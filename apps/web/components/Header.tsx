@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
-import { Button } from '../../packages/ui/Button'
+import { Button } from '@elevate/ui'
 
 export function Header() {
   const pathname = usePathname()
@@ -48,12 +48,12 @@ export function Header() {
           <div className="flex items-center space-x-4">
             <SignedOut>
               <SignInButton mode="modal">
-                <Button variant="outline">Sign In</Button>
+                <Button variant="ghost">Sign In</Button>
               </SignInButton>
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard">
-                <Button variant="default" size="sm">Dashboard</Button>
+                <Button variant="primary" >Dashboard</Button>
               </Link>
               <UserButton afterSignOutUrl="/" />
             </SignedIn>

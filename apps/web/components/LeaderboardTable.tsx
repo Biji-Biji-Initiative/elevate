@@ -3,8 +3,8 @@
 import { useState, useMemo } from 'react'
 import { ProfileCard } from './ProfileCard'
 import { LoadingSpinner } from './LoadingSpinner'
-import { Button } from '../../packages/ui/Button'
-import { Input } from '../../packages/ui/Input'
+import { Button } from '@elevate/ui'
+import { Input } from '@elevate/ui'
 
 interface LeaderboardEntry {
   rank: number
@@ -80,7 +80,7 @@ export function LeaderboardTable({
   if (loading) {
     return (
       <div className="flex justify-center py-12">
-        <LoadingSpinner size="lg" />
+        <LoadingSpinner  />
       </div>
     )
   }
@@ -284,14 +284,14 @@ export function LeaderboardTable({
         <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6">
           <div className="flex flex-1 justify-between sm:hidden">
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
             >
               Previous
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
             >
@@ -316,8 +316,8 @@ export function LeaderboardTable({
             <div>
               <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant="ghost"
+                  
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="relative inline-flex items-center rounded-l-md"
@@ -338,8 +338,8 @@ export function LeaderboardTable({
                   return (
                     <Button
                       key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
-                      size="sm"
+                      variant={currentPage === pageNum ? "primary" : "ghost"}
+                      
                       onClick={() => setCurrentPage(pageNum)}
                       className="relative inline-flex items-center"
                     >
@@ -349,8 +349,8 @@ export function LeaderboardTable({
                 })}
                 
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant="ghost"
+                  
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   className="relative inline-flex items-center rounded-r-md"

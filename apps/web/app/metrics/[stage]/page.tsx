@@ -7,9 +7,9 @@ import { StageCard } from '../../../components/StageCard'
 import { PageLoading } from '../../../components/LoadingSpinner'
 
 interface MetricsPageProps {
-  params: {
+  params: Promise<{
     stage: string
-  }
+  }>
 }
 
 interface StageMetrics {
@@ -372,16 +372,17 @@ async function MetricsContent({ stage }: { stage: string }) {
 }
 
 export async function generateMetadata({ params }: MetricsPageProps): Promise<Metadata> {
-  const stage = params.stage.toLowerCase()
+  const { stage } = await params
+  const stageKey = stage.toLowerCase()
   
-  if (!validStages.includes(stage)) {
+  if (!validStages.includes(stageKey)) {
     return {
       title: 'Stage Not Found - MS Elevate LEAPS Tracker',
       description: 'The requested LEAPS stage could not be found.',
     }
   }
   
-  const info = stageInfo[stage as keyof typeof stageInfo]
+  const info = stageInfo[stageKey as keyof typeof stageInfo]
   
   return {
     title: `${info.title} Metrics - MS Elevate LEAPS Tracker`,
@@ -389,17 +390,18 @@ export async function generateMetadata({ params }: MetricsPageProps): Promise<Me
     openGraph: {
       title: `${info.title} Stage Metrics`,
       description: `Explore ${info.title} stage statistics in the MS Elevate LEAPS program. ${info.description}`,
-      url: `https://leaps.mereka.org/metrics/${stage}`,
+      url: `https://leaps.mereka.org/metrics/${stageKey}`,
     },
   }
 }
 
-export default function MetricsStagePage({ params }: MetricsPageProps) {
-  const stage = params.stage.toLowerCase()
+export default async function MetricsStagePage({ params }: MetricsPageProps) {
+  const { stage } = await params
+  const stageKey = stage.toLowerCase()
   
   return (
     <Suspense fallback={<PageLoading />}>
-      <MetricsContent stage={stage} />
+      <MetricsContent stage={stageKey} />
     </Suspense>
   )
 }

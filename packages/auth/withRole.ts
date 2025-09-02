@@ -16,7 +16,7 @@ export interface AuthUser {
  * @returns AuthUser object or null if not authenticated
  */
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const { userId, sessionClaims } = auth()
+  const { userId, sessionClaims } = await auth()
   if (!userId) return null
   
   const role = normalizeRole((sessionClaims?.publicMetadata as any)?.role)

@@ -22,7 +22,7 @@ async function sendEmail(to: string, subject: string, html: string, text?: strin
       subject,
       html,
       text,
-      reply_to: REPLY_TO_EMAIL,
+      replyTo: REPLY_TO_EMAIL,
     });
 
     if (error) {
@@ -39,7 +39,7 @@ async function sendEmail(to: string, subject: string, html: string, text?: strin
 
 // Welcome Email
 export async function sendWelcomeEmail(to: string, name: string, dashboardUrl: string) {
-  const html = render(WelcomeEmail({ name, dashboardUrl }));
+  const html = await render(WelcomeEmail({ name, dashboardUrl }));
   const subject = `Selamat datang di MS Elevate LEAPS, ${name}! 🚀`;
   
   return sendEmail(to, subject, html);
@@ -53,7 +53,7 @@ export async function sendSubmissionConfirmationEmail(
   submissionDate: string, 
   dashboardUrl: string
 ) {
-  const html = render(SubmissionConfirmationEmail({ 
+  const html = await render(SubmissionConfirmationEmail({ 
     name, 
     activityName, 
     submissionDate, 
@@ -76,7 +76,7 @@ export async function sendApprovalNotificationEmail(
   dashboardUrl: string,
   leaderboardUrl: string
 ) {
-  const html = render(ApprovalNotificationEmail({ 
+  const html = await render(ApprovalNotificationEmail({ 
     name, 
     activityName, 
     pointsAwarded,
@@ -100,7 +100,7 @@ export async function sendRejectionNotificationEmail(
   dashboardUrl: string,
   supportUrl: string
 ) {
-  const html = render(RejectionNotificationEmail({ 
+  const html = await render(RejectionNotificationEmail({ 
     name, 
     activityName, 
     reviewerNote,
@@ -127,7 +127,7 @@ export async function sendWeeklyProgressEmail(
   dashboardUrl: string,
   leaderboardUrl: string
 ) {
-  const html = render(WeeklyProgressEmail({ 
+  const html = await render(WeeklyProgressEmail({ 
     name,
     weekStartDate,
     weekEndDate,

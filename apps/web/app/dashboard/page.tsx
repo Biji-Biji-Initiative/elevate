@@ -257,7 +257,7 @@ export default function DashboardPage() {
                               )}
                               
                               <Link href={ACTIVITY_ROUTES[stage.activityCode as keyof typeof ACTIVITY_ROUTES]}>
-                                <Button size="sm">
+                                <Button>
                                   {stage.hasCompleted ? 'View' : 'Start'}
                                 </Button>
                               </Link>
@@ -346,7 +346,7 @@ export default function DashboardPage() {
                     </Button>
                   </Link>
                   <Link href="/u/[handle]" as={`/u/${data.user.handle}`} className="block">
-                    <Button variant="outline" className="w-full text-left justify-start">
+                    <Button variant="ghost" className="w-full text-left justify-start">
                       View Public Profile
                     </Button>
                   </Link>

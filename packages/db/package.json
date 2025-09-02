@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "main": "./client.ts",
+  "scripts": {
+    "postinstall": "prisma generate --schema=./schema.prisma"
+  },
   "dependencies": {
     "@prisma/client": "^5.19.0"
   },

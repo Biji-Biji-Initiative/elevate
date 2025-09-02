@@ -1,11 +1,23 @@
 'use client'
 
 import Link from 'next/link'
-import { Badge, EarnedBadge, User } from '@prisma/client'
 
 interface ProfileCardProps {
-  user: User & {
-    earned_badges?: (EarnedBadge & { badge: Badge })[]
+  user: {
+    id: string
+    handle: string
+    name: string
+    email?: string
+    school?: string | null
+    cohort?: string | null
+    avatar_url?: string | null
+    earned_badges?: Array<{
+      badge: {
+        code: string
+        name: string
+        icon_url?: string | null
+      }
+    }>
     _sum?: {
       points: number | null
     }

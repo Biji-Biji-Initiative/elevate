@@ -3,11 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Webhook } from 'svix'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { prisma } from '@elevate/db/client'
+import { getKajabiClient } from '@elevate/integrations'
 
 // This webhook endpoint handles Clerk user events to sync user data
 export async function POST(req: NextRequest) {
   // Get the headers
-  const headerPayload = headers()
+  const headerPayload = await headers()
   const svixId = headerPayload.get('svix-id')
   const svixTimestamp = headerPayload.get('svix-timestamp')
   const svixSignature = headerPayload.get('svix-signature')
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
         const userRole = validRoles.includes(role) ? role : 'PARTICIPANT'
 
         // Upsert user in database
-        await prisma.user.upsert({
+        const upsertedUser = await prisma.user.upsert({
           where: { id },
           update: {
             name,
@@ -101,6 +102,52 @@ export async function POST(req: NextRequest) {
             role: userRole as any,
           },
         })
+
+        // Enroll user in Kajabi on registration
+        if (eventType === 'user.created') {
+          try {
+            const kajabiClient = getKajabiClient();
+            const kajabiContact = await kajabiClient.createOrUpdateContact(email, name);
+            
+            // Update user with Kajabi contact ID
+            await prisma.user.update({
+              where: { id },
+              data: { kajabi_contact_id: kajabiContact.id.toString() }
+            });
+
+            // Create audit log for Kajabi enrollment
+            await prisma.auditLog.create({
+              data: {
+                actor_id: 'system',
+                action: 'KAJABI_USER_ENROLLED',
+                target_id: id,
+                meta: {
+                  kajabi_contact_id: kajabiContact.id,
+                  email: email,
+                  name: name
+                }
+              }
+            });
+
+            console.log(`User enrolled in Kajabi: ${email} (Contact ID: ${kajabiContact.id})`);
+          } catch (kajabiError) {
+            console.error('Failed to enroll user in Kajabi:', kajabiError);
+            // Don't fail the webhook if Kajabi enrollment fails
+            // Log the error for manual follow-up
+            await prisma.auditLog.create({
+              data: {
+                actor_id: 'system',
+                action: 'KAJABI_ENROLLMENT_FAILED',
+                target_id: id,
+                meta: {
+                  error: kajabiError instanceof Error ? kajabiError.message : String(kajabiError),
+                  email: email,
+                  name: name
+                }
+              }
+            });
+          }
+        }
 
         console.log(`User ${eventType}: ${id} (${email})`)
         break

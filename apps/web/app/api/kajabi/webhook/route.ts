@@ -22,20 +22,24 @@ function verifySignature(payload: string, signature: string): boolean {
   );
 }
 
-// Process course completion from Kajabi form submission
-async function processCourseCompletion(eventData: any) {
+// Process tag-based events from Kajabi
+async function processTagEvent(eventData: any) {
   try {
-    const { submission } = eventData.data;
-    const fields = submission.fields;
+    const { contact, tag } = eventData.data;
+    
+    // Extract contact information
+    const email = contact.email?.toLowerCase().trim();
+    const contactId = contact.id;
+    const tagName = tag.name;
 
-    // Extract required fields from form submission
-    const email = fields.email?.toLowerCase().trim();
-    const courseName = fields.course_name || fields.certificate_name;
-    const completionDate = fields.completion_date || new Date().toISOString();
-    const studentName = fields.student_name || fields.name;
+    if (!email || !tagName) {
+      throw new Error('Required fields missing: email and tag name');
+    }
 
-    if (!email || !courseName) {
-      throw new Error('Required fields missing: email and course_name');
+    // Only process LEARN_COMPLETED tags
+    if (tagName !== 'LEARN_COMPLETED') {
+      console.log(`Tag event ignored - not LEARN_COMPLETED: ${tagName}`);
+      return { success: true, reason: 'tag_not_processed', tag: tagName };
     }
 
     // Find user by email
@@ -55,6 +59,14 @@ async function processCourseCompletion(eventData: any) {
         }
       });
       return { success: false, reason: 'user_not_found', email };
+    }
+
+    // Update user with Kajabi contact ID if not already set
+    if (!user.kajabi_contact_id && contactId) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { kajabi_contact_id: contactId.toString() }
+      });
     }
 
     // Check for duplicate processing
@@ -96,11 +108,12 @@ async function processCourseCompletion(eventData: any) {
         status: 'APPROVED',
         visibility: 'PRIVATE',
         payload: {
-          certificate_name: courseName,
-          completion_date: completionDate,
+          tag_name: tagName,
+          kajabi_contact_id: contactId,
+          completion_date: new Date().toISOString(),
           provider: 'Kajabi',
           auto_approved: true,
-          source: 'webhook'
+          source: 'tag_webhook'
         },
         attachments: []
       }
@@ -124,7 +137,8 @@ async function processCourseCompletion(eventData: any) {
         target_id: user.id,
         meta: {
           event_id: eventData.event_id,
-          course_name: courseName,
+          tag_name: tagName,
+          kajabi_contact_id: contactId,
           points_awarded: learnActivity.default_points
         }
       }
@@ -134,18 +148,19 @@ async function processCourseCompletion(eventData: any) {
       success: true, 
       user_id: user.id,
       points_awarded: learnActivity.default_points,
-      course_name: courseName
+      tag_name: tagName,
+      kajabi_contact_id: contactId
     };
 
   } catch (error) {
-    console.error('Error processing course completion:', error);
+    console.error('Error processing tag event:', error);
     
     // Store failed event for manual review
     try {
       await prisma.kajabiEvent.create({
         data: {
           id: eventData.event_id,
-          payload: { ...eventData, error: error.message },
+          payload: { ...eventData, error: error instanceof Error ? error.message : String(error) },
           processed_at: null,
           user_match: null
         }
@@ -161,7 +176,7 @@ async function processCourseCompletion(eventData: any) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
-    const headersList = headers();
+    const headersList = await headers();
     
     // Get signature from headers (format may vary by platform)
     const signature = headersList.get('x-kajabi-signature') || 
@@ -195,8 +210,8 @@ export async function POST(request: NextRequest) {
 
     // Handle different event types
     switch (eventData.event_type) {
-      case 'form.submitted':
-        const result = await processCourseCompletion(eventData);
+      case 'contact.tagged':
+        const result = await processTagEvent(eventData);
         
         return NextResponse.json({
           success: true,
@@ -205,19 +220,39 @@ export async function POST(request: NextRequest) {
           result
         });
 
+      case 'form.submitted':
       case 'purchase.created':
-        // Handle purchase events if needed
-        console.log('Purchase event received - not processed yet');
+        // Store all events for audit but don't process
+        await prisma.kajabiEvent.create({
+          data: {
+            id: eventData.event_id,
+            payload: eventData,
+            processed_at: null,
+            user_match: null
+          }
+        });
+        
+        console.log(`Event ${eventData.event_type} stored for audit`);
         return NextResponse.json({
           success: true,
-          message: 'Purchase event acknowledged but not processed'
+          message: `Event type ${eventData.event_type} stored for audit`
         });
 
       default:
+        // Store unknown events for audit
+        await prisma.kajabiEvent.create({
+          data: {
+            id: eventData.event_id,
+            payload: eventData,
+            processed_at: null,
+            user_match: null
+          }
+        });
+        
         console.log(`Unhandled event type: ${eventData.event_type}`);
         return NextResponse.json({
           success: true,
-          message: `Event type ${eventData.event_type} acknowledged but not processed`
+          message: `Event type ${eventData.event_type} stored for audit`
         });
     }
 

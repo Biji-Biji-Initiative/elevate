@@ -6,9 +6,9 @@ import { StageCard } from '../../../components/StageCard'
 import { PageLoading } from '../../../components/LoadingSpinner'
 
 interface ProfilePageProps {
-  params: {
+  params: Promise<{
     handle: string
-  }
+  }>
 }
 
 interface UserProfile {
@@ -377,7 +377,8 @@ async function ProfileContent({ handle }: { handle: string }) {
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   // In production, you'd fetch the profile data here for accurate metadata
-  const profile = await fetchUserProfile(params.handle)
+  const { handle } = await params
+  const profile = await fetchUserProfile(handle)
   
   if (!profile) {
     return {
@@ -403,10 +404,12 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   }
 }
 
-export default function PublicProfile({ params }: ProfilePageProps) {
+export default async function PublicProfile({ params }: ProfilePageProps) {
+  const { handle } = await params
+  
   return (
     <Suspense fallback={<PageLoading />}>
-      <ProfileContent handle={params.handle} />
+      <ProfileContent handle={handle} />
     </Suspense>
   )
 }

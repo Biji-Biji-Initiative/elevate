@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Card } from '../../packages/ui/Card'
+import { Card } from '@elevate/ui'
 
 interface StageCardProps {
   stage: 'learn' | 'explore' | 'amplify' | 'present' | 'shine'

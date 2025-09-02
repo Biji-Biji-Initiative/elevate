@@ -2,12 +2,23 @@
   "name": "elevate-monorepo",
   "private": true,
   "version": "0.1.0",
-  "workspaces": ["apps/*", "packages/*"],
+  "packageManager": "pnpm@10.12.4",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "concurrently \"pnpm -F web dev\" \"pnpm -F admin dev\"",
+    "dev:web": "pnpm -F web dev",
+    "dev:admin": "pnpm -F admin dev",
     "build": "pnpm -r build",
+    "build:web": "pnpm -F web build",
+    "build:admin": "pnpm -F admin build",
     "start": "concurrently \"pnpm -F web start\" \"pnpm -F admin start\"",
     "setup": "./scripts/setup.sh",
+    "setup:clerk": "./scripts/setup-clerk.sh",
+    "setup:clerk-auto": "node scripts/clerk-auto-setup.js",
+    "setup:clerk-env": "node scripts/clerk-auto-setup.js",
     "db:setup": "./scripts/db-setup.sh",
     "db:deploy": "./scripts/db-deploy.sh",
     "db:generate": "prisma generate --schema=packages/db/schema.prisma",
@@ -21,6 +32,8 @@
     "deploy": "./scripts/deploy.sh",
     "deploy:staging": "./scripts/deploy.sh staging",
     "deploy:prod": "./scripts/deploy.sh production",
+    "deploy:vercel": "node scripts/vercel-deploy.js",
+    "deploy:vercel-shell": "./deploy-vercel.sh",
     "env:check": "./scripts/env-check.sh",
     "type-check": "pnpm -r type-check",
     "lint": "pnpm -r lint",
@@ -33,6 +46,10 @@
     "concurrently": "^8.2.2",
     "prisma": "^5.19.0",
     "ts-node": "^10.9.2",
+    "turbo": "^2.5.6",
     "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "svix": "^1.75.0"
   }
 }

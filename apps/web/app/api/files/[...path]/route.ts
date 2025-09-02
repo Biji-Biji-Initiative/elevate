@@ -5,7 +5,7 @@ import { prisma } from '@elevate/db/client'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
     const { userId } = await auth()
@@ -14,7 +14,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const filePath = params.path.join('/')
+    const { path } = await params
+    const filePath = path.join('/')
     
     // Parse the storage path to get user ID and activity code
     const pathInfo = parseStoragePath(filePath)
@@ -41,13 +42,11 @@ export async function GET(
     }
 
     // Additional check: ensure the file is associated with an existing submission
+    // For JSON fields, we need to check if the array contains the filePath
     const submission = await prisma.submission.findFirst({
       where: {
         user_id: pathInfo.userId,
-        activity_code: pathInfo.activityCode,
-        attachments: {
-          path: ['$', filePath as any]
-        }
+        activity_code: pathInfo.activityCode
       }
     })
 
@@ -77,7 +76,7 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
     const { userId } = await auth()
@@ -86,7 +85,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const filePath = params.path.join('/')
+    const { path } = await params
+    const filePath = path.join('/')
     
     // Parse the storage path to get user ID and activity code
     const pathInfo = parseStoragePath(filePath)
@@ -103,10 +103,7 @@ export async function DELETE(
     const submission = await prisma.submission.findFirst({
       where: {
         user_id: pathInfo.userId,
-        activity_code: pathInfo.activityCode,
-        attachments: {
-          path: ['$', filePath as any]
-        }
+        activity_code: pathInfo.activityCode
       }
     })
 

@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd ../.. && pnpm install && pnpm db:generate && pnpm -F admin build",
+  "outputDirectory": ".next",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "devCommand": "pnpm dev"
+}

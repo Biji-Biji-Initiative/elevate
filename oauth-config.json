@@ -1,0 +1,6 @@
+{
+  "support_email": "gurpreet@biji-biji.com",
+  "application_name": "MS Elevate Indonesia LEAPS Tracker",
+  "authorized_domains": ["ms-elevate-indonesia.vercel.app", "localhost:3000", "localhost:3001"],
+  "scopes": ["openid", "email", "profile"]
+}

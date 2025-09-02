@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '../../../../packages/db/client'
+import { prisma } from '@elevate/db/client'
 
-interface RouteParams {
-  params: {
-    handle: string
-  }
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ handle: string }> }) {
   try {
-    const { handle } = params
+    const { handle } = await params
 
     // Mock data - in production this would query the database
     if (handle === 'siti_nurhaliza') {

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
 import { StageCard } from '../components/StageCard'
-import { Button } from '../../packages/ui/Button'
+import { Button } from '@elevate/ui'
 import { LoadingSpinner } from '../components/LoadingSpinner'
 
 // Mock data for stage completion counts - in production this would come from API
@@ -72,20 +72,20 @@ export default function Page() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <SignedOut>
                 <SignInButton mode="modal">
-                  <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100">
+                  <Button variant="primary" className="bg-white text-blue-600 hover:bg-gray-100">
                     Join the Program
                   </Button>
                 </SignInButton>
               </SignedOut>
               <SignedIn>
                 <Link href="/dashboard">
-                  <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100">
+                  <Button variant="primary" className="bg-white text-blue-600 hover:bg-gray-100">
                     Go to Dashboard
                   </Button>
                 </Link>
               </SignedIn>
               <Link href="/leaderboard">
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
+                <Button variant="ghost" className="border-white text-white hover:bg-white hover:text-blue-600">
                   View Leaderboard
                 </Button>
               </Link>
@@ -249,14 +249,14 @@ export default function Page() {
           
           <SignedOut>
             <SignInButton mode="modal">
-              <Button size="lg" variant="secondary" className="bg-white text-purple-600 hover:bg-gray-100">
+              <Button variant="primary" className="bg-white text-purple-600 hover:bg-gray-100">
                 Get Started Now
               </Button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
             <Link href="/dashboard">
-              <Button size="lg" variant="secondary" className="bg-white text-purple-600 hover:bg-gray-100">
+              <Button variant="primary" className="bg-white text-purple-600 hover:bg-gray-100">
                 Continue Your Journey
               </Button>
             </Link>

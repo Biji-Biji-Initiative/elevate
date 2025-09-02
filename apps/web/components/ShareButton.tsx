@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '../../packages/ui/Button'
+import { Button } from '@elevate/ui'
 
 interface ShareButtonProps {
   url: string
@@ -41,8 +41,7 @@ export function ShareButton({ url, title, text, size = 'md' }: ShareButtonProps)
   
   return (
     <Button 
-      variant="outline" 
-      size={size} 
+      variant="ghost" 
       onClick={handleShare}
       disabled={copied}
     >

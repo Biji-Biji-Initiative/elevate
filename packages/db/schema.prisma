@@ -32,18 +32,19 @@ enum LedgerSource {
 }
 
 model User {
-  id           String   @id               // mirror Clerk user id
-  handle       String   @unique
-  name         String
-  email        String   @unique
-  avatar_url   String?
-  role         Role     @default(PARTICIPANT)
-  school       String?
-  cohort       String?
-  created_at   DateTime @default(now())
-  submissions  Submission[]
-  ledger       PointsLedger[]
-  earned_badges EarnedBadge[]
+  id              String   @id               // mirror Clerk user id
+  handle          String   @unique
+  name            String
+  email           String   @unique
+  avatar_url      String?
+  role            Role     @default(PARTICIPANT)
+  school          String?
+  cohort          String?
+  kajabi_contact_id String?  @unique          // Kajabi contact ID
+  created_at      DateTime @default(now())
+  submissions     Submission[]
+  ledger          PointsLedger[]
+  earned_badges   EarnedBadge[]
   @@map("users")
 }
 
