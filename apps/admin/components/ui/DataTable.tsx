@@ -265,7 +265,7 @@ export function DataTable<T>({
                   ) : (
                     <Button
                       key={pageNum}
-                      variant={pageNum === pagination.page ? 'primary' : 'ghost'}
+                      variant={pageNum === pagination.page ? 'default' : 'ghost'}
                       onClick={() => pagination.onPageChange(pageNum as number)}
                       style={{ borderRadius: 0 }}
                     >

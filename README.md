@@ -1,5 +1,11 @@
 # 🚀 MS Elevate Indonesia LEAPS Tracker
 
+[![CI](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/ci.yml)
+[![Deploy](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/deploy.yml/badge.svg)](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/deploy.yml)
+[![Database Drift Check](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/db-drift-check.yml/badge.svg)](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/db-drift-check.yml)
+[![Secret Scan](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/secret-scan.yml)
+[![Codecov](https://codecov.io/gh/your-org/elevate-leaps-tracker/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/elevate-leaps-tracker)
+
 > Production-ready platform for tracking Indonesian educators' journey through the LEAPS framework (Learn, Explore, Amplify, Present, Shine) as they adopt AI in classrooms.
 
 ## 📋 Table of Contents

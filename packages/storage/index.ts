@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
-import { parseWebEnv } from '@elevate/config/env'
+import { parseWebEnv } from '@elevate/config'
 
 // Initialize Supabase client
 let supabaseClient: ReturnType<typeof createClient> | null = null
@@ -172,7 +172,14 @@ export async function fileExists(path: string): Promise<boolean> {
 }
 
 // Get file metadata
-export async function getFileMetadata(path: string) {
+export async function getFileMetadata(path: string): Promise<{
+  name: string
+  id?: string
+  updated_at?: string
+  created_at?: string
+  last_accessed_at?: string
+  metadata?: Record<string, any>
+}> {
   const supabase = getSupabaseClient()
   
   const { data, error } = await supabase.storage

@@ -1,2 +1,1 @@
-export * from './kajabi';
-export * from './utils';
+export * from './kajabi'

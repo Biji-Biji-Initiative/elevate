@@ -1,42 +1,21 @@
 {
-  "cSpell.enabled": false,
-  "cSpell.enableFiletypes": [],
-  "markdown.validate.enabled": false,
-  "markdown.lint.enabled": false,
-  "spellright.language": [],
-  "spellright.documentTypes": [],
-  "spellright.enabled": false,
-  "spellright.documentTypes": [],
-  "spellright.language": [],
-  "spellright.ignoreRegExps": [
-    ".*"
+  "eslint.experimental.useFlatConfig": true,
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
   ],
-  "markdown-all-in-one.lint.enabled": false,
-  "markdown-all-in-one.validate.enabled": false,
-  "markdown-all-in-one.extension.enableAutoUpdate": false,
-  "files.associations": {
-    "*.md": "markdown"
-  },
-  "markdown.preview.breaks": true,
-  "markdown.preview.linkify": true,
-  "editor.quickSuggestions": {
-    "strings": false
-  },
-  "editor.suggest.showWords": false,
-  "editor.wordBasedSuggestions": false,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
   "editor.codeActionsOnSave": {
-    "source.fixAll": false
+    "source.fixAll.eslint": "explicit"
   },
-  "problems.decorations.enabled": false,
-  "editor.renderValidationDecorations": "off",
-  "[markdown]": {
-    "editor.quickSuggestions": {
-      "comments": false,
-      "strings": false,
-      "other": false
-    },
-    "editor.wordBasedSuggestions": false,
-    "editor.suggest.showWords": false,
-    "editor.renderValidationDecorations": "off"
-  }
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.suggest.autoImports": true
 }

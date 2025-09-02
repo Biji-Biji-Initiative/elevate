@@ -2,8 +2,22 @@
   "name": "@elevate/db",
   "version": "0.1.0",
   "private": true,
-  "main": "./client.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./client.ts",
+      "default": "./client.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "clean": "rm -rf dist",
     "postinstall": "prisma generate --schema=./schema.prisma"
   },
   "dependencies": {
@@ -12,6 +26,7 @@
   "devDependencies": {
     "@types/node": "^20.14.0",
     "typescript": "^5.5.4",
-    "prisma": "^5.19.0"
+    "prisma": "^5.19.0",
+    "tsup": "^8.0.2"
   }
 }

@@ -1,9 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Button } from '@elevate/ui'
-import { Input } from '@elevate/ui/Input'
-import { Textarea } from '@elevate/ui/Textarea'
+import { Button, Input, Textarea } from '@elevate/ui'
 import { DataTable, Column } from '../../components/ui/DataTable'
 import { Modal, ConfirmModal } from '../../components/ui/Modal'
 

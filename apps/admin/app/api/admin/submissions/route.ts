@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
 import { requireRole } from '@elevate/auth/withRole'
-import { computePoints } from '@elevate/logic/scoring'
+import { computePoints } from '@elevate/logic'
 
 export async function GET(request: NextRequest) {
   try {

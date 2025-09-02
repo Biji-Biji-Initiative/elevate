@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Button } from '@elevate/ui'
-import { Input } from '@elevate/ui/Input'
+import { Button, Input } from '@elevate/ui'
 
 interface ExportFilters {
   startDate: string

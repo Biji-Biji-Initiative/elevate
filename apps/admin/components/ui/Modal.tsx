@@ -134,7 +134,7 @@ interface ConfirmModalProps {
   message: string
   confirmText?: string
   cancelText?: string
-  confirmVariant?: 'primary' | 'ghost'
+  confirmVariant?: 'default' | 'ghost'
   isLoading?: boolean
 }
 
@@ -146,7 +146,7 @@ export function ConfirmModal({
   message,
   confirmText = 'Confirm',
   cancelText = 'Cancel',
-  confirmVariant = 'primary',
+  confirmVariant = 'default',
   isLoading = false
 }: ConfirmModalProps) {
   return (

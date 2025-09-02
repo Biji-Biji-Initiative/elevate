@@ -1,35 +1,37 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  serverExternalPackages: ['@prisma/client'],
-  transpilePackages: [
-    '@elevate/auth',
-    '@elevate/db',
-    '@elevate/config',
-    '@elevate/types',
-    '@elevate/logic',
-    '@elevate/ui',
-    '@elevate/integrations',
-  ],
+  // Enable experimental features for React 19
+  experimental: {
+    reactCompiler: false, // Disable React Compiler for now
+  },
+  
+  // ESLint configuration
+  eslint: {
+    // Use the root ESLint config
+    dirs: ['./'],
+  },
+  
+  // TypeScript configuration
+  typescript: {
+    // Enable type checking in development
+    tsconfigPath: './tsconfig.json',
+  },
+
+  // Image configuration
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'img.clerk.com',
+        hostname: '**',
       },
     ],
   },
-  // Admin-specific configuration
-  basePath: '',
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/queue',
-        permanent: false,
-      },
-    ]
+
+  // Webpack configuration
+  webpack: (config, { isServer }) => {
+    // Add custom webpack configuration if needed
+    return config;
   },
 }
 
-export default nextConfig
+export default nextConfig;

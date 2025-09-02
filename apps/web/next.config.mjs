@@ -1,37 +1,37 @@
-import createNextIntlPlugin from 'next-intl/plugin';
-
-const withNextIntl = createNextIntlPlugin('./i18n.ts');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  serverExternalPackages: ['@prisma/client'],
-  transpilePackages: [
-    '@elevate/auth',
-    '@elevate/db',
-    '@elevate/config',
-    '@elevate/types',
-    '@elevate/logic',
-    '@elevate/ui',
-    '@elevate/emails',
-    '@elevate/storage',
-    '@elevate/integrations',
-  ],
-  images: {
-    domains: ['img.clerk.com', 'images.clerk.dev'],
+  // Enable experimental features for React 19
+  experimental: {
+    reactCompiler: false, // Disable React Compiler for now
   },
-  async rewrites() {
-    return [
+  
+  // ESLint configuration
+  eslint: {
+    // Use the root ESLint config
+    dirs: ['./'],
+  },
+  
+  // TypeScript configuration
+  typescript: {
+    // Enable type checking in development
+    tsconfigPath: './tsconfig.json',
+  },
+
+  // Image configuration
+  images: {
+    remotePatterns: [
       {
-        source: '/robots.txt',
-        destination: '/api/robots'
+        protocol: 'https',
+        hostname: '**',
       },
-      {
-        source: '/sitemap.xml',
-        destination: '/api/sitemap'
-      }
-    ];
-  }
+    ],
+  },
+
+  // Webpack configuration
+  webpack: (config, { isServer }) => {
+    // Add custom webpack configuration if needed
+    return config;
+  },
 }
 
-export default withNextIntl(nextConfig);
+export default nextConfig;

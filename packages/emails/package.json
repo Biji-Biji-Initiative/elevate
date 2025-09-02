@@ -2,11 +2,19 @@
   "name": "@elevate/emails",
   "version": "0.1.0",
   "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "echo 'Email templates ready'",
-    "build": "echo 'Email templates built'",
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "clean": "rm -rf dist",
     "export": "echo 'Email templates exported'"
   },
   "dependencies": {
@@ -22,6 +30,7 @@
     "@types/react": "^18.3.0",
     "react": "19.0.0-rc-65a56d0e-20241020",
     "react-email": "^3.0.1",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "tsup": "^8.0.2"
   }
 }
