@@ -7,19 +7,10 @@ export async function GET() {
     // Check admin role
     await requireRole('admin');
 
-    // Fetch Kajabi events with user matches
+    // Fetch Kajabi events
     const events = await prisma.kajabiEvent.findMany({
       orderBy: { received_at: 'desc' },
       take: 50,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
     });
 
     // Calculate statistics
@@ -48,7 +39,6 @@ export async function GET() {
         processed_at: event.processed_at,
         user_match: event.user_match,
         payload: event.payload,
-        user: event.user,
       })),
       stats: {
         total_events: stats._count.id,

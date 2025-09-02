@@ -227,8 +227,8 @@ function KajabiPage() {
                   <td className="p-2">
                     {!event.processed_at && (
                       <Button
-                        size="sm"
-                        variant="outline"
+                        variant="ghost"
+                        style={{ padding: '4px 8px', fontSize: '12px' }}
                         onClick={() => handleReprocess(event.id)}
                       >
                         Reprocess
@@ -273,4 +273,4 @@ function KajabiPage() {
   );
 }
 
-export default withRoleGuard(KajabiPage, ['ADMIN', 'SUPERADMIN']);
+export default withRoleGuard(KajabiPage, ['admin', 'superadmin']);

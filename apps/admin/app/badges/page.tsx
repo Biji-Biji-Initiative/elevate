@@ -258,7 +258,11 @@ export default function BadgesPage() {
       code: badge.code,
       name: badge.name,
       description: badge.description,
-      criteria: badge.criteria,
+      criteria: {
+        ...badge.criteria,
+        activity_codes: badge.criteria.activity_codes || [],
+        conditions: badge.criteria.conditions || {}
+      },
       icon_url: badge.icon_url || ''
     })
   }
@@ -313,8 +317,8 @@ export default function BadgesPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          code: badgeModal.badge.code,
-          ...badgeForm
+          ...badgeForm,
+          code: badgeModal.badge.code
         })
       })
 
@@ -413,7 +417,7 @@ export default function BadgesPage() {
         loading={loading}
         selection={{
           selectedRows,
-          onSelectionChange: setSelectedRows,
+          onSelectionChange: (selectedRows: Set<string | number>) => setSelectedRows(new Set(Array.from(selectedRows).map(String))),
           getRowId: (row) => row.code
         }}
         emptyMessage="No badges found. Create your first badge to get started."
