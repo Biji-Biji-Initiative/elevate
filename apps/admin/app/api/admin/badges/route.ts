@@ -3,6 +3,8 @@ import { prisma } from '@elevate/db/client'
 import { requireRole } from '@elevate/auth/withRole'
 import { z } from 'zod'
 
+export const runtime = 'nodejs';
+
 const BadgeSchema = z.object({
   code: z.string().min(2).max(50),
   name: z.string().min(2).max(100),

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@elevate/db/client';
 import { requireRole } from '@elevate/auth/server-helpers';
 
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     // Check admin role

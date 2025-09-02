@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@elevate/db';
 
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
     // Check database connection

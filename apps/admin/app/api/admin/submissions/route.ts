@@ -3,6 +3,8 @@ import { prisma } from '@elevate/db/client'
 import { requireRole } from '@elevate/auth/withRole'
 import { computePoints } from '@elevate/logic'
 
+export const runtime = 'nodejs';
+
 export async function GET(request: NextRequest) {
   try {
     const user = await requireRole('reviewer')

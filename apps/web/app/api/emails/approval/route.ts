@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendApprovalNotificationEmail } from '@elevate/emails';
 import { auth } from '@clerk/nextjs/server';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
