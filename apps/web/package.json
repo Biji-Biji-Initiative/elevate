@@ -17,6 +17,7 @@
     "@elevate/db": "workspace:*",
     "@elevate/emails": "workspace:*",
     "@elevate/integrations": "workspace:*",
+    "@elevate/security": "workspace:*",
     "@elevate/storage": "workspace:*",
     "@elevate/types": "workspace:*",
     "@elevate/ui": "workspace:*",

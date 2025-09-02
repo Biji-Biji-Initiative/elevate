@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # MS Elevate LEAPS Tracker - Setup Script
 # This script sets up the development environment
 
-set -e  # Exit on any error
+set -euo pipefail  # Exit on any error, undefined variables, or pipe failures
 
 echo "🚀 Setting up MS Elevate LEAPS Tracker..."
 

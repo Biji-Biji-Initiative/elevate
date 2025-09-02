@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Environment variables validation script
-# Ensures all required environment variables are properly configured
 
-set -e
+set -euo pipefail
+
+# Ensures all required environment variables are properly configured
 
 # Colors for output
 RED='\033[0;31m'

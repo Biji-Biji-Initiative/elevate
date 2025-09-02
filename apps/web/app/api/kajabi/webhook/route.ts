@@ -2,13 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { prisma } from '@elevate/db';
 import crypto from 'crypto';
+import { withRateLimit, webhookRateLimiter } from '@elevate/security';
 
 export const runtime = 'nodejs';
 
-// Verify webhook signature from Kajabi
+// Verify webhook signature from Kajabi with timing-safe comparison
 function verifySignature(payload: string, signature: string): boolean {
   if (!process.env.KAJABI_WEBHOOK_SECRET) {
     console.error('KAJABI_WEBHOOK_SECRET not configured');
+    return false;
+  }
+
+  if (!signature || signature.length === 0) {
+    console.error('Missing or empty signature');
     return false;
   }
 
@@ -17,11 +23,17 @@ function verifySignature(payload: string, signature: string): boolean {
     .update(payload)
     .digest('hex');
 
+  // Ensure both buffers have the same length before timing-safe comparison
+  const signatureBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+
+  if (signatureBuffer.length !== expectedBuffer.length) {
+    console.error('Signature length mismatch');
+    return false;
+  }
+
   // Compare signatures securely
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
+  return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
 }
 
 // Process tag-based events from Kajabi
@@ -176,35 +188,68 @@ async function processTagEvent(eventData: any) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.text();
-    const headersList = await headers();
+  // Apply rate limiting first
+  return withRateLimit(request, webhookRateLimiter, async () => {
+    try {
+      const body = await request.text();
+      const headersList = await headers();
+      
+      // Store event before processing for audit trail
+      let eventData: any;
+      try {
+        eventData = JSON.parse(body);
+      } catch (parseError) {
+        console.error('Invalid JSON in webhook body:', parseError);
+        return NextResponse.json(
+          { error: 'Invalid JSON payload' },
+          { status: 400 }
+        );
+      }
+
+      // Store raw event first (before signature verification for audit)
+      if (eventData.event_id) {
+        try {
+          await prisma.kajabiEvent.upsert({
+            where: { id: eventData.event_id },
+            update: {
+              payload: { ...eventData, received_at: new Date().toISOString() }
+            },
+            create: {
+              id: eventData.event_id,
+              payload: { ...eventData, received_at: new Date().toISOString() },
+              processed_at: null,
+              user_match: null
+            }
+          });
+        } catch (storeError) {
+          console.error('Failed to store webhook event:', storeError);
+          // Continue processing even if storage fails
+        }
+      }
+      
+      // Get signature from headers (format may vary by platform)
+      const signature = headersList.get('x-kajabi-signature') || 
+                       headersList.get('signature') ||
+                       headersList.get('authorization')?.replace('Bearer ', '');
+
+      if (!signature) {
+        console.log('Missing webhook signature');
+        return NextResponse.json(
+          { error: 'Missing signature' },
+          { status: 401 }
+        );
+      }
+
+      // Verify webhook signature with enhanced security
+      if (!verifySignature(body, signature)) {
+        console.log('Invalid webhook signature');
+        return NextResponse.json(
+          { error: 'Invalid signature' },
+          { status: 401 }
+        );
+      }
     
-    // Get signature from headers (format may vary by platform)
-    const signature = headersList.get('x-kajabi-signature') || 
-                     headersList.get('signature') ||
-                     headersList.get('authorization')?.replace('Bearer ', '');
-
-    if (!signature) {
-      console.log('Missing webhook signature');
-      return NextResponse.json(
-        { error: 'Missing signature' },
-        { status: 401 }
-      );
-    }
-
-    // Verify webhook signature
-    if (!verifySignature(body, signature)) {
-      console.log('Invalid webhook signature');
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 401 }
-      );
-    }
-
-    const eventData = JSON.parse(body);
-    
-    console.log('Kajabi webhook received:', {
+      console.log('Kajabi webhook received:', {
       event_id: eventData.event_id,
       event_type: eventData.event_type,
       timestamp: eventData.created_at
@@ -258,15 +303,16 @@ export async function POST(request: NextRequest) {
         });
     }
 
-  } catch (error) {
-    console.error('Kajabi webhook error:', error);
-    
-    return NextResponse.json({
-      success: false,
-      error: 'Internal server error',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
-  }
+    } catch (error) {
+      console.error('Kajabi webhook error:', error);
+      
+      return NextResponse.json({
+        success: false,
+        error: 'Internal server error',
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
+    }
+  });
 }
 
 // Health check for webhook endpoint

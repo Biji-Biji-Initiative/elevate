@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Database Setup Script for MS Elevate LEAPS Tracker
 # This script sets up the PostgreSQL database with all required tables and views
 
-set -e
+set -euo pipefail
 
 echo "🗄️  Setting up MS Elevate LEAPS database..."
 

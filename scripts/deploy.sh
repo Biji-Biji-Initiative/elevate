@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # MS Elevate LEAPS Tracker Deployment Script
-# This script handles deployment to Vercel with proper environment setup
 
-set -e
+set -euo pipefail
+
+# This script handles deployment to Vercel with proper environment setup
 
 # Colors for output
 RED='\033[0;31m'
