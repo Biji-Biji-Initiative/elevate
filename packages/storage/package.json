@@ -1,0 +1,16 @@
+{
+  "name": "@elevate/storage",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "@elevate/config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

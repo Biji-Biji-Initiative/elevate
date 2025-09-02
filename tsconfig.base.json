@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@elevate/db/*": ["packages/db/*"],
+      "@elevate/types/*": ["packages/types/*"],
+      "@elevate/auth/*": ["packages/auth/*"],
+      "@elevate/storage/*": ["packages/storage/*"],
+      "@elevate/logic/*": ["packages/logic/*"],
+      "@elevate/config/*": ["packages/config/*"]
+    }
+  }
+}
+

@@ -1,0 +1,14 @@
+{
+  "name": "@elevate/logic",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@elevate/db": "workspace:*",
+    "@elevate/types": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4"
+  }
+}

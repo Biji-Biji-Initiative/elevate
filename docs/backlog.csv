@@ -1,0 +1,34 @@
+Epic,ID,Title,Description,AcceptanceCriteria,Priority,Status
+Public Site,WEB-001,Home page hero,"Program title, purpose, CTA (Sign in with Google). Bahasa + English short copy.","Hero present with title, purpose, CTA; copy placeholders in both languages.",P1,Todo
+Public Site,WEB-002,LEAPS overview tiles,"Five tiles with points and one-liners for each stage.","Tiles render with Learn(20), Explore(50), Amplify(2/1), Present(20), Shine.",P1,Todo
+Public Site,WEB-003,Impact strip counters,"Live counters for participants and per-stage approved counts.","Counters fetch /api/metrics and display non-PII aggregates.",P2,Todo
+Public Site,WEB-004,Targets snapshot,"Show 25k micro-credentials, 5k MCE, convening.","Targets visible with copy from proposal.",P3,Todo
+Public Site,WEB-005,Leaderboard preview,"Mini Top-20 preview and link to full leaderboard.","Renders top 5 from /api/leaderboard; link to /leaderboard.",P2,Todo
+Public Site,WEB-006,Partners/flow teaser,"Diagram or bullets on rollout and master trainers.","Section present with placeholder assets list.",P3,Todo
+Public Site,WEB-007,Footer + contacts,"FAQ link and contacts from deck.","Contacts visible; FAQ placeholder.",P3,Todo
+
+Participant,APP-101,Dashboard overview,"Show points, badges, and links to stage forms.","Points total, badge strip visible; links to 5 stages.",P1,Todo
+Participant,APP-102,Learn form,"Certificate upload or Kajabi credit; provider/course/date.","Submit creates PENDING submission with payload and evidence refs.",P1,Todo
+Participant,APP-103,Explore form,"Reflection, class date, school, evidence.","Submit creates PENDING submission; reflection min length validated.",P1,Todo
+Participant,APP-104,Amplify form,"Peers/students counts, proof; caps TBD.","Submit creates PENDING submission; counts validated and capped.",P1,Todo
+Participant,APP-105,Present form,"LinkedIn URL + screenshot; caption.","Validates URL; stores screenshot; PENDING submission.",P1,Todo
+Participant,APP-106,Shine form,"Idea title/summary; optional attachment.","Submit creates PENDING submission.",P2,Todo
+Participant,APP-107,Submission history,"List of my submissions with statuses.","Table shows stage, date, status, notes.",P2,Todo
+Participant,APP-108,Public profile,"/u/[handle] shows approved+public items only.","Profile page excludes private/rejected; shareable URL.",P2,Todo
+
+Admin,ADM-201,Pending queue,"List and search submissions awaiting review.","Pagination; filter by stage; open review detail.",P1,Todo
+Admin,ADM-202,Review detail,"Preview evidence; approve/reject; award points; note.","Approvals create ledger entries and refresh leaderboards; audit logged.",P1,Todo
+Admin,ADM-203,Users & roles,"List users; set participant/reviewer/admin.","Role changes persist; secured by admin only.",P3,Todo
+Admin,ADM-204,Exports,"CSV export for submissions and leaderboard snapshot.","Download CSVs; background job optional.",P3,Todo
+Admin,ADM-205,Kajabi reconciliation,"List unmatched Kajabi events; resolve to user.","Match by email; award Learn points; mark processed.",P2,Todo
+
+API/DB,API-301,OpenAPI spec,"Define endpoints for participant/admin/leaderboard/metrics.","docs/openapi.yaml up-to-date and complete.",P1,In Progress
+API/DB,DB-302,Prisma schema,"Users, submissions, points_ledger, badges, kajabi_events, audit_log.","Schema in packages/db/schema.prisma matches plan.",P1,Done
+API/DB,DB-303,SQL views,"Materialized views for leaderboards and metrics view.","infra SQL created; refresh function defined.",P1,Done
+API/DB,API-304,RBAC helper,"Clerk role gate for routes.","withRole helper available and documented.",P2,Done
+
+Policies,SEC-401,Privacy & public profile,"PII policy; opt-in per submission.","Policies doc approved; toggles enforced in UI.",P1,Todo
+Policies,SEC-402,Scoring rules,"Document scoring formulas and caps.","Scoring doc approved; admin UI reflects rules.",P1,In Review
+Policies,SEC-403,Badges & thresholds,"Define badge criteria and thresholds.","Badges doc approved; dashboard reflects progression.",P2,Todo
+Localization,LOC-501,Copy EN/ID,"Homepage and key pages copy in both languages.","Copy doc created; toggle or auto-locale decided.",P2,Todo
+Ops,OPS-601,Decisions log,"Track ADR-lite decisions.","decisions.md updated for major choices.",P3,Done

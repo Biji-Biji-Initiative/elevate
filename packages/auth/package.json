@@ -1,0 +1,14 @@
+{
+  "name": "@elevate/auth",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./index.ts",
+  "dependencies": {
+    "@clerk/nextjs": "^5.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4"
+  }
+}

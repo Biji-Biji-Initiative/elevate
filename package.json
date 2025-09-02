@@ -1,0 +1,38 @@
+{
+  "name": "elevate-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "concurrently \"pnpm -F web dev\" \"pnpm -F admin dev\"",
+    "build": "pnpm -r build",
+    "start": "concurrently \"pnpm -F web start\" \"pnpm -F admin start\"",
+    "setup": "./scripts/setup.sh",
+    "db:setup": "./scripts/db-setup.sh",
+    "db:deploy": "./scripts/db-deploy.sh",
+    "db:generate": "prisma generate --schema=packages/db/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema=packages/db/schema.prisma",
+    "db:migrate:prod": "prisma migrate deploy --schema=packages/db/schema.prisma",
+    "db:push": "prisma db push --schema=packages/db/schema.prisma",
+    "db:seed": "ts-node packages/db/seed.ts",
+    "db:reset": "prisma migrate reset --schema=packages/db/schema.prisma --force",
+    "db:studio": "prisma studio --schema=packages/db/schema.prisma",
+    "db:init": "pnpm db:push && pnpm db:seed",
+    "deploy": "./scripts/deploy.sh",
+    "deploy:staging": "./scripts/deploy.sh staging",
+    "deploy:prod": "./scripts/deploy.sh production",
+    "env:check": "./scripts/env-check.sh",
+    "type-check": "pnpm -r type-check",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "test": "pnpm -r test",
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    "emails:dev": "pnpm -F @elevate/emails dev"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "prisma": "^5.19.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}

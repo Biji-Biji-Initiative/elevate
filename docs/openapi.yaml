@@ -1,0 +1,100 @@
+openapi: 3.0.3
+info:
+  title: Elevate Indonesia API
+  version: 0.1.0
+servers:
+  - url: https://api.example.com
+paths:
+  /me:
+    get:
+      summary: Get current user
+      responses:
+        '200': { description: OK }
+  /submissions:
+    get:
+      summary: List my submissions
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Create submission (any stage)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                activity_code: { type: string, enum: [LEARN, EXPLORE, AMPLIFY, PRESENT, SHINE] }
+                payload: { type: object }
+                visibility: { type: string, enum: [PUBLIC, PRIVATE] }
+      responses:
+        '201': { description: Created }
+  /submissions/{id}:
+    get:
+      summary: Get a submission
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /admin/submissions:
+    get:
+      summary: Queue of pending submissions
+      responses:
+        '200': { description: OK }
+  /admin/submissions/{id}/approve:
+    post:
+      summary: Approve a submission and award points
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /leaderboard/top:
+    get:
+      summary: Get top N users
+      parameters:
+        - in: query
+          name: period
+          schema: { type: string, enum: [all, 30d], default: all }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 20, maximum: 100 }
+      responses:
+        '200': { description: OK }
+  /metrics:
+    get:
+      summary: Public aggregate counts per stage
+      responses:
+        '200': { description: OK }
+
+  /badges/me:
+    get:
+      summary: Get badges earned by current user
+      responses:
+        '200': { description: OK }
+
+  /admin/badges:
+    get:
+      summary: List defined badges
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Upsert a badge definition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code: { type: string }
+                name: { type: string }
+                description: { type: string }
+                criteria: { type: object }
+      responses:
+        '200': { description: OK }

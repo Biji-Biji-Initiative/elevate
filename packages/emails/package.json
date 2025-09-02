@@ -1,0 +1,24 @@
+{
+  "name": "@elevate/emails",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "dev": "echo 'Email templates ready'",
+    "build": "echo 'Email templates built'",
+    "export": "echo 'Email templates exported'"
+  },
+  "dependencies": {
+    "@react-email/components": "^0.0.25",
+    "@react-email/render": "^1.0.1",
+    "react": "18.3.1",
+    "resend": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.0",
+    "react-email": "^3.0.1",
+    "typescript": "^5.5.4"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@elevate/db",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./client.ts",
+  "dependencies": {
+    "@prisma/client": "^5.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4",
+    "prisma": "^5.19.0"
+  }
+}

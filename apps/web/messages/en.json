@@ -1,0 +1,162 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "points": "Points",
+    "error": "Error",
+    "success": "Success"
+  },
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "leaderboard": "Leaderboard",
+    "profile": "Profile",
+    "admin": "Admin",
+    "logout": "Logout"
+  },
+  "leaps": {
+    "learn": "Learn",
+    "explore": "Explore", 
+    "amplify": "Amplify",
+    "present": "Present",
+    "shine": "Shine"
+  },
+  "homepage": {
+    "title": "MS Elevate LEAPS Tracker",
+    "subtitle": "Empower Indonesian educators to adopt AI in classrooms through structured learning journey",
+    "hero_title": "Transform Your Teaching with AI",
+    "hero_subtitle": "Join thousands of Indonesian educators on the LEAPS journey to integrate AI tools in your classroom",
+    "get_started": "Get Started",
+    "learn_more": "Learn More",
+    "stats": {
+      "educators": "Educators",
+      "completed": "Activities Completed",
+      "points": "Total Points Awarded"
+    }
+  },
+  "dashboard": {
+    "title": "My LEAPS Journey",
+    "welcome": "Welcome back, {name}!",
+    "total_points": "Total Points",
+    "current_position": "Leaderboard Position",
+    "activities_completed": "Activities Completed",
+    "progress_summary": "Progress Summary",
+    "next_activity": "Next Suggested Activity",
+    "recent_submissions": "Recent Submissions"
+  },
+  "activities": {
+    "learn": {
+      "title": "Learn - AI Foundations",
+      "description": "Complete foundational courses on AI for education",
+      "points": "20 points",
+      "upload_certificate": "Upload Certificate",
+      "certificate_required": "Valid certificate from approved provider required"
+    },
+    "explore": {
+      "title": "Explore - Classroom Implementation", 
+      "description": "Apply AI tools in your classroom and document the experience",
+      "points": "50 points",
+      "add_reflection": "Add Reflection",
+      "evidence_required": "Photos, videos, or documents showing AI implementation"
+    },
+    "amplify": {
+      "title": "Amplify - Train Others",
+      "description": "Share your knowledge by training peers and students",
+      "points": "2 points per person trained",
+      "record_training": "Record Training Session",
+      "attendance_required": "Attendance proof or documentation required"
+    },
+    "present": {
+      "title": "Present - Share Your Story",
+      "description": "Present your AI education journey publicly",
+      "points": "20 points",
+      "share_presentation": "Share Presentation",
+      "linkedin_post": "LinkedIn post with screenshot required"
+    },
+    "shine": {
+      "title": "Shine - Recognition",
+      "description": "Get recognized for outstanding innovation in AI education",
+      "points": "Recognition only",
+      "submit_innovation": "Submit Innovation",
+      "showcase_impact": "Showcase your unique AI education impact"
+    }
+  },
+  "forms": {
+    "certificate_upload": {
+      "title": "Upload Learning Certificate",
+      "certificate_name": "Certificate Name",
+      "provider": "Training Provider",
+      "completion_date": "Completion Date",
+      "upload_file": "Upload Certificate File",
+      "file_requirements": "PDF, JPG, or PNG files up to 10MB"
+    },
+    "reflection": {
+      "title": "Classroom Implementation Reflection",
+      "ai_tool": "AI Tool Used",
+      "subject": "Subject/Class",
+      "student_count": "Number of Students",
+      "implementation": "Implementation Description",
+      "impact": "Impact on Learning",
+      "challenges": "Challenges Faced",
+      "upload_evidence": "Upload Evidence"
+    }
+  },
+  "leaderboard": {
+    "title": "LEAPS Leaderboard",
+    "top_educators": "Top Educators",
+    "all_time": "All Time",
+    "last_30_days": "Last 30 Days",
+    "rank": "Rank",
+    "educator": "Educator",
+    "school": "School",
+    "total_points": "Total Points",
+    "activities": "Activities"
+  },
+  "profile": {
+    "title": "Profile Settings",
+    "personal_info": "Personal Information",
+    "display_name": "Display Name",
+    "school": "School",
+    "cohort": "Cohort",
+    "privacy_settings": "Privacy Settings",
+    "public_profile": "Make Profile Public",
+    "public_profile_description": "Allow others to see your progress and achievements on the leaderboard"
+  },
+  "submissions": {
+    "status": {
+      "pending": "Pending Review",
+      "approved": "Approved",
+      "rejected": "Needs Revision"
+    },
+    "submitted": "Submitted",
+    "reviewer": "Reviewer",
+    "review_note": "Review Note",
+    "points_awarded": "Points Awarded"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "review_queue": "Review Queue",
+    "user_management": "User Management",
+    "analytics": "Analytics",
+    "exports": "Data Exports",
+    "settings": "Settings"
+  },
+  "errors": {
+    "something_went_wrong": "Something went wrong",
+    "try_again": "Please try again",
+    "file_too_large": "File is too large (max 10MB)",
+    "invalid_file_type": "Invalid file type",
+    "upload_failed": "Upload failed",
+    "network_error": "Network error - please check your connection",
+    "unauthorized": "You don't have permission to perform this action"
+  }
+}

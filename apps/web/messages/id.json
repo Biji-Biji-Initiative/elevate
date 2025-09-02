@@ -1,0 +1,162 @@
+{
+  "common": {
+    "loading": "Memuat...",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "submit": "Kirim",
+    "edit": "Edit",
+    "delete": "Hapus",
+    "confirm": "Konfirmasi",
+    "back": "Kembali",
+    "next": "Selanjutnya",
+    "yes": "Ya",
+    "no": "Tidak",
+    "points": "Poin",
+    "error": "Error",
+    "success": "Berhasil"
+  },
+  "navigation": {
+    "home": "Beranda",
+    "dashboard": "Dashboard",
+    "leaderboard": "Peringkat",
+    "profile": "Profil",
+    "admin": "Admin",
+    "logout": "Keluar"
+  },
+  "leaps": {
+    "learn": "Pelajari",
+    "explore": "Eksplorasi", 
+    "amplify": "Perbesar",
+    "present": "Presentasi",
+    "shine": "Bersinar"
+  },
+  "homepage": {
+    "title": "MS Elevate LEAPS Tracker",
+    "subtitle": "Memberdayakan pendidik Indonesia untuk mengadopsi AI di kelas melalui perjalanan pembelajaran terstruktur",
+    "hero_title": "Transformasikan Pengajaran Anda dengan AI",
+    "hero_subtitle": "Bergabung dengan ribuan pendidik Indonesia dalam perjalanan LEAPS untuk mengintegrasikan alat AI di kelas Anda",
+    "get_started": "Mulai Sekarang",
+    "learn_more": "Pelajari Lebih Lanjut",
+    "stats": {
+      "educators": "Pendidik",
+      "completed": "Aktivitas Selesai",
+      "points": "Total Poin Diberikan"
+    }
+  },
+  "dashboard": {
+    "title": "Perjalanan LEAPS Saya",
+    "welcome": "Selamat datang kembali, {name}!",
+    "total_points": "Total Poin",
+    "current_position": "Posisi Peringkat",
+    "activities_completed": "Aktivitas Selesai",
+    "progress_summary": "Ringkasan Progress",
+    "next_activity": "Aktivitas Berikutnya yang Disarankan",
+    "recent_submissions": "Submisi Terbaru"
+  },
+  "activities": {
+    "learn": {
+      "title": "Pelajari - Dasar AI",
+      "description": "Selesaikan kursus dasar tentang AI untuk pendidikan",
+      "points": "20 poin",
+      "upload_certificate": "Unggah Sertifikat",
+      "certificate_required": "Sertifikat valid dari penyedia yang disetujui diperlukan"
+    },
+    "explore": {
+      "title": "Eksplorasi - Implementasi Kelas", 
+      "description": "Terapkan alat AI di kelas Anda dan dokumentasikan pengalamannya",
+      "points": "50 poin",
+      "add_reflection": "Tambah Refleksi",
+      "evidence_required": "Foto, video, atau dokumen yang menunjukkan implementasi AI"
+    },
+    "amplify": {
+      "title": "Perbesar - Latih Orang Lain",
+      "description": "Bagikan pengetahuan Anda dengan melatih rekan dan siswa",
+      "points": "2 poin per orang yang dilatih",
+      "record_training": "Catat Sesi Pelatihan",
+      "attendance_required": "Bukti kehadiran atau dokumentasi diperlukan"
+    },
+    "present": {
+      "title": "Presentasi - Bagikan Cerita Anda",
+      "description": "Presentasikan perjalanan pendidikan AI Anda secara publik",
+      "points": "20 poin",
+      "share_presentation": "Bagikan Presentasi",
+      "linkedin_post": "Postingan LinkedIn dengan screenshot diperlukan"
+    },
+    "shine": {
+      "title": "Bersinar - Pengakuan",
+      "description": "Dapatkan pengakuan atas inovasi luar biasa dalam pendidikan AI",
+      "points": "Pengakuan saja",
+      "submit_innovation": "Kirim Inovasi",
+      "showcase_impact": "Tunjukkan dampak unik pendidikan AI Anda"
+    }
+  },
+  "forms": {
+    "certificate_upload": {
+      "title": "Unggah Sertifikat Pembelajaran",
+      "certificate_name": "Nama Sertifikat",
+      "provider": "Penyedia Pelatihan",
+      "completion_date": "Tanggal Selesai",
+      "upload_file": "Unggah File Sertifikat",
+      "file_requirements": "File PDF, JPG, atau PNG hingga 10MB"
+    },
+    "reflection": {
+      "title": "Refleksi Implementasi Kelas",
+      "ai_tool": "Alat AI yang Digunakan",
+      "subject": "Mata Pelajaran/Kelas",
+      "student_count": "Jumlah Siswa",
+      "implementation": "Deskripsi Implementasi",
+      "impact": "Dampak pada Pembelajaran",
+      "challenges": "Tantangan yang Dihadapi",
+      "upload_evidence": "Unggah Bukti"
+    }
+  },
+  "leaderboard": {
+    "title": "Peringkat LEAPS",
+    "top_educators": "Pendidik Teratas",
+    "all_time": "Sepanjang Masa",
+    "last_30_days": "30 Hari Terakhir",
+    "rank": "Peringkat",
+    "educator": "Pendidik",
+    "school": "Sekolah",
+    "total_points": "Total Poin",
+    "activities": "Aktivitas"
+  },
+  "profile": {
+    "title": "Pengaturan Profil",
+    "personal_info": "Informasi Pribadi",
+    "display_name": "Nama Tampilan",
+    "school": "Sekolah",
+    "cohort": "Kohort",
+    "privacy_settings": "Pengaturan Privasi",
+    "public_profile": "Buat Profil Publik",
+    "public_profile_description": "Izinkan orang lain melihat progress dan pencapaian Anda di peringkat"
+  },
+  "submissions": {
+    "status": {
+      "pending": "Menunggu Review",
+      "approved": "Disetujui",
+      "rejected": "Perlu Revisi"
+    },
+    "submitted": "Dikirim",
+    "reviewer": "Reviewer",
+    "review_note": "Catatan Review",
+    "points_awarded": "Poin Diberikan"
+  },
+  "admin": {
+    "title": "Dashboard Admin",
+    "review_queue": "Antrian Review",
+    "user_management": "Manajemen User",
+    "analytics": "Analitik",
+    "exports": "Ekspor Data",
+    "settings": "Pengaturan"
+  },
+  "errors": {
+    "something_went_wrong": "Terjadi kesalahan",
+    "try_again": "Silakan coba lagi",
+    "file_too_large": "File terlalu besar (maksimal 10MB)",
+    "invalid_file_type": "Tipe file tidak valid",
+    "upload_failed": "Upload gagal",
+    "network_error": "Error jaringan - silakan periksa koneksi Anda",
+    "unauthorized": "Anda tidak memiliki izin untuk melakukan tindakan ini"
+  }
+}
