@@ -91,7 +91,8 @@ tmp/
 temp/
 
 # Editor directories and files
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo

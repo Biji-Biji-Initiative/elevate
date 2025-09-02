@@ -1,0 +1,33 @@
+{
+  "cSpell.enabled": false,
+  "cSpell.enableFiletypes": [],
+  "markdown.validate.enabled": false,
+  "markdown.lint.enabled": false,
+  "spellright.language": [],
+  "spellright.documentTypes": [],
+  "spellright.enabled": false,
+  "files.associations": {
+    "*.md": "markdown"
+  },
+  "markdown.preview.breaks": true,
+  "markdown.preview.linkify": true,
+  "editor.quickSuggestions": {
+    "strings": false
+  },
+  "editor.suggest.showWords": false,
+  "editor.wordBasedSuggestions": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": false
+  },
+  "problems.decorations.enabled": false,
+  "editor.renderValidationDecorations": "off",
+  "[markdown]": {
+    "editor.quickSuggestions": {
+      "comments": false,
+      "strings": false,
+      "other": false
+    },
+    "editor.wordBasedSuggestions": false,
+    "editor.suggest.showWords": false
+  }
+}
