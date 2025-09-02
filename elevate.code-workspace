@@ -1,0 +1,39 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "cSpell.enabled": false,
+    "cSpell.enableFiletypes": [],
+    "markdown.validate.enabled": false,
+    "markdown.lint.enabled": false,
+    "spellright.enabled": false,
+    "spellright.documentTypes": [],
+    "spellright.language": [],
+    "spellright.ignoreRegExps": [".*"],
+    "markdown-all-in-one.lint.enabled": false,
+    "markdown-all-in-one.validate.enabled": false,
+    "markdown-all-in-one.extension.enableAutoUpdate": false,
+    "problems.decorations.enabled": false,
+    "editor.renderValidationDecorations": "off",
+    "[markdown]": {
+      "editor.quickSuggestions": {
+        "comments": false,
+        "strings": false,
+        "other": false
+      },
+      "editor.wordBasedSuggestions": false,
+      "editor.suggest.showWords": false,
+      "editor.renderValidationDecorations": "off"
+    }
+  },
+  "extensions": {
+    "recommendations": [],
+    "unwantedRecommendations": [
+      "ban.spellright",
+      "yzhang.markdown-all-in-one"
+    ]
+  }
+}

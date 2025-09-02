@@ -6,6 +6,14 @@
   "spellright.language": [],
   "spellright.documentTypes": [],
   "spellright.enabled": false,
+  "spellright.documentTypes": [],
+  "spellright.language": [],
+  "spellright.ignoreRegExps": [
+    ".*"
+  ],
+  "markdown-all-in-one.lint.enabled": false,
+  "markdown-all-in-one.validate.enabled": false,
+  "markdown-all-in-one.extension.enableAutoUpdate": false,
   "files.associations": {
     "*.md": "markdown"
   },
@@ -28,6 +36,7 @@
       "other": false
     },
     "editor.wordBasedSuggestions": false,
-    "editor.suggest.showWords": false
+    "editor.suggest.showWords": false,
+    "editor.renderValidationDecorations": "off"
   }
 }
