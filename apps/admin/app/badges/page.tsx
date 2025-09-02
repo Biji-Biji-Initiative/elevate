@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Button } from '@elevate/ui/Button'
+import { Button } from '@elevate/ui'
 import { Input } from '@elevate/ui/Input'
 import { Textarea } from '@elevate/ui/Textarea'
 import { DataTable, Column } from '../../components/ui/DataTable'
@@ -403,7 +403,7 @@ export default function BadgesPage() {
           <p className="text-gray-600">Create and manage achievement badges for participants</p>
         </div>
         <Button
-          variant="primary"
+          variant="default"
           onClick={openCreateModal}
         >
           Create Badge
@@ -435,7 +435,7 @@ export default function BadgesPage() {
               Cancel
             </Button>
             <Button
-              variant="primary"
+              variant="default"
               onClick={badgeModal.mode === 'create' ? handleCreateBadge : handleEditBadge}
               disabled={processing}
             >
@@ -541,7 +541,7 @@ export default function BadgesPage() {
               Cancel
             </Button>
             <Button
-              variant="primary"
+              variant="default"
               onClick={handleAssignBadge}
               disabled={processing || assignForm.userIds.length === 0}
             >

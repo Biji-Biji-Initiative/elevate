@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { Button } from '@elevate/ui/Button'
+import { Button } from '@elevate/ui'
 
 export interface Column<T> {
   key: keyof T | string

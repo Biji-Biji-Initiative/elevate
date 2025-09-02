@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@elevate/ui/Button'
+import { Button } from '@elevate/ui'
 import { Textarea } from '@elevate/ui/Textarea'
 import { Input } from '@elevate/ui/Input'
 import { StatusBadge } from '../../../components/ui/StatusBadge'
@@ -368,7 +368,7 @@ export default function ReviewSubmissionPage({
 
               <div className="space-y-2">
                 <Button
-                  variant="primary"
+                  variant="default"
                   style={{ 
                     width: '100%',
                     backgroundColor: '#16a34a'
@@ -379,7 +379,7 @@ export default function ReviewSubmissionPage({
                   Approve Submission
                 </Button>
                 <Button
-                  variant="primary"
+                  variant="default"
                   style={{ 
                     width: '100%',
                     backgroundColor: '#dc2626'

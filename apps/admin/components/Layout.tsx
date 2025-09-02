@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser, SignOutButton } from '@clerk/nextjs'
-import { Button } from '@elevate/ui/Button'
+import { Button } from '@elevate/ui'
 
 interface NavItem {
   href: string

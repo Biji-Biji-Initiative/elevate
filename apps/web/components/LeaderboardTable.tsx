@@ -338,7 +338,7 @@ export function LeaderboardTable({
                   return (
                     <Button
                       key={pageNum}
-                      variant={currentPage === pageNum ? "primary" : "ghost"}
+                      variant={currentPage === pageNum ? "default" : "ghost"}
                       
                       onClick={() => setCurrentPage(pageNum)}
                       className="relative inline-flex items-center"

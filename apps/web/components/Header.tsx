@@ -53,7 +53,7 @@ export function Header() {
             </SignedOut>
             <SignedIn>
               <Link href="/dashboard">
-                <Button variant="primary" >Dashboard</Button>
+                <Button variant="default" >Dashboard</Button>
               </Link>
               <UserButton afterSignOutUrl="/" />
             </SignedIn>

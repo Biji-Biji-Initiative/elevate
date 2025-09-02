@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef } from 'react'
-import { Button } from '@elevate/ui/Button'
+import { Button } from '@elevate/ui'
 
 interface ModalProps {
   isOpen: boolean

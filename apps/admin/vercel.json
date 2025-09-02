@@ -1,7 +1,6 @@
 {
-  "buildCommand": "cd ../.. && pnpm install && pnpm db:generate && pnpm -F admin build",
-  "outputDirectory": ".next",
-  "installCommand": "pnpm install --frozen-lockfile",
-  "framework": "nextjs",
-  "devCommand": "pnpm dev"
+  "buildCommand": "pnpm turbo run build --filter=admin",
+  "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
+  "outputDirectory": "apps/admin/.next",
+  "framework": "nextjs"
 }

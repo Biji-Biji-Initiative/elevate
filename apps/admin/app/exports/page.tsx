@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Button } from '@elevate/ui/Button'
+import { Button } from '@elevate/ui'
 import { Input } from '@elevate/ui/Input'
 
 interface ExportFilters {
@@ -208,7 +208,7 @@ export default function ExportsPage() {
             </div>
 
             <Button
-              variant="primary"
+              variant="default"
               onClick={() => handleExport(item.id)}
               disabled={loading[item.id]}
               style={{ width: '100%' }}

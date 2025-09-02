@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Button } from '@elevate/ui/Button'
+import { Button } from '@elevate/ui'
 import { Input } from '@elevate/ui/Input'
 import { DataTable, Column } from '../../components/ui/DataTable'
 import { StatusBadge } from '../../components/ui/StatusBadge'
@@ -376,7 +376,7 @@ export default function UsersPage() {
                   <option value="SUPERADMIN">Superadmin</option>
                 </select>
                 <Button
-                  variant="primary"
+                  variant="default"
                   onClick={() => setBulkRoleModal(prev => ({ ...prev, isOpen: true }))}
                 >
                   Update Roles
@@ -423,7 +423,7 @@ export default function UsersPage() {
               Cancel
             </Button>
             <Button
-              variant="primary"
+              variant="default"
               onClick={handleEditUser}
               disabled={processing}
             >

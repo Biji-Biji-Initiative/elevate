@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback, useState } from 'react'
-import { Button } from './Button'
+import { Button } from './components/button'
 
 export interface FileUploadProps {
   onFileSelect: (files: File[]) => void

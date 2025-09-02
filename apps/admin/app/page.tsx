@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from '@elevate/ui/Button'
+import { Button } from '@elevate/ui'
 import { StatusBadge } from '../components/ui/StatusBadge'
 
 interface AnalyticsData {

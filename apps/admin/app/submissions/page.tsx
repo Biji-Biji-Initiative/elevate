@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@elevate/ui/Button'
+import { Button } from '@elevate/ui'
 import { Input } from '@elevate/ui/Input'
 import { DataTable, Column } from '../../components/ui/DataTable'
 import { StatusBadge } from '../../components/ui/StatusBadge'
@@ -158,7 +158,7 @@ export default function SubmissionsPage() {
           {row.status === 'PENDING' && (
             <>
               <Button
-                variant="primary"
+                variant="default"
                 style={{ 
                   padding: '4px 8px', 
                   fontSize: '12px',
@@ -172,7 +172,7 @@ export default function SubmissionsPage() {
                 Approve
               </Button>
               <Button
-                variant="primary"
+                variant="default"
                 style={{ 
                   padding: '4px 8px', 
                   fontSize: '12px',
@@ -420,7 +420,7 @@ export default function SubmissionsPage() {
               </span>
               <div className="space-x-2">
                 <Button
-                  variant="primary"
+                  variant="default"
                   style={{ backgroundColor: '#16a34a' }}
                   onClick={() => {
                     setBulkModal({ isOpen: true, action: 'approve' })
@@ -430,7 +430,7 @@ export default function SubmissionsPage() {
                   Bulk Approve
                 </Button>
                 <Button
-                  variant="primary"
+                  variant="default"
                   style={{ backgroundColor: '#dc2626' }}
                   onClick={() => {
                     setBulkModal({ isOpen: true, action: 'reject' })
@@ -482,7 +482,7 @@ export default function SubmissionsPage() {
               Cancel
             </Button>
             <Button
-              variant="primary"
+              variant="default"
               onClick={handleSingleReview}
               disabled={processing}
               style={{

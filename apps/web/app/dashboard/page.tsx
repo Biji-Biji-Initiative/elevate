@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import Link from 'next/link'
-import { Button } from '@elevate/ui/Button'
+import { Button } from '@elevate/ui'
 import { Card } from '@elevate/ui/Card'
 import { LoadingSpinner, Alert } from '@elevate/ui/FormField'
 

@@ -16,6 +16,8 @@
     "@elevate/integrations": "workspace:*",
     "@elevate/types": "workspace:*",
     "@elevate/ui": "workspace:*",
+    "@premieroctet/next-admin": "^8.3.0",
+    "@premieroctet/next-admin-generator-prisma": "^1.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.542.0",

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card } from '@elevate/ui/Card';
-import { Button } from '@elevate/ui/Button';
+import { Button } from '@elevate/ui';
 import { Input } from '@elevate/ui/Input';
 import { Alert } from '@elevate/ui/Alert';
 import { LoadingSpinner } from '@elevate/ui/LoadingSpinner';
