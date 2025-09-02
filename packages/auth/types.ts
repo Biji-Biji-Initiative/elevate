@@ -29,7 +29,7 @@ export const ROLE_PERMISSIONS = {
   ]
 } as const
 
-export type Permission = (typeof ROLE_PERMISSIONS)[RoleName][number]
+export type Permission = (typeof ROLE_PERMISSIONS)[keyof typeof ROLE_PERMISSIONS][number]
 
 /**
  * Normalize role string to valid RoleName
@@ -57,5 +57,5 @@ export function hasAnyRole(userRole: RoleName, requiredRoles: RoleName[]): boole
  * Check if user has specific permission
  */
 export function hasPermission(userRole: RoleName, permission: Permission): boolean {
-  return ROLE_PERMISSIONS[userRole].includes(permission)
+  return (ROLE_PERMISSIONS[userRole] as readonly string[]).includes(permission)
 }

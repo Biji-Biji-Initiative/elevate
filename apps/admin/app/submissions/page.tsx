@@ -458,7 +458,7 @@ export default function SubmissionsPage() {
         }}
         selection={{
           selectedRows,
-          onSelectionChange: setSelectedRows,
+          onSelectionChange: (selectedRows: Set<string | number>) => setSelectedRows(new Set(Array.from(selectedRows).map(String))),
           getRowId: (row) => row.id
         }}
         sorting={{

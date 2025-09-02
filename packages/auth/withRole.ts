@@ -1,4 +1,5 @@
 import { auth } from '@clerk/nextjs/server'
+import { ROLE_PERMISSIONS, Permission } from './types'
 
 const ROLE_ORDER = ['participant', 'reviewer', 'admin', 'superadmin'] as const
 export type RoleName = (typeof ROLE_ORDER)[number]
@@ -103,14 +104,6 @@ export class RoleError extends Error {
   }
 }
 
-export const ROLE_PERMISSIONS = {
-  participant: ['view_own_profile', 'submit_evidence', 'view_leaderboard'],
-  reviewer: ['review_submissions', 'approve_submissions', 'view_all_submissions'],
-  admin: ['manage_users', 'view_analytics', 'export_data', 'manage_badges'],
-  superadmin: ['system_config', 'manage_roles', 'access_logs'],
-} as const
-
-export type Permission = (typeof ROLE_PERMISSIONS)[keyof typeof ROLE_PERMISSIONS][number]
 
 /**
  * Check if user role has specific permission
@@ -122,7 +115,7 @@ export function hasPermission(userRole: RoleName, permission: Permission): boole
   // Higher roles inherit all lower role permissions
   for (let i = ROLE_ORDER.indexOf(userRole); i >= 0; i--) {
     const role = ROLE_ORDER[i]
-    if (ROLE_PERMISSIONS[role].includes(permission as any)) {
+    if ((ROLE_PERMISSIONS[role] as readonly string[]).includes(permission)) {
       return true
     }
   }
