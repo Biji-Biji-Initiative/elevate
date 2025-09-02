@@ -8,6 +8,7 @@ import { DataTable, Column } from '../../components/ui/DataTable'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { Modal, ConfirmModal } from '../../components/ui/Modal'
 import { Textarea } from '@elevate/ui/Textarea'
+import { withRoleGuard } from '@elevate/auth/context'
 
 interface Submission {
   id: string
@@ -42,7 +43,7 @@ interface Filters {
   sortOrder: 'asc' | 'desc'
 }
 
-export default function SubmissionsPage() {
+function SubmissionsPage() {
   const router = useRouter()
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
@@ -553,3 +554,5 @@ export default function SubmissionsPage() {
     </div>
   )
 }
+
+export default withRoleGuard(SubmissionsPage, ['reviewer', 'admin', 'superadmin'])

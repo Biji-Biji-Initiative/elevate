@@ -1,6 +1,7 @@
 import { ClerkProvider } from '@clerk/nextjs'
 import { Inter } from 'next/font/google'
 import { AdminLayout } from '../components/Layout'
+import { AuthProvider } from '@elevate/auth/context'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -19,7 +20,9 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={inter.className}>
-          <AdminLayout>{children}</AdminLayout>
+          <AuthProvider>
+            <AdminLayout>{children}</AdminLayout>
+          </AuthProvider>
         </body>
       </html>
     </ClerkProvider>

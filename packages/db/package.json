@@ -18,7 +18,9 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "clean": "rm -rf dist",
-    "postinstall": "prisma generate --schema=./schema.prisma"
+    "postinstall": "prisma generate --schema=./schema.prisma",
+    "test": "vitest --run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@prisma/client": "^5.19.0"

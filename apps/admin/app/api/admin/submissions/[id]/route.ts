@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
-import { requireRole } from '@elevate/auth/withRole'
+import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 
 export const runtime = 'nodejs';
 
@@ -37,11 +37,8 @@ export async function GET(
     }
     
     return NextResponse.json({ submission })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching submission:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch submission' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }

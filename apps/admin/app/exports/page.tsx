@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { Button, Input } from '@elevate/ui'
+import { withRoleGuard } from '@elevate/auth/context'
 
 interface ExportFilters {
   startDate: string
@@ -11,7 +12,7 @@ interface ExportFilters {
   cohort: string
 }
 
-export default function ExportsPage() {
+function ExportsPage() {
   const [filters, setFilters] = useState<ExportFilters>({
     startDate: '',
     endDate: '',
@@ -243,4 +244,6 @@ export default function ExportsPage() {
     </div>
   )
 }
+
+export default withRoleGuard(ExportsPage, ['admin', 'superadmin'])
 

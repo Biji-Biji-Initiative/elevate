@@ -114,11 +114,20 @@ export const AdminEnvSchema = EnvSchema.pick({
   KAJABI_CLIENT_SECRET: true,
 })
 
+// Normalize aliases and environment naming drifts without requiring changes downstream
+function withAliases(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  return {
+    ...env,
+    // Support both SUPABASE_SERVICE_ROLE_KEY and SUPABASE_SERVICE_ROLE
+    SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY || (env as any).SUPABASE_SERVICE_ROLE,
+  }
+}
+
 // Enhanced parsing with detailed error reporting and fail-fast behavior
 export function parseEnv(env: NodeJS.ProcessEnv, schema: z.ZodSchema<any> = EnvSchema) {
   console.log('🔍 Validating environment variables...');
-  
-  const res = schema.safeParse(env);
+  const normalized = withAliases(env);
+  const res = schema.safeParse(normalized);
   if (!res.success) {
     console.error('❌ Environment validation failed!');
     
@@ -176,7 +185,7 @@ export function parseWebEnv(env: NodeJS.ProcessEnv = process.env) {
   console.log('🌐 Validating web app environment...');
   
   try {
-    const parsed = parseEnv(env, WebEnvSchema);
+    const parsed = parseEnv(withAliases(env), WebEnvSchema);
     
     // Additional runtime checks for web app
     if (parsed.NODE_ENV === 'production') {
@@ -227,4 +236,3 @@ export function validateEnvOnStartup(appType: 'web' | 'admin' | 'general' = 'gen
     process.exit(1);
   }
 }
-

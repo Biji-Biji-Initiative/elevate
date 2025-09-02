@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
-import { requireRole } from '@elevate/auth/withRole'
+import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 
 export const runtime = 'nodejs';
 
@@ -127,12 +127,9 @@ export async function GET(request: NextRequest) {
         topBadges
       }
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching analytics:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch analytics' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }
 

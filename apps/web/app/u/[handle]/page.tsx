@@ -4,6 +4,7 @@ import { Metadata } from 'next'
 import { ShareButton, SocialShareButtons } from '../../../components/ShareButton'
 import { StageCard } from '../../../components/StageCard'
 import { PageLoading } from '../../../components/LoadingSpinner'
+import { getProfileUrl } from '@elevate/types'
 
 interface ProfilePageProps {
   params: Promise<{
@@ -223,7 +224,7 @@ async function ProfileContent({ handle }: { handle: string }) {
     notFound()
   }
   
-  const profileUrl = `https://leaps.mereka.org/u/${profile.handle}`
+  const profileUrl = getProfileUrl(profile.handle)
   const stageBreakdown = profile.submissions
     .filter(s => s.status === 'APPROVED')
     .reduce((acc, submission) => {
@@ -387,20 +388,33 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
     }
   }
 
+  const canonicalUrl = getProfileUrl(profile.handle)
+  
   return {
     title: `${profile.name} (@${profile.handle}) - MS Elevate LEAPS Tracker`,
     description: `Follow ${profile.name}'s journey through the LEAPS framework. ${profile._sum.points} points earned across ${profile.submissions.filter(s => s.status === 'APPROVED').length} achievements.`,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: `${profile.name}'s LEAPS Journey`,
       description: `${profile.name} has earned ${profile._sum.points} points in the MS Elevate LEAPS program!`,
-      url: `https://leaps.mereka.org/u/${profile.handle}`,
+      url: canonicalUrl,
       type: 'profile',
     },
     twitter: {
       card: 'summary',
       title: `${profile.name}'s LEAPS Journey`,
       description: `${profile.name} has earned ${profile._sum.points} points in the MS Elevate LEAPS program!`,
-    }
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
+    },
   }
 }
 

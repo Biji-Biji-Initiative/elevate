@@ -14,8 +14,15 @@
   "aliases": {
     "components": "@/components",
     "utils": "@elevate/ui/lib/utils",
-    "ui": "@elevate/ui/components", 
+    "ui": "@elevate/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
+  },
+  "registry": {
+    "url": "../../registry.json",
+    "style": "new-york",
+    "lib": "@elevate/ui/lib",
+    "components": "@elevate/ui",
+    "utils": "@elevate/ui/lib/utils"
   }
 }

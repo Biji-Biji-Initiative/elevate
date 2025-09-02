@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
-import { requireRole } from '@elevate/auth/withRole'
+import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { z } from 'zod'
 
 export const runtime = 'nodejs';
@@ -50,12 +50,9 @@ export async function GET(request: NextRequest) {
     })
     
     return NextResponse.json({ badges })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching badges:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch badges' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }
 
@@ -115,12 +112,9 @@ export async function POST(request: NextRequest) {
       message: 'Badge created successfully'
     })
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error creating badge:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to create badge' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }
 
@@ -183,12 +177,9 @@ export async function PATCH(request: NextRequest) {
       message: 'Badge updated successfully'
     })
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating badge:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to update badge' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }
 
@@ -252,11 +243,8 @@ export async function DELETE(request: NextRequest) {
       message: 'Badge deleted successfully'
     })
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error deleting badge:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to delete badge' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }

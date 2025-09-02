@@ -93,7 +93,14 @@
    - Create materialized views
    - Seed initial data
 
-5. **Start development servers**
+5. **Set up Turbo Remote Cache (optional but recommended)**
+   ```bash
+   pnpm setup:cache
+   ```
+   
+   This enables faster builds by caching across team members and CI. See [Turbo Remote Cache Guide](./docs/TURBO_REMOTE_CACHE.md) for details.
+
+6. **Start development servers**
    ```bash
    pnpm dev
    ```
@@ -177,6 +184,7 @@ elevate/
 - [CLAUDE.md](./CLAUDE.md) - Comprehensive project documentation
 - [SETUP.md](./SETUP.md) - Detailed setup instructions
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Production deployment guide
+- [Turbo Remote Cache](./docs/TURBO_REMOTE_CACHE.md) - Build caching setup guide
 - [API Documentation](./docs/api-specs.yaml) - OpenAPI specification
 - [Kajabi Integration](./docs/kajabi-integration.md) - Webhook setup guide
 
@@ -198,10 +206,14 @@ pnpm db:migrate      # Run migrations
 pnpm db:seed         # Seed database
 pnpm db:studio       # Open Prisma Studio
 
-# Build
+# Build (with caching)
 pnpm build           # Build all apps
 pnpm build:web       # Build web app
 pnpm build:admin     # Build admin app
+
+# Cache management
+pnpm setup:cache     # Set up Turbo Remote Cache
+turbo run build --summarize  # Build with cache summary
 
 # Testing
 pnpm lint            # Run linter

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
-import { requireRole } from '@elevate/auth/withRole'
+import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 
 export const runtime = 'nodejs';
 
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
     
     return response
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error generating export:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to generate export' },

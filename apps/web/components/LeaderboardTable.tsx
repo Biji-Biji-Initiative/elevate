@@ -5,6 +5,7 @@ import { ProfileCard } from './ProfileCard'
 import { LoadingSpinner } from './LoadingSpinner'
 import { Button } from '@elevate/ui'
 import { Input } from '@elevate/ui'
+import { getProfilePath } from '@elevate/types'
 
 interface LeaderboardEntry {
   rank: number
@@ -238,7 +239,7 @@ export function LeaderboardTable({
                         </div>
                         <div className="ml-3">
                           <a 
-                            href={`/u/${entry.user.handle}`}
+                            href={getProfilePath(entry.user.handle)}
                             className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors"
                           >
                             {entry.user.name}

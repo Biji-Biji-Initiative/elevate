@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Button } from '@elevate/ui'
 import { Card } from '@elevate/ui/Card'
 import { LoadingSpinner, Alert } from '@elevate/ui/FormField'
+import { getProfilePath } from '@elevate/types'
 
 interface DashboardData {
   user: {
@@ -345,7 +346,7 @@ export default function DashboardPage() {
                       View Leaderboard
                     </Button>
                   </Link>
-                  <Link href="/u/[handle]" as={`/u/${data.user.handle}`} className="block">
+                  <Link href={getProfilePath(data.user.handle)} className="block">
                     <Button variant="ghost" className="w-full text-left justify-start">
                       View Public Profile
                     </Button>

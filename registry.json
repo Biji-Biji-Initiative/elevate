@@ -1,0 +1,173 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "tailwind": {
+    "config": "./packages/ui/tailwind.config.js",
+    "css": "./packages/ui/src/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "components": [
+    {
+      "name": "alert",
+      "type": "components:ui",
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/alert.tsx",
+          "content": "Alert component with variants for notifications",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "badge",
+      "type": "components:ui", 
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/badge.tsx",
+          "content": "Badge component for status and labels",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "button",
+      "type": "components:ui",
+      "dependencies": ["@radix-ui/react-slot"],
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/button.tsx",
+          "content": "Button component with multiple variants and sizes",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "card",
+      "type": "components:ui",
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/card.tsx",
+          "content": "Card component for content containers",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "dialog",
+      "type": "components:ui",
+      "dependencies": ["@radix-ui/react-dialog", "lucide-react"],
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/dialog.tsx",
+          "content": "Modal dialog component with overlay",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "form",
+      "type": "components:ui",
+      "dependencies": ["@radix-ui/react-label", "react-hook-form"],
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/form.tsx",
+          "content": "Form components with React Hook Form integration",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "input",
+      "type": "components:ui",
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/input.tsx",
+          "content": "Input field component",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "label",
+      "type": "components:ui",
+      "dependencies": ["@radix-ui/react-label"],
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/label.tsx",
+          "content": "Label component for form fields",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "select",
+      "type": "components:ui",
+      "dependencies": ["@radix-ui/react-select", "lucide-react"],
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/select.tsx",
+          "content": "Select dropdown component",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "table",
+      "type": "components:ui",
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/table.tsx",
+          "content": "Table components for data display",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "textarea",
+      "type": "components:ui",
+      "files": [
+        {
+          "path": "./packages/ui/src/components/ui/textarea.tsx",
+          "content": "Textarea component for multi-line input",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "file-upload",
+      "type": "components:custom",
+      "files": [
+        {
+          "path": "./packages/ui/FileUpload.tsx",
+          "content": "Custom file upload component with progress",
+          "type": "registry:custom"
+        }
+      ]
+    },
+    {
+      "name": "loading-spinner", 
+      "type": "components:custom",
+      "files": [
+        {
+          "path": "./packages/ui/LoadingSpinner.tsx",
+          "content": "Loading spinner components with variants",
+          "type": "registry:custom"
+        }
+      ]
+    }
+  ],
+  "utils": [
+    {
+      "name": "cn",
+      "files": [
+        {
+          "path": "./packages/ui/src/lib/utils.ts",
+          "content": "Utility function for conditional classnames",
+          "type": "registry:lib"
+        }
+      ]
+    }
+  ]
+}

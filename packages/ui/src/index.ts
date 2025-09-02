@@ -1,9 +1,35 @@
 // Export shadcn/ui components
-export { Button, buttonVariants } from '../components/button'
-export { Badge, badgeVariants } from '../components/badge'
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '../components/card'
-export { Input } from '../components/input'
-export { Label } from '../components/label'
+export { Button, buttonVariants } from './components/ui/button'
+export { Badge, badgeVariants } from './components/ui/badge'
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './components/ui/card'
+export { Input } from './components/ui/input'
+export { Label } from './components/ui/label'
+export { Textarea } from './components/ui/textarea'
+export { Alert, AlertTitle, AlertDescription } from './components/ui/alert'
+export {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from './components/ui/dialog'
+export {
+  Select,
+  SelectGroup,
+  SelectValue,
+  SelectTrigger,
+  SelectContent,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+  SelectScrollUpButton,
+  SelectScrollDownButton,
+} from './components/ui/select'
 export {
   useFormField,
   Form,
@@ -13,7 +39,7 @@ export {
   FormDescription,
   FormMessage,
   FormField as ShadcnFormField,
-} from '../components/form'
+} from './components/ui/form'
 export {
   Table,
   TableHeader,
@@ -23,10 +49,10 @@ export {
   TableRow,
   TableCell,
   TableCaption,
-} from '../components/table'
+} from './components/ui/table'
 
 // Export utility functions
-export { cn } from '../lib/utils'
+export { cn } from './lib/utils'
 
 // Export custom components (legacy)
 export { Card as LegacyCard } from '../Card'

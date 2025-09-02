@@ -3,6 +3,12 @@ import { prisma } from '@elevate/db/client'
 
 export const runtime = 'nodejs';
 
+/**
+ * Internal API endpoint for profile data
+ * Note: This is NOT the canonical profile URL. The canonical URL is /u/[handle]
+ * This API route is for internal data fetching only.
+ */
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ handle: string }> }) {
   try {
     const { handle } = await params

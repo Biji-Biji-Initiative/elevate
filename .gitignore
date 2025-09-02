@@ -119,7 +119,8 @@ prisma/migrations/dev.db*
 .vercel
 
 # Turbo
-.turbo
+.turbo/
+!.turbo/config.json.template
 
 # Local development
 apps/*/.env.local

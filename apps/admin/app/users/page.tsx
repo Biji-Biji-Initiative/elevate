@@ -6,6 +6,7 @@ import { Input } from '@elevate/ui/Input'
 import { DataTable, Column } from '../../components/ui/DataTable'
 import { StatusBadge } from '../../components/ui/StatusBadge'
 import { Modal, ConfirmModal } from '../../components/ui/Modal'
+import { withRoleGuard } from '@elevate/auth/context'
 
 interface User {
   id: string
@@ -33,7 +34,7 @@ interface Filters {
   sortOrder: 'asc' | 'desc'
 }
 
-export default function UsersPage() {
+function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
@@ -503,4 +504,6 @@ export default function UsersPage() {
     </div>
   )
 }
+
+export default withRoleGuard(UsersPage, ['admin', 'superadmin'])
 

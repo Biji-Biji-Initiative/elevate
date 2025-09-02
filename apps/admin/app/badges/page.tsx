@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Button, Input, Textarea } from '@elevate/ui'
 import { DataTable, Column } from '../../components/ui/DataTable'
 import { Modal, ConfirmModal } from '../../components/ui/Modal'
+import { withRoleGuard } from '@elevate/auth/context'
 
 interface Badge {
   code: string
@@ -37,7 +38,7 @@ interface User {
   email: string
 }
 
-export default function BadgesPage() {
+function BadgesPage() {
   const [badges, setBadges] = useState<Badge[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -597,3 +598,5 @@ export default function BadgesPage() {
     </div>
   )
 }
+
+export default withRoleGuard(BadgesPage, ['admin', 'superadmin'])

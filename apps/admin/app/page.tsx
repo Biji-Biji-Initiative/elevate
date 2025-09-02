@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@elevate/ui'
 import { StatusBadge } from '../components/ui/StatusBadge'
+import { withRoleGuard } from '@elevate/auth/context'
 
 interface AnalyticsData {
   overview: {
@@ -87,7 +88,7 @@ interface AnalyticsData {
   }
 }
 
-export default function AdminDashboard() {
+function AdminDashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState({
@@ -381,3 +382,5 @@ export default function AdminDashboard() {
     </div>
   )
 }
+
+export default withRoleGuard(AdminDashboard, ['reviewer', 'admin', 'superadmin'])

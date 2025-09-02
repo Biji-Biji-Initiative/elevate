@@ -1,36 +1,47 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import createIntlMiddleware from 'next-intl/middleware';
-
-const intlMiddleware = createIntlMiddleware({
-  locales: ['en', 'id'],
-  defaultLocale: 'id', // Indonesian as default
-  localePrefix: 'as-needed'
-});
+import { NextRequest, NextResponse } from 'next/server';
 
 const isPublicRoute = createRouteMatcher([
   '/',
   '/leaderboard',
   '/metrics/(.*)',
-  '/u/(.*)',
+  '/u/(.*)', // Canonical public profile routes
   '/api/kajabi/webhook',
   '/api/health'
 ]);
 
 const isApiRoute = createRouteMatcher(['/api/(.*)']);
 
-export default clerkMiddleware((auth, req) => {
-  // Skip authentication for API routes that don't need it
-  if (isApiRoute(req) && req.nextUrl.pathname !== '/api/user' && !req.nextUrl.pathname.startsWith('/api/admin')) {
-    return intlMiddleware(req);
+export default clerkMiddleware(async (auth, req: NextRequest) => {
+  // Skip all middleware processing for API routes except protected ones
+  if (isApiRoute(req)) {
+    // Only apply auth to protected API routes
+    if (req.nextUrl.pathname.startsWith('/api/admin') || req.nextUrl.pathname === '/api/user') {
+      const { userId, redirectToSignIn } = await auth();
+      if (!userId) {
+        return redirectToSignIn();
+      }
+    }
+    return; // Skip further processing for API routes
+  }
+
+  // Handle locale prefix redirects - remove them for now to fix routing
+  const pathname = req.nextUrl.pathname;
+  if (pathname.startsWith('/en/') || pathname.startsWith('/id/')) {
+    const newPathname = pathname.replace(/^\/(en|id)/, '') || '/';
+    const url = req.nextUrl.clone();
+    url.pathname = newPathname;
+    return NextResponse.redirect(url);
   }
 
   // Apply authentication for protected routes
   if (!isPublicRoute(req)) {
-    auth().protect();
+    const { userId, redirectToSignIn } = await auth();
+    
+    if (!userId) {
+      return redirectToSignIn();
+    }
   }
-
-  // Apply internationalization
-  return intlMiddleware(req);
 });
 
 export const config = {

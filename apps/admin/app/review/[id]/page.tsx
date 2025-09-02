@@ -7,6 +7,7 @@ import { Textarea } from '@elevate/ui/Textarea'
 import { Input } from '@elevate/ui/Input'
 import { StatusBadge } from '../../../components/ui/StatusBadge'
 import { ConfirmModal } from '../../../components/ui/Modal'
+import { withRoleGuard } from '@elevate/auth/context'
 
 interface Submission {
   id: string
@@ -33,7 +34,7 @@ interface Submission {
   updated_at: string
 }
 
-export default function ReviewSubmissionPage({
+function ReviewSubmissionPage({
   params
 }: {
   params: Promise<{ id: string }>
@@ -433,4 +434,6 @@ export default function ReviewSubmissionPage({
     </div>
   )
 }
+
+export default withRoleGuard(ReviewSubmissionPage, ['reviewer', 'admin', 'superadmin'])
 

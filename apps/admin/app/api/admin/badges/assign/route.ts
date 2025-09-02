@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
-import { requireRole } from '@elevate/auth/withRole'
+import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 
 export const runtime = 'nodejs';
 
@@ -125,12 +125,9 @@ export async function POST(request: NextRequest) {
       message: `Badge "${badge.name}" assigned to ${results.length} users`
     })
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error assigning badges:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to assign badges' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }
 
@@ -212,7 +209,7 @@ export async function DELETE(request: NextRequest) {
       message: `Badge "${assignments[0].badge.name}" removed from ${assignments.length} users`
     })
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error removing badges:', error)
     return NextResponse.json(
       { error: error.message || 'Failed to remove badges' },

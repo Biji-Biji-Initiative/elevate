@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
-import { requireRole, hasRole } from '@elevate/auth/withRole'
+import { requireRole, hasRole, createErrorResponse } from '@elevate/auth/server-helpers'
 
 export const runtime = 'nodejs';
 
@@ -99,12 +99,9 @@ export async function GET(request: NextRequest) {
         pages: Math.ceil(total / limit)
       }
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching users:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch users' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }
 
@@ -214,12 +211,9 @@ export async function PATCH(request: NextRequest) {
       message: 'User updated successfully'
     })
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating user:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to update user' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }
 
@@ -347,11 +341,8 @@ export async function POST(request: NextRequest) {
       message: `${results.length} users updated to ${role} role`
     })
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error bulk updating users:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to bulk update users' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }

@@ -1,3 +1,9 @@
+import bundleAnalyzer from '@next/bundle-analyzer';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Enable experimental features for React 19
@@ -27,11 +33,43 @@ const nextConfig = {
     ],
   },
 
-  // Webpack configuration
+  // Webpack configuration for optimized bundle splitting
   webpack: (config, { isServer }) => {
-    // Add custom webpack configuration if needed
+    // Optimize chunk splitting for i18n
+    if (!isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          ...config.optimization.splitChunks,
+          cacheGroups: {
+            ...config.optimization.splitChunks?.cacheGroups,
+            // Separate chunk for each locale
+            'locale-en': {
+              test: /[\\/]messages[\\/]en\.json$/,
+              name: 'locale-en',
+              chunks: 'all',
+              priority: 30,
+            },
+            'locale-id': {
+              test: /[\\/]messages[\\/]id\.json$/,
+              name: 'locale-id',
+              chunks: 'all',
+              priority: 30,
+            },
+            // next-intl library
+            'next-intl': {
+              test: /[\\/]node_modules[\\/]next-intl[\\/]/,
+              name: 'next-intl',
+              chunks: 'all',
+              priority: 25,
+            },
+          },
+        },
+      };
+    }
+    
     return config;
   },
 }
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

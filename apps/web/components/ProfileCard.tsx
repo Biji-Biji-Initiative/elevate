@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { getProfilePath } from '@elevate/types'
 
 interface ProfileCardProps {
   user: {
@@ -32,7 +33,7 @@ export function ProfileCard({ user, rank, showRank = false, compact = false }: P
   
   return (
     <div className={`bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow ${compact ? 'text-sm' : ''}`}>
-      <Link href={`/u/${user.handle}`} className="block">
+      <Link href={getProfilePath(user.handle)} className="block">
         <div className="flex items-start space-x-3">
           {showRank && rank && (
             <div className={`flex-shrink-0 ${compact ? 'w-6 h-6' : 'w-8 h-8'} rounded-full bg-gray-100 flex items-center justify-center`}>

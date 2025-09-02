@@ -1,4 +1,6 @@
-export default function QueuePage() {
+import { withRoleGuard } from '@elevate/auth/context'
+
+function QueuePage() {
   return (
     <main style={{ padding: 24, fontFamily: 'system-ui' }}>
       <h1>Pending Submissions</h1>
@@ -9,4 +11,6 @@ export default function QueuePage() {
     </main>
   )
 }
+
+export default withRoleGuard(QueuePage, ['reviewer', 'admin', 'superadmin'])
 

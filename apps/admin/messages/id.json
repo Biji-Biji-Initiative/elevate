@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "Memuat...",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "submit": "Kirim",
+    "edit": "Edit",
+    "delete": "Hapus",
+    "confirm": "Konfirmasi",
+    "back": "Kembali",
+    "next": "Selanjutnya",
+    "yes": "Ya",
+    "no": "Tidak",
+    "search": "Cari",
+    "filter": "Filter",
+    "export": "Ekspor",
+    "refresh": "Refresh",
+    "view": "Lihat",
+    "approve": "Setuju",
+    "reject": "Tolak",
+    "pending": "Menunggu",
+    "approved": "Disetujui",
+    "rejected": "Ditolak"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "submissions": "Antrian Review",
+    "users": "Manajemen User",
+    "analytics": "Analitik", 
+    "exports": "Ekspor Data",
+    "settings": "Pengaturan",
+    "badges": "Manajemen Badge",
+    "kajabi": "Integrasi Kajabi",
+    "logout": "Keluar"
+  },
+  "dashboard": {
+    "title": "Dashboard Admin",
+    "welcome": "Selamat datang, {name}",
+    "overview": "Ringkasan Sistem",
+    "recent_activity": "Aktivitas Terbaru",
+    "pending_reviews": "Review Tertunda",
+    "total_users": "Total User",
+    "total_submissions": "Total Submisi",
+    "points_awarded": "Poin Diberikan Hari Ini"
+  },
+  "submissions": {
+    "title": "Antrian Review Submisi",
+    "filters": {
+      "all": "Semua Submisi",
+      "pending": "Menunggu Review",
+      "approved": "Disetujui",
+      "rejected": "Perlu Revisi",
+      "activity_type": "Tipe Aktivitas",
+      "date_range": "Rentang Tanggal"
+    },
+    "table": {
+      "educator": "Pendidik",
+      "activity": "Aktivitas",
+      "submitted": "Dikirim",
+      "status": "Status",
+      "reviewer": "Reviewer",
+      "actions": "Aksi"
+    },
+    "review": {
+      "title": "Review Submisi",
+      "educator_info": "Informasi Pendidik",
+      "submission_details": "Detail Submisi",
+      "evidence": "Bukti",
+      "review_notes": "Catatan Review",
+      "points_adjustment": "Penyesuaian Poin",
+      "approve_submission": "Setujui Submisi",
+      "reject_submission": "Minta Revisi",
+      "rejection_reason": "Alasan Penolakan"
+    }
+  },
+  "users": {
+    "title": "Manajemen User",
+    "search_placeholder": "Cari berdasarkan nama, email, atau sekolah...",
+    "table": {
+      "name": "Nama",
+      "email": "Email",
+      "role": "Peran",
+      "school": "Sekolah",
+      "cohort": "Kohort",
+      "joined": "Bergabung",
+      "status": "Status",
+      "actions": "Aksi"
+    },
+    "roles": {
+      "participant": "Peserta",
+      "reviewer": "Reviewer", 
+      "admin": "Admin",
+      "superadmin": "Super Admin"
+    },
+    "bulk_actions": {
+      "title": "Aksi Massal",
+      "export_selected": "Ekspor Terpilih",
+      "change_role": "Ubah Peran",
+      "send_notification": "Kirim Notifikasi"
+    }
+  },
+  "analytics": {
+    "title": "Dashboard Analitik",
+    "engagement": "Metrik Keterlibatan",
+    "completion_rates": "Tingkat Penyelesaian",
+    "leaderboard_stats": "Statistik Peringkat",
+    "activity_breakdown": "Rincian Aktivitas",
+    "user_growth": "Pertumbuhan User",
+    "export_data": "Ekspor Data Analitik"
+  },
+  "exports": {
+    "title": "Ekspor Data",
+    "user_data": "Data User",
+    "submissions": "Submisi",
+    "points_ledger": "Buku Poin",
+    "audit_log": "Log Audit",
+    "export_format": "Format Ekspor",
+    "date_range": "Rentang Tanggal",
+    "generate_export": "Buat Ekspor",
+    "download_ready": "Siap Unduh"
+  },
+  "settings": {
+    "title": "Pengaturan Sistem",
+    "general": "Pengaturan Umum",
+    "notifications": "Notifikasi",
+    "integrations": "Integrasi",
+    "security": "Keamanan",
+    "backup": "Backup & Recovery"
+  },
+  "badges": {
+    "title": "Manajemen Badge", 
+    "criteria": "Kriteria Badge",
+    "design": "Desain Badge",
+    "assignments": "Penugasan Badge"
+  },
+  "kajabi": {
+    "title": "Integrasi Kajabi",
+    "webhook_status": "Status Webhook",
+    "recent_events": "Event Terbaru",
+    "reconciliation": "Rekonsiliasi Data",
+    "test_webhook": "Test Webhook"
+  },
+  "errors": {
+    "something_went_wrong": "Terjadi kesalahan",
+    "unauthorized": "Anda tidak memiliki izin untuk melakukan tindakan ini",
+    "not_found": "Resource tidak ditemukan",
+    "validation_error": "Silakan periksa input Anda dan coba lagi",
+    "network_error": "Error jaringan - silakan periksa koneksi Anda"
+  }
+}

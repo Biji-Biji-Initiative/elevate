@@ -16,8 +16,8 @@
       "@elevate/storage/*": ["packages/storage/*"],
       "@elevate/logic/*": ["packages/logic/*"],
       "@elevate/config/*": ["packages/config/*"],
-      "@elevate/ui/*": ["packages/ui/*"]
+      "@elevate/ui/*": ["packages/ui/*"],
+      "@elevate/security/*": ["packages/security/*"]
     }
   }
 }
-

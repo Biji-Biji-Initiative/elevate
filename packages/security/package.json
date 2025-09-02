@@ -2,16 +2,26 @@
   "name": "@elevate/security",
   "version": "0.1.0",
   "private": true,
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "clean": "rm -rf dist",
     "type-check": "tsc --noEmit"
   },
-  "dependencies": {
-    "next": "15.0.0"
+  "peerDependencies": {
+    "next": "^15.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.5.4",
-    "@types/node": "^20.19.11"
+    "@types/node": "^20.19.11",
+    "tsup": "^8.0.2",
+    "typescript": "^5.5.4"
   }
 }

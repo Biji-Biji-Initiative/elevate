@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@elevate/db/client';
-import { requireRole } from '@elevate/auth/server-helpers';
+import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
 
 export const runtime = 'nodejs';
 
@@ -52,9 +52,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error fetching Kajabi data:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch Kajabi data' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 500);
   }
 }

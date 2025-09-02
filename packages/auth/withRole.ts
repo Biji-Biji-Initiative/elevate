@@ -35,14 +35,14 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
  * Require authentication with minimum role level
  * @param minRole Minimum required role level
  * @returns AuthUser object
- * @throws Error if unauthenticated or insufficient role
+ * @throws RoleError with proper status codes
  */
 export async function requireRole(minRole: RoleName): Promise<AuthUser> {
   const user = await getCurrentUser()
-  if (!user) throw new Error('Unauthenticated')
+  if (!user) throw new RoleError('Authentication required', 401)
   
   if (!hasRole(user.role, minRole)) {
-    throw new Error(`Forbidden: requires ${minRole} role or higher`)
+    throw new RoleError(`Insufficient permissions: requires ${minRole} role or higher`, 403)
   }
   
   return user

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
-import { requireRole } from '@elevate/auth/withRole'
+import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { computePoints } from '@elevate/logic'
 
 export const runtime = 'nodejs';
@@ -68,12 +68,9 @@ export async function GET(request: NextRequest) {
         pages: Math.ceil(total / limit)
       }
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching submissions:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch submissions' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }
 
@@ -207,12 +204,9 @@ export async function PATCH(request: NextRequest) {
       message: `Submission ${action}d successfully`
     })
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating submission:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to update submission' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }
 
@@ -328,11 +322,8 @@ export async function POST(request: NextRequest) {
       message: `${results.length} submissions ${action}d successfully`
     })
     
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error bulk updating submissions:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to bulk update submissions' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }

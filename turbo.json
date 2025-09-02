@@ -1,6 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
   "globalDependencies": ["**/.env.*local", "pnpm-lock.yaml", "turbo.json"],
+  "remoteCache": {
+    "signature": true
+  },
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -11,20 +15,24 @@
         "NEXT_PUBLIC_SUPABASE_URL",
         "NEXT_PUBLIC_SUPABASE_ANON_KEY",
         "NEXT_PUBLIC_SITE_URL"
-      ]
+      ],
+      "outputLogs": "new-only"
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
     "lint": {
-      "outputs": []
+      "outputs": [],
+      "outputLogs": "new-only"
     },
     "type-check": {
-      "outputs": []
+      "outputs": [],
+      "outputLogs": "new-only"
     },
     "test": {
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "outputLogs": "new-only"
     },
     "db:generate": {
       "cache": false

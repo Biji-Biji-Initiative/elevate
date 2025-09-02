@@ -7,25 +7,18 @@ const isPublicRoute = createRouteMatcher([
   '/api/health',
 ])
 
-const isAdminRoute = createRouteMatcher([
-  '/admin(.*)',
-  '/queue(.*)',
-  '/users(.*)',
-  '/exports(.*)',
-  '/api(.*)',
-])
 
-export default clerkMiddleware((auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   // Allow public routes
   if (isPublicRoute(req)) {
     return NextResponse.next()
   }
 
   // All other routes require authentication
-  const { userId, sessionClaims } = auth()
+  const { userId, sessionClaims, redirectToSignIn } = await auth()
   
   if (!userId) {
-    return auth().redirectToSignIn()
+    return redirectToSignIn()
   }
 
   // Check if user has minimum required role for admin access

@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "yes": "Yes",
+    "no": "No",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "refresh": "Refresh",
+    "view": "View",
+    "approve": "Approve",
+    "reject": "Reject",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "submissions": "Review Queue",
+    "users": "User Management",
+    "analytics": "Analytics", 
+    "exports": "Data Exports",
+    "settings": "Settings",
+    "badges": "Badge Management",
+    "kajabi": "Kajabi Integration",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Admin Dashboard",
+    "welcome": "Welcome, {name}",
+    "overview": "System Overview",
+    "recent_activity": "Recent Activity",
+    "pending_reviews": "Pending Reviews",
+    "total_users": "Total Users",
+    "total_submissions": "Total Submissions",
+    "points_awarded": "Points Awarded Today"
+  },
+  "submissions": {
+    "title": "Submission Review Queue",
+    "filters": {
+      "all": "All Submissions",
+      "pending": "Pending Review",
+      "approved": "Approved",
+      "rejected": "Needs Revision",
+      "activity_type": "Activity Type",
+      "date_range": "Date Range"
+    },
+    "table": {
+      "educator": "Educator",
+      "activity": "Activity",
+      "submitted": "Submitted",
+      "status": "Status",
+      "reviewer": "Reviewer",
+      "actions": "Actions"
+    },
+    "review": {
+      "title": "Review Submission",
+      "educator_info": "Educator Information",
+      "submission_details": "Submission Details",
+      "evidence": "Evidence",
+      "review_notes": "Review Notes",
+      "points_adjustment": "Points Adjustment",
+      "approve_submission": "Approve Submission",
+      "reject_submission": "Request Revision",
+      "rejection_reason": "Reason for Rejection"
+    }
+  },
+  "users": {
+    "title": "User Management",
+    "search_placeholder": "Search by name, email, or school...",
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "school": "School",
+      "cohort": "Cohort",
+      "joined": "Joined",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "roles": {
+      "participant": "Participant",
+      "reviewer": "Reviewer", 
+      "admin": "Admin",
+      "superadmin": "Super Admin"
+    },
+    "bulk_actions": {
+      "title": "Bulk Actions",
+      "export_selected": "Export Selected",
+      "change_role": "Change Role",
+      "send_notification": "Send Notification"
+    }
+  },
+  "analytics": {
+    "title": "Analytics Dashboard",
+    "engagement": "Engagement Metrics",
+    "completion_rates": "Completion Rates",
+    "leaderboard_stats": "Leaderboard Statistics",
+    "activity_breakdown": "Activity Breakdown",
+    "user_growth": "User Growth",
+    "export_data": "Export Analytics Data"
+  },
+  "exports": {
+    "title": "Data Exports",
+    "user_data": "User Data",
+    "submissions": "Submissions",
+    "points_ledger": "Points Ledger",
+    "audit_log": "Audit Log",
+    "export_format": "Export Format",
+    "date_range": "Date Range",
+    "generate_export": "Generate Export",
+    "download_ready": "Download Ready"
+  },
+  "settings": {
+    "title": "System Settings",
+    "general": "General Settings",
+    "notifications": "Notifications",
+    "integrations": "Integrations",
+    "security": "Security",
+    "backup": "Backup & Recovery"
+  },
+  "badges": {
+    "title": "Badge Management", 
+    "criteria": "Badge Criteria",
+    "design": "Badge Design",
+    "assignments": "Badge Assignments"
+  },
+  "kajabi": {
+    "title": "Kajabi Integration",
+    "webhook_status": "Webhook Status",
+    "recent_events": "Recent Events",
+    "reconciliation": "Data Reconciliation",
+    "test_webhook": "Test Webhook"
+  },
+  "errors": {
+    "something_went_wrong": "Something went wrong",
+    "unauthorized": "You don't have permission to perform this action",
+    "not_found": "Resource not found",
+    "validation_error": "Please check your input and try again",
+    "network_error": "Network error - please check your connection"
+  }
+}
