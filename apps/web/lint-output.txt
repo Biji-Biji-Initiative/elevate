@@ -1,0 +1,22 @@
+
+> web@0.1.0 lint /Users/agent-g/elevate/elevate/apps/web
+> eslint . --max-warnings 0
+
+
+Oops! Something went wrong! :(
+
+ESLint: 8.57.1
+
+TypeError: Error while loading rule '@typescript-eslint/no-unused-expressions': Cannot read properties of undefined (reading 'allowShortCircuit')
+Occurred while linting /Users/agent-g/elevate/elevate/apps/web/i18n.ts
+    at Object.create (/Users/agent-g/elevate/elevate/node_modules/.pnpm/eslint@9.34.0_jiti@1.21.7/node_modules/eslint/lib/rules/no-unused-expressions.js:85:5)
+    at create (/Users/agent-g/elevate/elevate/node_modules/.pnpm/@typescript-eslint+eslint-plugin@8.42.0_@typescript-eslint+parser@8.42.0_eslint@9.34.0__5eb4f185df3e3a8534854c96f0710a08/node_modules/@typescript-eslint/eslint-plugin/dist/rules/no-unused-expressions.js:30:32)
+    at Object.create (/Users/agent-g/elevate/elevate/node_modules/.pnpm/@typescript-eslint+utils@8.42.0_eslint@9.34.0_jiti@1.21.7__typescript@5.9.2/node_modules/@typescript-eslint/utils/dist/eslint-utils/RuleCreator.js:31:20)
+    at createRuleListeners (/Users/agent-g/elevate/elevate/node_modules/.pnpm/eslint@8.57.1/node_modules/eslint/lib/linter/linter.js:895:21)
+    at /Users/agent-g/elevate/elevate/node_modules/.pnpm/eslint@8.57.1/node_modules/eslint/lib/linter/linter.js:1066:110
+    at Array.forEach (<anonymous>)
+    at runRules (/Users/agent-g/elevate/elevate/node_modules/.pnpm/eslint@8.57.1/node_modules/eslint/lib/linter/linter.js:1003:34)
+    at Linter._verifyWithFlatConfigArrayAndWithoutProcessors (/Users/agent-g/elevate/elevate/node_modules/.pnpm/eslint@8.57.1/node_modules/eslint/lib/linter/linter.js:1730:31)
+    at Linter._verifyWithFlatConfigArray (/Users/agent-g/elevate/elevate/node_modules/.pnpm/eslint@8.57.1/node_modules/eslint/lib/linter/linter.js:1861:21)
+    at Linter.verify (/Users/agent-g/elevate/elevate/node_modules/.pnpm/eslint@8.57.1/node_modules/eslint/lib/linter/linter.js:1433:65)
+ ELIFECYCLE  Command failed with exit code 2.

@@ -57,7 +57,6 @@ export async function isKajabiHealthy(): Promise<boolean> {
     const client = getKajabiClient();
     return await client.healthCheck();
   } catch (error) {
-    console.error('Kajabi health check failed:', error);
     return false;
   }
 }
@@ -69,7 +68,6 @@ export function tryGetKajabiClient() {
   try {
     return getKajabiClient();
   } catch (error) {
-    console.warn('Kajabi client not available:', error instanceof Error ? error.message : String(error));
     return null;
   }
 }

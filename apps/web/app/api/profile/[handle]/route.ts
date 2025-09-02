@@ -13,68 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { handle } = await params
 
-    // Mock data - in production this would query the database
-    if (handle === 'siti_nurhaliza') {
-      const mockProfile = {
-        id: '1',
-        handle: 'siti_nurhaliza',
-        name: 'Siti Nurhaliza',
-        email: 'siti@example.com',
-        school: 'SMA Negeri 1 Jakarta',
-        cohort: 'Jakarta 2024',
-        created_at: '2024-01-15T08:00:00Z',
-        _sum: { points: 185 },
-        earned_badges: [
-          {
-            badge: {
-              code: 'LEARN_MASTER',
-              name: 'Learn Master',
-              description: 'Completed multiple learning courses',
-            },
-            earned_at: '2024-02-01T10:00:00Z'
-          },
-          {
-            badge: {
-              code: 'EXPLORER',
-              name: 'Explorer',
-              description: 'Successfully applied AI tools in classroom',
-            },
-            earned_at: '2024-03-15T14:30:00Z'
-          }
-        ],
-        submissions: [
-          {
-            id: '1',
-            activity_code: 'LEARN',
-            activity: { name: 'Learn', code: 'LEARN' },
-            status: 'APPROVED',
-            visibility: 'PUBLIC',
-            payload: {
-              provider: 'ILS',
-              course: 'AI in Education Fundamentals',
-              completedAt: '2024-02-01'
-            },
-            created_at: '2024-02-01T08:00:00Z',
-            updated_at: '2024-02-01T12:00:00Z'
-          }
-        ]
-      }
-
-      return NextResponse.json(mockProfile, {
-        headers: {
-          'Cache-Control': 'public, s-maxage=300' // Cache for 5 minutes
-        }
-      })
-    }
-
-    // Profile not found
-    return NextResponse.json(
-      { error: 'Profile not found or not public' },
-      { status: 404 }
-    )
-
-    // In production, you would use something like this:
-    /*
+    // Query user by handle
     const user = await prisma.user.findUnique({
       where: { handle },
       select: {
@@ -86,6 +25,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         created_at: true,
         earned_badges: {
           select: {
+            badge_code: true,
             badge: {
               select: {
                 code: true,
@@ -95,7 +35,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               }
             },
             earned_at: true
-          }
+          },
+          orderBy: { earned_at: 'desc' }
         },
         submissions: {
           where: {
@@ -115,9 +56,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             updated_at: true
           },
           orderBy: { created_at: 'desc' }
-        },
-        _sum: {
-          points: true
         }
       }
     })
@@ -129,11 +67,42 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       )
     }
 
-    return NextResponse.json(user)
-    */
+    // Check if user has any public submissions
+    if (user.submissions.length === 0) {
+      return NextResponse.json(
+        { error: 'Profile not found or not public' },
+        { status: 404 }
+      )
+    }
+
+    // Calculate total points from points_ledger
+    const pointsResult = await prisma.pointsLedger.aggregate({
+      where: { user_id: user.id },
+      _sum: { delta_points: true }
+    })
+
+    const totalPoints = pointsResult._sum.delta_points || 0
+
+    // Format response
+    const profileData = {
+      id: user.id,
+      handle: user.handle,
+      name: user.name,
+      school: user.school,
+      cohort: user.cohort,
+      created_at: user.created_at,
+      _sum: { points: totalPoints },
+      earned_badges: user.earned_badges,
+      submissions: user.submissions
+    }
+
+    return NextResponse.json(profileData, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300' // Cache for 5 minutes
+      }
+    })
 
   } catch (error) {
-    console.error('Profile API error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch profile data' },
       { status: 500 }

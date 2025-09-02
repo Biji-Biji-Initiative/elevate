@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@elevate/db/client'
 import { z } from 'zod'
+import type { SubmissionWhereClause, ActivityPayload } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
 // Submission request schema
 const SubmissionRequestSchema = z.object({
   activityCode: z.enum(['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']),
-  payload: z.record(z.any()),
+  payload: z.record(z.unknown()),
   attachments: z.array(z.string()).optional(),
   visibility: z.enum(['PUBLIC', 'PRIVATE']).optional()
 })
@@ -76,12 +77,12 @@ export async function POST(request: NextRequest) {
 
       // Calculate total peers and students trained in last 7 days
       const totalPeers = recentSubmissions.reduce((sum, sub) => {
-        const payload = sub.payload as any
+        const payload = sub.payload as ActivityPayload
         return sum + (payload.peersTrained || 0)
       }, 0)
 
       const totalStudents = recentSubmissions.reduce((sum, sub) => {
-        const payload = sub.payload as any
+        const payload = sub.payload as ActivityPayload
         return sum + (payload.studentsTrained || 0)
       }, 0)
 
@@ -121,13 +122,6 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Log the submission creation
-    console.log(`New ${validatedData.activityCode} submission created:`, {
-      submissionId: submission.id,
-      userId: userId,
-      userHandle: user.handle,
-      activityCode: validatedData.activityCode
-    })
 
     return NextResponse.json({
       success: true,
@@ -142,7 +136,6 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Submission creation error:', error)
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -170,7 +163,7 @@ export async function GET(request: NextRequest) {
     const activityCode = url.searchParams.get('activity')
     const status = url.searchParams.get('status')
 
-    const whereClause: any = {
+    const whereClause: SubmissionWhereClause = {
       user_id: userId
     }
 
@@ -208,7 +201,6 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Submissions fetch error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch submissions' },
       { status: 500 }

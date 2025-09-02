@@ -1,5 +1,14 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import createIntlMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
+import { locales, defaultLocale } from './i18n';
+
+// Create the intl middleware
+const intlMiddleware = createIntlMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'as-needed'
+});
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -7,7 +16,12 @@ const isPublicRoute = createRouteMatcher([
   '/metrics/(.*)',
   '/u/(.*)', // Canonical public profile routes
   '/api/kajabi/webhook',
-  '/api/health'
+  '/api/health',
+  // Include localized versions of public routes
+  '/(en|id)/',
+  '/(en|id)/leaderboard',
+  '/(en|id)/metrics/(.*)',
+  '/(en|id)/u/(.*)',
 ]);
 
 const isApiRoute = createRouteMatcher(['/api/(.*)']);
@@ -25,13 +39,12 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     return; // Skip further processing for API routes
   }
 
-  // Handle locale prefix redirects - remove them for now to fix routing
-  const pathname = req.nextUrl.pathname;
-  if (pathname.startsWith('/en/') || pathname.startsWith('/id/')) {
-    const newPathname = pathname.replace(/^\/(en|id)/, '') || '/';
-    const url = req.nextUrl.clone();
-    url.pathname = newPathname;
-    return NextResponse.redirect(url);
+  // Handle internationalization first
+  const intlResponse = intlMiddleware(req);
+  
+  // If intl middleware returns a response (redirect), use it
+  if (intlResponse) {
+    return intlResponse;
   }
 
   // Apply authentication for protected routes

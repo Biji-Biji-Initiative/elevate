@@ -15,8 +15,8 @@ export const ExploreSchema = z.object({
 })
 
 export const AmplifySchema = z.object({
-  peersTrained: z.coerce.number().int().min(0).max(50),
-  studentsTrained: z.coerce.number().int().min(0).max(200),
+  peersTrained: z.number().int().min(0).max(50),
+  studentsTrained: z.number().int().min(0).max(200),
   attendanceProofFiles: z.array(z.string()).optional(), // Array of storage paths after upload
 })
 

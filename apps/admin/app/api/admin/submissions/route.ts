@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { computePoints } from '@elevate/logic'
+import type { SubmissionWhereClause, ActivityCode, ActivityPayload } from '@elevate/types'
+import type { SubmissionStatus } from '@elevate/db'
 
 export const runtime = 'nodejs';
 
@@ -20,14 +22,14 @@ export async function GET(request: NextRequest) {
     
     const offset = (page - 1) * limit
     
-    const where: any = {}
+    const where: SubmissionWhereClause = {}
     
     if (status && status !== 'ALL') {
-      where.status = status
+      where.status = status as SubmissionStatus
     }
     
     if (activity) {
-      where.activity_code = activity
+      where.activity_code = activity as ActivityCode
     }
     
     if (userId) {
@@ -69,7 +71,6 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error fetching submissions:', error)
     return createErrorResponse(error, 500)
   }
 }
@@ -144,7 +145,7 @@ export async function PATCH(request: NextRequest) {
       
       // Award points if approved
       if (action === 'approve') {
-        const basePoints = computePoints(submission.activity_code as any, submission.payload)
+        const basePoints = computePoints(submission.activity_code as ActivityCode, submission.payload as ActivityPayload)
         const finalPoints = pointAdjustment !== undefined ? pointAdjustment : basePoints
         
         // Validate point adjustment is within bounds (±20% of base points)
@@ -186,17 +187,9 @@ export async function PATCH(request: NextRequest) {
       return updatedSubmission
     })
     
-    // Refresh materialized views after approval/rejection
-    if (action === 'approve') {
-      try {
-        await prisma.$executeRaw`REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_totals;`
-        await prisma.$executeRaw`REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_30d;`
-        await prisma.$executeRaw`REFRESH MATERIALIZED VIEW CONCURRENTLY metric_counts;`
-      } catch (mvError) {
-        console.error('Failed to refresh materialized views:', mvError)
-        // Don't fail the request if MV refresh fails
-      }
-    }
+    // Note: Materialized views are not used in the Prisma ORM implementation
+    // The leaderboard API now calculates data in real-time using proper Prisma aggregations
+    // This provides better consistency and eliminates the need for manual view refreshes
     
     return NextResponse.json({
       success: true,
@@ -205,7 +198,6 @@ export async function PATCH(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Error updating submission:', error)
     return createErrorResponse(error, 500)
   }
 }
@@ -287,7 +279,7 @@ export async function POST(request: NextRequest) {
         
         // Award points if approved
         if (action === 'approve') {
-          const points = computePoints(submission.activity_code as any, submission.payload)
+          const points = computePoints(submission.activity_code as ActivityCode, submission.payload as ActivityPayload)
           
           await tx.pointsLedger.create({
             data: {
@@ -305,16 +297,9 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    // Refresh materialized views after bulk approval
-    if (action === 'approve') {
-      try {
-        await prisma.$executeRaw`REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_totals;`
-        await prisma.$executeRaw`REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_30d;`
-        await prisma.$executeRaw`REFRESH MATERIALIZED VIEW CONCURRENTLY metric_counts;`
-      } catch (mvError) {
-        console.error('Failed to refresh materialized views:', mvError)
-      }
-    }
+    // Note: Materialized views are not used in the Prisma ORM implementation
+    // The leaderboard API now calculates data in real-time using proper Prisma aggregations
+    // This provides better consistency and eliminates the need for manual view refreshes
     
     return NextResponse.json({
       success: true,
@@ -323,7 +308,6 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Error bulk updating submissions:', error)
     return createErrorResponse(error, 500)
   }
 }

@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('File upload error:', error)
 
     if (error instanceof FileValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400 })

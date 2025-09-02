@@ -26,13 +26,11 @@ async function sendEmail(to: string, subject: string, html: string, text?: strin
     });
 
     if (error) {
-      console.error('Email sending error:', error);
       throw error;
     }
 
     return data;
   } catch (error) {
-    console.error('Failed to send email:', error);
     throw error;
   }
 }
@@ -165,13 +163,11 @@ export async function sendBatchEmails(emails: Array<{
     );
 
     if (error) {
-      console.error('Batch email sending error:', error);
       throw error;
     }
 
     return data;
   } catch (error) {
-    console.error('Failed to send batch emails:', error);
     throw error;
   }
 }

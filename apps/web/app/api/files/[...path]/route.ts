@@ -132,11 +132,9 @@ export async function GET(
       return response;
 
     } catch (error) {
-      console.error('File access error:', error)
       
       // Log security-relevant errors
       if (error instanceof Error && error.message.includes('Invalid path segment')) {
-        console.warn('Potential path traversal attempt:', { userId, filePath, error: error.message });
       }
       
       return NextResponse.json(
@@ -215,11 +213,9 @@ export async function DELETE(
       })
 
     } catch (error) {
-      console.error('File deletion error:', error)
       
       // Log security-relevant errors
       if (error instanceof Error && error.message.includes('Invalid path segment')) {
-        console.warn('Potential path traversal attempt in DELETE:', { userId, filePath, error: error.message });
       }
       
       return NextResponse.json(

@@ -425,19 +425,33 @@ describe('Row Level Security Policies', () => {
         delta_points: 100,
       });
 
-      // Leaderboard should only show public users
-      const leaderboard = await db.prisma.$queryRaw<any[]>`
-        SELECT u.handle, COALESCE(SUM(pl.delta_points), 0) as points
-        FROM users u
-        LEFT JOIN points_ledger pl ON u.id = pl.user_id
-        WHERE u.id IN (
-          SELECT DISTINCT user_id 
-          FROM submissions 
-          WHERE visibility = 'PUBLIC' AND status = 'APPROVED'
-        )
-        GROUP BY u.id, u.handle
-        ORDER BY points DESC
-      `;
+      // Leaderboard should only show public users using Prisma
+      const usersWithPublicSubmissions = await db.prisma.user.findMany({
+        where: {
+          submissions: {
+            some: {
+              visibility: 'PUBLIC',
+              status: 'APPROVED'
+            }
+          }
+        },
+        select: {
+          id: true,
+          handle: true,
+          ledger: {
+            select: {
+              delta_points: true
+            }
+          }
+        }
+      });
+      
+      const leaderboard = usersWithPublicSubmissions
+        .map(user => ({
+          handle: user.handle,
+          points: user.ledger.reduce((sum, entry) => sum + entry.delta_points, 0)
+        }))
+        .sort((a, b) => b.points - a.points);
 
       expect(leaderboard).toHaveLength(1);
       expect(leaderboard[0].handle).toBe('public');

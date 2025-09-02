@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@elevate/db';
+import { prisma } from '@elevate/db/client';
 
 export const runtime = 'nodejs';
 
 export async function GET() {
   try {
+    // Log DATABASE_URL for debugging (only first and last 20 chars for security)
+    const dbUrl = process.env.DATABASE_URL;
+    const urlLog = dbUrl ? `${dbUrl.substring(0, 20)}...${dbUrl.substring(dbUrl.length - 20)}` : 'undefined';
+    
     // Check database connection
-    await prisma.$queryRaw`SELECT 1`;
+    await prisma.$connect();
     
     // Check environment variables
     const requiredEnvVars = [
@@ -41,7 +45,6 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('Health check failed:', error);
     
     return NextResponse.json({
       status: 'unhealthy',

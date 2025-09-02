@@ -17,5 +17,31 @@
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "typescript.preferences.importModuleSpecifier": "relative",
-  "typescript.suggest.autoImports": true
+  "typescript.suggest.autoImports": true,
+  "typescript.validate.enable": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "files.associations": {
+    "*.md": "markdown",
+    "*.mdx": "mdx"
+  },
+  "files.exclude": {
+    "**/*.md": false
+  },
+  "problems.exclude": {
+    "**/*.md": true,
+    "**/*.mdx": true,
+    "**/claude.md": true,
+    "**/CLAUDE.md": true,
+    "**/README.md": true,
+    "**/bundle-analysis.md": true
+  },
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    },
+    "editor.snippetSuggestions": "none"
+  }
 }

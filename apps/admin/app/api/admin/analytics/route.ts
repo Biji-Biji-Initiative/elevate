@@ -1,6 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import type {
+  AnalyticsDateFilter,
+  AnalyticsCohortFilter,
+  AnalyticsSubmissionFilter,
+  AnalyticsUserFilter,
+  SubmissionStats,
+  UserAnalyticsStats,
+  PointsStats,
+  BadgeStats,
+  ReviewStats,
+  StatusDistribution,
+  ActivityDistribution,
+  ActivityCode,
+  RoleDistribution,
+  CohortDistribution,
+  PointsActivityDistribution,
+  PointsDistributionStats,
+  DailySubmissionStats,
+  DailyRegistrationStats,
+  RecentSubmission,
+  RecentApproval,
+  RecentUser,
+  ReviewerPerformance,
+  TopBadge
+} from '@elevate/types'
 
 export const runtime = 'nodejs';
 
@@ -14,7 +39,7 @@ export async function GET(request: NextRequest) {
     const cohort = searchParams.get('cohort')
     
     // Build date filter
-    const dateFilter: any = {}
+    const dateFilter: AnalyticsDateFilter = {}
     if (startDate && endDate) {
       dateFilter.created_at = {
         gte: new Date(startDate),
@@ -23,7 +48,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Build cohort filter
-    const cohortFilter: any = {}
+    const cohortFilter: AnalyticsCohortFilter = {}
     if (cohort && cohort !== 'ALL') {
       cohortFilter.user = {
         cohort: cohort
@@ -128,12 +153,11 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error fetching analytics:', error)
     return createErrorResponse(error, 500)
   }
 }
 
-async function getSubmissionStats(filter: any) {
+async function getSubmissionStats(filter: AnalyticsSubmissionFilter): Promise<SubmissionStats> {
   const [total, pending, approved, rejected] = await Promise.all([
     prisma.submission.count({ where: filter }),
     prisma.submission.count({ where: { ...filter, status: 'PENDING' } }),
@@ -152,7 +176,7 @@ async function getSubmissionStats(filter: any) {
   }
 }
 
-async function getSubmissionsByStatus(filter: any) {
+async function getSubmissionsByStatus(filter: AnalyticsSubmissionFilter): Promise<StatusDistribution[]> {
   const result = await prisma.submission.groupBy({
     by: ['status'],
     where: filter,
@@ -165,7 +189,7 @@ async function getSubmissionsByStatus(filter: any) {
   }))
 }
 
-async function getSubmissionsByActivity(filter: any) {
+async function getSubmissionsByActivity(filter: AnalyticsSubmissionFilter): Promise<ActivityDistribution[]> {
   const result = await prisma.submission.groupBy({
     by: ['activity_code'],
     where: filter,
@@ -190,13 +214,13 @@ async function getSubmissionsByActivity(filter: any) {
   }, {} as Record<string, string>)
   
   return result.map(item => ({
-    activity: item.activity_code,
+    activity: item.activity_code as ActivityCode,
     activityName: activityMap[item.activity_code],
     count: item._count
   }))
 }
 
-async function getSubmissionsByDate(filter: any) {
+async function getSubmissionsByDate(filter: AnalyticsSubmissionFilter): Promise<DailySubmissionStats[]> {
   // Get submissions grouped by date (last 30 days)
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -224,9 +248,10 @@ async function getSubmissionsByDate(filter: any) {
       acc[date] = { total: 0, approved: 0, rejected: 0, pending: 0 }
     }
     acc[date].total++
-    acc[date][sub.status.toLowerCase()]++
+    const statusKey = sub.status.toLowerCase() as 'approved' | 'rejected' | 'pending'
+    acc[date][statusKey]++
     return acc
-  }, {} as Record<string, any>)
+  }, {} as Record<string, { total: number; approved: number; rejected: number; pending: number }>)
   
   return Object.entries(dailyStats).map(([date, stats]) => ({
     date,
@@ -234,7 +259,7 @@ async function getSubmissionsByDate(filter: any) {
   })).sort((a, b) => a.date.localeCompare(b.date))
 }
 
-async function getUserStats(filter: any) {
+async function getUserStats(filter: AnalyticsUserFilter): Promise<UserAnalyticsStats> {
   const [total, active, withSubmissions, withBadges] = await Promise.all([
     prisma.user.count({ where: filter }),
     prisma.user.count({ 
@@ -276,7 +301,7 @@ async function getUserStats(filter: any) {
   }
 }
 
-async function getUsersByRole(filter: any) {
+async function getUsersByRole(filter: AnalyticsUserFilter): Promise<RoleDistribution[]> {
   const result = await prisma.user.groupBy({
     by: ['role'],
     where: filter,
@@ -294,7 +319,7 @@ async function getUsersByRole(filter: any) {
   }))
 }
 
-async function getUsersByCohort() {
+async function getUsersByCohort(): Promise<CohortDistribution[]> {
   const result = await prisma.user.groupBy({
     by: ['cohort'],
     _count: true,
@@ -311,7 +336,7 @@ async function getUsersByCohort() {
   }))
 }
 
-async function getUserRegistrationsByDate(filter: any) {
+async function getUserRegistrationsByDate(filter: AnalyticsUserFilter): Promise<DailyRegistrationStats[]> {
   // Get user registrations grouped by date (last 30 days)
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -341,7 +366,7 @@ async function getUserRegistrationsByDate(filter: any) {
   })).sort((a, b) => a.date.localeCompare(b.date))
 }
 
-async function getPointsStats(filter: any) {
+async function getPointsStats(filter: AnalyticsSubmissionFilter): Promise<PointsStats> {
   const result = await prisma.pointsLedger.aggregate({
     where: filter,
     _sum: {
@@ -359,7 +384,7 @@ async function getPointsStats(filter: any) {
   }
 }
 
-async function getPointsByActivity(filter: any) {
+async function getPointsByActivity(filter: AnalyticsSubmissionFilter): Promise<PointsActivityDistribution[]> {
   const result = await prisma.pointsLedger.groupBy({
     by: ['activity_code'],
     where: filter,
@@ -387,14 +412,14 @@ async function getPointsByActivity(filter: any) {
   }, {} as Record<string, string>)
   
   return result.map(item => ({
-    activity: item.activity_code,
+    activity: item.activity_code as ActivityCode,
     activityName: activityMap[item.activity_code],
     totalPoints: item._sum.delta_points || 0,
     entries: item._count
   }))
 }
 
-async function getPointsDistribution(filter: any) {
+async function getPointsDistribution(filter: AnalyticsSubmissionFilter): Promise<PointsDistributionStats> {
   // Get point totals per user
   const userPoints = await prisma.pointsLedger.groupBy({
     by: ['user_id'],
@@ -424,8 +449,8 @@ async function getPointsDistribution(filter: any) {
   }
 }
 
-async function getRecentSubmissions(limit: number) {
-  return await prisma.submission.findMany({
+async function getRecentSubmissions(limit: number): Promise<RecentSubmission[]> {
+  const submissions = await prisma.submission.findMany({
     take: limit,
     orderBy: {
       created_at: 'desc'
@@ -444,10 +469,15 @@ async function getRecentSubmissions(limit: number) {
       }
     }
   })
+  
+  return submissions.map(sub => ({
+    ...sub,
+    activity_code: sub.activity_code as ActivityCode
+  }))
 }
 
-async function getRecentApprovals(limit: number) {
-  return await prisma.submission.findMany({
+async function getRecentApprovals(limit: number): Promise<RecentApproval[]> {
+  const approvals = await prisma.submission.findMany({
     where: {
       status: 'APPROVED'
     },
@@ -469,9 +499,14 @@ async function getRecentApprovals(limit: number) {
       }
     }
   })
+  
+  return approvals.map(approval => ({
+    ...approval,
+    activity_code: approval.activity_code as ActivityCode
+  }))
 }
 
-async function getRecentUsers(limit: number) {
+async function getRecentUsers(limit: number): Promise<RecentUser[]> {
   return await prisma.user.findMany({
     take: limit,
     orderBy: {
@@ -488,7 +523,7 @@ async function getRecentUsers(limit: number) {
   })
 }
 
-async function getBadgeStats() {
+async function getBadgeStats(): Promise<BadgeStats> {
   const [totalBadges, totalEarned, uniqueEarners] = await Promise.all([
     prisma.badge.count(),
     prisma.earnedBadge.count(),
@@ -505,7 +540,7 @@ async function getBadgeStats() {
   }
 }
 
-async function getTopBadges(limit: number) {
+async function getTopBadges(limit: number): Promise<TopBadge[]> {
   const result = await prisma.earnedBadge.groupBy({
     by: ['badge_code'],
     _count: true,
@@ -526,15 +561,18 @@ async function getTopBadges(limit: number) {
   const badgeMap = badges.reduce((acc, badge) => {
     acc[badge.code] = badge
     return acc
-  }, {} as Record<string, any>)
+  }, {} as Record<string, typeof badges[0]>)
   
   return result.map(item => ({
-    badge: badgeMap[item.badge_code],
+    badge: {
+      ...badgeMap[item.badge_code],
+      icon_url: badgeMap[item.badge_code].icon_url ?? undefined
+    },
     earnedCount: item._count
   }))
 }
 
-async function getReviewStats(filter: any) {
+async function getReviewStats(filter: AnalyticsSubmissionFilter): Promise<ReviewStats> {
   const [pending, avgReviewTime] = await Promise.all([
     prisma.submission.count({
       where: {
@@ -551,7 +589,7 @@ async function getReviewStats(filter: any) {
   }
 }
 
-async function getAverageReviewTime(filter: any) {
+async function getAverageReviewTime(filter: AnalyticsSubmissionFilter): Promise<number> {
   const reviewedSubmissions = await prisma.submission.findMany({
     where: {
       ...filter,
@@ -575,7 +613,7 @@ async function getAverageReviewTime(filter: any) {
   return Math.round((totalHours / reviewedSubmissions.length) * 100) / 100
 }
 
-async function getReviewerPerformance() {
+async function getReviewerPerformance(): Promise<ReviewerPerformance[]> {
   const reviewers = await prisma.user.findMany({
     where: {
       role: { in: ['REVIEWER', 'ADMIN', 'SUPERADMIN'] }
@@ -607,16 +645,17 @@ async function getReviewerPerformance() {
       total: 0
     }
     return acc
-  }, {} as Record<string, any>)
+  }, {} as Record<string, ReviewerPerformance>)
   
   performance.forEach(p => {
     if (p.reviewer_id && reviewerMap[p.reviewer_id]) {
-      reviewerMap[p.reviewer_id][p.status.toLowerCase()] = p._count
+      const statusKey = p.status.toLowerCase() as 'approved' | 'rejected'
+      reviewerMap[p.reviewer_id][statusKey] = p._count
       reviewerMap[p.reviewer_id].total += p._count
     }
   })
   
   return Object.values(reviewerMap)
-    .filter((r: any) => r.total > 0)
-    .sort((a: any, b: any) => b.total - a.total)
+    .filter((r: ReviewerPerformance) => r.total > 0)
+    .sort((a: ReviewerPerformance, b: ReviewerPerformance) => b.total - a.total)
 }

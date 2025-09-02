@@ -12,14 +12,14 @@ export type {
 } from '@elevate/types/schemas';
 
 // Type helpers for API responses
-export type APIResponse<T = any> = {
+export type APIResponse<T = unknown> = {
   success: boolean;
   data?: T;
   error?: string;
-  details?: any[];
+  details?: unknown[];
 };
 
-export type PaginatedResponse<T = any> = APIResponse<T[]> & {
+export type PaginatedResponse<T = unknown> = APIResponse<T[]> & {
   total: number;
   limit: number;
   offset: number;
@@ -31,7 +31,7 @@ export class APIError extends Error {
   constructor(
     message: string,
     public status: number,
-    public details?: any[]
+    public details?: unknown[]
   ) {
     super(message);
     this.name = 'APIError';
@@ -39,7 +39,7 @@ export class APIError extends Error {
 }
 
 export class ValidationError extends APIError {
-  constructor(message: string, details?: any[]) {
+  constructor(message: string, details?: unknown[]) {
     super(message, 400, details);
     this.name = 'ValidationError';
   }

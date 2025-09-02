@@ -1,22 +1,516 @@
 openapi: 3.0.3
 info:
-  title: Elevate Indonesia API
-  version: 0.1.0
+  title: MS Elevate LEAPS Tracker API
+  version: 1.0.0
+  description: |
+    Complete API documentation for the Microsoft Elevate Indonesia LEAPS Tracker platform.
+    
+    The LEAPS framework consists of 5 stages:
+    - **Learn**: Complete Microsoft Learn courses (20 points)
+    - **Explore**: Apply AI in classroom with evidence (50 points)  
+    - **Amplify**: Train peers/students (2 points/peer, 1 point/student)
+    - **Present**: LinkedIn post with screenshot (20 points)
+    - **Shine**: Innovation ideas for recognition
+    
+    ## Authentication
+    All authenticated endpoints require a valid Clerk JWT token in the Authorization header.
+    
+    ## Rate Limits
+    - File uploads: 10MB max per file
+    - Amplify submissions: 50 peers, 200 students per 7-day rolling window
+    - Bulk operations: Maximum 50 items per request
+    
+  contact:
+    name: MS Elevate Team
+    url: https://leaps.mereka.org
+    
 servers:
-  - url: https://api.example.com
+  - url: https://leaps.mereka.org/api
+    description: Production server
+  - url: https://staging-leaps.mereka.org/api 
+    description: Staging server
+
+security:
+  - ClerkJWT: []
+
+components:
+  securitySchemes:
+    ClerkJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Clerk authentication JWT token
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        details:
+          type: array
+          items:
+            type: object
+          description: Validation error details (for Zod errors)
+      required:
+        - error
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        handle:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        avatar_url:
+          type: string
+        school:
+          type: string
+        cohort:
+          type: string
+        role:
+          type: string
+          enum: [participant, reviewer, admin, superadmin]
+        profile_visibility:
+          type: string
+          enum: [PUBLIC, PRIVATE]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - handle
+        - name
+        - email
+
+    Activity:
+      type: object
+      properties:
+        code:
+          type: string
+          enum: [LEARN, EXPLORE, AMPLIFY, PRESENT, SHINE]
+        name:
+          type: string
+        description:
+          type: string
+        default_points:
+          type: integer
+      required:
+        - code
+        - name
+        - default_points
+
+    Submission:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        activity_code:
+          type: string
+          enum: [LEARN, EXPLORE, AMPLIFY, PRESENT, SHINE]
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED]
+        visibility:
+          type: string
+          enum: [PUBLIC, PRIVATE]
+        payload:
+          type: object
+          description: Activity-specific data
+        attachments:
+          type: array
+          items:
+            type: string
+        reviewer_id:
+          type: string
+          nullable: true
+        review_note:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user_id
+        - activity_code
+        - status
+        - payload
+
+    LearnPayload:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum: [SPL, ILS]
+        course:
+          type: string
+          minLength: 2
+        completedAt:
+          type: string
+          format: date-time
+        certificateFile:
+          type: string
+          description: Storage path after upload
+      required:
+        - provider
+        - course
+        - completedAt
+
+    ExplorePayload:
+      type: object
+      properties:
+        reflection:
+          type: string
+          minLength: 150
+        classDate:
+          type: string
+          format: date
+        school:
+          type: string
+        evidenceFiles:
+          type: array
+          items:
+            type: string
+      required:
+        - reflection
+        - classDate
+
+    AmplifyPayload:
+      type: object
+      properties:
+        peersTrained:
+          type: integer
+          minimum: 0
+          maximum: 50
+        studentsTrained:
+          type: integer
+          minimum: 0
+          maximum: 200
+        attendanceProofFiles:
+          type: array
+          items:
+            type: string
+      required:
+        - peersTrained
+        - studentsTrained
+
+    PresentPayload:
+      type: object
+      properties:
+        linkedinUrl:
+          type: string
+          format: uri
+        screenshotFile:
+          type: string
+        caption:
+          type: string
+          minLength: 10
+      required:
+        - linkedinUrl
+        - caption
+
+    ShinePayload:
+      type: object
+      properties:
+        ideaTitle:
+          type: string
+          minLength: 4
+        ideaSummary:
+          type: string
+          minLength: 50
+        attachment:
+          type: array
+          items:
+            type: string
+      required:
+        - ideaTitle
+        - ideaSummary
+
+    Badge:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        icon_url:
+          type: string
+        criteria:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - code
+        - name
+
+    EarnedBadge:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        badge_id:
+          type: string
+        earned_at:
+          type: string
+          format: date-time
+        badge:
+          $ref: '#/components/schemas/Badge'
+      required:
+        - id
+        - user_id
+        - badge_id
+        - earned_at
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        user:
+          allOf:
+            - $ref: '#/components/schemas/User'
+            - type: object
+              properties:
+                earned_badges:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/EarnedBadge'
+                _sum:
+                  type: object
+                  properties:
+                    points:
+                      type: integer
+                    learn_points:
+                      type: integer
+                    explore_points:
+                      type: integer
+                    amplify_points:
+                      type: integer
+                    present_points:
+                      type: integer
+                    shine_points:
+                      type: integer
+                    submission_count:
+                      type: integer
+
+    PointsLedger:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        activity_code:
+          type: string
+        delta_points:
+          type: integer
+        source:
+          type: string
+          enum: [KAJABI, MANUAL]
+        external_source:
+          type: string
+        external_event_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user_id
+        - activity_code
+        - delta_points
+        - source
+
 paths:
-  /me:
+  # Health and Status
+  /health:
     get:
-      summary: Get current user
+      summary: Health check endpoint
+      tags: [System]
+      security: []
       responses:
-        '200': { description: OK }
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /metrics:
+    get:
+      summary: Get public aggregate metrics per LEAPS stage
+      tags: [Public]
+      security: []
+      responses:
+        '200':
+          description: Aggregate submission counts by activity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        activity_code:
+                          type: string
+                        activity_name:
+                          type: string
+                        total_submissions:
+                          type: integer
+                        pending_submissions:
+                          type: integer
+                        approved_submissions:
+                          type: integer
+
+  # Authentication and User Management
+  /dashboard:
+    get:
+      summary: Get current user's dashboard data
+      tags: [User]
+      responses:
+        '200':
+          description: User dashboard information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  submissions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Submission'
+                  totalPoints:
+                    type: integer
+                  earnedBadges:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EarnedBadge'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /profile/{handle}:
+    get:
+      summary: Get public user profile by handle
+      tags: [Public]
+      security: []
+      parameters:
+        - name: handle
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Public user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  publicSubmissions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Submission'
+                  totalPoints:
+                    type: integer
+                  earnedBadges:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EarnedBadge'
+        '404':
+          description: User not found or profile is private
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Submissions
   /submissions:
     get:
-      summary: List my submissions
+      summary: Get current user's submissions
+      tags: [Submissions]
+      parameters:
+        - name: activity
+          in: query
+          schema:
+            type: string
+            enum: [LEARN, EXPLORE, AMPLIFY, PRESENT, SHINE]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED]
       responses:
-        '200': { description: OK }
+        '200':
+          description: List of user submissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Submission'
+                        - type: object
+                          properties:
+                            activityName:
+                              type: string
+                            attachmentCount:
+                              type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
     post:
-      summary: Create submission (any stage)
+      summary: Create a new submission
+      tags: [Submissions]
       requestBody:
         required: true
         content:
@@ -24,67 +518,814 @@ paths:
             schema:
               type: object
               properties:
-                activity_code: { type: string, enum: [LEARN, EXPLORE, AMPLIFY, PRESENT, SHINE] }
-                payload: { type: object }
-                visibility: { type: string, enum: [PUBLIC, PRIVATE] }
+                activityCode:
+                  type: string
+                  enum: [LEARN, EXPLORE, AMPLIFY, PRESENT, SHINE]
+                payload:
+                  oneOf:
+                    - $ref: '#/components/schemas/LearnPayload'
+                    - $ref: '#/components/schemas/ExplorePayload'
+                    - $ref: '#/components/schemas/AmplifyPayload'
+                    - $ref: '#/components/schemas/PresentPayload'
+                    - $ref: '#/components/schemas/ShinePayload'
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                visibility:
+                  type: string
+                  enum: [PUBLIC, PRIVATE]
+                  default: PRIVATE
+              required:
+                - activityCode
+                - payload
       responses:
-        '201': { description: Created }
-  /submissions/{id}:
+        '201':
+          description: Submission created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      activityCode:
+                        type: string
+                      status:
+                        type: string
+                      visibility:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+                      potentialPoints:
+                        type: integer
+        '400':
+          description: Invalid submission data or limits exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Leaderboard
+  /leaderboard:
     get:
-      summary: Get a submission
+      summary: Get leaderboard rankings
+      tags: [Public]
+      security: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [all, 30d]
+            default: all
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: search
+          in: query
+          schema:
+            type: string
+            description: Search by name, handle, or school
       responses:
-        '200': { description: OK }
+        '200':
+          description: Leaderboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaderboardEntry'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+                  hasMore:
+                    type: boolean
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              description: Cache control header
+
+  # File Management
+  /files/upload:
+    post:
+      summary: Upload a file to secure storage
+      tags: [Files]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload (PDF, JPG, PNG only, max 10MB)
+                path:
+                  type: string
+                  description: Storage path prefix
+              required:
+                - file
+      responses:
+        '200':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      path:
+                        type: string
+                      size:
+                        type: integer
+                      contentType:
+                        type: string
+        '400':
+          description: Invalid file type or size
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /files/{path}:
+    get:
+      summary: Get signed URL for file access
+      tags: [Files]
+      parameters:
+        - name: path
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+          description: File path in storage (can contain slashes)
+      responses:
+        '302':
+          description: Redirect to signed URL
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized to access file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Badges
+  /badges:
+    get:
+      summary: Get current user's earned badges
+      tags: [Badges]
+      responses:
+        '200':
+          description: User's earned badges
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EarnedBadge'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Statistics
+  /stats:
+    get:
+      summary: Get platform statistics
+      tags: [Public]
+      security: []
+      responses:
+        '200':
+          description: Platform-wide statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalUsers:
+                    type: integer
+                  totalSubmissions:
+                    type: integer
+                  totalPointsAwarded:
+                    type: integer
+                  activeUsers30d:
+                    type: integer
+                  submissionsByStage:
+                    type: object
+                    additionalProperties:
+                      type: integer
+
+  # Webhooks
+  /webhooks/clerk:
+    post:
+      summary: Clerk user webhook
+      tags: [Webhooks]
+      security: []
+      description: Handles user creation/updates from Clerk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Clerk webhook payload
+      responses:
+        '200':
+          description: Webhook processed successfully
+        '400':
+          description: Invalid webhook payload
+
+  /kajabi/webhook:
+    post:
+      summary: Kajabi course completion webhook
+      tags: [Webhooks]
+      security: []
+      description: Handles automatic point awarding for Learn stage completions
+      parameters:
+        - name: X-Kajabi-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Webhook signature for verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event_type:
+                  type: string
+                data:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                    course_name:
+                      type: string
+                    completed_at:
+                      type: string
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Invalid webhook signature or payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Email Services (Internal)
+  /emails/welcome:
+    post:
+      summary: Send welcome email
+      tags: [Email]
+      security: []
+      description: Internal email service endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                to:
+                  type: string
+                  format: email
+                name:
+                  type: string
+              required:
+                - to
+                - name
+      responses:
+        '200':
+          description: Email sent successfully
+
+  /emails/approval:
+    post:
+      summary: Send submission approval email
+      tags: [Email]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                to:
+                  type: string
+                  format: email
+                submissionType:
+                  type: string
+                pointsAwarded:
+                  type: integer
+              required:
+                - to
+                - submissionType
+                - pointsAwarded
+      responses:
+        '200':
+          description: Email sent successfully
+
+  /emails/rejection:
+    post:
+      summary: Send submission rejection email
+      tags: [Email]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                to:
+                  type: string
+                  format: email
+                submissionType:
+                  type: string
+                reason:
+                  type: string
+              required:
+                - to
+                - submissionType
+      responses:
+        '200':
+          description: Email sent successfully
+
+  /emails/submission-confirmation:
+    post:
+      summary: Send submission confirmation email
+      tags: [Email]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                to:
+                  type: string
+                  format: email
+                submissionType:
+                  type: string
+                submissionId:
+                  type: string
+              required:
+                - to
+                - submissionType
+                - submissionId
+      responses:
+        '200':
+          description: Email sent successfully
+
+  # Cron Jobs
+  /cron/refresh-leaderboards:
+    post:
+      summary: Refresh materialized views
+      tags: [System]
+      security: []
+      description: Cron endpoint to refresh leaderboard materialized views
+      responses:
+        '200':
+          description: Views refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  # Documentation
+  /docs:
+    get:
+      summary: API documentation redirect
+      tags: [System]
+      security: []
+      responses:
+        '302':
+          description: Redirect to API documentation
+
+  # Admin Endpoints
   /admin/submissions:
     get:
-      summary: Queue of pending submissions
-      responses:
-        '200': { description: OK }
-  /admin/submissions/{id}/approve:
-    post:
-      summary: Approve a submission and award points
+      summary: Get submissions queue for review
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
       parameters:
-        - in: path
-          name: id
-          required: true
-          schema: { type: string }
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED, ALL]
+            default: PENDING
+        - name: activity
+          in: query
+          schema:
+            type: string
+            enum: [LEARN, EXPLORE, AMPLIFY, PRESENT, SHINE]
+        - name: userId
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            default: created_at
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
       responses:
-        '200': { description: OK }
-  /leaderboard/top:
-    get:
-      summary: Get top N users
-      parameters:
-        - in: query
-          name: period
-          schema: { type: string, enum: [all, 30d], default: all }
-        - in: query
-          name: limit
-          schema: { type: integer, default: 20, maximum: 100 }
-      responses:
-        '200': { description: OK }
-  /metrics:
-    get:
-      summary: Public aggregate counts per stage
-      responses:
-        '200': { description: OK }
+        '200':
+          description: Paginated submissions list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  submissions:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/Submission'
+                        - type: object
+                          properties:
+                            user:
+                              $ref: '#/components/schemas/User'
+                            activity:
+                              $ref: '#/components/schemas/Activity'
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
-  /badges/me:
-    get:
-      summary: Get badges earned by current user
+    patch:
+      summary: Review a submission (approve/reject)
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submissionId:
+                  type: string
+                action:
+                  type: string
+                  enum: [approve, reject]
+                reviewNote:
+                  type: string
+                pointAdjustment:
+                  type: integer
+                  description: Override points (within ±20% of base)
+              required:
+                - submissionId
+                - action
       responses:
-        '200': { description: OK }
+        '200':
+          description: Submission reviewed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  submission:
+                    $ref: '#/components/schemas/Submission'
+                  message:
+                    type: string
+        '400':
+          description: Invalid request or submission already reviewed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Bulk review submissions
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                submissionIds:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 50
+                action:
+                  type: string
+                  enum: [approve, reject]
+                reviewNote:
+                  type: string
+              required:
+                - submissionIds
+                - action
+      responses:
+        '200':
+          description: Bulk operation completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  processed:
+                    type: integer
+                  message:
+                    type: string
+        '400':
+          description: Invalid request or too many submissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/submissions/{id}:
+    get:
+      summary: Get detailed submission for review
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detailed submission data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Submission'
+                  - type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      activity:
+                        $ref: '#/components/schemas/Activity'
+                      attachmentUrls:
+                        type: array
+                        items:
+                          type: string
+        '404':
+          description: Submission not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/users:
+    get:
+      summary: Get users list for management
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [participant, reviewer, admin, superadmin]
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Paginated users list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/User'
+                        - type: object
+                          properties:
+                            _count:
+                              type: object
+                              properties:
+                                submissions:
+                                  type: integer
+                            pointsTotal:
+                              type: integer
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      pages:
+                        type: integer
+
+  /admin/exports:
+    get:
+      summary: Export data to CSV
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [users, submissions, leaderboard, points]
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [csv, xlsx]
+            default: csv
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: CSV/XLSX file download
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
 
   /admin/badges:
     get:
-      summary: List defined badges
+      summary: List all badge definitions
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
       responses:
-        '200': { description: OK }
+        '200':
+          description: List of badges
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  badges:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Badge'
+
     post:
-      summary: Upsert a badge definition
+      summary: Create or update badge definition
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
       requestBody:
         required: true
         content:
@@ -92,9 +1333,297 @@ paths:
             schema:
               type: object
               properties:
-                code: { type: string }
-                name: { type: string }
-                description: { type: string }
-                criteria: { type: object }
+                code:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                icon_url:
+                  type: string
+                criteria:
+                  type: object
+                  description: JSON criteria for badge earning
+              required:
+                - code
+                - name
+                - description
+                - criteria
       responses:
-        '200': { description: OK }
+        '200':
+          description: Badge created/updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  badge:
+                    $ref: '#/components/schemas/Badge'
+
+  /admin/badges/assign:
+    post:
+      summary: Manually assign badge to user
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                badgeId:
+                  type: string
+                reason:
+                  type: string
+              required:
+                - userId
+                - badgeId
+      responses:
+        '200':
+          description: Badge assigned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  earnedBadge:
+                    $ref: '#/components/schemas/EarnedBadge'
+
+  /admin/analytics:
+    get:
+      summary: Get admin analytics dashboard data
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, all]
+            default: 30d
+      responses:
+        '200':
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userStats:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      new:
+                        type: integer
+                      active:
+                        type: integer
+                  submissionStats:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      pending:
+                        type: integer
+                      approved:
+                        type: integer
+                      rejected:
+                        type: integer
+                      byStage:
+                        type: object
+                        additionalProperties:
+                          type: integer
+                  pointsStats:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      average:
+                        type: number
+                      distribution:
+                        type: object
+                        additionalProperties:
+                          type: integer
+                  trends:
+                    type: object
+                    properties:
+                      dailySubmissions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date
+                            count:
+                              type: integer
+
+  /admin/kajabi:
+    get:
+      summary: Get Kajabi webhook events for reconciliation
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [processed, unprocessed, error]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Kajabi events list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        event_type:
+                          type: string
+                        email:
+                          type: string
+                        course:
+                          type: string
+                        processed_at:
+                          type: string
+                          format: date-time
+                        user_matched:
+                          type: boolean
+                        error:
+                          type: string
+                  pagination:
+                    type: object
+                    properties:
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
+                      total:
+                        type: integer
+
+  /admin/kajabi/reprocess:
+    post:
+      summary: Reprocess failed Kajabi webhook events
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventIds:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 50
+              required:
+                - eventIds
+      responses:
+        '200':
+          description: Events reprocessed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  processed:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        eventId:
+                          type: string
+                        error:
+                          type: string
+
+  /admin/kajabi/test:
+    post:
+      summary: Test Kajabi webhook processing
+      tags: [Admin]
+      security:
+        - ClerkJWT: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                course:
+                  type: string
+              required:
+                - email
+                - course
+      responses:
+        '200':
+          description: Test webhook processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  userFound:
+                    type: boolean
+                  pointsAwarded:
+                    type: integer
+
+tags:
+  - name: System
+    description: System health and utility endpoints
+  - name: Public
+    description: Public endpoints (no authentication required)
+  - name: User
+    description: User dashboard and profile management
+  - name: Submissions
+    description: LEAPS submission management
+  - name: Files
+    description: File upload and access
+  - name: Badges
+    description: Badge system
+  - name: Webhooks
+    description: External webhook endpoints
+  - name: Email
+    description: Email service endpoints
+  - name: Admin
+    description: Administrative endpoints (reviewer/admin access required)

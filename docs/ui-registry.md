@@ -39,10 +39,8 @@ Located in `packages/ui/src/components/ui/`:
 - **table.tsx** - Data table components
 - **textarea.tsx** - Multi-line text input
 
-### Legacy Custom Components
+### Custom Components
 Located in `packages/ui/` root:
-- **Alert.tsx** - Legacy alert component
-- **Card.tsx** - Legacy card component
 - **FileUpload.tsx** - File upload with progress
 - **LoadingSpinner.tsx** - Loading indicators
 - **FormField.tsx** - Custom form field wrapper
@@ -79,7 +77,7 @@ import { Button, Card, Alert } from "@elevate/ui"
 // Import utilities
 import { cn } from "@elevate/ui/lib/utils"
 
-// Import legacy components
+// Import custom components
 import { FileUpload, LoadingSpinner } from "@elevate/ui"
 ```
 
@@ -260,7 +258,6 @@ export { NewComponent } from "./components/ui/new-component"
 ### Import Strategy
 - Prefer importing from `@elevate/ui` package exports
 - Use direct imports only for performance-critical paths
-- Keep legacy component imports separate
 
 ### Styling Guidelines
 - Use CSS variables for themeable properties

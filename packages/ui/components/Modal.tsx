@@ -1,0 +1,183 @@
+'use client'
+
+import React, { useEffect, useRef } from 'react'
+import { Button } from './button'
+
+interface ModalProps {
+  isOpen: boolean
+  onClose: () => void
+  title: string
+  children: React.ReactNode
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  actions?: React.ReactNode
+  preventCloseOnOverlay?: boolean
+}
+
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'md',
+  actions,
+  preventCloseOnOverlay = false
+}: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden'
+      // Focus trap - focus the modal when it opens
+      modalRef.current?.focus()
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isOpen, onClose])
+
+  if (!isOpen) return null
+
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'sm':
+        return 'max-w-md'
+      case 'lg':
+        return 'max-w-2xl'
+      case 'xl':
+        return 'max-w-4xl'
+      default:
+        return 'max-w-lg'
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        {/* Background overlay */}
+        <div
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          onClick={preventCloseOnOverlay ? undefined : onClose}
+        />
+
+        {/* This element is to trick the browser into centering the modal contents. */}
+        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+          &#8203;
+        </span>
+
+        {/* Modal panel */}
+        <div
+          ref={modalRef}
+          tabIndex={-1}
+          className={`
+            inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all
+            sm:my-8 sm:align-middle sm:w-full ${getSizeClasses()}
+          `}
+        >
+          {/* Header */}
+          <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="flex items-start justify-between">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">
+                {title}
+              </h3>
+              <button
+                onClick={onClose}
+                className="ml-3 flex-shrink-0 bg-white rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <span className="sr-only">Close</span>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="px-4 pb-4 sm:px-6 sm:pb-4">
+            {children}
+          </div>
+
+          {/* Footer */}
+          {actions && (
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              {actions}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface ConfirmModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  title: string
+  message: string
+  confirmText?: string
+  cancelText?: string
+  confirmVariant?: 'default' | 'ghost'
+  isLoading?: boolean
+}
+
+export function ConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  confirmVariant = 'default',
+  isLoading = false
+}: ConfirmModalProps) {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      size="sm"
+      preventCloseOnOverlay={isLoading}
+      actions={
+        <div className="space-x-3">
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            {cancelText}
+          </Button>
+          <Button
+            variant={confirmVariant}
+            onClick={onConfirm}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Processing...' : confirmText}
+          </Button>
+        </div>
+      }
+    >
+      <p className="text-sm text-gray-600">
+        {message}
+      </p>
+    </Modal>
+  )
+}

@@ -103,7 +103,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return [...staticPages, ...profilePages]
 
   } catch (error) {
-    console.error('Sitemap generation error:', error)
     
     // Return minimal sitemap on error
     return [

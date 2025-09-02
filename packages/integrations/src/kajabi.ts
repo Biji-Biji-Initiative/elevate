@@ -27,9 +27,20 @@ export interface KajabiOfferResponse {
   message?: string;
 }
 
+export interface KajabiTag {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface KajabiTagResponse {
   success: boolean;
   message?: string;
+}
+
+export interface KajabiTagsResponse {
+  tags: KajabiTag[];
 }
 
 export interface CreateContactData {
@@ -60,12 +71,6 @@ export class KajabiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        console.error('Kajabi API Error:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          url: error.config?.url,
-        });
         throw error;
       }
     );
@@ -106,9 +111,11 @@ export class KajabiClient {
         );
         return response.data.contact;
       }
-    } catch (error: any) {
-      console.error('Error creating/updating Kajabi contact:', error);
-      throw new Error(`Failed to create or update contact: ${error?.response?.data?.message || (error instanceof Error ? error.message : String(error))}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as any)?.response?.data?.message || String(error);
+      throw new Error(`Failed to create or update contact: ${errorMessage}`);
     }
   }
 
@@ -122,12 +129,14 @@ export class KajabiClient {
       );
       
       return response.data.contacts.length > 0 ? response.data.contacts[0] : null;
-    } catch (error: any) {
-      if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      if ((error as any)?.response?.status === 404) {
         return null;
       }
-      console.error('Error finding Kajabi contact:', error);
-      throw new Error(`Failed to find contact: ${error?.response?.data?.message || (error instanceof Error ? error.message : String(error))}`);
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as any)?.response?.data?.message || String(error);
+      throw new Error(`Failed to find contact: ${errorMessage}`);
     }
   }
 
@@ -141,9 +150,11 @@ export class KajabiClient {
       );
       
       return response.data.success || response.status === 200 || response.status === 201;
-    } catch (error: any) {
-      console.error('Error granting Kajabi offer:', error);
-      throw new Error(`Failed to grant offer: ${error?.response?.data?.message || (error instanceof Error ? error.message : String(error))}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as any)?.response?.data?.message || String(error);
+      throw new Error(`Failed to grant offer: ${errorMessage}`);
     }
   }
 
@@ -157,9 +168,11 @@ export class KajabiClient {
       );
       
       return response.data.success || response.status === 200 || response.status === 201;
-    } catch (error: any) {
-      console.error('Error tagging Kajabi contact:', error);
-      throw new Error(`Failed to tag contact: ${error?.response?.data?.message || (error instanceof Error ? error.message : String(error))}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as any)?.response?.data?.message || String(error);
+      throw new Error(`Failed to tag contact: ${errorMessage}`);
     }
   }
 
@@ -173,22 +186,26 @@ export class KajabiClient {
       );
       
       return response.status === 200 || response.status === 204;
-    } catch (error: any) {
-      console.error('Error removing tag from Kajabi contact:', error);
-      throw new Error(`Failed to remove tag: ${error?.response?.data?.message || (error instanceof Error ? error.message : String(error))}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as any)?.response?.data?.message || String(error);
+      throw new Error(`Failed to remove tag: ${errorMessage}`);
     }
   }
 
   /**
    * Get all tags for a contact
    */
-  async getContactTags(contactId: number): Promise<any[]> {
+  async getContactTags(contactId: number): Promise<KajabiTag[]> {
     try {
-      const response = await this.client.get(`/contacts/${contactId}/tags`);
+      const response: AxiosResponse<KajabiTagsResponse> = await this.client.get(`/contacts/${contactId}/tags`);
       return response.data.tags || [];
-    } catch (error: any) {
-      console.error('Error getting Kajabi contact tags:', error);
-      throw new Error(`Failed to get contact tags: ${error?.response?.data?.message || (error instanceof Error ? error.message : String(error))}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as any)?.response?.data?.message || String(error);
+      throw new Error(`Failed to get contact tags: ${errorMessage}`);
     }
   }
 
@@ -201,7 +218,6 @@ export class KajabiClient {
       const response = await this.client.get('/contacts?limit=1');
       return response.status === 200;
     } catch (error) {
-      console.error('Kajabi API health check failed:', error);
       return false;
     }
   }

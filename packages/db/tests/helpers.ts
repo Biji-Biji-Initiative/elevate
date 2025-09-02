@@ -173,7 +173,8 @@ export class TestDatabase {
     const start = Date.now();
     while (Date.now() - start < maxWait) {
       try {
-        await this.prisma.$executeRaw`SELECT 1`;
+        // Use Prisma's built-in health check instead of raw SQL
+        await this.prisma.$queryRaw`SELECT 1 as health_check`;
         await new Promise(resolve => setTimeout(resolve, 100));
         break;
       } catch (error) {
@@ -193,21 +194,65 @@ export class TestDatabase {
     const start = Date.now();
     
     try {
-      await this.prisma.$executeRaw`SELECT 1`;
+      // Test connection with a simple query
+      await this.prisma.$queryRaw`SELECT 1 as health_check`;
       const connected = true;
       const latency = Date.now() - start;
 
-      // Get table list
-      const tables = await this.prisma.$queryRaw<Array<{ table_name: string }>>`
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public'
-      `;
+      // Get table list using Prisma's introspection approach
+      // Since we know our schema, we can list the main tables
+      const tables = [
+        'users', 'activities', 'submissions', 'points_ledger', 
+        'badges', 'earned_badges', 'kajabi_events', 'audit_log'
+      ];
+
+      // Verify tables exist by checking if we can query them
+      const existingTables: string[] = [];
+      for (const table of tables) {
+        try {
+          switch (table) {
+            case 'users':
+              await this.prisma.user.findFirst({ take: 1 });
+              existingTables.push(table);
+              break;
+            case 'activities':
+              await this.prisma.activity.findFirst({ take: 1 });
+              existingTables.push(table);
+              break;
+            case 'submissions':
+              await this.prisma.submission.findFirst({ take: 1 });
+              existingTables.push(table);
+              break;
+            case 'points_ledger':
+              await this.prisma.pointsLedger.findFirst({ take: 1 });
+              existingTables.push(table);
+              break;
+            case 'badges':
+              await this.prisma.badge.findFirst({ take: 1 });
+              existingTables.push(table);
+              break;
+            case 'earned_badges':
+              await this.prisma.earnedBadge.findFirst({ take: 1 });
+              existingTables.push(table);
+              break;
+            case 'kajabi_events':
+              await this.prisma.kajabiEvent.findFirst({ take: 1 });
+              existingTables.push(table);
+              break;
+            case 'audit_log':
+              await this.prisma.auditLog.findFirst({ take: 1 });
+              existingTables.push(table);
+              break;
+          }
+        } catch {
+          // Table doesn't exist or is not accessible
+        }
+      }
 
       return {
         connected,
         latency,
-        tables: tables.map(t => t.table_name),
+        tables: existingTables,
       };
     } catch (error) {
       return {
@@ -364,18 +409,34 @@ export class PerformanceHelper {
 
     for (let i = 0; i < iterations; i++) {
       const { duration } = await this.measureQuery(async () => {
-        return this.prisma.$queryRaw`
-          SELECT 
-            u.id,
-            u.handle,
-            u.name,
-            COALESCE(SUM(pl.delta_points), 0) as total_points
-          FROM users u
-          LEFT JOIN points_ledger pl ON u.id = pl.user_id
-          GROUP BY u.id, u.handle, u.name
-          ORDER BY total_points DESC
-          LIMIT 20
-        `;
+        // Use Prisma aggregation instead of raw SQL
+        const usersWithPoints = await this.prisma.user.findMany({
+          where: {
+            role: 'PARTICIPANT'
+          },
+          select: {
+            id: true,
+            handle: true,
+            name: true,
+            ledger: {
+              select: {
+                delta_points: true
+              }
+            }
+          },
+          take: 20
+        });
+        
+        // Calculate totals and sort
+        return usersWithPoints
+          .map(user => ({
+            id: user.id,
+            handle: user.handle,
+            name: user.name,
+            total_points: user.ledger.reduce((sum, entry) => sum + entry.delta_points, 0)
+          }))
+          .sort((a, b) => b.total_points - a.total_points)
+          .slice(0, 20);
       });
       
       results.push(duration);

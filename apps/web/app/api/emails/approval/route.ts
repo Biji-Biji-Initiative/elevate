@@ -53,7 +53,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Failed to send approval notification email:', error);
     return NextResponse.json(
       { error: 'Failed to send email' },
       { status: 500 }

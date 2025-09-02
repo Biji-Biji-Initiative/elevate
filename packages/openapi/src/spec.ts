@@ -510,7 +510,7 @@ registry.registerComponent('securitySchemes', 'WebhookSignature', {
 // Generate OpenAPI specification
 const generator = new OpenApiGeneratorV31(registry.definitions);
 
-export const openApiSpec: any = generator.generateDocument({
+export const openApiSpec = generator.generateDocument({
   openapi: '3.1.0',
   info: {
     version: '1.0.0',

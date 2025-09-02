@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
+import { Prisma } from '@prisma/client'
 
 export const runtime = 'nodejs';
+
+// Type definitions
+type MonthlyTrendData = {
+  month: string;
+  submissions: number;
+  approvals: number;
+};
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,81 +23,156 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Mock metrics data - in production this would query materialized views
-    const mockMetrics = {
-      learn: {
-        stage: 'learn',
-        totalSubmissions: 1247,
-        approvedSubmissions: 1124,
-        pendingSubmissions: 89,
-        rejectedSubmissions: 34,
-        avgPointsEarned: 19.2,
-        uniqueEducators: 1089,
-        completionRate: 90.1,
-        topSchools: [
-          { name: 'SMA Negeri 1 Jakarta', count: 45 },
-          { name: 'SMA Negeri 2 Surabaya', count: 38 },
-          { name: 'SMA Negeri 1 Bandung', count: 32 }
-        ],
-        cohortBreakdown: [
-          { cohort: 'Jakarta 2024', count: 312 },
-          { cohort: 'Surabaya 2024', count: 198 },
-          { cohort: 'Bandung 2024', count: 156 }
-        ],
-        monthlyTrend: [
-          { month: 'Sep 2024', submissions: 145, approvals: 132 },
-          { month: 'Oct 2024', submissions: 289, approvals: 261 },
-          { month: 'Nov 2024', submissions: 356, approvals: 324 },
-          { month: 'Dec 2024', submissions: 457, approvals: 407 }
-        ]
+    const activityCode = stage.toUpperCase()
+
+    // Get basic submission statistics
+    const submissionStats = await prisma.submission.aggregate({
+      where: { activity_code: activityCode },
+      _count: {
+        id: true
       }
-    }
+    })
 
-    // Generate scaled data for other stages
-    const baseMetrics = mockMetrics.learn
-    const scaleFactor = stage === 'explore' ? 0.7 : stage === 'amplify' ? 0.5 : stage === 'present' ? 0.4 : 0.3
-    
-    const stageMetrics = stage === 'learn' ? mockMetrics.learn : {
-      ...baseMetrics,
+    const approvedSubmissions = await prisma.submission.count({
+      where: { 
+        activity_code: activityCode, 
+        status: 'APPROVED' 
+      }
+    })
+
+    const pendingSubmissions = await prisma.submission.count({
+      where: { 
+        activity_code: activityCode, 
+        status: 'PENDING' 
+      }
+    })
+
+    const rejectedSubmissions = await prisma.submission.count({
+      where: { 
+        activity_code: activityCode, 
+        status: 'REJECTED' 
+      }
+    })
+
+    // Count unique educators who submitted for this activity
+    const uniqueEducators = await prisma.submission.findMany({
+      where: { activity_code: activityCode },
+      select: { user_id: true },
+      distinct: ['user_id']
+    })
+
+    // Get average points earned from points_ledger
+    const avgPointsResult = await prisma.pointsLedger.aggregate({
+      where: { activity_code: activityCode },
+      _avg: { delta_points: true }
+    })
+
+    // Get top schools
+    const topSchoolsRaw = await prisma.submission.groupBy({
+      by: ['user_id'],
+      where: { activity_code: activityCode },
+      _count: { id: true }
+    })
+
+    // Get user schools for top submissions
+    const userIds = topSchoolsRaw.map(item => item.user_id)
+    const usersWithSchools = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, school: true }
+    })
+
+    // Group by school
+    const schoolCounts = usersWithSchools.reduce((acc, user) => {
+      const school = user.school || 'Unknown School'
+      acc[school] = (acc[school] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    const topSchools = Object.entries(schoolCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+
+    // Get cohort breakdown
+    const cohortBreakdownRaw = await prisma.submission.groupBy({
+      by: ['user_id'],
+      where: { activity_code: activityCode },
+      _count: { id: true }
+    })
+
+    const usersWithCohorts = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, cohort: true }
+    })
+
+    const cohortCounts = usersWithCohorts.reduce((acc, user) => {
+      const cohort = user.cohort || 'Unknown Cohort'
+      acc[cohort] = (acc[cohort] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
+    const cohortBreakdown = Object.entries(cohortCounts)
+      .map(([cohort, count]) => ({ cohort, count }))
+      .sort((a, b) => b.count - a.count)
+
+    // Get monthly trend (last 6 months) using Prisma aggregation
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+
+    const monthlySubmissions = await prisma.submission.findMany({
+      where: {
+        activity_code: activityCode,
+        created_at: { gte: sixMonthsAgo }
+      },
+      select: {
+        created_at: true,
+        status: true
+      }
+    })
+
+    // Group submissions by month and calculate trend
+    const monthlyData = monthlySubmissions.reduce((acc, submission) => {
+      const date = new Date(submission.created_at)
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      
+      if (!acc[monthKey]) {
+        acc[monthKey] = {
+          month: monthLabel,
+          submissions: 0,
+          approvals: 0,
+          sortKey: monthKey
+        }
+      }
+      
+      acc[monthKey].submissions++
+      if (submission.status === 'APPROVED') {
+        acc[monthKey].approvals++
+      }
+      
+      return acc
+    }, {} as Record<string, MonthlyTrendData & { sortKey: string }>)
+
+    const monthlyTrend: MonthlyTrendData[] = Object.values(monthlyData)
+      .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+      .map(({ sortKey, ...data }) => data)
+
+    const totalSubmissions = submissionStats._count.id
+    const completionRate = totalSubmissions > 0 ? (approvedSubmissions / totalSubmissions) * 100 : 0
+
+    const stageMetrics = {
       stage,
-      totalSubmissions: Math.floor(baseMetrics.totalSubmissions * scaleFactor),
-      approvedSubmissions: Math.floor(baseMetrics.approvedSubmissions * scaleFactor),
-      pendingSubmissions: Math.floor(baseMetrics.pendingSubmissions * scaleFactor),
-      rejectedSubmissions: Math.floor(baseMetrics.rejectedSubmissions * scaleFactor),
-      uniqueEducators: Math.floor(baseMetrics.uniqueEducators * scaleFactor),
-      avgPointsEarned: stage === 'explore' ? 47.8 : stage === 'amplify' ? 35.6 : 19.2,
-      topSchools: baseMetrics.topSchools.map(school => ({
-        ...school,
-        count: Math.floor(school.count * scaleFactor)
-      })),
-      cohortBreakdown: baseMetrics.cohortBreakdown.map(cohort => ({
-        ...cohort,
-        count: Math.floor(cohort.count * scaleFactor)
-      })),
-      monthlyTrend: baseMetrics.monthlyTrend.map(month => ({
-        ...month,
-        submissions: Math.floor(month.submissions * scaleFactor),
-        approvals: Math.floor(month.approvals * scaleFactor)
-      }))
+      totalSubmissions,
+      approvedSubmissions,
+      pendingSubmissions,
+      rejectedSubmissions,
+      avgPointsEarned: Number(avgPointsResult._avg.delta_points || 0),
+      uniqueEducators: uniqueEducators.length,
+      completionRate: Number(completionRate.toFixed(2)),
+      topSchools,
+      cohortBreakdown,
+      monthlyTrend
     }
-
-    // In production, you would use something like:
-    /*
-    const metrics = await prisma.$queryRaw`
-      SELECT 
-        activity_code as stage,
-        COUNT(*) as total_submissions,
-        COUNT(CASE WHEN status = 'APPROVED' THEN 1 END) as approved_submissions,
-        COUNT(CASE WHEN status = 'PENDING' THEN 1 END) as pending_submissions,
-        COUNT(CASE WHEN status = 'REJECTED' THEN 1 END) as rejected_submissions,
-        AVG(CASE WHEN status = 'APPROVED' THEN points_awarded END) as avg_points_earned,
-        COUNT(DISTINCT user_id) as unique_educators
-      FROM submissions s
-      LEFT JOIN activities a ON s.activity_code = a.code
-      WHERE s.activity_code = ${stage.toUpperCase()}
-      GROUP BY activity_code
-    `
-    */
 
     return NextResponse.json(stageMetrics, {
       headers: {
@@ -98,7 +181,6 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Metrics API error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch metrics data' },
       { status: 500 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@elevate/db/client';
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
+import type { KajabiTagEvent } from '@elevate/types';
 
 export const runtime = 'nodejs';
 
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
         data: {
           user_id: user.id,
           activity_code: 'LEARN',
-          source: 'REPROCESS',
+          source: 'MANUAL',
           delta_points: learnActivity.default_points,
           external_source: 'kajabi',
           external_event_id: event_id
@@ -205,7 +206,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error reprocessing Kajabi event:', error);
     return createErrorResponse(error, 500);
   }
 }

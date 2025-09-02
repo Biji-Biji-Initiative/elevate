@@ -25,8 +25,6 @@ This package provides a centralized collection of UI components used across the 
 - **FileUpload** - File upload with drag & drop and progress
 - **LoadingSpinner** - Loading indicators and overlays
 - **FormField** - Enhanced form field wrapper
-- **Alert (Legacy)** - Custom alert implementation
-- **Card (Legacy)** - Custom card implementation
 
 ## Installation & Usage
 
@@ -63,7 +61,7 @@ packages/ui/
 │   ├── lib/             # Utility functions
 │   ├── globals.css      # Global styles and CSS variables
 │   └── index.ts         # Main export file
-├── components/          # Legacy component location
+├── components/          # Custom component location
 ├── tailwind.config.js   # Tailwind configuration
 ├── tsconfig.json        # TypeScript configuration
 └── package.json         # Package configuration

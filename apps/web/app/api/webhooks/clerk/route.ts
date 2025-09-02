@@ -5,6 +5,7 @@ import { WebhookEvent } from '@clerk/nextjs/server'
 import { prisma } from '@elevate/db/client'
 import { getKajabiClient } from '@elevate/integrations'
 import { withRateLimit, webhookRateLimiter } from '@elevate/security'
+import type { Role } from '@prisma/client'
 
 export const runtime = 'nodejs';
 
@@ -20,7 +21,6 @@ export async function POST(req: NextRequest) {
 
     // Enhanced header validation
     if (!svixId || !svixTimestamp || !svixSignature) {
-      console.error('Missing Clerk webhook headers:', { svixId: !!svixId, svixTimestamp: !!svixTimestamp, svixSignature: !!svixSignature });
       return new NextResponse('Missing required svix headers', {
         status: 400,
       })
@@ -28,21 +28,19 @@ export async function POST(req: NextRequest) {
 
     // Validate webhook secret is configured
     if (!process.env.CLERK_WEBHOOK_SECRET) {
-      console.error('CLERK_WEBHOOK_SECRET not configured');
       return new NextResponse('Webhook not properly configured', {
         status: 500,
       });
     }
 
     // Get the body
-    let payload: any;
+    let payload: WebhookEvent;
     let body: string;
     
     try {
       payload = await req.json()
       body = JSON.stringify(payload)
     } catch (parseError) {
-      console.error('Invalid JSON in Clerk webhook body:', parseError);
       return new NextResponse('Invalid JSON payload', {
         status: 400,
       });
@@ -64,7 +62,6 @@ export async function POST(req: NextRequest) {
         }
       });
     } catch (auditError) {
-      console.error('Failed to store webhook audit log:', auditError);
       // Continue processing
     }
 
@@ -81,12 +78,6 @@ export async function POST(req: NextRequest) {
         'svix-signature': svixSignature,
       }) as WebhookEvent
     } catch (err) {
-      console.error('Error verifying Clerk webhook:', {
-        error: err instanceof Error ? err.message : String(err),
-        svixId,
-        svixTimestamp,
-        signaturePrefix: svixSignature.substring(0, 16) + '...'
-      });
       
       // Log failed verification attempt
       await prisma.auditLog.create({
@@ -120,7 +111,6 @@ export async function POST(req: NextRequest) {
         const email = primaryEmail?.email_address
         
         if (!email) {
-          console.error('No email found for user:', id)
           return new NextResponse('No email address found', { status: 400 })
         }
 
@@ -137,13 +127,12 @@ export async function POST(req: NextRequest) {
             if (!existingUser || existingUser.id === id) break
             handle = `${baseHandle}${counter++}`
           } catch (error) {
-            console.error('Error checking handle uniqueness:', error)
             break
           }
         }
 
         // Get role from metadata (defaults to PARTICIPANT)
-        const role = (public_metadata as any)?.role?.toUpperCase() || 'PARTICIPANT'
+        const role = (public_metadata as Record<string, unknown>)?.role as string || 'PARTICIPANT'
         const validRoles = ['PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN']
         const userRole = validRoles.includes(role) ? role : 'PARTICIPANT'
 
@@ -154,7 +143,7 @@ export async function POST(req: NextRequest) {
             name,
             email,
             avatar_url: image_url || null,
-            role: userRole as any,
+            role: userRole as Role,
             handle: eventType === 'user.created' ? handle : undefined, // Only update handle on creation
           },
           create: {
@@ -163,7 +152,7 @@ export async function POST(req: NextRequest) {
             name,
             email,
             avatar_url: image_url || null,
-            role: userRole as any,
+            role: userRole as Role,
           },
         })
 
@@ -193,9 +182,7 @@ export async function POST(req: NextRequest) {
               }
             });
 
-            console.log(`User enrolled in Kajabi: ${email} (Contact ID: ${kajabiContact.id})`);
           } catch (kajabiError) {
-            console.error('Failed to enroll user in Kajabi:', kajabiError);
             // Don't fail the webhook if Kajabi enrollment fails
             // Log the error for manual follow-up
             await prisma.auditLog.create({
@@ -213,7 +200,6 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        console.log(`User ${eventType}: ${id} (${email})`)
         break
       }
 
@@ -226,17 +212,14 @@ export async function POST(req: NextRequest) {
           where: { id: id! },
         })
 
-        console.log(`User deleted: ${id}`)
         break
       }
 
       default:
-        console.log(`Unhandled event type: ${eventType}`)
     }
 
     return new NextResponse('Success', { status: 200 })
   } catch (error) {
-    console.error('Error processing Clerk webhook:', error)
     
     // Log error for debugging
     await prisma.auditLog.create({

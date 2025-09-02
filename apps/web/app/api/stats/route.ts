@@ -1,118 +1,233 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
+import { Prisma } from '@prisma/client'
+import type { ActivityPayload, ActivityCode } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
+// Type definitions
+type CohortWithAvgPoints = {
+  name: string;
+  count: number;
+  avgPoints: number;
+};
+
+type MonthlyGrowthData = {
+  month: string;
+  educators: number;
+  submissions: number;
+};
+
 export async function GET(request: NextRequest) {
   try {
-    // Mock data - in production this would aggregate from the database
-    const mockStats = {
-      totalEducators: 2357,
-      totalSubmissions: 3247,
-      totalPoints: 185432,
-      studentsImpacted: 45678,
-      byStage: {
-        learn: {
-          total: 1247,
-          approved: 1124,
-          pending: 89,
-          rejected: 34
-        },
-        explore: {
-          total: 892,
-          approved: 743,
-          pending: 112,
-          rejected: 37
-        },
-        amplify: {
-          total: 563,
-          approved: 467,
-          pending: 78,
-          rejected: 18
-        },
-        present: {
-          total: 421,
-          approved: 367,
-          pending: 44,
-          rejected: 10
-        },
-        shine: {
-          total: 234,
-          approved: 198,
-          pending: 31,
-          rejected: 5
-        }
-      },
-      topCohorts: [
-        { name: 'Jakarta 2024', count: 567, avgPoints: 142.5 },
-        { name: 'Surabaya 2024', count: 389, avgPoints: 138.2 },
-        { name: 'Bandung 2024', count: 298, avgPoints: 135.7 },
-        { name: 'Medan 2024', count: 234, avgPoints: 133.1 },
-        { name: 'Yogyakarta 2024', count: 189, avgPoints: 128.9 }
-      ],
-      monthlyGrowth: [
-        { month: '2024-09', educators: 156, submissions: 234 },
-        { month: '2024-10', educators: 389, submissions: 567 },
-        { month: '2024-11', educators: 678, submissions: 892 },
-        { month: '2024-12', educators: 1134, submissions: 1554 }
-      ],
-      badges: {
-        totalAwarded: 892,
-        uniqueBadges: 12,
-        mostPopular: [
-          { code: 'LEARN_MASTER', name: 'Learn Master', count: 234 },
-          { code: 'EXPLORER', name: 'Explorer', count: 198 },
-          { code: 'AMPLIFIER', name: 'Amplifier', count: 156 }
-        ]
-      }
-    }
-
-    // In production, you would use aggregation queries like:
-    /*
+    // Get real statistics from database
     const [
       totalEducators,
       totalSubmissions,
-      totalPoints,
+      totalPointsResult,
       stageStats,
       topCohorts,
-      badgeStats
+      badgeStats,
+      monthlyGrowth
     ] = await Promise.all([
+      // Total educators
       prisma.user.count(),
+      
+      // Total submissions
       prisma.submission.count(),
+      
+      // Total points awarded
       prisma.pointsLedger.aggregate({
         _sum: { delta_points: true }
       }),
-      // Stage-wise aggregation
+      
+      // Stage-wise submission statistics
       prisma.submission.groupBy({
         by: ['activity_code', 'status'],
         _count: { id: true }
       }),
-      // Top cohorts
+      
+      // Top cohorts by user count
       prisma.user.groupBy({
         by: ['cohort'],
+        where: { cohort: { not: null } },
         _count: { id: true },
-        _avg: { points: true },
         orderBy: { _count: { id: 'desc' } },
         take: 5
       }),
+      
       // Badge statistics
       prisma.earnedBadge.groupBy({
         by: ['badge_code'],
         _count: { id: true },
         orderBy: { _count: { id: 'desc' } },
         take: 5
-      })
-    ])
-    */
+      }),
 
-    return NextResponse.json(mockStats, {
+      // Monthly growth (last 6 months)
+      getMonthlyGrowthData()
+    ])
+
+    // Calculate students impacted (approximation from AMPLIFY submissions)
+    const amplifySubmissions = await prisma.submission.findMany({
+      where: { 
+        activity_code: 'AMPLIFY',
+        status: 'APPROVED' 
+      },
+      select: { payload: true }
+    })
+
+    let studentsImpacted = 0
+    amplifySubmissions.forEach(submission => {
+      if (submission.payload && typeof submission.payload === 'object') {
+        const payload = submission.payload as ActivityPayload
+        studentsImpacted += (payload.studentsCount || 0)
+      }
+    })
+
+    // Process stage statistics
+    const byStage: Record<ActivityCode, { submissions: number; avgRating: number }> = {} as Record<ActivityCode, { submissions: number; avgRating: number }>
+    const stages = ['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']
+    
+    stages.forEach(stage => {
+      byStage[stage.toLowerCase()] = {
+        total: 0,
+        approved: 0,
+        pending: 0,
+        rejected: 0
+      }
+    })
+
+    stageStats.forEach(stat => {
+      const stage = stat.activity_code.toLowerCase()
+      if (byStage[stage]) {
+        byStage[stage][stat.status.toLowerCase()] = stat._count.id
+        byStage[stage].total += stat._count.id
+      }
+    })
+
+    // Get cohort average points using Prisma aggregation
+    const cohortsWithAvgPoints: CohortWithAvgPoints[] = await Promise.all(
+      topCohorts.map(async (cohort) => {
+        // Get all users in this cohort
+        const cohortUsers = await prisma.user.findMany({
+          where: { cohort: cohort.cohort },
+          select: { id: true }
+        })
+        
+        const userIds = cohortUsers.map(u => u.id)
+        
+        if (userIds.length === 0) {
+          return {
+            name: cohort.cohort || 'Unknown',
+            count: cohort._count.id,
+            avgPoints: 0
+          }
+        }
+        
+        // Get points for all users in this cohort
+        const userPointsData = await prisma.pointsLedger.groupBy({
+          by: ['user_id'],
+          where: {
+            user_id: { in: userIds }
+          },
+          _sum: {
+            delta_points: true
+          }
+        })
+        
+        // Calculate average
+        const totalPoints = userPointsData.reduce((sum, user) => 
+          sum + (user._sum.delta_points || 0), 0
+        )
+        const avgPoints = userPointsData.length > 0 ? totalPoints / userPointsData.length : 0
+        
+        return {
+          name: cohort.cohort || 'Unknown',
+          count: cohort._count.id,
+          avgPoints
+        }
+      })
+    )
+
+    // Helper function to get monthly growth data
+    async function getMonthlyGrowthData(): Promise<MonthlyGrowthData[]> {
+      const sixMonthsAgo = new Date()
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+      
+      const submissions = await prisma.submission.findMany({
+        where: {
+          created_at: { gte: sixMonthsAgo }
+        },
+        select: {
+          created_at: true,
+          user_id: true
+        }
+      })
+      
+      // Group by month
+      const monthlyData = submissions.reduce((acc, submission) => {
+        const monthKey = submission.created_at.toISOString().slice(0, 7) // YYYY-MM format
+        if (!acc[monthKey]) {
+          acc[monthKey] = {
+            educators: new Set<string>(),
+            submissions: 0
+          }
+        }
+        acc[monthKey].educators.add(submission.user_id)
+        acc[monthKey].submissions++
+        return acc
+      }, {} as Record<string, { educators: Set<string>; submissions: number }>)
+      
+      // Convert to array and format
+      return Object.entries(monthlyData)
+        .map(([month, data]) => ({
+          month,
+          educators: data.educators.size,
+          submissions: data.submissions
+        }))
+        .sort((a, b) => a.month.localeCompare(b.month))
+    }
+
+    // Get badge details for most popular badges
+    const badgeDetails = await prisma.badge.findMany({
+      where: {
+        code: { in: badgeStats.map(b => b.badge_code) }
+      },
+      select: { code: true, name: true }
+    })
+
+    const mostPopularBadges = badgeStats.map(stat => {
+      const badge = badgeDetails.find(b => b.code === stat.badge_code)
+      return {
+        code: stat.badge_code,
+        name: badge?.name || stat.badge_code,
+        count: stat._count.id
+      }
+    })
+
+    const stats = {
+      totalEducators,
+      totalSubmissions,
+      totalPoints: totalPointsResult._sum.delta_points || 0,
+      studentsImpacted,
+      byStage,
+      topCohorts: cohortsWithAvgPoints,
+      monthlyGrowth,
+      badges: {
+        totalAwarded: badgeStats.reduce((sum, stat) => sum + stat._count.id, 0),
+        uniqueBadges: badgeStats.length,
+        mostPopular: mostPopularBadges
+      }
+    }
+
+    return NextResponse.json(stats, {
       headers: {
         'Cache-Control': 'public, s-maxage=1800' // Cache for 30 minutes
       }
     })
 
   } catch (error) {
-    console.error('Stats API error:', error)
     return NextResponse.json(
       { error: 'Failed to fetch statistics' },
       { status: 500 }

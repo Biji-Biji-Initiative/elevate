@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser, requireRole, RoleName, RoleError } from './withRole'
+import { getCurrentUser, requireRole, RoleName, RoleError, AuthUser } from './withRole'
 
 // Re-export commonly used functions
-export { requireRole, getCurrentUser, RoleError } from './withRole'
+export { requireRole, getCurrentUser, RoleError, hasRole } from './withRole'
 
 /**
  * API route handler with role protection
@@ -12,7 +12,7 @@ export { requireRole, getCurrentUser, RoleError } from './withRole'
  */
 export function createProtectedApiHandler(
   minRole: RoleName,
-  handler: (user: any, req: NextRequest) => Promise<NextResponse>
+  handler: (user: AuthUser, req: NextRequest) => Promise<NextResponse>
 ) {
   return async (req: NextRequest): Promise<NextResponse> => {
     try {
@@ -42,7 +42,6 @@ export function createProtectedApiHandler(
         }
       }
       
-      console.error('API handler error:', error)
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -59,7 +58,7 @@ export function createProtectedApiHandler(
  */
 export function createProtectedAction<TInput, TOutput>(
   minRole: RoleName,
-  action: (user: any, input: TInput) => Promise<TOutput>
+  action: (user: AuthUser, input: TInput) => Promise<TOutput>
 ) {
   return async (input: TInput): Promise<TOutput> => {
     try {
@@ -108,14 +107,12 @@ export function createErrorResponse(error: unknown, fallbackStatus: number = 500
   }
   
   if (error instanceof Error) {
-    console.error('API Error:', error)
     return NextResponse.json(
       { error: error.message },
       { status: fallbackStatus }
     )
   }
   
-  console.error('Unknown API Error:', error)
   return NextResponse.json(
     { error: 'An unexpected error occurred' },
     { status: fallbackStatus }

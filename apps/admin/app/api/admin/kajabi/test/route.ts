@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         data: {
           user_id: user.id,
           activity_code: 'LEARN',
-          source: 'TEST',
+          source: 'MANUAL',
           delta_points: learnActivity.default_points,
           external_source: 'kajabi',
           external_event_id: eventId
@@ -169,7 +169,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating test Kajabi event:', error);
     return createErrorResponse(error, 500);
   }
 }

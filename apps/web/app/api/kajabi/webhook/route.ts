@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { prisma } from '@elevate/db';
+import { prisma } from '@elevate/db/client';
 import crypto from 'crypto';
 import { withRateLimit, webhookRateLimiter } from '@elevate/security';
+import type { KajabiTagEvent } from '@elevate/types';
 
 export const runtime = 'nodejs';
 
 // Verify webhook signature from Kajabi with timing-safe comparison
 function verifySignature(payload: string, signature: string): boolean {
   if (!process.env.KAJABI_WEBHOOK_SECRET) {
-    console.error('KAJABI_WEBHOOK_SECRET not configured');
     return false;
   }
 
   if (!signature || signature.length === 0) {
-    console.error('Missing or empty signature');
     return false;
   }
 
@@ -28,7 +27,6 @@ function verifySignature(payload: string, signature: string): boolean {
   const expectedBuffer = Buffer.from(expectedSignature);
 
   if (signatureBuffer.length !== expectedBuffer.length) {
-    console.error('Signature length mismatch');
     return false;
   }
 
@@ -37,7 +35,7 @@ function verifySignature(payload: string, signature: string): boolean {
 }
 
 // Process tag-based events from Kajabi
-async function processTagEvent(eventData: any) {
+async function processTagEvent(eventData: KajabiTagEvent) {
   try {
     const { contact, tag } = eventData.data;
     
@@ -52,7 +50,6 @@ async function processTagEvent(eventData: any) {
 
     // Only process LEARN_COMPLETED tags
     if (tagName !== 'LEARN_COMPLETED') {
-      console.log(`Tag event ignored - not LEARN_COMPLETED: ${tagName}`);
       return { success: true, reason: 'tag_not_processed', tag: tagName };
     }
 
@@ -62,7 +59,6 @@ async function processTagEvent(eventData: any) {
     });
 
     if (!user) {
-      console.log(`User not found for email: ${email}`);
       // Store for manual review
       await prisma.kajabiEvent.create({
         data: {
@@ -89,7 +85,6 @@ async function processTagEvent(eventData: any) {
     });
 
     if (existingEvent) {
-      console.log(`Event already processed: ${eventData.event_id}`);
       return { success: true, reason: 'already_processed' };
     }
 
@@ -167,7 +162,6 @@ async function processTagEvent(eventData: any) {
     };
 
   } catch (error) {
-    console.error('Error processing tag event:', error);
     
     // Store failed event for manual review
     try {
@@ -180,7 +174,6 @@ async function processTagEvent(eventData: any) {
         }
       });
     } catch (dbError) {
-      console.error('Failed to store failed event:', dbError);
     }
 
     throw error;
@@ -195,11 +188,10 @@ export async function POST(request: NextRequest) {
       const headersList = await headers();
       
       // Store event before processing for audit trail
-      let eventData: any;
+      let eventData: KajabiTagEvent;
       try {
         eventData = JSON.parse(body);
       } catch (parseError) {
-        console.error('Invalid JSON in webhook body:', parseError);
         return NextResponse.json(
           { error: 'Invalid JSON payload' },
           { status: 400 }
@@ -222,7 +214,6 @@ export async function POST(request: NextRequest) {
             }
           });
         } catch (storeError) {
-          console.error('Failed to store webhook event:', storeError);
           // Continue processing even if storage fails
         }
       }
@@ -233,7 +224,6 @@ export async function POST(request: NextRequest) {
                        headersList.get('authorization')?.replace('Bearer ', '');
 
       if (!signature) {
-        console.log('Missing webhook signature');
         return NextResponse.json(
           { error: 'Missing signature' },
           { status: 401 }
@@ -242,18 +232,12 @@ export async function POST(request: NextRequest) {
 
       // Verify webhook signature with enhanced security
       if (!verifySignature(body, signature)) {
-        console.log('Invalid webhook signature');
         return NextResponse.json(
           { error: 'Invalid signature' },
           { status: 401 }
         );
       }
     
-      console.log('Kajabi webhook received:', {
-      event_id: eventData.event_id,
-      event_type: eventData.event_type,
-      timestamp: eventData.created_at
-    });
 
     // Handle different event types
     switch (eventData.event_type) {
@@ -279,7 +263,6 @@ export async function POST(request: NextRequest) {
           }
         });
         
-        console.log(`Event ${eventData.event_type} stored for audit`);
         return NextResponse.json({
           success: true,
           message: `Event type ${eventData.event_type} stored for audit`
@@ -296,7 +279,6 @@ export async function POST(request: NextRequest) {
           }
         });
         
-        console.log(`Unhandled event type: ${eventData.event_type}`);
         return NextResponse.json({
           success: true,
           message: `Event type ${eventData.event_type} stored for audit`
@@ -304,7 +286,6 @@ export async function POST(request: NextRequest) {
     }
 
     } catch (error) {
-      console.error('Kajabi webhook error:', error);
       
       return NextResponse.json({
         success: false,

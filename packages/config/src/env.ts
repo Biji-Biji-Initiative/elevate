@@ -119,13 +119,12 @@ function withAliases(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return {
     ...env,
     // Support both SUPABASE_SERVICE_ROLE_KEY and SUPABASE_SERVICE_ROLE
-    SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY || (env as any).SUPABASE_SERVICE_ROLE,
+    SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY || (env as Record<string, string | undefined>).SUPABASE_SERVICE_ROLE,
   }
 }
 
 // Enhanced parsing with detailed error reporting and fail-fast behavior
-export function parseEnv(env: NodeJS.ProcessEnv, schema: z.ZodSchema<any> = EnvSchema) {
-  console.log('🔍 Validating environment variables...');
+export function parseEnv(env: NodeJS.ProcessEnv, schema: z.ZodSchema = EnvSchema) {
   const normalized = withAliases(env);
   const res = schema.safeParse(normalized);
   if (!res.success) {
@@ -166,23 +165,17 @@ export function parseEnv(env: NodeJS.ProcessEnv, schema: z.ZodSchema<any> = EnvS
     }
     
     // Show help message
-    console.log('\n📖 Help:');
-    console.log('  • Copy .env.example to .env.local and fill in the values');
-    console.log('  • Check the CLAUDE.md file for environment variable documentation');
-    console.log('  • Run: pnpm env:check to validate your configuration\n');
     
     // Fail fast on any error
     const allErrors = [...criticalErrors, ...warnings];
     throw new Error(`Environment validation failed (${allErrors.length} issues): ${allErrors.join('; ')}`);
   }
   
-  console.log('✅ Environment variables validated successfully');
   return res.data;
 }
 
 // Helper functions for specific app types with enhanced error handling
 export function parseWebEnv(env: NodeJS.ProcessEnv = process.env) {
-  console.log('🌐 Validating web app environment...');
   
   try {
     const parsed = parseEnv(withAliases(env), WebEnvSchema);
@@ -197,7 +190,6 @@ export function parseWebEnv(env: NodeJS.ProcessEnv = process.env) {
       }
     }
     
-    console.log('✅ Web app environment validated');
     return parsed;
   } catch (error) {
     console.error('❌ Web app environment validation failed:', error);
@@ -206,11 +198,9 @@ export function parseWebEnv(env: NodeJS.ProcessEnv = process.env) {
 }
 
 export function parseAdminEnv(env: NodeJS.ProcessEnv = process.env) {
-  console.log('⚙️  Validating admin app environment...');
   
   try {
     const parsed = parseEnv(env, AdminEnvSchema);
-    console.log('✅ Admin app environment validated');
     return parsed;
   } catch (error) {
     console.error('❌ Admin app environment validation failed:', error);
@@ -232,7 +222,6 @@ export function validateEnvOnStartup(appType: 'web' | 'admin' | 'general' = 'gen
   } catch (error) {
     console.error(`\n💥 ${appType.toUpperCase()} APP STARTUP FAILED`);
     console.error('Environment validation error:', error);
-    console.log('\nThe application cannot start with invalid environment configuration.');
     process.exit(1);
   }
 }

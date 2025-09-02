@@ -23,12 +23,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@prisma/client": "^5.19.0"
+    "@prisma/client": "^6.15.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
-    "typescript": "^5.5.4",
-    "prisma": "^5.19.0",
-    "tsup": "^8.0.2"
+    "typescript": "^5.9.2",
+    "prisma": "^6.15.0",
+    "tsup": "^8.3.7"
   }
 }

@@ -5,6 +5,7 @@
 
 import { PrismaClient, Role, SubmissionStatus, Visibility, LedgerSource } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import type { ActivityPayload } from '@elevate/types';
 
 // Types for test data
 export interface TestUser {
@@ -24,7 +25,7 @@ export interface TestSubmission {
   activity_code: string;
   status: SubmissionStatus;
   visibility: Visibility;
-  payload: any;
+  payload: ActivityPayload;
   attachments: string[];
   reviewer_id?: string;
   review_note?: string;
@@ -96,7 +97,7 @@ export class DatabaseFixtures {
   /**
    * Generate realistic payload data based on activity type
    */
-  generatePayloadForActivity(activityCode: string): any {
+  generatePayloadForActivity(activityCode: string): ActivityPayload {
     switch (activityCode) {
       case 'LEARN':
         return {

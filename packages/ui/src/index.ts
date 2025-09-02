@@ -54,14 +54,26 @@ export {
 // Export utility functions
 export { cn } from './lib/utils'
 
-// Export custom components (legacy)
-export { Card as LegacyCard } from '../Card'
-export { Input as LegacyInput } from '../Input'
-export { Textarea } from '../Textarea'
+// Export custom components
 export { FormField } from '../FormField'
 export { FileUpload } from '../FileUpload'
-export { Alert } from '../Alert'
-export { LoadingSpinner, LoadingContainer, LoadingOverlay } from '../LoadingSpinner'
+
+// Export new shared components
+export { LoadingSpinner, LoadingContainer, LoadingOverlay, PageLoading } from '../components/LoadingSpinner'
+export { DataTable } from '../components/DataTable'
+export type { DataTableProps, Column } from '../components/DataTable'
+export { Modal, ConfirmModal } from '../components/Modal'
+export { StatusBadge } from '../components/StatusBadge'
+export { StageCard } from '../components/StageCard'
+export { MetricsChart, StatsGrid } from '../components/MetricsChart'
+export { ShareButton, SocialShareButtons } from '../components/ShareButton'
+export { ProfileCard } from '../components/ProfileCard'
+export { LeaderboardTable } from '../components/LeaderboardTable'
+export { Header } from '../components/Header'
+export { ClientHeader } from '../components/ClientHeader'
+export { Footer } from '../components/Footer'
+export { AdminLayout } from '../components/AdminLayout'
+export { LanguageSwitcher } from '../components/LanguageSwitcher'
 
 // Export types
 export type { FileUploadProps } from '../FileUpload'

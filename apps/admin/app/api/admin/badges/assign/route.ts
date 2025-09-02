@@ -126,7 +126,6 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Error assigning badges:', error)
     return createErrorResponse(error, 500)
   }
 }
@@ -210,10 +209,6 @@ export async function DELETE(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Error removing badges:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to remove badges' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }

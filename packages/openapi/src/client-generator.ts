@@ -156,7 +156,7 @@ export class APIError extends Error {
   constructor(
     message: string,
     public status: number,
-    public details?: any[]
+    public details?: unknown[]
   ) {
     super(message);
     this.name = 'APIError';
@@ -164,7 +164,7 @@ export class APIError extends Error {
 }
 
 export class ValidationError extends APIError {
-  constructor(message: string, details?: any[]) {
+  constructor(message: string, details?: unknown[]) {
     super(message, 400, details);
     this.name = 'ValidationError';
   }

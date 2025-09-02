@@ -51,7 +51,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Error fetching Kajabi data:', error);
     return createErrorResponse(error, 500);
   }
 }

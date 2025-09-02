@@ -1,0 +1,300 @@
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/badges/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/badges/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/exports/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/exports/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/kajabi/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/kajabi/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/layout.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/layout.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/queue/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/queue/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/review/[id]/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/review/[id]/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/submissions/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/submissions/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/unauthorized/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/unauthorized/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/users/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/users/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/analytics/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/analytics/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/badges/assign/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/badges/assign/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/badges/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/badges/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/exports/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/exports/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/kajabi/reprocess/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/kajabi/reprocess/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/kajabi/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/kajabi/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/kajabi/test/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/kajabi/test/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/submissions/[id]/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/submissions/[id]/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/submissions/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/submissions/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/users/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/users/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/app/layout.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/app/layout.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/i18n.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/i18n.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/admin/middleware.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/admin/middleware.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/amplify/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/amplify/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/explore/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/explore/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/learn/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/learn/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/present/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/present/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/shine/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/dashboard/shine/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/error.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/error.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/layout.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/layout.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/leaderboard/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/leaderboard/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/loading.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/loading.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/metrics/[stage]/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/metrics/[stage]/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/not-found.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/not-found.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/u/[handle]/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/[locale]/u/[handle]/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/badges/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/badges/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/cron/refresh-leaderboards/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/cron/refresh-leaderboards/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/dashboard/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/dashboard/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/docs/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/docs/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/emails/approval/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/emails/approval/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/emails/rejection/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/emails/rejection/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/emails/submission-confirmation/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/emails/submission-confirmation/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/emails/welcome/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/emails/welcome/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/files/[...path]/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/files/[...path]/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/files/upload/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/files/upload/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/health/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/health/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/kajabi/webhook/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/kajabi/webhook/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/leaderboard/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/leaderboard/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/metrics/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/metrics/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/profile/[handle]/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/profile/[handle]/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/stats/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/stats/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/submissions/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/submissions/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/api/webhooks/clerk/route.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/api/webhooks/clerk/route.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/components/LanguageSwitcher.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/components/LanguageSwitcher.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/docs/page.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/docs/page.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/layout.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/layout.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/app/sitemap.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/app/sitemap.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/i18n.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/i18n.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/apps/web/middleware.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/apps/web/middleware.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/config/dist/env.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/config/src/env.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/emails/dist/templates/approval-notification.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/emails/src/templates/approval-notification.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/emails/dist/templates/rejection-notification.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/emails/src/templates/rejection-notification.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/emails/dist/templates/submission-confirmation.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/emails/src/templates/submission-confirmation.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/emails/dist/templates/weekly-progress.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/emails/src/templates/weekly-progress.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/emails/dist/templates/welcome.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/emails/src/templates/welcome.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/integrations/dist/kajabi.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/integrations/src/kajabi.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/integrations/dist/utils.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/integrations/src/utils.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/openapi/dist/client-generator.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/openapi/src/client-generator.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/openapi/dist/generator.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/openapi/src/generator.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/openapi/dist/index.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/openapi/src/index.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/openapi/dist/schemas.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/openapi/src/schemas.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/openapi/dist/spec.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/openapi/src/spec.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/types/dist/src/canonical-urls.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/types/src/canonical-urls.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/types/dist/src/common.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/types/src/common.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/types/dist/src/index.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/types/src/index.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/types/dist/src/schemas.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/types/src/schemas.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/types/dist/tsup.config.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/types/tsup.config.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/types/dist/vitest.config.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/types/vitest.config.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/alert.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/alert.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/badge.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/badge.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/button.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/button.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/card.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/card.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/dialog.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/dialog.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/form.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/form.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/input.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/input.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/label.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/label.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/select.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/select.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/table.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/table.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/components/ui/textarea.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/components/ui/textarea.tsx'.
+  The file is in the program because:
+    Matched by include pattern '**/*.tsx' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+error TS6305: Output file '/Users/agent-g/elevate/elevate/packages/ui/dist/lib/utils.d.ts' has not been built from source file '/Users/agent-g/elevate/elevate/packages/ui/src/lib/utils.ts'.
+  The file is in the program because:
+    Matched by include pattern '**/*.ts' in '/Users/agent-g/elevate/elevate/tsconfig.json'
+tsconfig.json(44,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/apps/web' must have setting "composite": true.
+tsconfig.json(44,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/apps/web' may not disable emit.
+tsconfig.json(47,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/apps/admin' must have setting "composite": true.
+tsconfig.json(47,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/apps/admin' may not disable emit.
+tsconfig.json(50,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/packages/ui' must have setting "composite": true.
+tsconfig.json(50,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/packages/ui' may not disable emit.
+tsconfig.json(53,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/packages/types' must have setting "composite": true.
+tsconfig.json(53,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/packages/types' may not disable emit.
+tsconfig.json(56,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/packages/config' must have setting "composite": true.
+tsconfig.json(56,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/packages/config' may not disable emit.
+tsconfig.json(59,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/packages/auth' must have setting "composite": true.
+tsconfig.json(59,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/packages/auth' may not disable emit.
+tsconfig.json(62,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/packages/emails' must have setting "composite": true.
+tsconfig.json(62,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/packages/emails' may not disable emit.
+tsconfig.json(65,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/packages/logic' must have setting "composite": true.
+tsconfig.json(65,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/packages/logic' may not disable emit.
+tsconfig.json(68,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/packages/openapi' must have setting "composite": true.
+tsconfig.json(68,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/packages/openapi' may not disable emit.
+tsconfig.json(71,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/packages/storage' must have setting "composite": true.
+tsconfig.json(71,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/packages/storage' may not disable emit.
+tsconfig.json(74,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/packages/integrations' must have setting "composite": true.
+tsconfig.json(74,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/packages/integrations' may not disable emit.
+tsconfig.json(77,5): error TS6306: Referenced project '/Users/agent-g/elevate/elevate/packages/db' must have setting "composite": true.
+tsconfig.json(77,5): error TS6310: Referenced project '/Users/agent-g/elevate/elevate/packages/db' may not disable emit.

@@ -13,7 +13,7 @@ const BadgeSchema = z.object({
     type: z.enum(['points', 'submissions', 'activities', 'streak']),
     threshold: z.number().positive(),
     activity_codes: z.array(z.string()).optional(),
-    conditions: z.record(z.any()).optional()
+    conditions: z.record(z.unknown()).optional()
   }),
   icon_url: z.string().url().optional()
 })
@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json({ badges })
   } catch (error) {
-    console.error('Error fetching badges:', error)
     return createErrorResponse(error, 500)
   }
 }
@@ -88,7 +87,7 @@ export async function POST(request: NextRequest) {
         code: data.code,
         name: data.name,
         description: data.description,
-        criteria: data.criteria,
+        criteria: data.criteria as any,
         icon_url: data.icon_url
       }
     })
@@ -102,7 +101,7 @@ export async function POST(request: NextRequest) {
         meta: {
           badgeName: badge.name,
           criteria: badge.criteria
-        }
+        } as any
       }
     })
     
@@ -113,7 +112,6 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Error creating badge:', error)
     return createErrorResponse(error, 500)
   }
 }
@@ -155,7 +153,10 @@ export async function PATCH(request: NextRequest) {
     
     const badge = await prisma.badge.update({
       where: { code },
-      data: validation.data
+      data: {
+        ...validation.data,
+        criteria: validation.data.criteria ? validation.data.criteria as any : undefined
+      }
     })
     
     // Create audit log
@@ -167,7 +168,7 @@ export async function PATCH(request: NextRequest) {
         meta: {
           updates: validation.data,
           original: existing
-        }
+        } as any
       }
     })
     
@@ -178,7 +179,6 @@ export async function PATCH(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Error updating badge:', error)
     return createErrorResponse(error, 500)
   }
 }
@@ -234,7 +234,7 @@ export async function DELETE(request: NextRequest) {
         meta: {
           badgeName: existing.name,
           criteria: existing.criteria
-        }
+        } as any
       }
     })
     
@@ -244,7 +244,6 @@ export async function DELETE(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Error deleting badge:', error)
     return createErrorResponse(error, 500)
   }
 }

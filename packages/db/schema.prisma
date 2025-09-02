@@ -1,10 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+model User {
+  id                String         @id
+  handle            String         @unique
+  name              String
+  email             String         @unique
+  avatar_url        String?
+  role              Role           @default(PARTICIPANT)
+  school            String?
+  cohort            String?
+  created_at        DateTime       @default(now())
+  kajabi_contact_id String?        @unique
+  earned_badges     EarnedBadge[]
+  ledger            PointsLedger[]
+  submissions       Submission[]
+
+  @@map("users")
+}
+
+model Activity {
+  code           String         @id
+  name           String
+  default_points Int
+  ledger         PointsLedger[]
+  submissions    Submission[]
+
+  @@map("activities")
+}
+
+model Submission {
+  id            String           @id @default(cuid())
+  user_id       String
+  activity_code String
+  status        SubmissionStatus @default(PENDING)
+  visibility    Visibility       @default(PRIVATE)
+  payload       Json
+  attachments   Json
+  reviewer_id   String?
+  review_note   String?
+  created_at    DateTime         @default(now())
+  updated_at    DateTime         @updatedAt
+  activity      Activity         @relation(fields: [activity_code], references: [code], onDelete: Cascade)
+  user          User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, activity_code])
+  @@map("submissions")
+}
+
+model PointsLedger {
+  id                String       @id @default(cuid())
+  user_id           String
+  activity_code     String
+  source            LedgerSource
+  delta_points      Int
+  external_source   String?
+  external_event_id String?      @unique
+  created_at        DateTime     @default(now())
+  activity          Activity     @relation(fields: [activity_code], references: [code], onDelete: Cascade)
+  user              User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, activity_code])
+  @@map("points_ledger")
+}
+
+model Badge {
+  code          String        @id
+  name          String
+  description   String
+  criteria      Json
+  icon_url      String?
+  earned_badges EarnedBadge[]
+
+  @@map("badges")
+}
+
+model EarnedBadge {
+  id         String   @id @default(cuid())
+  user_id    String
+  badge_code String
+  earned_at  DateTime @default(now())
+  badge      Badge    @relation(fields: [badge_code], references: [code], onDelete: Cascade)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, badge_code])
+  @@index([badge_code])
+  @@map("earned_badges")
+}
+
+model KajabiEvent {
+  id           String    @id
+  received_at  DateTime  @default(now())
+  payload      Json
+  processed_at DateTime?
+  user_match   String?
+
+  @@map("kajabi_events")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor_id   String
+  action     String
+  target_id  String?
+  meta       Json?
+  created_at DateTime @default(now())
+
+  @@index([actor_id, created_at])
+  @@map("audit_log")
 }
 
 enum Role {
@@ -29,105 +138,4 @@ enum LedgerSource {
   MANUAL
   WEBHOOK
   FORM
-}
-
-model User {
-  id              String   @id               // mirror Clerk user id
-  handle          String   @unique
-  name            String
-  email           String   @unique
-  avatar_url      String?
-  role            Role     @default(PARTICIPANT)
-  school          String?
-  cohort          String?
-  kajabi_contact_id String?  @unique          // Kajabi contact ID
-  created_at      DateTime @default(now())
-  submissions     Submission[]
-  ledger          PointsLedger[]
-  earned_badges   EarnedBadge[]
-  @@map("users")
-}
-
-model Activity {
-  code           String @id               // LEARN | EXPLORE | AMPLIFY | PRESENT | SHINE
-  name           String
-  default_points Int
-  submissions    Submission[]
-  ledger         PointsLedger[]
-  @@map("activities")
-}
-
-model Submission {
-  id            String           @id @default(cuid())
-  user_id       String
-  user          User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  activity_code String
-  activity      Activity         @relation(fields: [activity_code], references: [code], onDelete: Cascade)
-  status        SubmissionStatus @default(PENDING)
-  visibility    Visibility       @default(PRIVATE)
-  payload       Json
-  attachments   Json             // string[] storage paths
-  reviewer_id   String?
-  review_note   String?
-  created_at    DateTime         @default(now())
-  updated_at    DateTime         @updatedAt
-  @@index([user_id, activity_code])
-  @@map("submissions")
-}
-
-model PointsLedger {
-  id                String   @id @default(cuid())
-  user_id           String
-  user              User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  activity_code     String
-  activity          Activity @relation(fields: [activity_code], references: [code], onDelete: Cascade)
-  source            LedgerSource
-  delta_points      Int
-  external_source   String?
-  external_event_id String?  @unique
-  created_at        DateTime  @default(now())
-  @@index([user_id, activity_code])
-  @@map("points_ledger")
-}
-
-model Badge {
-  code         String @id
-  name         String
-  description  String
-  criteria     Json
-  icon_url     String?
-  earned_badges EarnedBadge[]
-  @@map("badges")
-}
-
-model EarnedBadge {
-  id         String   @id @default(cuid())
-  user_id    String
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  badge_code String
-  badge      Badge    @relation(fields: [badge_code], references: [code], onDelete: Cascade)
-  earned_at  DateTime @default(now())
-  @@unique([user_id, badge_code])
-  @@index([badge_code])
-  @@map("earned_badges")
-}
-
-model KajabiEvent {
-  id            String   @id
-  received_at   DateTime @default(now())
-  payload       Json
-  processed_at  DateTime?
-  user_match    String?
-  @@map("kajabi_events")
-}
-
-model AuditLog {
-  id          String   @id @default(cuid())
-  actor_id    String
-  action      String   // APPROVE_SUBMISSION | REJECT_SUBMISSION | ADJUST_POINTS
-  target_id   String?
-  meta        Json?
-  created_at  DateTime @default(now())
-  @@index([actor_id, created_at])
-  @@map("audit_log")
 }

@@ -34,7 +34,11 @@
     "dist",
     "build",
     "**/.turbo",
-    "**/coverage"
+    "**/coverage",
+    "**/*.md",
+    "**/*.mdx",
+    "docs/**/*",
+    "*.md"
   ],
   "references": [
     {
@@ -42,6 +46,36 @@
     },
     {
       "path": "./apps/admin"
+    },
+    {
+      "path": "./packages/ui"
+    },
+    {
+      "path": "./packages/types"
+    },
+    {
+      "path": "./packages/config"
+    },
+    {
+      "path": "./packages/auth"
+    },
+    {
+      "path": "./packages/emails"
+    },
+    {
+      "path": "./packages/logic"
+    },
+    {
+      "path": "./packages/openapi"
+    },
+    {
+      "path": "./packages/storage"
+    },
+    {
+      "path": "./packages/integrations"
+    },
+    {
+      "path": "./packages/db"
     }
   ]
 }

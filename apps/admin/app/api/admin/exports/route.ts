@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
+import type { SubmissionStatus } from '@elevate/db'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import type { UserWhereClause, SubmissionWhereClause, PointsLedgerWhereClause, ActivityCode } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
@@ -99,11 +101,7 @@ export async function GET(request: NextRequest) {
     return response
     
   } catch (error) {
-    console.error('Error generating export:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to generate export' },
-      { status: error.statusCode || 500 }
-    )
+    return createErrorResponse(error, 500)
   }
 }
 
@@ -114,7 +112,7 @@ async function generateSubmissionsCSV(filters: {
   status?: string | null
   cohort?: string | null
 }) {
-  const where: any = {}
+  const where: SubmissionWhereClause = {}
   
   if (filters.startDate && filters.endDate) {
     where.created_at = {
@@ -124,11 +122,11 @@ async function generateSubmissionsCSV(filters: {
   }
   
   if (filters.activity && filters.activity !== 'ALL') {
-    where.activity_code = filters.activity
+    where.activity_code = filters.activity as ActivityCode
   }
   
   if (filters.status && filters.status !== 'ALL') {
-    where.status = filters.status
+    where.status = filters.status as SubmissionStatus
   }
   
   if (filters.cohort && filters.cohort !== 'ALL') {
@@ -202,7 +200,7 @@ async function generateSubmissionsCSV(filters: {
 }
 
 async function generateUsersCSV(filters: { cohort?: string | null }) {
-  const where: any = {}
+  const where: UserWhereClause = {}
   
   if (filters.cohort && filters.cohort !== 'ALL') {
     where.cohort = filters.cohort
@@ -279,7 +277,7 @@ async function generateUsersCSV(filters: { cohort?: string | null }) {
 }
 
 async function generateLeaderboardCSV(filters: { cohort?: string | null }) {
-  const where: any = {}
+  const where: UserWhereClause = {}
   
   if (filters.cohort && filters.cohort !== 'ALL') {
     where.cohort = filters.cohort
@@ -319,7 +317,7 @@ async function generateLeaderboardCSV(filters: { cohort?: string | null }) {
   const usersMap = users.reduce((acc, user) => {
     acc[user.id] = user
     return acc
-  }, {} as Record<string, any>)
+  }, {} as Record<string, typeof users[0]>)
   
   const headers = [
     'Rank',
@@ -363,7 +361,7 @@ async function generatePointsLedgerCSV(filters: {
   endDate?: string | null
   cohort?: string | null
 }) {
-  const where: any = {}
+  const where: PointsLedgerWhereClause = {}
   
   if (filters.startDate && filters.endDate) {
     where.created_at = {

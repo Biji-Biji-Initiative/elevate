@@ -27,7 +27,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const userId = user?.id
   const email = user?.emailAddresses?.[0]?.emailAddress
   const name = user?.fullName || undefined
-  const role = normalizeRole((user?.publicMetadata as any)?.role)
+  const role = normalizeRole((user?.publicMetadata as Record<string, unknown>)?.role as string)
 
   const contextValue: AuthContextValue = {
     isLoaded,

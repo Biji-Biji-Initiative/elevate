@@ -139,7 +139,6 @@ export async function getMultipleSignedUrls(paths: string[], expiresIn: number =
       const url = await getSignedUrl(path, expiresIn)
       return { path, url }
     } catch (error) {
-      console.error(`Failed to get signed URL for ${path}:`, error)
       return { path, url: null }
     }
   })
@@ -178,7 +177,7 @@ export async function getFileMetadata(path: string): Promise<{
   updated_at?: string
   created_at?: string
   last_accessed_at?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, string | number | boolean | null>
 }> {
   const supabase = getSupabaseClient()
   

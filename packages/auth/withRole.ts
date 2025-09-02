@@ -19,8 +19,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   const { userId, sessionClaims } = await auth()
   if (!userId) return null
   
-  const role = normalizeRole((sessionClaims?.publicMetadata as any)?.role)
-  const email = (sessionClaims?.primaryEmailAddress as any)?.emailAddress
+  const role = normalizeRole((sessionClaims?.publicMetadata as Record<string, unknown>)?.role as string)
+  const email = (sessionClaims?.primaryEmailAddress as Record<string, string>)?.emailAddress
   const name = `${sessionClaims?.firstName || ''} ${sessionClaims?.lastName || ''}`.trim()
   
   return {
@@ -84,7 +84,7 @@ export function hasAnyRole(userRole: RoleName, allowedRoles: RoleName[]): boolea
  * @param handler Handler function that receives AuthUser as first parameter
  * @returns Protected handler function
  */
-export function withRoleProtection<T extends any[], R>(
+export function withRoleProtection<T extends unknown[], R>(
   minRole: RoleName,
   handler: (user: AuthUser, ...args: T) => R | Promise<R>
 ) {

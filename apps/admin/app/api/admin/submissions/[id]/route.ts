@@ -38,7 +38,6 @@ export async function GET(
     
     return NextResponse.json({ submission })
   } catch (error) {
-    console.error('Error fetching submission:', error)
     return createErrorResponse(error, 500)
   }
 }

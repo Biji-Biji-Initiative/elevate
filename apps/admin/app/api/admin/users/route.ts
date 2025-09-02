@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@elevate/db/client'
 import { requireRole, hasRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import type { UserWhereClause } from '@elevate/types'
+import type { Role } from '@elevate/db'
 
 export const runtime = 'nodejs';
 
@@ -100,7 +102,6 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error fetching users:', error)
     return createErrorResponse(error, 500)
   }
 }
@@ -152,7 +153,7 @@ export async function PATCH(request: NextRequest) {
     }
     
     // Handle uniqueness validation
-    const updateData: any = {}
+    const updateData: Partial<{ name: string; email: string; handle: string; school: string | null; cohort: string | null; role: Role }> = {}
     
     if (name !== undefined) updateData.name = name
     if (school !== undefined) updateData.school = school
@@ -212,7 +213,6 @@ export async function PATCH(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Error updating user:', error)
     return createErrorResponse(error, 500)
   }
 }
@@ -342,7 +342,6 @@ export async function POST(request: NextRequest) {
     })
     
   } catch (error) {
-    console.error('Error bulk updating users:', error)
     return createErrorResponse(error, 500)
   }
 }

@@ -25,6 +25,8 @@ if pnpm exec prisma db execute --stdin --schema=packages/db/schema.prisma <<< "S
     echo "✅ Database connection successful"
 else
     echo "❌ Cannot connect to database. Please check your DATABASE_URL and ensure PostgreSQL is running."
+    echo "💡 For local development, try running: docker-compose up -d postgres"
+    echo "💡 Wait a few seconds for PostgreSQL to start, then try this command again"
     exit 1
 fi
 

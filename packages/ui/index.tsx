@@ -6,8 +6,7 @@ export { Button, buttonVariants } from './components/button'
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './components/card'
 export { Input } from './components/input'
 
-// Legacy components (to be migrated)
-export { Alert } from './Alert'
+// Custom components
 export { LoadingSpinner } from './LoadingSpinner'
 export { FileUpload } from './FileUpload'
 export { FormField } from './FormField'
