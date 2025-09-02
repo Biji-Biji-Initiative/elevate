@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 export async function GET() {
   // Placeholder: return sample earned badges
   const badges = [

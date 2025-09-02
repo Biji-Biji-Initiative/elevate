@@ -3,6 +3,8 @@ import { auth } from '@clerk/nextjs/server'
 import { getSignedUrl, parseStoragePath } from '@elevate/storage'
 import { prisma } from '@elevate/db/client'
 
+export const runtime = 'nodejs';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }

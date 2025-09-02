@@ -1,18 +1,17 @@
 import { NextAdmin } from "@premieroctet/next-admin";
-import { prisma, options } from "@/lib/next-admin-options";
+import { options } from "@/lib/next-admin-options";
 import "@premieroctet/next-admin/dist/styles.css";
 
-export default function AdminPage({
-  params,
-  searchParams,
-}: {
-  params: { nextadmin: string[] };
-  searchParams: { [key: string]: string | string[] | undefined };
+export default async function AdminPage(props: {
+  params: Promise<{ nextadmin: string[] }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
+  
   return (
     <NextAdmin
       apiBasePath="/api/admin"
-      prisma={prisma}
       options={options}
       params={params}
       searchParams={searchParams}

@@ -122,10 +122,12 @@ prisma/migrations/dev.db*
 .turbo
 
 # Local development
-.env.example
+apps/*/.env.local
+packages/*/.env.local
 
 # Supabase
-.supabase/
+supabase/.branches/
+supabase/.temp/
 
 # Testing
 coverage/

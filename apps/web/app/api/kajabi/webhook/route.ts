@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import { prisma } from '@elevate/db';
 import crypto from 'crypto';
 
+export const runtime = 'nodejs';
+
 // Verify webhook signature from Kajabi
 function verifySignature(payload: string, signature: string): boolean {
   if (!process.env.KAJABI_WEBHOOK_SECRET) {

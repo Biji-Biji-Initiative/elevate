@@ -5,6 +5,8 @@ import { WebhookEvent } from '@clerk/nextjs/server'
 import { prisma } from '@elevate/db/client'
 import { getKajabiClient } from '@elevate/integrations'
 
+export const runtime = 'nodejs';
+
 // This webhook endpoint handles Clerk user events to sync user data
 export async function POST(req: NextRequest) {
   // Get the headers

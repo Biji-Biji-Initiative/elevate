@@ -3,6 +3,8 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@elevate/db/client'
 import { z } from 'zod'
 
+export const runtime = 'nodejs';
+
 // Submission request schema
 const SubmissionRequestSchema = z.object({
   activityCode: z.enum(['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']),
