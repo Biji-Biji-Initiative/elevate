@@ -1,5 +1,6 @@
 import { NextAdminOptions } from "@premieroctet/next-admin";
 import { prisma } from "@elevate/db";
+import { SubmissionStatus, Visibility, LedgerSource } from "@prisma/client";
 
 export const options: NextAdminOptions = {
   title: "MS Elevate LEAPS Admin",
@@ -9,25 +10,16 @@ export const options: NextAdminOptions = {
       list: {
         display: ["handle", "name", "email", "role", "school", "cohort", "created_at"],
         search: ["email", "name", "handle", "school", "cohort"],
-        filters: [
-          {
-            name: "role",
-            enum: ["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"],
-          },
-          {
-            name: "cohort",
-          },
-        ],
       },
       edit: {
         display: [
           "id",
-          "handle", 
+          "handle",
           "name",
           "email",
           "avatar_url",
           "role",
-          "school",
+          "school", 
           "cohort",
           "kajabi_contact_id",
           "created_at",
@@ -35,7 +27,6 @@ export const options: NextAdminOptions = {
         fields: {
           id: { 
             disabled: true,
-            format: "text",
           },
           handle: { 
             required: true,
@@ -49,12 +40,9 @@ export const options: NextAdminOptions = {
             format: "email",
           },
           role: {
-            format: "select",
-            enum: ["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"],
             helperText: "User role determines access permissions",
           },
           avatar_url: {
-            format: "text",
             helperText: "Profile picture URL",
           },
           school: {
@@ -68,7 +56,7 @@ export const options: NextAdminOptions = {
           },
           created_at: { 
             disabled: true,
-            format: "datetime-local",
+            format: "date-time",
           },
         },
       },
@@ -79,25 +67,20 @@ export const options: NextAdminOptions = {
       list: {
         display: ["code", "name", "default_points"],
         search: ["name", "code"],
-        sort: {
-          field: "code",
-          direction: "asc",
-        },
       },
       edit: {
         display: ["code", "name", "default_points"],
         fields: {
           code: {
-            validation: { required: true },
+            required: true,
             helperText: "Activity identifier (LEARN, EXPLORE, etc.)",
           },
           name: {
-            validation: { required: true },
+            required: true,
             helperText: "Display name for the activity",
           },
           default_points: {
-            type: "number",
-            validation: { required: true, min: 0 },
+            required: true,
             helperText: "Default points awarded for completion",
           },
         },
@@ -112,49 +95,12 @@ export const options: NextAdminOptions = {
           "user",
           "activity_code",
           "status",
-          "visibility",
+          "visibility", 
           "reviewer_id",
           "created_at",
           "updated_at",
         ],
         search: ["user.name", "user.email", "user.handle"],
-        filters: [
-          {
-            name: "status",
-            type: "select",
-            options: [
-              { label: "Pending", value: "PENDING" },
-              { label: "Approved", value: "APPROVED" },
-              { label: "Rejected", value: "REJECTED" },
-            ],
-          },
-          {
-            name: "activity_code",
-            type: "select",
-            options: [
-              { label: "Learn", value: "LEARN" },
-              { label: "Explore", value: "EXPLORE" },
-              { label: "Amplify", value: "AMPLIFY" },
-              { label: "Present", value: "PRESENT" },
-              { label: "Shine", value: "SHINE" },
-            ],
-          },
-          {
-            name: "visibility",
-            type: "select",
-            options: [
-              { label: "Public", value: "PUBLIC" },
-              { label: "Private", value: "PRIVATE" },
-            ],
-          },
-        ],
-        sort: {
-          field: "created_at",
-          direction: "desc",
-        },
-        pagination: {
-          itemsPerPage: 25,
-        },
       },
       edit: {
         display: [
@@ -164,7 +110,7 @@ export const options: NextAdminOptions = {
           "status",
           "visibility",
           "payload",
-          "attachments",
+          "attachments", 
           "reviewer_id",
           "review_note",
           "created_at",
@@ -172,46 +118,23 @@ export const options: NextAdminOptions = {
         ],
         fields: {
           id: { disabled: true },
-          user_id: { 
-            type: "relationship",
-            relationName: "user",
-          },
-          activity_code: {
-            type: "relationship",
-            relationName: "activity",
-          },
-          status: {
-            type: "select",
-            options: [
-              { label: "Pending", value: "PENDING" },
-              { label: "Approved", value: "APPROVED" },
-              { label: "Rejected", value: "REJECTED" },
-            ],
-          },
-          visibility: {
-            type: "select",
-            options: [
-              { label: "Public", value: "PUBLIC" },
-              { label: "Private", value: "PRIVATE" },
-            ],
-          },
           payload: {
-            type: "json",
+            format: "json",
             helperText: "Submission data (JSON format)",
           },
           attachments: {
-            type: "json",
+            format: "json",
             helperText: "File paths array (JSON format)",
           },
           reviewer_id: {
             helperText: "ID of reviewing user",
           },
           review_note: {
-            type: "textarea",
+            format: "textarea",
             helperText: "Review comments and feedback",
           },
-          created_at: { disabled: true },
-          updated_at: { disabled: true },
+          created_at: { disabled: true, format: "date-time" },
+          updated_at: { disabled: true, format: "date-time" },
         },
       },
     },
@@ -229,35 +152,6 @@ export const options: NextAdminOptions = {
           "created_at",
         ],
         search: ["user.name", "user.email", "user.handle"],
-        filters: [
-          {
-            name: "activity_code",
-            type: "select",
-            options: [
-              { label: "Learn", value: "LEARN" },
-              { label: "Explore", value: "EXPLORE" },
-              { label: "Amplify", value: "AMPLIFY" },
-              { label: "Present", value: "PRESENT" },
-              { label: "Shine", value: "SHINE" },
-            ],
-          },
-          {
-            name: "source",
-            type: "select",
-            options: [
-              { label: "Manual", value: "MANUAL" },
-              { label: "Webhook", value: "WEBHOOK" },
-              { label: "Form", value: "FORM" },
-            ],
-          },
-        ],
-        sort: {
-          field: "created_at",
-          direction: "desc",
-        },
-        pagination: {
-          itemsPerPage: 100,
-        },
       },
       edit: {
         display: [
@@ -272,26 +166,9 @@ export const options: NextAdminOptions = {
         ],
         fields: {
           id: { disabled: true },
-          user_id: {
-            type: "relationship",
-            relationName: "user",
-          },
-          activity_code: {
-            type: "relationship",
-            relationName: "activity",
-          },
           delta_points: {
-            type: "number",
-            validation: { required: true },
+            required: true,
             helperText: "Points change (positive or negative)",
-          },
-          source: {
-            type: "select",
-            options: [
-              { label: "Manual", value: "MANUAL" },
-              { label: "Webhook", value: "WEBHOOK" },
-              { label: "Form", value: "FORM" },
-            ],
           },
           external_source: {
             helperText: "Source system identifier (e.g., 'kajabi')",
@@ -299,7 +176,7 @@ export const options: NextAdminOptions = {
           external_event_id: {
             helperText: "Unique event ID for idempotency",
           },
-          created_at: { disabled: true },
+          created_at: { disabled: true, format: "date-time" },
         },
       },
     },
@@ -314,20 +191,20 @@ export const options: NextAdminOptions = {
         display: ["code", "name", "description", "criteria", "icon_url"],
         fields: {
           code: {
-            validation: { required: true },
+            required: true,
             helperText: "Unique badge identifier",
           },
           name: {
-            validation: { required: true },
+            required: true,
             helperText: "Display name for the badge",
           },
           description: {
-            type: "textarea",
-            validation: { required: true },
+            format: "textarea",
+            required: true,
             helperText: "Badge description and requirements",
           },
           criteria: {
-            type: "json",
+            format: "json",
             helperText: "Badge criteria configuration (JSON format)",
           },
           icon_url: {
@@ -342,30 +219,12 @@ export const options: NextAdminOptions = {
       list: {
         display: ["id", "user", "badge", "earned_at"],
         search: ["user.name", "user.email", "user.handle", "badge.name"],
-        filters: [
-          {
-            name: "badge_code",
-            type: "select",
-          },
-        ],
-        sort: {
-          field: "earned_at",
-          direction: "desc",
-        },
       },
       edit: {
         display: ["id", "user_id", "badge_code", "earned_at"],
         fields: {
           id: { disabled: true },
-          user_id: {
-            type: "relationship",
-            relationName: "user",
-          },
-          badge_code: {
-            type: "relationship",
-            relationName: "badge",
-          },
-          earned_at: { disabled: true },
+          earned_at: { disabled: true, format: "date-time" },
         },
       },
     },
@@ -375,32 +234,19 @@ export const options: NextAdminOptions = {
       list: {
         display: ["id", "user_match", "processed_at", "received_at"],
         search: ["user_match", "id"],
-        filters: [
-          {
-            name: "processed_at",
-            type: "boolean",
-            label: "Processed",
-          },
-        ],
-        sort: {
-          field: "received_at",
-          direction: "desc",
-        },
-        pagination: {
-          itemsPerPage: 25,
-        },
       },
       edit: {
         display: ["id", "payload", "processed_at", "user_match", "received_at"],
         fields: {
           id: { disabled: true },
           payload: {
-            type: "json",
+            format: "json",
             disabled: true,
             helperText: "Original webhook payload (read-only)",
           },
           processed_at: {
             disabled: true,
+            format: "date-time",
             helperText: "When the event was processed",
           },
           user_match: {
@@ -409,6 +255,7 @@ export const options: NextAdminOptions = {
           },
           received_at: {
             disabled: true,
+            format: "date-time",
             helperText: "When the webhook was received",
           },
         },
@@ -420,19 +267,6 @@ export const options: NextAdminOptions = {
       list: {
         display: ["id", "actor_id", "action", "target_id", "created_at"],
         search: ["actor_id", "action", "target_id"],
-        filters: [
-          {
-            name: "action",
-            type: "select",
-          },
-        ],
-        sort: {
-          field: "created_at",
-          direction: "desc",
-        },
-        pagination: {
-          itemsPerPage: 100,
-        },
       },
       edit: {
         display: ["id", "actor_id", "action", "target_id", "meta", "created_at"],
@@ -451,19 +285,13 @@ export const options: NextAdminOptions = {
             helperText: "ID of the target resource",
           },
           meta: {
-            type: "json",
+            format: "json",
             disabled: true,
             helperText: "Additional action metadata (read-only)",
           },
-          created_at: { disabled: true },
+          created_at: { disabled: true, format: "date-time" },
         },
       },
-    },
-  },
-  
-  pages: {
-    "/api/admin": {
-      title: "Dashboard",
     },
   },
   

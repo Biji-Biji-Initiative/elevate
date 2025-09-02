@@ -15,6 +15,9 @@ importers:
       concurrently:
         specifier: ^8.2.2
         version: 8.2.2
+      next:
+        specifier: 15.0.0
+        version: 15.0.0(react-dom@19.0.0-rc-65a56d0e-20241020(react@19.0.0-rc-65a56d0e-20241020))(react@19.0.0-rc-65a56d0e-20241020)
       prisma:
         specifier: ^5.19.0
         version: 5.22.0

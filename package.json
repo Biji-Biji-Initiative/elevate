@@ -44,6 +44,7 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
+    "next": "15.0.0",
     "prisma": "^5.19.0",
     "ts-node": "^10.9.2",
     "turbo": "^2.5.6",

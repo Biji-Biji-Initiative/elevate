@@ -1,6 +1,7 @@
 {
   "buildCommand": "pnpm turbo run build --filter=web",
-  "installCommand": "pnpm install && pnpm db:generate",
+  "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
   "outputDirectory": "apps/web/.next",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "rootDirectory": "."
 }
