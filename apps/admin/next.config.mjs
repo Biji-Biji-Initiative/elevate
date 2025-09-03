@@ -9,7 +9,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Fix workspace root warning
-  outputFileTracingRoot: '../../',
+  outputFileTracingRoot: '/Users/agent-g/elevate/elevate',
   
   // React 19 and Next.js 15 configuration
   experimental: {

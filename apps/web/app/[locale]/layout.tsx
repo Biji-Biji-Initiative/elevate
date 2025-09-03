@@ -106,61 +106,57 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   
   return (
-    <html lang={locale} className="scroll-smooth">
-      <body>
-        <NextIntlClientProvider messages={messages}>
-          <ClientHeader 
-            isSignedIn={false}
-            signInButton={
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <Button variant="ghost">Sign In</Button>
-                </SignInButton>
-              </SignedOut>
+    <NextIntlClientProvider messages={messages}>
+      <ClientHeader 
+        isSignedIn={false}
+        signInButton={
+          <SignedOut>
+            <SignInButton mode="modal">
+              <Button variant="ghost">Sign In</Button>
+            </SignInButton>
+          </SignedOut>
+        }
+        userButton={
+          <SignedIn>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+        }
+        languageSwitcher={<LanguageSwitcher />}
+      />
+      <main className="flex-1">
+        {children}
+      </main>
+      <Footer />
+      
+      {/* JSON-LD structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "EducationalOrganization",
+            "name": "MS Elevate LEAPS Tracker",
+            "description": "Transform your teaching with AI through the LEAPS framework",
+            "url": "https://leaps.mereka.org",
+            "logo": "https://leaps.mereka.org/logo.png",
+            "sameAs": [
+              "https://twitter.com/MicrosoftEDU",
+              "https://linkedin.com/company/microsoft"
+            ],
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "ID",
+              "addressRegion": "Jakarta"
+            },
+            "offers": {
+              "@type": "Offer",
+              "category": "Educational Program",
+              "name": "LEAPS Framework Training",
+              "description": "Professional development program for educators to integrate AI in classrooms"
             }
-            userButton={
-              <SignedIn>
-                <UserButton afterSignOutUrl="/" />
-              </SignedIn>
-            }
-            languageSwitcher={<LanguageSwitcher />}
-          />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-          
-          {/* JSON-LD structured data */}
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "EducationalOrganization",
-                "name": "MS Elevate LEAPS Tracker",
-                "description": "Transform your teaching with AI through the LEAPS framework",
-                "url": "https://leaps.mereka.org",
-                "logo": "https://leaps.mereka.org/logo.png",
-                "sameAs": [
-                  "https://twitter.com/MicrosoftEDU",
-                  "https://linkedin.com/company/microsoft"
-                ],
-                "address": {
-                  "@type": "PostalAddress",
-                  "addressCountry": "ID",
-                  "addressRegion": "Jakarta"
-                },
-                "offers": {
-                  "@type": "Offer",
-                  "category": "Educational Program",
-                  "name": "LEAPS Framework Training",
-                  "description": "Professional development program for educators to integrate AI in classrooms"
-                }
-              })
-            }}
-          />
-        </NextIntlClientProvider>
-      </body>
-    </html>
+          })
+        }}
+      />
+    </NextIntlClientProvider>
   );
 }

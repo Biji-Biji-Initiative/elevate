@@ -2642,6 +2642,8 @@ export type $defs = Record<string, never>;
 export type operations = Record<string, never>;
 
 
+import { mergeHeaders, addAuthHeader } from '@elevate/types';
+
 // API Client SDK
 export class ElevateAPIClient {
   private baseUrl: string;
@@ -2657,13 +2659,15 @@ export class ElevateAPIClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
+    
+    // Type-safe header merging
+    let headers = mergeHeaders(
+      { 'Content-Type': 'application/json' },
+      options.headers
+    );
 
     if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
+      headers = addAuthHeader(headers, this.token);
     }
 
     const response = await fetch(url, {

@@ -3,7 +3,7 @@
  * This avoids TypeScript strict mode issues with generated code
  */
 
-import { mergeHeaders, addAuthHeader } from '@elevate/types/src/http'
+import { mergeHeaders, addAuthHeader } from '@elevate/types'
 
 export interface APIResponse<T = unknown> {
   success: boolean;
@@ -51,13 +51,15 @@ export class ElevateAPIClient {
     options: RequestInit = {}
   ): Promise<APIResponse<T>> {
     const url = `${this.baseUrl}${path}`;
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
+    
+    // Type-safe header merging
+    let headers = mergeHeaders(
+      { 'Content-Type': 'application/json' },
+      options.headers
+    );
 
     if (this.token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
+      headers = addAuthHeader(headers, this.token);
     }
 
     try {
@@ -100,9 +102,10 @@ export class ElevateAPIClient {
     formData.append('file', file);
     formData.append('activityType', activityType);
 
-    const headers: HeadersInit = {};
+    // Type-safe header creation - don't set Content-Type for FormData
+    let headers: Record<string, string> = {};
     if (this.token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
+      headers = addAuthHeader(headers, this.token);
     }
 
     try {

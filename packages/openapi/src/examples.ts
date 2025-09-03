@@ -3,7 +3,8 @@
 import ElevateAPIClient, { 
   APIError, 
   ValidationError,
-  AuthenticationError 
+  AuthenticationError,
+  ForbiddenError
 } from './sdk.js';
 
 // Initialize the client
@@ -27,6 +28,7 @@ async function createLearnSubmission() {
     });
     
     console.log('Submission created:', submission.data);
+    return submission.data;
   } catch (error) {
     if (error instanceof ValidationError) {
       console.error('Validation errors:', error.details);
@@ -43,6 +45,11 @@ async function uploadEvidence(file: File) {
   try {
     const upload = await api.uploadFile(file, 'EXPLORE');
     console.log('File uploaded:', upload.data);
+    
+    if (!upload.data?.path) {
+      throw new Error('Upload response missing required path property');
+    }
+    
     return upload.data.path;
   } catch (error) {
     console.error('Upload failed:', error);
@@ -54,26 +61,47 @@ async function uploadEvidence(file: File) {
 async function getUserDashboard() {
   try {
     const dashboard = await api.getDashboard();
+    
+    if (!dashboard.data) {
+      throw new Error('Dashboard response missing data');
+    }
+    
     console.log('User progress:', dashboard.data.progress);
     console.log('Recent submissions:', dashboard.data.recentSubmissions);
+    
+    return dashboard.data;
   } catch (error) {
     console.error('Dashboard fetch failed:', error);
+    throw error;
   }
 }
 
 // Example 4: Get leaderboard with search
 async function getTopEducators(searchTerm?: string) {
   try {
-    const leaderboard = await api.getLeaderboard({
+    const params: { period: '30d'; limit: number; search?: string } = {
       period: '30d',
       limit: 10,
-      search: searchTerm
-    });
+    };
+    
+    // Only add search if it has a value
+    if (searchTerm && searchTerm.trim()) {
+      params.search = searchTerm;
+    }
+    
+    const leaderboard = await api.getLeaderboard(params);
+    
+    if (!leaderboard.data) {
+      throw new Error('Leaderboard response missing data');
+    }
     
     console.log('Top educators:', leaderboard.data);
     console.log(`Total participants: ${leaderboard.total}`);
+    
+    return { data: leaderboard.data, total: leaderboard.total };
   } catch (error) {
     console.error('Leaderboard fetch failed:', error);
+    throw error;
   }
 }
 
@@ -85,14 +113,19 @@ async function reviewSubmissions() {
       limit: 50
     });
     
-    console.log(`${submissions.data.length} submissions need review`);
-    return submissions.data;
+    if (!submissions.data?.submissions) {
+      throw new Error('Admin submissions response missing data or submissions array');
+    }
+    
+    console.log(`${submissions.data.submissions.length} submissions need review`);
+    return submissions.data.submissions;
   } catch (error) {
     if (error instanceof ForbiddenError) {
       console.error('Admin access required');
     } else {
       console.error('Failed to fetch submissions:', error);
     }
+    throw error;
   }
 }
 
