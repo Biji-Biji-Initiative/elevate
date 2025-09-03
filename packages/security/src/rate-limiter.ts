@@ -30,6 +30,7 @@ async function getRedis(): Promise<RedisLike | null> {
 }
 
 interface RateLimiterConfig {
+  name?: string; // Identifier for metrics
   windowMs: number; // Time window in milliseconds
   maxRequests: number; // Max requests per window
   keyGenerator?: (request: NextRequest) => string; // Custom key generator
@@ -55,11 +56,34 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
+type RateLimitCounter = { allowed: number; blocked: number; lastReset: number };
+const rateLimitStats = new Map<string, RateLimitCounter>();
+
+function getCounter(name: string): RateLimitCounter {
+  const now = Date.now();
+  let c = rateLimitStats.get(name);
+  if (!c) {
+    c = { allowed: 0, blocked: 0, lastReset: now };
+    rateLimitStats.set(name, c);
+  }
+  return c;
+}
+
+export function getRateLimitStats(): Record<string, RateLimitCounter> {
+  return Object.fromEntries(rateLimitStats.entries());
+}
+
+export function resetRateLimitStats(): void {
+  rateLimitStats.clear();
+}
+
 export class RateLimiter {
   private config: RateLimiterConfig;
+  private name: string;
 
   constructor(config: RateLimiterConfig) {
     this.config = config;
+    this.name = config.name || 'unnamed';
   }
 
   private getKey(request: NextRequest): string {
@@ -113,6 +137,21 @@ export class RateLimiter {
       const reset = ttl > 0 ? now + ttl : windowEnd;
       const allowed = count <= this.config.maxRequests;
       const remaining = Math.max(0, this.config.maxRequests - count);
+      const counter = getCounter(this.name);
+      if (allowed) counter.allowed++; else counter.blocked++;
+      if (!allowed && process.env.RATE_LIMIT_LOG_ENABLED === '1') {
+        // Lightweight JSON line for ingestion by log drains
+        // eslint-disable-next-line no-console
+        console.warn(JSON.stringify({
+          level: 'warn',
+          event: 'rate_limit_block',
+          limiter: this.name,
+          key,
+          remaining,
+          reset,
+          ts: new Date().toISOString(),
+        }));
+      }
       return { allowed, remaining, resetTime: reset, totalRequests: count };
     }
 
@@ -125,6 +164,20 @@ export class RateLimiter {
     store.set(key, record);
     const allowed = record.count <= this.config.maxRequests;
     const remaining = Math.max(0, this.config.maxRequests - record.count);
+    const counter = getCounter(this.name);
+    if (allowed) counter.allowed++; else counter.blocked++;
+    if (!allowed && process.env.RATE_LIMIT_LOG_ENABLED === '1') {
+      // eslint-disable-next-line no-console
+      console.warn(JSON.stringify({
+        level: 'warn',
+        event: 'rate_limit_block',
+        limiter: this.name,
+        key,
+        remaining,
+        reset: record.resetTime,
+        ts: new Date().toISOString(),
+      }));
+    }
     return { allowed, remaining, resetTime: record.resetTime, totalRequests: record.count };
   }
 
@@ -144,7 +197,8 @@ export class RateLimiter {
               'X-RateLimit-Limit': this.config.maxRequests.toString(),
               'X-RateLimit-Remaining': result.remaining.toString(),
               'X-RateLimit-Reset': Math.ceil(result.resetTime / 1000).toString(),
-              'Retry-After': Math.ceil((result.resetTime - Date.now()) / 1000).toString()
+              'Retry-After': Math.ceil((result.resetTime - Date.now()) / 1000).toString(),
+              'X-RateLimit-Name': this.name,
             }
           }
         );
@@ -155,6 +209,7 @@ export class RateLimiter {
       response.headers.set('X-RateLimit-Limit', this.config.maxRequests.toString());
       response.headers.set('X-RateLimit-Remaining', result.remaining.toString());
       response.headers.set('X-RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString());
+      response.headers.set('X-RateLimit-Name', this.name);
       
       return null; // Continue to next handler
     };
@@ -163,6 +218,7 @@ export class RateLimiter {
 
 // Pre-configured rate limiters
 export const webhookRateLimiter = new RateLimiter({
+  name: 'webhook',
   windowMs: 60 * 1000, // 1 minute
   maxRequests: parseInt(process.env.WEBHOOK_RATE_LIMIT_RPM || '120'),
   keyGenerator: (request) => {
@@ -181,11 +237,13 @@ export const webhookRateLimiter = new RateLimiter({
 });
 
 export const apiRateLimiter = new RateLimiter({
+  name: 'api',
   windowMs: 60 * 1000, // 1 minute
   maxRequests: parseInt(process.env.RATE_LIMIT_RPM || '60'),
 });
 
 export const adminRateLimiter = new RateLimiter({
+  name: 'admin',
   windowMs: 60 * 1000, // 1 minute
   maxRequests: parseInt(process.env.ADMIN_RATE_LIMIT_RPM || '40'),
 });

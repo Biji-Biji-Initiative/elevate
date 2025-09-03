@@ -9,12 +9,12 @@
       "default": "./dist/js/index.js"
     },
     "./scoring": {
-      "types": "./dist/types/scoring.d.d.ts",
-      "default": "./dist/js/scoring.d.js"
+      "types": "./dist/types/scoring.d.ts",
+      "default": "./dist/js/scoring.js"
     },
     "./badges": {
-      "types": "./dist/types/badges.d.d.ts",
-      "default": "./dist/js/badges.d.js"
+      "types": "./dist/types/badges.d.ts",
+      "default": "./dist/js/badges.js"
     },
     "./package.json": "./package.json"
   },

@@ -35,7 +35,7 @@ async function createLearnSubmission() {
     } else if (error instanceof AuthenticationError) {
       console.error('Authentication required');
     } else {
-      console.error('Submission failed:', error.message);
+      console.error('Submission failed:', error instanceof Error ? error.message : String(error));
     }
   }
 }
@@ -135,10 +135,28 @@ async function completeExploreSubmission(
   evidenceFiles: File[]
 ) {
   try {
+    // Validate input parameters
+    if (!reflectionText || reflectionText.trim().length === 0) {
+      throw new Error('Reflection text is required');
+    }
+    
+    if (!evidenceFiles || evidenceFiles.length === 0) {
+      throw new Error('At least one evidence file is required');
+    }
+    
     // 1. Upload evidence files
     const uploadedFiles = await Promise.all(
       evidenceFiles.map(file => uploadEvidence(file))
     );
+    
+    // Filter out any undefined paths
+    const validUploadedFiles = uploadedFiles.filter((path): path is string => 
+      typeof path === 'string' && path.length > 0
+    );
+    
+    if (validUploadedFiles.length !== evidenceFiles.length) {
+      throw new Error('Some file uploads failed');
+    }
     
     // 2. Create submission
     const submission = await api.createSubmission({
@@ -147,10 +165,14 @@ async function completeExploreSubmission(
         reflection: reflectionText,
         classDate: new Date().toISOString().split('T')[0],
         school: 'SDN 123 Jakarta',
-        evidenceFiles: uploadedFiles
+        evidenceFiles: validUploadedFiles
       },
       visibility: 'PUBLIC'
     });
+    
+    if (!submission.data) {
+      throw new Error('Submission response missing data');
+    }
     
     console.log('Explore submission completed:', submission.data);
     return submission.data;
@@ -176,7 +198,8 @@ async function handleAPIErrors() {
       switch (error.status) {
         case 400:
           console.error('Bad Request:', error.message);
-          if (error.details) {
+          // Safe access to optional details property
+          if (error.details && Array.isArray(error.details) && error.details.length > 0) {
             console.error('Validation details:', error.details);
           }
           break;
@@ -203,22 +226,47 @@ async function handleAPIErrors() {
 /*
 import { useState, useEffect } from 'react';
 
+type LeaderboardData = Awaited<ReturnType<typeof api.getLeaderboard>> | null;
+type LoadingState = boolean;
+type ErrorState = Error | null;
+
 function useLeaderboard(period: '30d' | 'all' = 'all') {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [data, setData] = useState<LeaderboardData>(null);
+  const [loading, setLoading] = useState<LoadingState>(true);
+  const [error, setError] = useState<ErrorState>(null);
 
   useEffect(() => {
+    let isCanceled = false;
+    
     api.getLeaderboard({ period })
       .then(response => {
-        setData(response);
-        setError(null);
+        if (!isCanceled) {
+          // Type guard for response validation
+          if (response && typeof response === 'object' && 'data' in response) {
+            setData(response);
+            setError(null);
+          } else {
+            setError(new Error('Invalid leaderboard response format'));
+            setData(null);
+          }
+        }
       })
       .catch(err => {
-        setError(err);
-        setData(null);
+        if (!isCanceled) {
+          setError(err instanceof Error ? err : new Error('Unknown error occurred'));
+          setData(null);
+        }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!isCanceled) {
+          setLoading(false);
+        }
+      });
+      
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isCanceled = true;
+    };
   }, [period]);
 
   return { data, loading, error };
@@ -226,7 +274,7 @@ function useLeaderboard(period: '30d' | 'all' = 'all') {
 */
 
 // Example 9: Configuration for different environments
-export const createApiClient = (environment: 'development' | 'staging' | 'production') => {
+export const createApiClient = (environment: 'development' | 'staging' | 'production', token?: string) => {
   const configs = {
     development: {
       baseUrl: 'http://localhost:3000',
@@ -237,7 +285,16 @@ export const createApiClient = (environment: 'development' | 'staging' | 'produc
     production: {
       baseUrl: 'https://leaps.mereka.org',
     }
-  };
+  } as const;
 
-  return new ElevateAPIClient(configs[environment]);
+  // Type-safe environment config access
+  const config = configs[environment];
+  if (!config) {
+    throw new Error(`Invalid environment: ${environment}. Must be one of: ${Object.keys(configs).join(', ')}`);
+  }
+
+  return new ElevateAPIClient({
+    ...config,
+    ...(token && { token })
+  });
 };

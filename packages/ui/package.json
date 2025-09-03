@@ -25,6 +25,10 @@
       "types": "./dist/types/FileUpload.d.ts",
       "default": "./dist/js/FileUpload.js"
     },
+    "./lib/utils": {
+      "types": "./dist/types/lib/utils.d.ts",
+      "default": "./dist/js/lib/utils.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/js/index.js",

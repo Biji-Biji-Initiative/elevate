@@ -27,6 +27,38 @@
       "types": "./dist/types/query-schemas.d.ts",
       "default": "./dist/js/query-schemas.js"
     },
+    "./admin-schemas": {
+      "types": "./dist/types/admin-schemas.d.ts",
+      "default": "./dist/js/admin-schemas.js"
+    },
+    "./api-types": {
+      "types": "./dist/types/api-types.d.ts",
+      "default": "./dist/js/api-types.js"
+    },
+    "./ui-types": {
+      "types": "./dist/types/ui-types.d.ts",
+      "default": "./dist/js/ui-types.js"
+    },
+    "./common": {
+      "types": "./dist/types/common.d.ts",
+      "default": "./dist/js/common.js"
+    },
+    "./submission-payloads": {
+      "types": "./dist/types/submission-payloads.d.ts",
+      "default": "./dist/js/submission-payloads.js"
+    },
+    "./webhooks": {
+      "types": "./dist/types/webhooks.d.ts",
+      "default": "./dist/js/webhooks.js"
+    },
+    "./canonical-urls": {
+      "types": "./dist/types/canonical-urls.d.ts",
+      "default": "./dist/js/canonical-urls.js"
+    },
+    "./http": {
+      "types": "./dist/types/http.d.ts",
+      "default": "./dist/js/http.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/js/index.js",

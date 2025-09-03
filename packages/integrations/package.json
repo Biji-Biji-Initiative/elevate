@@ -8,6 +8,14 @@
       "types": "./dist/types/index.d.ts",
       "default": "./dist/js/index.js"
     },
+    "./kajabi": {
+      "types": "./dist/types/kajabi.d.ts",
+      "default": "./dist/js/kajabi.js"
+    },
+    "./utils": {
+      "types": "./dist/types/utils.d.ts",
+      "default": "./dist/js/utils.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/js/index.js",

@@ -9,7 +9,6 @@ export default defineConfig({
   clean: true,
   splitting: false,
   bundle: true,
-  jsx: 'preserve',
   target: 'es2022',
   banner: {
     js: '"use client";',

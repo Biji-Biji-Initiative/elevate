@@ -22,10 +22,16 @@
       "default": "./dist/js/schemas.js"
     },
     "./client": {
+      "types": "./dist/types/client.d.ts",
       "default": "./dist/js/client.js"
     },
     "./examples": {
+      "types": "./dist/types/examples.d.ts",
       "default": "./dist/js/examples.js"
+    },
+    "./simple-sdk": {
+      "types": "./dist/types/simple-sdk.d.ts",
+      "default": "./dist/js/simple-sdk.js"
     },
     "./package.json": "./package.json"
   },

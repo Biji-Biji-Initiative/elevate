@@ -8,6 +8,10 @@
       "types": "./dist/types/index.d.ts",
       "default": "./dist/js/index.js"
     },
+    "./env": {
+      "types": "./dist/types/env.d.ts",
+      "default": "./dist/js/env.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/js/index.js",
