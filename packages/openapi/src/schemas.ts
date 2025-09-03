@@ -424,6 +424,7 @@ export const AdminSubmissionSchema = z.object({
   visibility: VisibilitySchema,
   review_note: z.string().nullable().optional(),
   attachments: z.array(z.unknown()).optional(),
+  attachmentCount: z.number().int().optional().openapi({ example: 2 }),
   user: AdminUserMiniSchema,
   activity: AdminActivitySchema,
 })

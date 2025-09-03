@@ -138,3 +138,6 @@ coverage/
 *.log
 *.tgz
 *.tar.gz
+
+# Build artifact policy
+.build-hashes.json

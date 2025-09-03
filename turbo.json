@@ -1,60 +1,57 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "remoteCache": {
+    "signature": true
+  },
   "tasks": {
     "typecheck": {
-      "outputs": ["packages/*/tsconfig.tsbuildinfo", "**/*.tsbuildinfo"]
+      "outputs": ["packages/*/tsconfig.tsbuildinfo", "**/*.tsbuildinfo"],
+      "cache": true
     },
     "build:types": {
       "dependsOn": ["^typecheck"],
-      "outputs": ["packages/*/dist/types/**", "dist/types/**"]
+      "outputs": ["packages/*/dist/types/**", "dist/types/**"],
+      "cache": true
     },
     "build:js": {
       "dependsOn": ["build:types"],
-      "outputs": ["packages/*/dist/js/**", "dist/js/**"]
+      "outputs": ["packages/*/dist/js/**", "dist/js/**"],
+      "cache": true
     },
     "build": {
       "dependsOn": ["build:js"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "cache": true
     },
     "lint": {
-      "outputs": []
+      "outputs": [],
+      "cache": true
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "cache": true
     },
     "api:extract": {
       "dependsOn": ["build:types"],
-      "outputs": ["**/*.api.md"]
+      "outputs": ["**/*.api.md"],
+      "cache": true
     },
     "api:check": {
       "dependsOn": ["build:types"],
-      "outputs": []
+      "outputs": [],
+      "cache": true
     }
-  }
-  ,
+  },
   "globalEnv": [
-    "DATABASE_URL",
     "NODE_ENV",
     "VERCEL_ENV",
     "VERCEL_GIT_COMMIT_SHA",
     "ANALYZE",
-    "CRON_SECRET",
-    "CLERK_WEBHOOK_SECRET",
-    "KAJABI_WEBHOOK_SECRET",
     "SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
     "SUPABASE_ANON_KEY",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
-    "CLERK_SECRET_KEY",
     "NEXT_PUBLIC_SITE_URL",
-    "CLERK_SIGN_IN_URL",
-    "CLERK_SIGN_UP_URL",
-    "CLERK_AFTER_SIGN_IN_URL",
-    "CLERK_AFTER_SIGN_UP_URL",
-    "NEXTAUTH_SECRET",
-    "NEXTAUTH_URL",
-    "WEBHOOK_SECRET",
     "TURBO_TOKEN",
     "TURBO_TEAM",
     "CI"

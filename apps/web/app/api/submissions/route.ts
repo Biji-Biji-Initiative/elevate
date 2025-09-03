@@ -156,6 +156,16 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Persist attachments as relational rows (in addition to JSON for backward compatibility)
+    if (Array.isArray(validatedData.attachments) && validatedData.attachments.length > 0) {
+      const values = validatedData.attachments
+        .filter((p): p is string => typeof p === 'string' && p.length > 0)
+        .map((p) => ({ submission_id: submission.id, path: p }))
+      if (values.length > 0) {
+        await prisma.submissionAttachment.createMany({ data: values, skipDuplicates: true })
+      }
+    }
+
 
     return NextResponse.json({
       success: true,
@@ -218,7 +228,8 @@ export async function GET(request: NextRequest) {
     const submissions = await prisma.submission.findMany({
       where: whereClause,
       include: {
-        activity: true
+        activity: true,
+        attachments_rel: true
       },
       orderBy: {
         created_at: 'desc'
@@ -236,7 +247,7 @@ export async function GET(request: NextRequest) {
         createdAt: submission.created_at,
         updatedAt: submission.updated_at,
         reviewNote: submission.review_note,
-        attachmentCount: Array.isArray(submission.attachments) ? submission.attachments.length : 0
+        attachmentCount: submission.attachments_rel ? submission.attachments_rel.length : (Array.isArray(submission.attachments) ? submission.attachments.length : 0)
       }))
     })
 

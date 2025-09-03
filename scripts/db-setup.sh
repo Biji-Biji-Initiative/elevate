@@ -44,20 +44,16 @@ else
     echo "⚠️  View migration file not found, skipping materialized views"
 fi
 
-echo "📋 Applying constraints and DB rules..."
-if [ -f "packages/db/migrations/003_constraints.sql" ]; then
-    pnpm exec prisma db execute --stdin --schema=packages/db/schema.prisma < packages/db/migrations/003_constraints.sql
-    echo "✅ Constraints applied"
-else
-    echo "⚠️  Constraints migration file not found, skipping"
-fi
-
-if [ -f "packages/db/migrations/004_amplify_quota.sql" ]; then
-    pnpm exec prisma db execute --stdin --schema=packages/db/schema.prisma < packages/db/migrations/004_amplify_quota.sql
-    echo "✅ Amplify quota trigger applied"
-else
-    echo "⚠️  Amplify quota migration file not found, skipping"
-fi
+echo "📋 Applying additional SQL migrations..."
+shopt -s nullglob
+for file in packages/db/migrations/00*.sql packages/db/migrations/0*.sql packages/db/migrations/[1-9]*.sql; do
+  echo "➡️  Applying $file"
+  pnpm exec prisma db execute --stdin --schema=packages/db/schema.prisma < "$file" || {
+    echo "❌ Failed applying $file"; exit 1;
+  }
+done
+shopt -u nullglob
+echo "✅ All SQL migrations applied"
 
 echo "🔄 Refreshing materialized views..."
 pnpm exec prisma db execute --stdin --schema=packages/db/schema.prisma <<< "SELECT refresh_leaderboards();" || echo "⚠️  Could not refresh views (function may not exist yet)"

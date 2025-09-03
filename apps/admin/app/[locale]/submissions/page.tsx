@@ -152,7 +152,9 @@ function SubmissionsPage() {
       key: 'attachments',
       header: 'Files',
       render: (row) => {
-        const attachmentCount = Array.isArray(row.attachments) ? row.attachments.length : 0
+        const attachmentCount = typeof row.attachmentCount === 'number'
+          ? row.attachmentCount
+          : (Array.isArray(row.attachments) ? row.attachments.length : 0)
         return (
           <span className="text-sm text-gray-600">
             {attachmentCount} files

@@ -1,4 +1,5 @@
 {
+  "name": "elevate-admin",
   "buildCommand": "cd ../.. && pnpm turbo run build --filter=elevate-admin",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm db:generate",
   "outputDirectory": ".next",
@@ -13,5 +14,20 @@
       "source": "/api/:path*",
       "destination": "/api/:path*"
     }
-  ]
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-App-Name",
+          "value": "elevate-admin"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "TURBO_TOKEN": "@turbo_token",
+    "TURBO_TEAM": "@turbo_team"
+  }
 }

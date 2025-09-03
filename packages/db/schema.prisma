@@ -44,6 +44,7 @@ model Submission {
   visibility    Visibility       @default(PRIVATE)
   payload       Json
   attachments   Json
+  attachments_rel SubmissionAttachment[]
   reviewer_id   String?
   review_note   String?
   created_at    DateTime         @default(now())
@@ -103,6 +104,20 @@ model KajabiEvent {
   user_match   String?
 
   @@map("kajabi_events")
+}
+
+model SubmissionAttachment {
+  id             String     @id @default(cuid())
+  submission_id  String
+  path           String
+  hash           String?
+  created_at     DateTime   @default(now())
+
+  submission     Submission @relation(fields: [submission_id], references: [id], onDelete: Cascade)
+
+  @@unique([submission_id, path])
+  @@index([submission_id])
+  @@map("submission_attachments")
 }
 
 model AuditLog {

@@ -106,17 +106,41 @@ pnpm run emails:dev # http://localhost:3002
 
 ## Deployment
 
-### Staging Deployment
+> **📋 Complete Vercel Deployment Guide**: See [VERCEL_DEPLOYMENT_GUIDE.md](./VERCEL_DEPLOYMENT_GUIDE.md) for detailed configuration and troubleshooting information.
+
+### Quick Deployment Commands
+
+#### Individual Apps
 
 ```bash
-# Deploy to Vercel staging
-pnpm run deploy:staging
+# Web app (public site)
+./scripts/deploy-web.sh staging
+./scripts/deploy-web.sh production
 
-# Manual steps:
-vercel --yes  # Creates preview deployment
+# Admin app (admin console)
+./scripts/deploy-admin.sh staging  
+./scripts/deploy-admin.sh production
 ```
 
-### Production Deployment
+#### Both Apps Together
+
+```bash
+# Deploy both web and admin apps
+./scripts/deploy-apps.sh staging
+./scripts/deploy-apps.sh production
+```
+
+### Legacy Deployment (Deprecated)
+
+The following commands are deprecated in favor of the new deployment strategy:
+
+```bash
+# DEPRECATED: Use individual app deployment instead
+pnpm run deploy:staging
+pnpm run deploy:prod
+```
+
+### Pre-deployment Checklist
 
 ```bash
 # Run pre-deployment checks
@@ -124,12 +148,8 @@ pnpm run env:check production
 pnpm run type-check
 pnpm run lint
 
-# Deploy to production
-pnpm run deploy:prod
-
-# Manual steps:
-pnpm run db:migrate:prod  # Run migrations first
-vercel --prod --yes       # Deploy to production
+# Database migrations (if needed)
+pnpm run db:migrate:prod
 ```
 
 ### Environment Variables (Vercel)

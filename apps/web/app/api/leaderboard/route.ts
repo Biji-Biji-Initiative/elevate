@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@elevate/db/client'
+import { Prisma } from '@prisma/client'
 
 import { LeaderboardQuerySchema } from '@elevate/types'
 
@@ -69,32 +70,25 @@ export async function GET(request: NextRequest) {
         new Date(0)
       
       // Use materialized views for leaderboard (faster and consistent)
-      const viewName = period === '30d' ? 'leaderboard_30d' : 'leaderboard_totals'
-      const params: any[] = []
-      const whereClauses: string[] = []
-      if (search && search.trim().length > 0) {
-        params.push(`%${search.trim()}%`, `%${search.trim()}%`, `%${search.trim()}%`)
-        whereClauses.push('(name ILIKE $1 OR handle ILIKE $2 OR school ILIKE $3)')
-      }
-      const whereSQL = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : ''
+      const table = period === '30d' ? Prisma.sql`leaderboard_30d` : Prisma.sql`leaderboard_totals`
+      const like = (v: string) => `%${v.trim()}%`
+      const where = search && search.trim().length > 0
+        ? Prisma.sql`WHERE name ILIKE ${like(search)} OR handle ILIKE ${like(search)} OR school ILIKE ${like(search)}`
+        : Prisma.sql``
 
       // Count
-      const countRows = await prisma.$queryRawUnsafe<{ count: bigint }[]>(
-        `SELECT COUNT(*)::bigint AS count FROM ${viewName} ${whereSQL}`,
-        ...params
+      const countRows = await prisma.$queryRaw<{ count: bigint }[]>(
+        Prisma.sql`SELECT COUNT(*)::bigint AS count FROM ${table} ${where}`
       )
       totalCount = Number(countRows?.[0]?.count ?? 0)
 
       // Page rows
-      const pageParams = [...params]
-      pageParams.push(limit, offset)
-      const pageRows = await prisma.$queryRawUnsafe<Array<{ user_id: string; handle: string; name: string; avatar_url: string | null; school: string | null; cohort: string | null; total_points: number; last_activity_at: Date | null }>>(
-        `SELECT user_id, handle, name, avatar_url, school, cohort, total_points, last_activity_at
-         FROM ${viewName}
-         ${whereSQL}
-         ORDER BY total_points DESC, COALESCE(last_activity_at, '1970-01-01') DESC
-         LIMIT $${pageParams.length - 1} OFFSET $${pageParams.length}`,
-        ...pageParams
+      const pageRows = await prisma.$queryRaw<Array<{ user_id: string; handle: string; name: string; avatar_url: string | null; school: string | null; cohort: string | null; total_points: number; last_activity_at: Date | null }>>(
+        Prisma.sql`SELECT user_id, handle, name, avatar_url, school, cohort, total_points, last_activity_at
+                   FROM ${table}
+                   ${where}
+                   ORDER BY total_points DESC, COALESCE(last_activity_at, '1970-01-01') DESC
+                   LIMIT ${limit} OFFSET ${offset}`
       )
 
       // Shape to match downstream computation

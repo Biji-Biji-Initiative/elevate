@@ -59,7 +59,8 @@ export async function GET(request: NextRequest) {
               cohort: true
             }
           },
-          activity: true
+          activity: true,
+          attachments_rel: true
         },
         orderBy: {
           [sortBy]: sortOrder
@@ -70,10 +71,18 @@ export async function GET(request: NextRequest) {
       prisma.submission.count({ where })
     ])
     
+    // Map to include attachmentCount sourced from relational table (fallback to JSON array length)
+    const mapped = submissions.map((s) => ({
+      ...s,
+      attachmentCount: Array.isArray(s.attachments_rel) && s.attachments_rel.length > 0
+        ? s.attachments_rel.length
+        : (Array.isArray(s.attachments) ? (s.attachments as unknown[]).length : 0),
+    }))
+
     return NextResponse.json({
       success: true,
       data: {
-        submissions,
+        submissions: mapped,
         pagination: {
           page,
           limit,

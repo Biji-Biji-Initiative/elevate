@@ -360,6 +360,14 @@ export default [
   // General JavaScript/TypeScript rules
   {
     rules: {
+      // Disallow prisma.$queryRawUnsafe to prevent SQL injection; use Prisma.sql + $queryRaw
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'CallExpression[callee.property.name="$queryRawUnsafe"]',
+          message: 'Use prisma.$queryRaw with Prisma.sql to avoid SQL injection risks.'
+        },
+      ],
       // Code quality
       'prefer-const': 'error',
       'no-var': 'error',
