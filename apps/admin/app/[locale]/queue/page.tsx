@@ -1,18 +1,17 @@
 'use client'
 
+import { useEffect } from 'react'
+
+import { useRouter } from 'next/navigation'
+
 import { withRoleGuard } from '@elevate/auth/context'
 
 function QueuePage() {
-  return (
-    <main style={{ padding: 24, fontFamily: 'system-ui' }}>
-      <h1>Pending Submissions</h1>
-      <p>Filter by stage; open items to review. Placeholder list.</p>
-      <ul>
-        <li>—</li>
-      </ul>
-    </main>
-  )
+  const router = useRouter()
+  useEffect(() => {
+    router.replace('/admin/submissions?status=PENDING')
+  }, [router])
+  return null
 }
 
 export default withRoleGuard(QueuePage, ['reviewer', 'admin', 'superadmin'])
-

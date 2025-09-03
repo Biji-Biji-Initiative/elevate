@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+
 import { prisma } from '@elevate/db/client'
+import { HandleParamSchema, apiError, apiSuccess } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
@@ -11,7 +13,12 @@ export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ handle: string }> }) {
   try {
-    const { handle } = await params
+    const raw = await params
+    const parsed = HandleParamSchema.safeParse(raw)
+    if (!parsed.success) {
+      return NextResponse.json(apiError('Invalid handle'), { status: 400 })
+    }
+    const { handle } = parsed.data
 
     // Query user by handle
     const user = await prisma.user.findUnique({
@@ -61,10 +68,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Profile not found or not public' },
-        { status: 404 }
-      )
+      return NextResponse.json(apiError('Profile not found or not public'), { status: 404 })
     }
 
     // Check if user has any public submissions
@@ -96,16 +100,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       submissions: user.submissions
     }
 
-    return NextResponse.json(profileData, {
+    return NextResponse.json(apiSuccess(profileData), {
       headers: {
         'Cache-Control': 'public, s-maxage=300' // Cache for 5 minutes
       }
     })
 
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch profile data' },
-      { status: 500 }
-    )
+    return NextResponse.json(apiError('Failed to fetch profile data'), { status: 500 })
   }
 }

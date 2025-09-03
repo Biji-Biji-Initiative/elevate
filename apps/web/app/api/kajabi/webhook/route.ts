@@ -1,9 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { headers } from 'next/headers';
-import { prisma } from '@elevate/db/client';
 import crypto from 'crypto';
+
+import { headers } from 'next/headers';
+import { NextResponse, type NextRequest } from 'next/server';
+
+import { prisma } from '@elevate/db/client';
 import { withRateLimit, webhookRateLimiter } from '@elevate/security';
-import type { KajabiTagEvent } from '@elevate/types';
+import { parseKajabiWebhook, parseWebhookHeaders, toJsonValue, toPrismaJson, buildAuditMeta, type KajabiTagEvent } from '@elevate/types';
+
+// Local wrapper to ensure type safety for object inputs
+function toPrismaJsonObject(obj: object): Exclude<ReturnType<typeof toPrismaJson>, null> {
+  const result = toPrismaJson(obj);
+  if (result === null) {
+    throw new Error('Unexpected null result from non-null object');
+  }
+  return result;
+}
+
+// Local wrapper for audit meta to ensure type safety
+function buildAuditMetaSafe(envelope: { entityType: any; entityId: string }, meta?: Record<string, unknown>) {
+  const result = buildAuditMeta(envelope, meta);
+  if (result === null) {
+    throw new Error('Unexpected null result from audit meta');
+  }
+  return result;
+}
 
 export const runtime = 'nodejs';
 
@@ -35,9 +55,9 @@ function verifySignature(payload: string, signature: string): boolean {
 }
 
 // Process tag-based events from Kajabi
-async function processTagEvent(eventData: KajabiTagEvent) {
+async function processTagEvent(eventData: KajabiTagEvent, eventId: string) {
   try {
-    const { contact, tag } = eventData.data;
+    const { contact, tag } = eventData;
     
     // Extract contact information
     const email = contact.email?.toLowerCase().trim();
@@ -60,12 +80,17 @@ async function processTagEvent(eventData: KajabiTagEvent) {
 
     if (!user) {
       // Store for manual review
+      const userNotFoundPayload = toPrismaJsonObject({
+        ...eventData,
+        processing_status: 'user_not_found',
+        stored_at: new Date().toISOString()
+      });
+      
       await prisma.kajabiEvent.create({
         data: {
-          id: eventData.event_id,
-          payload: eventData,
-          processed_at: null,
-          user_match: null
+          id: eventId,
+          payload: userNotFoundPayload
+          // processed_at and user_match are omitted (will be null by default)
         }
       });
       return { success: false, reason: 'user_not_found', email };
@@ -81,7 +106,7 @@ async function processTagEvent(eventData: KajabiTagEvent) {
 
     // Check for duplicate processing
     const existingEvent = await prisma.kajabiEvent.findUnique({
-      where: { id: eventData.event_id }
+      where: { id: eventId }
     });
 
     if (existingEvent) {
@@ -105,7 +130,7 @@ async function processTagEvent(eventData: KajabiTagEvent) {
         source: 'WEBHOOK',
         delta_points: learnActivity.default_points,
         external_source: 'kajabi',
-        external_event_id: eventData.event_id
+        external_event_id: eventId
       }
     });
 
@@ -129,10 +154,16 @@ async function processTagEvent(eventData: KajabiTagEvent) {
     });
 
     // Store processed event
+    const processedEventPayload = toPrismaJsonObject({
+      ...eventData,
+      processing_status: 'completed',
+      processed_at: new Date().toISOString()
+    });
+    
     await prisma.kajabiEvent.create({
       data: {
-        id: eventData.event_id,
-        payload: eventData,
+        id: eventData.event_id || `${eventData.event_type}_${eventData.contact.id}_${Date.now()}`,
+        payload: processedEventPayload,
         processed_at: new Date(),
         user_match: user.id
       }
@@ -144,12 +175,12 @@ async function processTagEvent(eventData: KajabiTagEvent) {
         actor_id: 'system',
         action: 'KAJABI_COMPLETION_PROCESSED',
         target_id: user.id,
-        meta: {
-          event_id: eventData.event_id,
+        meta: buildAuditMetaSafe({ entityType: 'kajabi', entityId: String(eventData.event_id || `${eventData.event_type}_${eventData.contact.id}_${Date.now()}`) }, {
+          event_id: eventData.event_id || `${eventData.event_type}_${eventData.contact.id}_${Date.now()}`,
           tag_name: tagName,
           kajabi_contact_id: contactId,
           points_awarded: learnActivity.default_points
-        }
+        })
       }
     });
 
@@ -165,12 +196,17 @@ async function processTagEvent(eventData: KajabiTagEvent) {
     
     // Store failed event for manual review
     try {
+      const failedEventPayload = toPrismaJsonObject({
+        ...eventData,
+        error: error instanceof Error ? error.message : String(error),
+        failed_at: new Date().toISOString()
+      });
+      
       await prisma.kajabiEvent.create({
         data: {
-          id: eventData.event_id,
-          payload: { ...eventData, error: error instanceof Error ? error.message : String(error) },
-          processed_at: null,
-          user_match: null
+          id: eventData.event_id || `${eventData.event_type}_${eventData.contact.id}_${Date.now()}`,
+          payload: failedEventPayload
+          // processed_at and user_match omitted (will be null by default)
         }
       });
     } catch (dbError) {
@@ -187,10 +223,10 @@ export async function POST(request: NextRequest) {
       const body = await request.text();
       const headersList = await headers();
       
-      // Store event before processing for audit trail
-      let eventData: KajabiTagEvent;
+      // Parse JSON first (we'll validate specific schemas by event type)
+      let rawEventData: unknown;
       try {
-        eventData = JSON.parse(body);
+        rawEventData = JSON.parse(body);
       } catch (parseError) {
         return NextResponse.json(
           { error: 'Invalid JSON payload' },
@@ -198,19 +234,52 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Store raw event first (before signature verification for audit)
-      if (eventData.event_id) {
+      // Parse and validate the initial webhook structure
+      const parseResult = parseKajabiWebhook(rawEventData);
+      
+      // Validate payload structure first
+      if (!rawEventData || typeof rawEventData !== 'object') {
+        return NextResponse.json(
+          { error: 'Invalid webhook payload structure' },
+          { status: 400 }
+        );
+      }
+
+      // Use parsed and validated data from parseResult
+      const eventData = parseResult || rawEventData;
+
+      // Compute a stable event fingerprint to ensure idempotency
+      const fingerprint = crypto.createHash('sha256').update(body).digest('hex');
+      // Prefer provider event_id; otherwise use fingerprint-based ID
+      const providerEventId = parseResult?.event_id || 
+        (typeof rawEventData === 'object' && rawEventData !== null && 
+         'event_id' in rawEventData && typeof (rawEventData as any).event_id === 'string'
+         ? (rawEventData as any).event_id
+         : undefined);
+      const eventType = parseResult?.event_type || 
+        (typeof rawEventData === 'object' && rawEventData !== null && 
+         'event_type' in rawEventData && typeof (rawEventData as any).event_type === 'string'
+         ? (rawEventData as any).event_type
+         : undefined);
+      const stableEventId = String(providerEventId || `kajabi:${fingerprint}`);
+         
+      if (stableEventId || eventType) {
         try {
+          const auditPayload = toPrismaJsonObject({
+            ...(typeof rawEventData === 'object' && rawEventData !== null ? rawEventData : {}),
+            received_at: new Date().toISOString(),
+            validation_status: parseResult ? 'valid' : 'invalid_format'
+          });
+          
           await prisma.kajabiEvent.upsert({
-            where: { id: eventData.event_id },
+            where: { id: stableEventId },
             update: {
-              payload: { ...eventData, received_at: new Date().toISOString() }
+              payload: auditPayload
             },
             create: {
-              id: eventData.event_id,
-              payload: { ...eventData, received_at: new Date().toISOString() },
-              processed_at: null,
-              user_match: null
+              id: stableEventId,
+              payload: auditPayload
+              // processed_at and user_match omitted (will be null by default)
             }
           });
         } catch (storeError) {
@@ -240,13 +309,24 @@ export async function POST(request: NextRequest) {
     
 
     // Handle different event types
-    switch (eventData.event_type) {
+    switch (eventType) {
       case 'contact.tagged':
-        const result = await processTagEvent(eventData);
+        // Use the already parsed result
+        if (!parseResult) {
+          return NextResponse.json(
+            { 
+              error: 'Invalid contact.tagged event format',
+              details: 'Event payload does not match expected KajabiTagEvent schema'
+            },
+            { status: 400 }
+          );
+        }
+        
+        const result = await processTagEvent(parseResult, parseResult.event_id || `kajabi_contact_tagged_${Date.now()}`);
         
         return NextResponse.json({
           success: true,
-          event_id: eventData.event_id,
+          event_id: parseResult.event_id || `kajabi_contact_tagged_${Date.now()}`,
           processed_at: new Date().toISOString(),
           result
         });
@@ -254,34 +334,44 @@ export async function POST(request: NextRequest) {
       case 'form.submitted':
       case 'purchase.created':
         // Store all events for audit but don't process
+        const auditOnlyPayload = toPrismaJsonObject({
+          ...eventData,
+          stored_at: new Date().toISOString(),
+          processing_status: 'audit_only'
+        });
+        
         await prisma.kajabiEvent.create({
           data: {
-            id: eventData.event_id,
-            payload: eventData,
-            processed_at: null,
-            user_match: null
+            id: stableEventId,
+            payload: auditOnlyPayload
+            // processed_at and user_match omitted (will be null by default)
           }
         });
         
         return NextResponse.json({
           success: true,
-          message: `Event type ${eventData.event_type} stored for audit`
+          message: `Event type ${String(eventType)} stored for audit`
         });
 
       default:
         // Store unknown events for audit
+        const unknownEventPayload = toPrismaJsonObject({
+          ...eventData,
+          stored_at: new Date().toISOString(),
+          processing_status: 'unknown_event_type'
+        });
+        
         await prisma.kajabiEvent.create({
           data: {
-            id: eventData.event_id,
-            payload: eventData,
-            processed_at: null,
-            user_match: null
+            id: stableEventId,
+            payload: unknownEventPayload
+            // processed_at and user_match omitted (will be null by default)
           }
         });
         
         return NextResponse.json({
           success: true,
-          message: `Event type ${eventData.event_type} stored for audit`
+          message: `Event type ${String(eventType)} stored for audit`
         });
     }
 

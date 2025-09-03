@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@elevate/db/client'
+import { type NextRequest, NextResponse } from 'next/server'
+
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import { prisma } from '@elevate/db'
 
 export const runtime = 'nodejs';
 
@@ -30,13 +31,10 @@ export async function GET(
     })
     
     if (!submission) {
-      return NextResponse.json(
-        { error: 'Submission not found' },
-        { status: 404 }
-      )
+      return createErrorResponse(new Error('Submission not found'), 404)
     }
     
-    return NextResponse.json({ submission })
+    return NextResponse.json({ success: true, data: { submission } })
   } catch (error) {
     return createErrorResponse(error, 500)
   }

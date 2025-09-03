@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+
 import { auth } from '@clerk/nextjs/server'
+
 import { saveEvidenceFile, FileValidationError } from '@elevate/storage'
+import { parseActivityCode } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
@@ -13,22 +16,25 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData()
-    const file = formData.get('file') as File
-    const activityCode = formData.get('activityCode') as string
+    const fileEntry = formData.get('file')
+    const activityCodeEntry = formData.get('activityCode')
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+    // Validate file is actually a File object
+    if (!fileEntry || !(fileEntry instanceof File)) {
+      return NextResponse.json({ error: 'No file provided or invalid file' }, { status: 400 })
     }
 
-    if (!activityCode) {
+    // Validate activity code is a string and valid
+    if (!activityCodeEntry || typeof activityCodeEntry !== 'string') {
       return NextResponse.json({ error: 'Activity code is required' }, { status: 400 })
     }
 
-    // Validate activity code
-    const validActivityCodes = ['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']
-    if (!validActivityCodes.includes(activityCode)) {
+    const activityCode = parseActivityCode(activityCodeEntry)
+    if (!activityCode) {
       return NextResponse.json({ error: 'Invalid activity code' }, { status: 400 })
     }
+
+    const file = fileEntry
 
     const result = await saveEvidenceFile(file, userId, activityCode)
 

@@ -1,23 +1,24 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Button, Input, Textarea } from '@elevate/ui'
-import { DataTable, Modal, ConfirmModal } from '@elevate/ui'
-import type { Column } from '@elevate/ui'
-import { withRoleGuard } from '@elevate/auth/context'
+import Image from 'next/image'
 
-interface Badge extends Record<string, unknown> {
+import { withRoleGuard } from '@elevate/auth/context'
+import { adminClient } from '@/lib/admin-client'
+import { Button, Input, Textarea, DataTable, Modal, ConfirmModal, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, createColumns, type Column, Alert } from '@elevate/ui'
+
+type Badge = {
   code: string
   name: string
   description: string
   criteria: {
     type: 'points' | 'submissions' | 'activities' | 'streak'
     threshold: number
-    activity_codes?: string[]
-    conditions?: Record<string, unknown>
+    activity_codes?: string[] | undefined
+    conditions?: Record<string, unknown> | undefined // Keep flexible for badge conditions
   }
-  icon_url?: string
-  earned_badges?: Array<{
+  icon_url?: string | undefined
+  earned_badges?: {
     id: string
     user: {
       id: string
@@ -25,10 +26,10 @@ interface Badge extends Record<string, unknown> {
       handle: string
     }
     earned_at: string
-  }>
+  }[] | undefined
   _count?: {
-    earned_badges: number
-  }
+    earned_badges?: number | undefined
+  } | undefined
 }
 
 interface User {
@@ -43,6 +44,7 @@ function BadgesPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [error, setError] = useState<string | null>(null)
   
   // Modal states
   const [badgeModal, setBadgeModal] = useState<{
@@ -88,7 +90,7 @@ function BadgesPage() {
 
   const [processing, setProcessing] = useState(false)
 
-  const columns: Column<Badge>[] = [
+  const columns = createColumns<Badge>()([
     {
       key: 'name',
       header: 'Badge',
@@ -96,7 +98,7 @@ function BadgesPage() {
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
             {row.icon_url ? (
-              <img src={row.icon_url} alt={row.name} className="w-8 h-8 rounded-full" />
+              <Image src={row.icon_url} alt={row.name} width={32} height={32} className="w-8 h-8 rounded-full" />
             ) : (
               <span className="text-white font-bold">🏆</span>
             )}
@@ -197,24 +199,19 @@ function BadgesPage() {
       width: '200px',
       sortable: false
     }
-  ]
+  ])
 
   useEffect(() => {
-    fetchBadges()
-    fetchUsers()
+    void fetchBadges()
+    void fetchUsers()
   }, [])
 
   const fetchBadges = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/admin/badges?includeStats=true')
-      const data = await response.json()
-      
-      if (response.ok) {
-        setBadges(data.badges)
-      } else {
-      }
-    } catch (error) {
+      const { badges } = await adminClient.getBadges(true)
+      setBadges(badges)
+    } catch (_error) {
     } finally {
       setLoading(false)
     }
@@ -222,13 +219,10 @@ function BadgesPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users?limit=1000')
-      const data = await response.json()
-      
-      if (response.ok) {
-        setUsers(data.users)
-      }
-    } catch (error) {
+      const { users } = await adminClient.getUsers({ limit: 1000 })
+      setUsers(users)
+    } catch (_error) {
+      console.error('Error fetching users:', _error)
     }
   }
 
@@ -282,22 +276,11 @@ function BadgesPage() {
   const handleCreateBadge = async () => {
     setProcessing(true)
     try {
-      const response = await fetch('/api/admin/badges', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(badgeForm)
-      })
-
-      const data = await response.json()
-      
-      if (response.ok) {
-        await fetchBadges()
-        closeBadgeModal()
-      } else {
-        alert(`Error: ${data.error}`)
-      }
-    } catch (error) {
-      alert('Failed to create badge')
+      await adminClient.createBadge(badgeForm)
+      await fetchBadges()
+      closeBadgeModal()
+    } catch (_error) {
+      setError('Failed to create badge')
     } finally {
       setProcessing(false)
     }
@@ -308,25 +291,11 @@ function BadgesPage() {
 
     setProcessing(true)
     try {
-      const response = await fetch('/api/admin/badges', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...badgeForm,
-          code: badgeModal.badge.code
-        })
-      })
-
-      const data = await response.json()
-      
-      if (response.ok) {
-        await fetchBadges()
-        closeBadgeModal()
-      } else {
-        alert(`Error: ${data.error}`)
-      }
-    } catch (error) {
-      alert('Failed to update badge')
+      await adminClient.updateBadge({ ...badgeForm, code: badgeModal.badge.code })
+      await fetchBadges()
+      closeBadgeModal()
+    } catch (_error) {
+      setError('Failed to update badge')
     } finally {
       setProcessing(false)
     }
@@ -337,20 +306,11 @@ function BadgesPage() {
 
     setProcessing(true)
     try {
-      const response = await fetch(`/api/admin/badges?code=${deleteModal.badge.code}`, {
-        method: 'DELETE'
-      })
-
-      const data = await response.json()
-      
-      if (response.ok) {
-        await fetchBadges()
-        setDeleteModal({ isOpen: false })
-      } else {
-        alert(`Error: ${data.error}`)
-      }
-    } catch (error) {
-      alert('Failed to delete badge')
+      await adminClient.deleteBadge(deleteModal.badge.code)
+      await fetchBadges()
+      setDeleteModal({ isOpen: false })
+    } catch (_error) {
+      setError('Failed to delete badge')
     } finally {
       setProcessing(false)
     }
@@ -361,27 +321,12 @@ function BadgesPage() {
 
     setProcessing(true)
     try {
-      const response = await fetch('/api/admin/badges/assign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          badgeCode: assignModal.badge.code,
-          userIds: assignForm.userIds,
-          reason: assignForm.reason
-        })
-      })
-
-      const data = await response.json()
-      
-      if (response.ok) {
-        await fetchBadges()
-        setAssignModal({ isOpen: false })
-        setAssignForm({ userIds: [], reason: '' })
-      } else {
-        alert(`Error: ${data.error}`)
-      }
-    } catch (error) {
-      alert('Failed to assign badge')
+      await adminClient.assignBadge({ badgeCode: assignModal.badge.code, userIds: assignForm.userIds, reason: assignForm.reason })
+      await fetchBadges()
+      setAssignModal({ isOpen: false })
+      setAssignForm({ userIds: [], reason: '' })
+    } catch (_error) {
+      setError('Failed to assign badge')
     } finally {
       setProcessing(false)
     }
@@ -389,6 +334,11 @@ function BadgesPage() {
 
   return (
     <div className="p-6">
+      {error && (
+        <div className="mb-4">
+          <Alert variant="destructive">{error}</Alert>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Badge Management</h1>
@@ -403,7 +353,7 @@ function BadgesPage() {
       </div>
 
       {/* Data Table */}
-      <DataTable
+      <DataTable<Badge>
         data={badges}
         columns={columns}
         loading={loading}
@@ -438,8 +388,9 @@ function BadgesPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Code</label>
+            <label htmlFor="badge-code" className="block text-sm font-medium text-gray-700 mb-1">Code</label>
             <Input
+              id="badge-code"
               value={badgeForm.code}
               onChange={(e) => setBadgeForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
               placeholder="BADGE_CODE"
@@ -448,8 +399,9 @@ function BadgesPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label htmlFor="badge-name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <Input
+              id="badge-name"
               value={badgeForm.name}
               onChange={(e) => setBadgeForm(prev => ({ ...prev, name: e.target.value }))}
               placeholder="Badge Name"
@@ -457,8 +409,9 @@ function BadgesPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label htmlFor="badge-description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <Textarea
+              id="badge-description"
               value={badgeForm.description}
               onChange={(e) => setBadgeForm(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Describe what this badge represents..."
@@ -467,8 +420,9 @@ function BadgesPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Icon URL (Optional)</label>
+            <label htmlFor="badge-icon-url" className="block text-sm font-medium text-gray-700 mb-1">Icon URL (Optional)</label>
             <Input
+              id="badge-icon-url"
               value={badgeForm.icon_url}
               onChange={(e) => setBadgeForm(prev => ({ ...prev, icon_url: e.target.value }))}
               placeholder="https://example.com/badge-icon.png"
@@ -479,25 +433,30 @@ function BadgesPage() {
             <h3 className="font-medium text-gray-900 mb-3">Badge Criteria</h3>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Criteria Type</label>
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={badgeForm.criteria.type}
-                onChange={(e) => setBadgeForm(prev => ({ 
+              <label id="badge-criteria-type-label" className="block text-sm font-medium text-gray-700 mb-1">Criteria Type</label>
+              <Select 
+                value={badgeForm.criteria.type} 
+                onValueChange={(value) => setBadgeForm(prev => ({ 
                   ...prev, 
-                  criteria: { ...prev.criteria, type: e.target.value as Badge['criteria']['type'] } 
+                  criteria: { ...prev.criteria, type: value as Badge['criteria']['type'] } 
                 }))}
               >
-                <option value="points">Points Threshold</option>
-                <option value="submissions">Submission Count</option>
-                <option value="activities">Activity Completion</option>
-                <option value="streak">Daily Streak</option>
-              </select>
+                <SelectTrigger aria-labelledby="badge-criteria-type-label">
+                  <SelectValue placeholder="Select criteria type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="points">Points Threshold</SelectItem>
+                  <SelectItem value="submissions">Submission Count</SelectItem>
+                  <SelectItem value="activities">Activity Completion</SelectItem>
+                  <SelectItem value="streak">Daily Streak</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="mt-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Threshold</label>
+              <label htmlFor="badge-threshold" className="block text-sm font-medium text-gray-700 mb-1">Threshold</label>
               <Input
+                id="badge-threshold"
                 type="number"
                 value={badgeForm.criteria.threshold}
                 onChange={(e) => setBadgeForm(prev => ({ 
@@ -544,8 +503,9 @@ function BadgesPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Select Users</label>
+            <label htmlFor="assign-users" className="block text-sm font-medium text-gray-700 mb-1">Select Users</label>
             <select
+              id="assign-users"
               multiple
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               style={{ height: '120px' }}
@@ -567,8 +527,9 @@ function BadgesPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label>
+            <label htmlFor="assign-reason" className="block text-sm font-medium text-gray-700 mb-1">Reason (Optional)</label>
             <Textarea
+              id="assign-reason"
               value={assignForm.reason}
               onChange={(e) => setAssignForm(prev => ({ ...prev, reason: e.target.value }))}
               placeholder="Manual assignment for special achievement..."

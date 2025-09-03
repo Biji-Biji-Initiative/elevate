@@ -1,9 +1,61 @@
 import { z } from 'zod'
-import { type Role, type SubmissionStatus, type Visibility } from '@prisma/client'
-import type { LearnInput, ExploreInput, AmplifyInput, PresentInput, ShineInput } from './schemas'
+import type { LearnInput, ExploreInput, AmplifyInput, PresentInput, ShineInput } from './schemas.js'
 
-// Activity types
+// Core domain enums (decoupled from Prisma)
+export type Role = 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
+export type SubmissionStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+export type Visibility = 'PRIVATE' | 'PUBLIC'
+
+// Activity types with Zod schema
 export type ActivityCode = 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
+
+export const ActivityCodeSchema = z.enum(['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE'])
+export const RoleSchema = z.enum(['PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN'])
+export const SubmissionStatusSchema = z.enum(['PENDING', 'APPROVED', 'REJECTED'])
+export const VisibilitySchema = z.enum(['PRIVATE', 'PUBLIC'])
+
+// Common utility schemas
+export const EmailSchema = z.string().email()
+export const UrlSchema = z.string().url()
+export const HandleSchema = z.string().min(2).max(50).regex(/^[a-zA-Z0-9_-]+$/, 'Handle must contain only letters, numbers, underscores, and hyphens')
+export const CohortSchema = z.string().min(1).max(100)
+export const SchoolSchema = z.string().min(1).max(200)
+
+// Date schemas
+export const DateStringSchema = z.string().refine((date: string) => !isNaN(Date.parse(date)), 'Invalid date string')
+export const PaginationSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  limit: z.number().int().min(1).max(100).default(20),
+  offset: z.number().int().min(0).optional()
+})
+
+// API Response schemas
+export const ApiSuccessSchema = <T extends z.ZodTypeAny>(dataSchema: T) => z.object({
+  success: z.literal(true),
+  data: dataSchema,
+  message: z.string().optional()
+})
+
+export const ApiErrorSchema = z.object({
+  success: z.literal(false),
+  error: z.string(),
+  details: z.record(z.unknown()).optional()
+})
+
+export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) => z.discriminatedUnion('success', [
+  ApiSuccessSchema(dataSchema),
+  ApiErrorSchema
+])
+
+// Infer types from schemas to ensure consistency
+export type ActivityCodeType = z.infer<typeof ActivityCodeSchema>
+export type RoleType = z.infer<typeof RoleSchema>
+export type SubmissionStatusType = z.infer<typeof SubmissionStatusSchema>
+export type VisibilityType = z.infer<typeof VisibilitySchema>
+export type PaginationType = z.infer<typeof PaginationSchema>
+export type ApiErrorType = z.infer<typeof ApiErrorSchema>
+
+// Helper types for API responses - using types from http.ts to avoid conflicts
 
 // Payload union type based on activity
 export type ActivityPayload = 
@@ -284,22 +336,105 @@ export interface AuditMeta {
   [key: string]: unknown
 }
 
-// Kajabi webhook types
-export interface KajabiContact {
-  id: number
-  email: string
-  first_name?: string
-  last_name?: string
-  tags?: string[]
-}
+// Badge criteria schema and types  
+export const BadgeConditionsSchema = z.record(z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.array(z.string()),
+  z.array(z.number())
+]))
 
-export interface KajabiTagEvent {
-  event_type: 'tag.added' | 'tag.removed'
-  contact: KajabiContact
-  tag: {
-    name: string
-  }
-}
+export const BadgeCriteriaSchema = z.object({
+  type: z.enum(['points', 'submissions', 'activities', 'streak']),
+  threshold: z.number().positive(),
+  activity_codes: z.array(z.string()).optional(),
+  conditions: BadgeConditionsSchema.optional()
+})
+
+export const BadgeSchema = z.object({
+  code: z.string().min(2).max(50),
+  name: z.string().min(2).max(100),
+  description: z.string().min(10).max(500),
+  criteria: BadgeCriteriaSchema,
+  icon_url: z.string().url().optional()
+})
+
+export type BadgeCriteria = z.infer<typeof BadgeCriteriaSchema>
+export type BadgeInput = z.infer<typeof BadgeSchema>
+
+// Badge audit log metadata
+export const BadgeAuditMetaSchema = z.object({
+  badgeName: z.string().optional(),
+  criteria: BadgeCriteriaSchema.optional(),
+  updates: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
+  original: z.record(z.union([z.string(), z.number(), z.boolean()])).optional()
+})
+
+export type BadgeAuditMeta = z.infer<typeof BadgeAuditMetaSchema>
+
+// Comprehensive audit log metadata schemas
+export const SubmissionAuditMetaSchema = z.object({
+  submissionId: z.string().optional(),
+  pointsAwarded: z.number().optional(),
+  reviewNote: z.string().optional(),
+  previousStatus: SubmissionStatusSchema.optional(),
+  newStatus: SubmissionStatusSchema.optional(),
+  submissionType: ActivityCodeSchema.optional(),
+  pointAdjustment: z.number().optional(),
+  bulkOperation: z.boolean().optional(),
+  basePoints: z.number().optional(),
+  adjustedPoints: z.number().optional(),
+  reason: z.string().optional()
+})
+
+export const UserAuditMetaSchema = z.object({
+  changes: z.record(z.unknown()).optional(),
+  originalRole: RoleSchema.optional(),
+  newRole: RoleSchema.optional(),
+  bulkOperation: z.boolean().optional()
+})
+
+export const ExportAuditMetaSchema = z.object({
+  type: z.string().optional(),
+  format: z.string().optional(),
+  filters: z.object({
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    activity: z.string().optional(),
+    status: z.string().optional(),
+    cohort: z.string().optional()
+  }).optional()
+})
+
+export const KajabiAuditMetaSchema = z.object({
+  event_id: z.string().optional(),
+  tag_name: z.string().optional(),
+  kajabi_contact_id: z.number().optional(),
+  points_awarded: z.number().optional(),
+  reprocessed_at: z.string().optional(),
+  processed_at: z.string().optional(),
+  user_id: z.string().optional(),
+  email: z.string().optional()
+})
+
+// Union type for all possible audit metadata
+export const AuditMetaUnionSchema = z.union([
+  SubmissionAuditMetaSchema,
+  UserAuditMetaSchema,
+  BadgeAuditMetaSchema,
+  ExportAuditMetaSchema,
+  KajabiAuditMetaSchema,
+  z.record(z.unknown()) // Fallback for generic metadata
+])
+
+export type SubmissionAuditMeta = z.infer<typeof SubmissionAuditMetaSchema>
+export type UserAuditMeta = z.infer<typeof UserAuditMetaSchema>
+export type ExportAuditMeta = z.infer<typeof ExportAuditMetaSchema>
+export type KajabiAuditMeta = z.infer<typeof KajabiAuditMetaSchema>
+export type AuditMetaUnion = z.infer<typeof AuditMetaUnionSchema>
+
+// Note: Kajabi webhook types moved to webhooks.ts for better organization
 
 // User with role metadata
 export interface UserWithRole {
@@ -372,4 +507,189 @@ export interface StorageMetadata {
   originalName?: string
   mimeType?: string
   [key: string]: string | number | boolean | undefined
+}
+
+// Safe parser functions - replace all enum casts with these
+export function parseRole(value: unknown): Role | null {
+  const result = RoleSchema.safeParse(value)
+  return result.success ? (result.data as Role) : null
+}
+
+export function parseSubmissionStatus(value: unknown): SubmissionStatus | null {
+  const result = SubmissionStatusSchema.safeParse(value)
+  return result.success ? (result.data as SubmissionStatus) : null
+}
+
+export function parseVisibility(value: unknown): Visibility | null {
+  const result = VisibilitySchema.safeParse(value)
+  return result.success ? (result.data as Visibility) : null
+}
+
+export function parseActivityCode(value: unknown): ActivityCode | null {
+  const result = ActivityCodeSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseEmail(value: unknown): string | null {
+  const result = EmailSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseUrl(value: unknown): string | null {
+  const result = UrlSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseHandle(value: unknown): string | null {
+  const result = HandleSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseCohort(value: unknown): string | null {
+  const result = CohortSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseSchool(value: unknown): string | null {
+  const result = SchoolSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseDateString(value: unknown): string | null {
+  const result = DateStringSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parsePagination(value: unknown): PaginationType | null {
+  const result = PaginationSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+// API Response helper functions - use apiSuccess and apiError from http.ts to avoid conflicts
+
+export function parseApiResponse<T>(value: unknown, dataSchema: z.ZodType<T>): unknown {
+  const result = z.union([
+    z.object({ success: z.literal(true), data: dataSchema, message: z.string().optional() }),
+    z.object({ success: z.literal(false), error: z.string(), details: z.record(z.unknown()).optional() })
+  ]).safeParse(value)
+  return result.success ? result.data : null
+}
+
+// Safe JSON parsing functions
+export function safeParseJSON<T>(json: string, schema: z.ZodType<T>): T | null {
+  try {
+    const parsed = JSON.parse(json)
+    const result = schema.safeParse(parsed)
+    return result.success ? result.data : null
+  } catch {
+    return null
+  }
+}
+
+export function safeParseUnknown<T>(value: unknown, schema: z.ZodType<T>): T | null {
+  const result = schema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+// Utility functions for safe parsing with error details
+export function parseWithErrors<T>(value: unknown, schema: z.ZodType<T>): { data: T | null; errors: z.ZodIssue[] } {
+  const result = schema.safeParse(value)
+  return {
+    data: result.success ? result.data : null,
+    errors: result.success ? [] : result.error.issues
+  }
+}
+
+export function parseJSONWithErrors<T>(json: string, schema: z.ZodType<T>): { data: T | null; errors: z.ZodIssue[] } {
+  try {
+    const parsed = JSON.parse(json)
+    return parseWithErrors(parsed, schema)
+  } catch (parseError) {
+    return {
+      data: null,
+      errors: [{
+        code: 'custom',
+        message: `Invalid JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
+        path: []
+      }]
+    }
+  }
+}
+
+// Badge-specific parser functions
+export function parseBadgeCriteria(value: unknown): BadgeCriteria | null {
+  const result = BadgeCriteriaSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseBadgeInput(value: unknown): BadgeInput | null {
+  const result = BadgeSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseBadgeAuditMeta(value: unknown): BadgeAuditMeta | null {
+  const result = BadgeAuditMetaSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+// Audit metadata parser functions
+export function parseSubmissionAuditMeta(value: unknown): SubmissionAuditMeta | null {
+  const result = SubmissionAuditMetaSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseUserAuditMeta(value: unknown): UserAuditMeta | null {
+  const result = UserAuditMetaSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseExportAuditMeta(value: unknown): ExportAuditMeta | null {
+  const result = ExportAuditMetaSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseKajabiAuditMeta(value: unknown): KajabiAuditMeta | null {
+  const result = KajabiAuditMetaSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+export function parseAuditMeta(value: unknown): AuditMetaUnion | null {
+  const result = AuditMetaUnionSchema.safeParse(value)
+  return result.success ? result.data : null
+}
+
+// JSON helpers for domain usage (no Prisma types)
+export type JsonValue = string | number | boolean | null | JsonObject | JsonArray
+export type JsonObject = { [k: string]: JsonValue }
+export type JsonArray = JsonValue[]
+
+export function toJsonValue(value: unknown): JsonValue {
+  if (value === undefined || value === null) return null
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value
+  if (Array.isArray(value)) return value.map(toJsonValue)
+  if (typeof value === 'object') {
+    const obj: JsonObject = {}
+    for (const [k, v] of Object.entries(value)) obj[k] = toJsonValue(v)
+    return obj
+  }
+  // Fallback for other types
+  return String(value)
+}
+
+// Prisma-specific JSON value conversion
+// This function safely converts any value to Prisma.InputJsonValue
+export function toPrismaJson(value: unknown): JsonValue {
+  // Use toJsonValue for the actual conversion since Prisma.InputJsonValue
+  // has the same shape as our JsonValue type
+  return toJsonValue(value)
+}
+
+// Audit meta helper to standardize envelope keys
+export type AuditEntityType = 'submission' | 'user' | 'badge' | 'export' | 'kajabi' | 'points' | 'cohort'
+
+export function buildAuditMeta(
+  envelope: { entityType: AuditEntityType; entityId: string },
+  meta?: Record<string, unknown>
+): JsonValue {
+  return toPrismaJson({ ...envelope, ...(meta ?? {}) })
 }

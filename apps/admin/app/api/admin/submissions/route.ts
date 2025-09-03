@@ -1,35 +1,44 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@elevate/db/client'
+import { type NextRequest, NextResponse } from 'next/server'
+
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
-import { computePoints } from '@elevate/logic'
-import type { SubmissionWhereClause, ActivityCode, ActivityPayload } from '@elevate/types'
 import type { SubmissionStatus } from '@elevate/db'
+import { prisma, type Prisma } from '@elevate/db'
+import { computePoints } from '@elevate/logic'
+// TODO: Re-enable when @elevate/security package is available
+// import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { parseSubmissionStatus, parseActivityCode, parseSubmissionPayload, toPrismaJson, buildAuditMeta, ReviewSubmissionSchema, BulkReviewSubmissionsSchema, AdminSubmissionsQuerySchema, type SubmissionWhereClause, type ActivityCode, type ActivityPayload } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  // TODO: Re-enable rate limiting when @elevate/security package is available
+  // return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const user = await requireRole('reviewer')
     const { searchParams } = new URL(request.url)
     
-    const status = searchParams.get('status') || 'PENDING'
-    const activity = searchParams.get('activity')
-    const userId = searchParams.get('userId')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const sortBy = searchParams.get('sortBy') || 'created_at'
-    const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const parsedQuery = AdminSubmissionsQuerySchema.safeParse(Object.fromEntries(searchParams))
+    if (!parsedQuery.success) {
+      return createErrorResponse(new Error('Invalid query'), 400)
+    }
+    const { status, activity, userId, page, limit, sortBy, sortOrder } = parsedQuery.data
     
     const offset = (page - 1) * limit
     
     const where: SubmissionWhereClause = {}
     
     if (status && status !== 'ALL') {
-      where.status = status as SubmissionStatus
+      const parsedStatus = parseSubmissionStatus(status)
+      if (parsedStatus) {
+        where.status = parsedStatus
+      }
     }
     
-    if (activity) {
-      where.activity_code = activity as ActivityCode
+    if (activity && activity !== 'ALL') {
+      const parsedActivity = parseActivityCode(activity)
+      if (parsedActivity) {
+        where.activity_code = parsedActivity
+      }
     }
     
     if (userId) {
@@ -62,24 +71,33 @@ export async function GET(request: NextRequest) {
     ])
     
     return NextResponse.json({
-      submissions,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
+      success: true,
+      data: {
+        submissions,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
       }
     })
   } catch (error) {
     return createErrorResponse(error, 500)
   }
+  // TODO: Re-enable rate limiting when @elevate/security package is available
+  // })
 }
 
 export async function PATCH(request: NextRequest) {
   try {
     const user = await requireRole('reviewer')
     const body = await request.json()
-    const { submissionId, action, reviewNote, pointAdjustment } = body
+    const parsed = ReviewSubmissionSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+    const { submissionId, action, reviewNote, pointAdjustment } = parsed.data
     
     if (!submissionId || !action) {
       return NextResponse.json(
@@ -135,17 +153,24 @@ export async function PATCH(request: NextRequest) {
           actor_id: user.userId,
           action: action === 'approve' ? 'APPROVE_SUBMISSION' : 'REJECT_SUBMISSION',
           target_id: submissionId,
-          meta: {
+          meta: buildAuditMeta({ entityType: 'submission', entityId: submissionId }, {
             reviewNote,
             pointAdjustment,
             submissionType: submission.activity_code
-          }
+          }) as Prisma.InputJsonValue
         }
       })
       
       // Award points if approved
       if (action === 'approve') {
-        const basePoints = computePoints(submission.activity_code as ActivityCode, submission.payload as ActivityPayload)
+        const activityCode = parseActivityCode(submission.activity_code)
+        const payload = parseSubmissionPayload(submission.payload)
+        
+        if (!activityCode || !payload) {
+          throw new Error('Invalid submission data - cannot parse activity code or payload')
+        }
+        
+        const basePoints = computePoints(activityCode, payload.data)
         const finalPoints = pointAdjustment !== undefined ? pointAdjustment : basePoints
         
         // Validate point adjustment is within bounds (±20% of base points)
@@ -174,11 +199,11 @@ export async function PATCH(request: NextRequest) {
               actor_id: user.userId,
               action: 'ADJUST_POINTS',
               target_id: submissionId,
-              meta: {
+              meta: buildAuditMeta({ entityType: 'submission', entityId: submissionId }, {
                 basePoints,
                 adjustedPoints: pointAdjustment,
                 reason: reviewNote
-              }
+              }) as Prisma.InputJsonValue
             }
           })
         }
@@ -207,7 +232,11 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireRole('reviewer')
     const body = await request.json()
-    const { submissionIds, action, reviewNote } = body
+    const parsed = BulkReviewSubmissionsSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+    const { submissionIds, action, reviewNote } = parsed.data
     
     if (!Array.isArray(submissionIds) || submissionIds.length === 0) {
       return NextResponse.json(
@@ -269,17 +298,24 @@ export async function POST(request: NextRequest) {
             actor_id: user.userId,
             action: action === 'approve' ? 'APPROVE_SUBMISSION' : 'REJECT_SUBMISSION',
             target_id: submission.id,
-            meta: {
+            meta: buildAuditMeta({ entityType: 'submission', entityId: submission.id }, {
               reviewNote,
               submissionType: submission.activity_code,
               bulkOperation: true
-            }
+            }) as Prisma.InputJsonValue
           }
         })
         
         // Award points if approved
         if (action === 'approve') {
-          const points = computePoints(submission.activity_code as ActivityCode, submission.payload as ActivityPayload)
+          const activityCode = parseActivityCode(submission.activity_code)
+          const payload = parseSubmissionPayload(submission.payload)
+          
+          if (!activityCode || !payload) {
+            throw new Error(`Invalid submission data for submission ${submission.id}`)
+          }
+          
+          const points = computePoints(activityCode, payload.data)
           
           await tx.pointsLedger.create({
             data: {

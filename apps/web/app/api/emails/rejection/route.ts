@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { sendRejectionNotificationEmail } from '@elevate/emails';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { auth } from '@clerk/nextjs/server';
+
+import { sendRejectionNotificationEmail } from '@elevate/emails';
+import { RejectionEmailSchema } from '@elevate/types';
 
 export const runtime = 'nodejs';
 
@@ -12,7 +15,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body: unknown = await request.json();
+    const parsed = RejectionEmailSchema.safeParse(body);
+    
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body', details: parsed.error.issues },
+        { status: 400 }
+      );
+    }
+
     const { 
       email, 
       name, 
@@ -20,15 +32,7 @@ export async function POST(request: NextRequest) {
       reviewerNote,
       dashboardUrl,
       supportUrl 
-    } = body;
-
-    // Validate required fields
-    if (!email || !name || !activityName || !reviewerNote || !dashboardUrl || !supportUrl) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Send rejection notification email
     const result = await sendRejectionNotificationEmail(

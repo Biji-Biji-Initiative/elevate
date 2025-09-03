@@ -1,51 +1,39 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Suspense } from 'react'
-import { LeaderboardTable, PageLoading } from '@elevate/ui'
-import { getProfilePath } from '@elevate/types'
+import { useState, useEffect , Suspense } from 'react'
 
-interface LeaderboardEntry {
-  rank: number
-  user: {
-    id: string
-    handle: string
-    name: string
-    school?: string
-    avatar_url?: string
-    earned_badges?: Array<{
-      badge: {
-        code: string
-        name: string
-        icon_url?: string
-      }
-    }>
-    _sum: {
-      points: number
-    }
-  }
-}
+import { z } from 'zod'
+import { getProfilePath, type LeaderboardEntry } from '@elevate/types'
+import { LeaderboardTable, PageLoading } from '@elevate/ui'
+import { getApiClient } from '../../../lib/api-client'
+
+// Define Zod schemas to match the shared LeaderboardEntry type
+const LeaderboardUserBadgeZ = z.object({
+  badge: z.object({ 
+    code: z.string(), 
+    name: z.string(), 
+    icon_url: z.string().nullable().optional() 
+  })
+})
+
+const LeaderItemZ = z.object({
+  rank: z.number(),
+  user: z.object({
+    id: z.string(),
+    handle: z.string(),
+    name: z.string(),
+    avatar_url: z.string().nullable().optional(),
+    school: z.string().nullable().optional(),
+    earned_badges: z.array(LeaderboardUserBadgeZ).optional(),
+    _sum: z.object({ points: z.number() }).optional(),
+    points: z.number().optional()
+  })
+})
 
 async function fetchLeaderboard(period: 'all' | '30d', limit = 20, offset = 0, search = '') {
-  try {
-    const params = new URLSearchParams({
-      period,
-      limit: limit.toString(),
-      offset: offset.toString(),
-      ...(search && { search })
-    })
-    
-    const response = await fetch(`/api/leaderboard?${params}`)
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const result = await response.json()
-    return result
-  } catch (error) {
-    throw error
-  }
+  const api = getApiClient()
+  const res = await api.getLeaderboard({ period, limit, offset, ...(search ? { search } : {}) })
+  return res
 }
 
 function LeaderboardContent() {
@@ -62,9 +50,9 @@ function LeaderboardContent() {
         setLoading(true)
         setError(null)
         const result = await fetchLeaderboard(period, 20, 0, '')
-        setData(result.data || [])
-        setTotal(result.total || 0)
-        setHasMore(result.hasMore || false)
+        setData(result.data.data as LeaderboardEntry[])
+        setTotal(result.data.total)
+        setHasMore(result.data.hasMore)
       } catch (err) {
         setError('Failed to load leaderboard data')
       } finally {
@@ -72,7 +60,7 @@ function LeaderboardContent() {
       }
     }
 
-    loadData()
+    void loadData()
   }, [period])
 
   const handlePeriodChange = (newPeriod: 'all' | '30d') => {

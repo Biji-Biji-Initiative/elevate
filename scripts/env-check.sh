@@ -34,6 +34,14 @@ ENVIRONMENT=${1:-development}
 
 print_status "Checking environment variables for $ENVIRONMENT..."
 
+# Normalize alias variables to avoid naming drift
+if [ -z "${SUPABASE_URL:-}" ] && [ -n "${NEXT_PUBLIC_SUPABASE_URL:-}" ]; then
+  export SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL"
+fi
+if [ -z "${SUPABASE_SERVICE_ROLE:-}" ] && [ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+  export SUPABASE_SERVICE_ROLE="$SUPABASE_SERVICE_ROLE_KEY"
+fi
+
 # Define required environment variables by category
 declare -A REQUIRED_VARS
 declare -A OPTIONAL_VARS

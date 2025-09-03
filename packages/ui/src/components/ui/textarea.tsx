@@ -1,23 +1,38 @@
-import * as React from "react"
-import { cn } from "../../lib/utils"
+import * as React from 'react'
 
-export interface TextareaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  error?: boolean
+}
 
-const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <textarea
-        className={cn(
-          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-    )
+export function Textarea({ error = false, className = '', ...props }: TextareaProps) {
+  const baseStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 10px',
+    borderRadius: 8,
+    border: error ? '1px solid #dc2626' : '1px solid #26314b',
+    outline: 'none',
+    minHeight: '80px',
+    resize: 'vertical',
   }
-)
-Textarea.displayName = "Textarea"
 
-export { Textarea }
+  const focusStyle = error 
+    ? { boxShadow: '0 0 0 1px #dc2626' }
+    : { boxShadow: '0 0 0 1px #3b82f6' }
+
+  return (
+    <textarea 
+      style={baseStyle} 
+      className={className}
+      onFocus={(e) => {
+        Object.assign(e.target.style, focusStyle)
+        props.onFocus?.(e)
+      }}
+      onBlur={(e) => {
+        e.target.style.boxShadow = 'none'
+        props.onBlur?.(e)
+      }}
+      {...props} 
+    />
+  )
+}
+

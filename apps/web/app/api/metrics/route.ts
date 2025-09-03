@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@elevate/db/client'
+import { type NextRequest, NextResponse } from 'next/server'
+
 import { Prisma } from '@prisma/client'
+import { prisma } from '@elevate/db/client'
+import { MetricsQuerySchema } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
@@ -14,14 +16,11 @@ type MonthlyTrendData = {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const stage = searchParams.get('stage')
-    
-    if (!stage || !['learn', 'explore', 'amplify', 'present', 'shine'].includes(stage)) {
-      return NextResponse.json(
-        { error: 'Invalid or missing stage parameter' },
-        { status: 400 }
-      )
+    const parsed = MetricsQuerySchema.safeParse(Object.fromEntries(searchParams))
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid or missing stage parameter' }, { status: 400 })
     }
+    const { stage } = parsed.data
 
     const activityCode = stage.toUpperCase()
 
@@ -82,11 +81,11 @@ export async function GET(request: NextRequest) {
     })
 
     // Group by school
-    const schoolCounts = usersWithSchools.reduce((acc, user) => {
+    const schoolCounts = usersWithSchools.reduce<Record<string, number>>((acc, user) => {
       const school = user.school || 'Unknown School'
       acc[school] = (acc[school] || 0) + 1
       return acc
-    }, {} as Record<string, number>)
+    }, {})
 
     const topSchools = Object.entries(schoolCounts)
       .map(([name, count]) => ({ name, count }))
@@ -105,11 +104,11 @@ export async function GET(request: NextRequest) {
       select: { id: true, cohort: true }
     })
 
-    const cohortCounts = usersWithCohorts.reduce((acc, user) => {
+    const cohortCounts = usersWithCohorts.reduce<Record<string, number>>((acc, user) => {
       const cohort = user.cohort || 'Unknown Cohort'
       acc[cohort] = (acc[cohort] || 0) + 1
       return acc
-    }, {} as Record<string, number>)
+    }, {})
 
     const cohortBreakdown = Object.entries(cohortCounts)
       .map(([cohort, count]) => ({ cohort, count }))
@@ -131,7 +130,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Group submissions by month and calculate trend
-    const monthlyData = monthlySubmissions.reduce((acc, submission) => {
+    const monthlyData = monthlySubmissions.reduce<Record<string, MonthlyTrendData & { sortKey: string }>>((acc, submission) => {
       const date = new Date(submission.created_at)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
       const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
@@ -151,7 +150,7 @@ export async function GET(request: NextRequest) {
       }
       
       return acc
-    }, {} as Record<string, MonthlyTrendData & { sortKey: string }>)
+    }, {})
 
     const monthlyTrend: MonthlyTrendData[] = Object.values(monthlyData)
       .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
@@ -174,16 +173,13 @@ export async function GET(request: NextRequest) {
       monthlyTrend
     }
 
-    return NextResponse.json(stageMetrics, {
+    return NextResponse.json({ success: true, data: stageMetrics }, {
       headers: {
         'Cache-Control': 'public, s-maxage=900' // Cache for 15 minutes
       }
     })
 
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch metrics data' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: 'Failed to fetch metrics data' }, { status: 500 })
   }
 }

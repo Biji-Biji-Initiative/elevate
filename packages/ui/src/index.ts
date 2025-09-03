@@ -1,11 +1,11 @@
 // Export shadcn/ui components
-export { Button, buttonVariants } from './components/ui/button'
-export { Badge, badgeVariants } from './components/ui/badge'
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './components/ui/card'
-export { Input } from './components/ui/input'
-export { Label } from './components/ui/label'
-export { Textarea } from './components/ui/textarea'
-export { Alert, AlertTitle, AlertDescription } from './components/ui/alert'
+export { Button, buttonVariants } from './components/ui/button.js'
+export { Badge, badgeVariants } from './components/ui/badge.js'
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './components/ui/card.js'
+export { Input } from './components/ui/input.js'
+export { Label } from './components/ui/label.js'
+export { Textarea } from './components/ui/textarea.js'
+export { Alert, AlertTitle, AlertDescription } from './components/ui/alert.js'
 export {
   Dialog,
   DialogPortal,
@@ -17,7 +17,7 @@ export {
   DialogFooter,
   DialogTitle,
   DialogDescription,
-} from './components/ui/dialog'
+} from './components/ui/dialog.js'
 export {
   Select,
   SelectGroup,
@@ -29,7 +29,7 @@ export {
   SelectSeparator,
   SelectScrollUpButton,
   SelectScrollDownButton,
-} from './components/ui/select'
+} from './components/ui/select.js'
 export {
   useFormField,
   Form,
@@ -39,7 +39,7 @@ export {
   FormDescription,
   FormMessage,
   FormField as ShadcnFormField,
-} from './components/ui/form'
+} from './components/ui/form.js'
 export {
   Table,
   TableHeader,
@@ -49,31 +49,32 @@ export {
   TableRow,
   TableCell,
   TableCaption,
-} from './components/ui/table'
+} from './components/ui/table.js'
 
 // Export utility functions
-export { cn } from './lib/utils'
+export { cn, hasUploadPath } from './lib/utils.js'
 
 // Export custom components
-export { FormField } from '../FormField'
-export { FileUpload } from '../FileUpload'
+export { FormField } from './FormField.js'
+export { FileUpload, FileList } from './FileUpload.js'
+export type { UploadedFile } from './FileUpload.js'
 
 // Export new shared components
-export { LoadingSpinner, LoadingContainer, LoadingOverlay, PageLoading } from '../components/LoadingSpinner'
-export { DataTable } from '../components/DataTable'
-export type { DataTableProps, Column } from '../components/DataTable'
-export { Modal, ConfirmModal } from '../components/Modal'
-export { StatusBadge } from '../components/StatusBadge'
-export { StageCard } from '../components/StageCard'
-export { MetricsChart, StatsGrid } from '../components/MetricsChart'
-export { ShareButton, SocialShareButtons } from '../components/ShareButton'
-export { ProfileCard } from '../components/ProfileCard'
-export { LeaderboardTable } from '../components/LeaderboardTable'
-export { Header } from '../components/Header'
-export { ClientHeader } from '../components/ClientHeader'
-export { Footer } from '../components/Footer'
-export { AdminLayout } from '../components/AdminLayout'
-export { LanguageSwitcher } from '../components/LanguageSwitcher'
+export { LoadingSpinner, LoadingContainer, LoadingOverlay, PageLoading } from './components/LoadingSpinner.js'
+export { DataTable, createColumns } from './components/DataTable.js'
+export type { DataTableProps, Column, ColumnOf } from './components/DataTable.js'
+export { Modal, ConfirmModal } from './components/Modal.js'
+export { StatusBadge } from './components/StatusBadge.js'
+export { StageCard } from './components/StageCard.js'
+export { MetricsChart, StatsGrid } from './components/MetricsChart.js'
+export { ShareButton, SocialShareButtons } from './components/ShareButton.js'
+export { ProfileCard } from './components/ProfileCard.js'
+export { LeaderboardTable } from './components/LeaderboardTable.js'
+export { Header } from './components/Header.js'
+export { ClientHeader } from './components/ClientHeader.js'
+export { Footer } from './components/Footer.js'
+export { AdminLayout } from './components/AdminLayout.js'
+export { LanguageSwitcher } from './components/LanguageSwitcher.js'
 
 // Export types
-export type { FileUploadProps } from '../FileUpload'
+export type { FileUploadProps } from './FileUpload.js'

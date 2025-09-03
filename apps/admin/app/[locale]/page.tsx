@@ -1,10 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+
 import Link from 'next/link'
-import { Button } from '@elevate/ui'
-import { StatusBadge } from '@elevate/ui'
+
 import { withRoleGuard } from '@elevate/auth/context'
+import { adminClient } from '@/lib/admin-client'
+import { Button , StatusBadge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 
 interface AnalyticsData {
   overview: {
@@ -41,13 +43,13 @@ interface AnalyticsData {
     submissionsByStatus: Array<{ status: string; count: number }>
     submissionsByActivity: Array<{ 
       activity: string
-      activityName: string
+      activityName?: string | undefined
       count: number 
     }>
     usersByRole: Array<{ role: string; count: number }>
     pointsByActivity: Array<{
       activity: string
-      activityName: string
+      activityName?: string | undefined
       totalPoints: number
       entries: number
     }>
@@ -91,6 +93,7 @@ interface AnalyticsData {
 function AdminDashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [cohorts, setCohorts] = useState<string[]>([])
   const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: '',
@@ -98,8 +101,22 @@ function AdminDashboard() {
   })
 
   useEffect(() => {
-    fetchAnalytics()
+    void fetchAnalytics()
   }, [dateRange])
+
+  useEffect(() => {
+    const fetchCohorts = async () => {
+      try {
+        setCohorts(await adminClient.getCohorts())
+      } catch (error) {
+        // Cohorts are optional for UI, don't break on fetch failure
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to fetch cohorts:', error);
+        }
+      }
+    }
+    void fetchCohorts()
+  }, [])
 
   const fetchAnalytics = async () => {
     setLoading(true)
@@ -109,13 +126,8 @@ function AdminDashboard() {
       if (dateRange.endDate) params.set('endDate', dateRange.endDate)
       if (dateRange.cohort !== 'ALL') params.set('cohort', dateRange.cohort)
 
-      const response = await fetch(`/api/admin/analytics?${params}`)
-      const data = await response.json()
-      
-      if (response.ok) {
-        setAnalytics(data)
-      } else {
-      }
+      const result = await adminClient.getAnalytics(Object.fromEntries(params) as { startDate?: string; endDate?: string; cohort?: string })
+      setAnalytics(result)
     } catch (error) {
     } finally {
       setLoading(false)
@@ -184,16 +196,17 @@ function AdminDashboard() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={dateRange.cohort}
-              onChange={(e) => setDateRange(prev => ({ ...prev, cohort: e.target.value }))}
-            >
-              <option value="ALL">All Cohorts</option>
-              <option value="Batch 1">Batch 1</option>
-              <option value="Batch 2">Batch 2</option>
-              <option value="Batch 3">Batch 3</option>
-            </select>
+            <Select value={dateRange.cohort} onValueChange={(value) => setDateRange(prev => ({ ...prev, cohort: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select cohort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Cohorts</SelectItem>
+                {cohorts.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-end">
             <Button onClick={fetchAnalytics} style={{ width: '100%' }}>

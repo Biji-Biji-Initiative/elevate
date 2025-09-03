@@ -1,8 +1,11 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
+
+import { useLocale } from 'next-intl';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui';
+
 import { locales, type Locale } from '../../i18n';
 
 const languageNames: Record<Locale, string> = {
@@ -15,11 +18,15 @@ const languageNamesNative: Record<Locale, string> = {
   id: 'Bahasa Indonesia'
 };
 
+function isValidLocale(locale: string): locale is Locale {
+  return locales.includes(locale as Locale);
+}
+
 export default function LanguageSwitcher() {
-  const locale = useLocale() as Locale;
+  const currentLocale = useLocale();
+  const locale = isValidLocale(currentLocale) ? currentLocale : 'en';
   const router = useRouter();
   const pathname = usePathname();
-  const t = useTranslations('common');
 
   const handleLocaleChange = (newLocale: Locale) => {
     if (newLocale === locale) return;

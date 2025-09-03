@@ -11,6 +11,17 @@
     "typescript",
     "typescriptreact"
   ],
+  "eslint.probe": [
+    "javascript",
+    "javascriptreact", 
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.options": {
+    "overrideConfig": {
+      "ignorePatterns": ["**/*.md", "**/*.mdx", "docs/**"]
+    }
+  },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
@@ -18,12 +29,24 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.suggest.autoImports": true,
-  "typescript.validate.enable": true,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
-  "files.associations": {
-    "*.md": "markdown",
-    "*.mdx": "mdx"
-  },
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  "markdownlint.enable": false,
+  "markdown.validate.enabled": false,
+  "markdown.lint.enabled": false,
+  "markdown-all-in-one.lint.enabled": false,
+  "markdown-all-in-one.validate.enabled": false,
+  "cSpell.enabled": true,
+  "cSpell.diagnosticLevel": "Hint",
+  "cSpell.enabledLanguageIds": [
+    "typescript",
+    "typescriptreact", 
+    "javascript",
+    "javascriptreact",
+    "json"
+  ],
+  "spellright.enabled": false,
   "files.exclude": {
     "**/*.md": false
   },

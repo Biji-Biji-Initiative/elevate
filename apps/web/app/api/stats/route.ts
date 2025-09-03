@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { prisma } from '@elevate/db/client'
-import { Prisma } from '@prisma/client'
-import type { ActivityPayload, ActivityCode } from '@elevate/types'
+import { parseAmplifyPayload, parseActivityCode, type ActivityCode } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
@@ -18,7 +17,7 @@ type MonthlyGrowthData = {
   submissions: number;
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Get real statistics from database
     const [
@@ -79,30 +78,55 @@ export async function GET(request: NextRequest) {
 
     let studentsImpacted = 0
     amplifySubmissions.forEach(submission => {
-      if (submission.payload && typeof submission.payload === 'object') {
-        const payload = submission.payload as ActivityPayload
-        studentsImpacted += (payload.studentsCount || 0)
+      if (submission.payload) {
+        const parsedPayload = parseAmplifyPayload({ activityCode: 'AMPLIFY', data: submission.payload })
+        if (parsedPayload) {
+          studentsImpacted += (parsedPayload.data.studentsTrained || 0)
+        }
       }
     })
 
-    // Process stage statistics
-    const byStage: Record<ActivityCode, { submissions: number; avgRating: number }> = {} as Record<ActivityCode, { submissions: number; avgRating: number }>
+    // Process stage statistics  
+    type StageStats = {
+      total: number;
+      approved: number;
+      pending: number;
+      rejected: number;
+    }
+    const byStage: Partial<Record<ActivityCode, StageStats>> = {}
     const stages = ['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']
     
-    stages.forEach(stage => {
-      byStage[stage.toLowerCase()] = {
-        total: 0,
-        approved: 0,
-        pending: 0,
-        rejected: 0
+    stages.forEach(stageStr => {
+      const stage = parseActivityCode(stageStr)
+      if (stage) {
+        byStage[stage] = {
+          total: 0,
+          approved: 0,
+          pending: 0,
+          rejected: 0
+        }
       }
     })
 
     stageStats.forEach(stat => {
-      const stage = stat.activity_code.toLowerCase()
-      if (byStage[stage]) {
-        byStage[stage][stat.status.toLowerCase()] = stat._count.id
-        byStage[stage].total += stat._count.id
+      const stage = parseActivityCode(stat.activity_code)
+      if (stage && byStage[stage]) {
+        const statusLower = stat.status.toLowerCase()
+        const stageData = byStage[stage]
+        
+        switch (statusLower) {
+          case 'approved':
+            stageData.approved = stat._count.id
+            break
+          case 'pending':
+            stageData.pending = stat._count.id
+            break
+          case 'rejected':
+            stageData.rejected = stat._count.id
+            break
+        }
+        
+        stageData.total += stat._count.id
       }
     })
 
@@ -221,16 +245,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(stats, {
+    return NextResponse.json({ success: true, data: stats }, {
       headers: {
         'Cache-Control': 'public, s-maxage=1800' // Cache for 30 minutes
       }
     })
 
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch statistics' },
-      { status: 500 }
-    )
+  } catch (_error) {
+    return NextResponse.json({ success: false, error: 'Failed to fetch statistics' }, { status: 500 })
   }
 }

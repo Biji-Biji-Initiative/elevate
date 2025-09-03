@@ -1,14 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@elevate/db/client'
+import { type NextRequest, NextResponse } from 'next/server'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import { prisma, type Prisma } from '@elevate/db'
+import { AssignBadgeSchema, RemoveBadgeSchema, buildAuditMeta } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
     const user = await requireRole('admin')
-    const body = await request.json()
-    const { badgeCode, userIds, reason } = body
+    const body: unknown = await request.json()
+    const parsed = AssignBadgeSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+    const { badgeCode, userIds, reason } = parsed.data
     
     if (!badgeCode || !Array.isArray(userIds) || userIds.length === 0) {
       return NextResponse.json(
@@ -102,12 +107,12 @@ export async function POST(request: NextRequest) {
             actor_id: user.userId,
             action: 'ASSIGN_BADGE',
             target_id: userId,
-            meta: {
+            meta: buildAuditMeta({ entityType: 'badge', entityId: badgeCode }, {
               badgeCode,
               badgeName: badge.name,
               reason,
               manualAssignment: true
-            }
+            }) as Prisma.InputJsonValue
           }
         })
         
@@ -134,8 +139,12 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const user = await requireRole('admin')
-    const body = await request.json()
-    const { badgeCode, userIds, reason } = body
+    const body: unknown = await request.json()
+    const parsed = RemoveBadgeSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+    const { badgeCode, userIds, reason } = parsed.data
     
     if (!badgeCode || !Array.isArray(userIds) || userIds.length === 0) {
       return NextResponse.json(
@@ -191,21 +200,24 @@ export async function DELETE(request: NextRequest) {
             actor_id: user.userId,
             action: 'REMOVE_BADGE',
             target_id: assignment.user_id,
-            meta: {
+            meta: buildAuditMeta({ entityType: 'badge', entityId: badgeCode }, {
               badgeCode,
               badgeName: assignment.badge.name,
               reason,
               earnedAt: assignment.earned_at
-            }
+            }) as Prisma.InputJsonValue
           }
         })
       }
     })
     
+    // We already checked assignments.length === 0 above, but TypeScript needs this check
+    const badgeName = assignments[0]?.badge.name ?? 'Unknown Badge'
+    
     return NextResponse.json({
       success: true,
       removed: assignments.length,
-      message: `Badge "${assignments[0].badge.name}" removed from ${assignments.length} users`
+      message: `Badge "${badgeName}" removed from ${assignments.length} users`
     })
     
   } catch (error) {

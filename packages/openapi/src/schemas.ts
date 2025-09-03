@@ -318,6 +318,369 @@ export const FileUploadResponseSchema = z
     description: 'Response from successful file upload',
   });
 
+// -----------------------------
+// Public metrics and profile schemas
+// -----------------------------
+
+export const StageStatsSchema = z.object({
+  total: z.number().int(),
+  approved: z.number().int(),
+  pending: z.number().int(),
+  rejected: z.number().int(),
+})
+
+export const PlatformStatsResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    totalEducators: z.number().int(),
+    totalSubmissions: z.number().int(),
+    totalPoints: z.number().int(),
+    studentsImpacted: z.number().int(),
+    byStage: z.record(StageStatsSchema),
+  })
+}).openapi({
+  title: 'Platform Stats Response',
+})
+
+export const StageMetricsResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    stage: z.string(),
+    totalSubmissions: z.number().int(),
+    approvedSubmissions: z.number().int(),
+    pendingSubmissions: z.number().int(),
+    rejectedSubmissions: z.number().int(),
+    avgPointsEarned: z.number(),
+    uniqueEducators: z.number().int(),
+    topSchools: z.array(z.object({ name: z.string(), count: z.number().int() })),
+    cohortBreakdown: z.array(z.object({ cohort: z.string(), count: z.number().int() })),
+    monthlyTrend: z.array(z.object({ month: z.string(), submissions: z.number().int(), approvals: z.number().int() })),
+    completionRate: z.number(),
+  })
+}).openapi({ title: 'Stage Metrics Response' })
+
+export const ProfileSubmissionSchema = z.object({
+  id: z.string(),
+  activity_code: ActivityCodeSchema,
+  activity: z.object({ name: z.string(), code: ActivityCodeSchema }),
+  status: SubmissionStatusSchema,
+  visibility: VisibilitySchema,
+  payload: z.record(z.unknown()),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime().optional(),
+})
+
+export const ProfileBadgeSchema = z.object({
+  badge: z.object({ code: z.string(), name: z.string(), description: z.string().optional(), icon_url: z.string().nullable().optional() }),
+  earned_at: z.string().datetime(),
+})
+
+export const ProfileResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    id: z.string(),
+    handle: z.string(),
+    name: z.string(),
+    school: z.string().nullable().optional(),
+    cohort: z.string().nullable().optional(),
+    created_at: z.string().datetime(),
+    _sum: z.object({ points: z.number().int() }),
+    earned_badges: z.array(ProfileBadgeSchema),
+    submissions: z.array(ProfileSubmissionSchema),
+  })
+}).openapi({ title: 'Profile Response' })
+
+// -----------------------------
+// Admin-specific schemas
+// -----------------------------
+
+export const AdminPaginationSchema = z.object({
+  page: z.number().int().openapi({ example: 1 }),
+  limit: z.number().int().openapi({ example: 50 }),
+  total: z.number().int().openapi({ example: 250 }),
+  pages: z.number().int().openapi({ example: 5 }),
+})
+
+export const AdminUserMiniSchema = z.object({
+  id: z.string().openapi({ example: 'user_123' }),
+  name: z.string().openapi({ example: 'Ahmad Sutanto' }),
+  handle: z.string().openapi({ example: 'educator_ahmad' }),
+  email: z.string().email().optional(),
+  school: z.string().nullable().optional(),
+  cohort: z.string().nullable().optional(),
+})
+
+export const AdminActivitySchema = z.object({
+  code: ActivityCodeSchema,
+  name: z.string().openapi({ example: 'Learn' }),
+  default_points: z.number().int().optional().openapi({ example: 20 })
+})
+
+export const AdminSubmissionSchema = z.object({
+  id: z.string().openapi({ example: 'sub_abc123' }),
+  created_at: z.string().datetime().openapi({ example: '2024-01-15T10:00:00Z' }),
+  updated_at: z.string().datetime().nullable().optional(),
+  status: SubmissionStatusSchema,
+  visibility: VisibilitySchema,
+  review_note: z.string().nullable().optional(),
+  attachments: z.array(z.unknown()).optional(),
+  user: AdminUserMiniSchema,
+  activity: AdminActivitySchema,
+})
+
+export const AdminUsersListItemSchema = z.object({
+  id: z.string(),
+  handle: z.string(),
+  name: z.string(),
+  email: z.string(),
+  avatar_url: z.string().nullable().optional(),
+  role: z.enum(['PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN']),
+  school: z.string().nullable().optional(),
+  cohort: z.string().nullable().optional(),
+  created_at: z.string().datetime(),
+  _count: z.object({ submissions: z.number().int(), earned_badges: z.number().int(), ledger: z.number().int() }),
+  totalPoints: z.number().int(),
+})
+
+export const AdminSubmissionsListResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    submissions: z.array(AdminSubmissionSchema),
+    pagination: AdminPaginationSchema,
+  })
+}).openapi({ 
+  title: 'Admin Submissions List Response',
+  example: {
+    success: true,
+    data: {
+      submissions: [
+        {
+          id: 'sub_abc123',
+          created_at: '2024-02-01T10:00:00Z',
+          updated_at: '2024-02-01T10:05:00Z',
+          status: 'PENDING',
+          visibility: 'PRIVATE',
+          review_note: null,
+          attachments: [],
+          user: {
+            id: 'user_123',
+            name: 'Ahmad Sutanto',
+            handle: 'educator_ahmad',
+            email: 'ahmad@school.edu',
+            school: 'SDN 123 Jakarta',
+            cohort: 'Cohort-2024-A'
+          },
+          activity: { code: 'LEARN', name: 'Learn', default_points: 20 }
+        }
+      ],
+      pagination: { page: 1, limit: 50, total: 1, pages: 1 }
+    }
+  }
+})
+
+export const AdminSubmissionDetailResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({ submission: AdminSubmissionSchema })
+}).openapi({ 
+  title: 'Admin Submission Detail Response',
+  example: {
+    success: true,
+    data: {
+      submission: {
+        id: 'sub_abc123',
+        created_at: '2024-02-01T10:00:00Z',
+        status: 'PENDING',
+        visibility: 'PRIVATE',
+        review_note: null,
+        user: { id: 'user_123', name: 'Ahmad Sutanto', handle: 'educator_ahmad', email: 'ahmad@school.edu' },
+        activity: { code: 'LEARN', name: 'Learn', default_points: 20 }
+      }
+    }
+  }
+})
+
+export const AdminUsersListResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    users: z.array(AdminUsersListItemSchema),
+    pagination: AdminPaginationSchema,
+  })
+}).openapi({ 
+  title: 'Admin Users List Response',
+  example: {
+    success: true,
+    data: {
+      users: [
+        {
+          id: 'user_123', handle: 'educator_ahmad', name: 'Ahmad Sutanto', email: 'ahmad@school.edu',
+          role: 'PARTICIPANT', created_at: '2024-01-10T09:00:00Z',
+          _count: { submissions: 7, earned_badges: 2, ledger: 10 }, totalPoints: 95
+        }
+      ],
+      pagination: { page: 1, limit: 50, total: 1, pages: 1 }
+    }
+  }
+})
+
+export const AdminBadgeCriteriaSchema = z.object({
+  type: z.enum(['points', 'submissions', 'activities', 'streak']),
+  threshold: z.number(),
+  activity_codes: z.array(z.string()).optional(),
+  conditions: z.record(z.unknown()).optional(),
+})
+
+export const AdminBadgeSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  description: z.string(),
+  criteria: AdminBadgeCriteriaSchema,
+  icon_url: z.string().url().nullable().optional(),
+  _count: z.object({ earned_badges: z.number().int() }).partial().optional(),
+  earned_badges: z.array(z.object({
+    id: z.string(),
+    user: z.object({ id: z.string(), name: z.string(), handle: z.string() }),
+    earned_at: z.string().datetime(),
+  })).optional(),
+})
+
+export const AdminBadgesListResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({ badges: z.array(AdminBadgeSchema) })
+}).openapi({ 
+  title: 'Admin Badges List Response',
+  example: {
+    success: true,
+    data: {
+      badges: [
+        { code: 'EARLY_ADOPTER', name: 'Early Adopter', description: 'Joined early', criteria: { type: 'points', threshold: 50 }, icon_url: null, _count: { earned_badges: 25 } }
+      ]
+    }
+  }
+})
+
+export const AdminAnalyticsResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    overview: z.object({
+      submissions: z.object({ total: z.number(), pending: z.number(), approved: z.number(), rejected: z.number(), approvalRate: z.number() }),
+      users: z.object({ total: z.number(), active: z.number(), withSubmissions: z.number(), withBadges: z.number(), activationRate: z.number() }),
+      points: z.object({ totalAwarded: z.number(), totalEntries: z.number(), avgPerEntry: z.number() }),
+      badges: z.object({ totalBadges: z.number(), totalEarned: z.number(), uniqueEarners: z.number() }),
+      reviews: z.object({ pendingReviews: z.number(), avgReviewTimeHours: z.number() }),
+    }),
+    distributions: z.object({
+      submissionsByStatus: z.array(z.object({ status: z.string(), count: z.number() })),
+      submissionsByActivity: z.array(z.object({ activity: z.string(), activityName: z.string().optional(), count: z.number() })),
+      usersByRole: z.array(z.object({ role: z.string(), count: z.number() })),
+      usersByCohort: z.array(z.object({ cohort: z.string().nullable(), count: z.number() })).optional(),
+      pointsByActivity: z.array(z.object({ activity: z.string(), activityName: z.string().optional(), totalPoints: z.number(), entries: z.number() })),
+      pointsDistribution: z.object({
+        totalUsers: z.number(),
+        max: z.number(),
+        min: z.number(),
+        avg: z.number(),
+        percentiles: z.array(z.object({ percentile: z.number(), value: z.number() }))
+      }).optional(),
+    }),
+    trends: z.object({
+      submissionsByDate: z.array(z.object({ date: z.string(), total: z.number(), approved: z.number(), rejected: z.number(), pending: z.number() })),
+      userRegistrationsByDate: z.array(z.object({ date: z.string(), count: z.number() })),
+    }),
+    recentActivity: z.object({
+      submissions: z.array(z.object({
+        id: z.string(),
+        user: z.object({ name: z.string(), handle: z.string() }),
+        activity: z.object({ name: z.string() }),
+        status: z.string(),
+        created_at: z.string().datetime(),
+      })),
+      approvals: z.array(z.object({
+        id: z.string(),
+        user: z.object({ name: z.string(), handle: z.string() }),
+        activity: z.object({ name: z.string() }),
+        updated_at: z.string().datetime(),
+      })),
+      users: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        handle: z.string(),
+        email: z.string(),
+        role: z.string(),
+        created_at: z.string().datetime(),
+      })),
+    }),
+    performance: z.object({
+      reviewers: z.array(z.object({ id: z.string(), name: z.string(), handle: z.string(), role: z.string(), approved: z.number(), rejected: z.number(), total: z.number() })),
+      topBadges: z.array(z.object({ badge: z.object({ code: z.string().optional(), name: z.string().optional(), icon_url: z.string().url().nullable().optional() }).passthrough(), earnedCount: z.number() })),
+    }),
+  })
+}).openapi({ 
+  title: 'Admin Analytics Response',
+  example: {
+    success: true,
+    data: {
+      overview: {
+        submissions: { total: 150, pending: 10, approved: 120, rejected: 20, approvalRate: 85.71 },
+        users: { total: 1000, active: 650, withSubmissions: 500, withBadges: 200, activationRate: 65 },
+        points: { totalAwarded: 50000, totalEntries: 2200, avgPerEntry: 22.73 },
+        badges: { totalBadges: 12, totalEarned: 300, uniqueEarners: 250 },
+        reviews: { pendingReviews: 10, avgReviewTimeHours: 12.5 }
+      },
+      distributions: {
+        submissionsByStatus: [ { status: 'APPROVED', count: 120 }, { status: 'REJECTED', count: 20 }, { status: 'PENDING', count: 10 } ],
+        submissionsByActivity: [ { activity: 'LEARN', activityName: 'Learn', count: 300 } ],
+        usersByRole: [ { role: 'PARTICIPANT', count: 900 }, { role: 'REVIEWER', count: 80 }, { role: 'ADMIN', count: 20 } ],
+        usersByCohort: [ { cohort: 'Cohort-2024-A', count: 200 } ],
+        pointsByActivity: [ { activity: 'LEARN', activityName: 'Learn', totalPoints: 20000, entries: 1000 } ],
+        pointsDistribution: { totalUsers: 1000, max: 500, min: 0, avg: 50, percentiles: [ { percentile: 50, value: 45 } ] }
+      },
+      trends: {
+        submissionsByDate: [ { date: '2024-01-10', total: 20, approved: 15, rejected: 3, pending: 2 } ],
+        userRegistrationsByDate: [ { date: '2024-01-10', count: 35 } ]
+      },
+      recentActivity: { submissions: [], approvals: [], users: [] },
+      performance: { reviewers: [ { id: 'r1', name: 'Reviewer A', handle: 'rev_a', role: 'REVIEWER', approved: 50, rejected: 10, total: 60 } ], topBadges: [] }
+    }
+  }
+})
+
+export const AdminKajabiResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    events: z.array(z.object({
+      id: z.string(),
+      received_at: z.string().datetime(),
+      processed_at: z.string().datetime().nullable(),
+      user_match: z.string().nullable(),
+      payload: z.record(z.unknown()),
+    })),
+    stats: z.object({
+      total_events: z.number(),
+      processed_events: z.number(),
+      matched_users: z.number(),
+      unmatched_events: z.number(),
+      points_awarded: z.number(),
+    })
+  })
+}).openapi({ 
+  title: 'Admin Kajabi Response',
+  example: {
+    success: true,
+    data: {
+      events: [ { id: 'test_123', received_at: '2024-02-01T10:00:00Z', processed_at: '2024-02-01T10:01:00Z', user_match: 'user_123', payload: { event_type: 'contact.tagged', data: { tag: { name: 'LEARN_COMPLETED' } } } } ],
+      stats: { total_events: 10, processed_events: 8, matched_users: 7, unmatched_events: 3, points_awarded: 160 }
+    }
+  }
+})
+
+export const AdminCohortsResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({ cohorts: z.array(z.string()) })
+}).openapi({ 
+  title: 'Admin Cohorts Response',
+  example: { success: true, data: { cohorts: ['Cohort-2024-A', 'Cohort-2024-B'] } }
+})
+
 export const ErrorResponseSchema = z
   .object({
     error: z.string().openapi({

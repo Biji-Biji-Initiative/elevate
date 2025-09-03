@@ -1,12 +1,16 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+
 import { useAuth } from '@clerk/nextjs'
-import { Button, Input, Textarea, Card, CardContent, FormField, LoadingSpinner, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
-import { FileUpload, FileList, UploadedFile } from '@elevate/ui/FileUpload'
-import { ExploreSchema, ExploreInput } from '@elevate/types/schemas'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+
+import { ExploreSchema, type ExploreInput } from '@elevate/types/schemas'
+import { Button, Input, Textarea, Card, FormField, LoadingSpinner, Alert, AlertTitle, AlertDescription, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, FileUpload, FileList, type UploadedFile } from '@elevate/ui'
+
+import { getApiClient } from '../../../../lib/api-client'
 
 const aiToolOptions = [
   { value: 'ChatGPT', label: 'ChatGPT' },
@@ -40,6 +44,15 @@ export default function ExploreFormPage() {
     setCharacterCount(watchedReflection?.length || 0)
   }, [watchedReflection])
 
+  // Narrow to successful uploaded files with path
+  const filterSuccessfulUploads = <T extends { path?: string; error?: unknown }>(
+    files: T[]
+  ): Array<T & { path: string }> => {
+    return files.filter((f) => typeof (f as any).path === 'string' && !(f as any).error) as Array<
+      T & { path: string }
+    >
+  }
+
   const handleFileSelect = async (files: File[]) => {
     const newFiles: UploadedFile[] = files.map(file => ({
       file,
@@ -49,29 +62,16 @@ export default function ExploreFormPage() {
     setUploadedFiles(prev => [...prev, ...newFiles])
 
     // Upload each file
-    const uploadPromises = files.map(async (file, index) => {
+    const uploadPromises = files.map(async (file, _index) => {
       try {
         const formData = new FormData()
         formData.append('file', file)
         formData.append('activityCode', 'EXPLORE')
 
-        const response = await fetch('/api/files/upload', {
-          method: 'POST',
-          body: formData
-        })
+        const api = getApiClient()
+        const result = await api.uploadFile(file, 'EXPLORE')
 
-        const result = await response.json()
-
-        if (!response.ok) {
-          throw new Error(result.error || 'Upload failed')
-        }
-
-        return {
-          file,
-          path: result.data.path,
-          hash: result.data.hash,
-          uploading: false
-        }
+        return { file, path: result.data.path, hash: result.data.hash, uploading: false }
 
       } catch (error) {
         return {
@@ -95,9 +95,7 @@ export default function ExploreFormPage() {
     })
 
     // Update form value with successful uploads
-    const successfulPaths = results
-      .filter(result => result.path && !result.error)
-      .map(result => result.path!)
+    const successfulPaths = filterSuccessfulUploads(results).map(r => r.path)
     
     setValue('evidenceFiles', successfulPaths)
   }
@@ -106,9 +104,7 @@ export default function ExploreFormPage() {
     const newFiles = uploadedFiles.filter((_, i) => i !== index)
     setUploadedFiles(newFiles)
     
-    const successfulPaths = newFiles
-      .filter(file => file.path && !file.error)
-      .map(file => file.path!)
+    const successfulPaths = filterSuccessfulUploads(newFiles).map(f => f.path)
     
     setValue('evidenceFiles', successfulPaths)
   }
@@ -135,26 +131,16 @@ export default function ExploreFormPage() {
         classDate: data.classDate,
         school: data.school || '',
         aiTool: selectedAiTool,
-        evidenceFiles: successfulFiles.map(f => f.path!)
+        evidenceFiles: filterSuccessfulUploads(successfulFiles).map(f => f.path)
       }
 
-      const response = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          activityCode: 'EXPLORE',
-          payload,
-          attachments: successfulFiles.map(f => f.path!)
-        })
+      const api2 = getApiClient()
+      await api2.createSubmission({
+        activityCode: 'EXPLORE',
+        payload,
+        attachments: filterSuccessfulUploads(successfulFiles).map(f => f.path),
+        visibility: 'PRIVATE'
       })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Submission failed')
-      }
 
       setSubmitStatus({ 
         type: 'success', 
@@ -190,8 +176,8 @@ export default function ExploreFormPage() {
             variant={submitStatus.type === 'error' ? 'destructive' : 'default'} 
             className="mb-6"
           >
-            <h4 className="font-semibold">{submitStatus.type === 'success' ? 'Success!' : 'Error'}</h4>
-            {submitStatus.message}
+            <AlertTitle>{submitStatus.type === 'success' ? 'Success!' : 'Error'}</AlertTitle>
+            <AlertDescription>{submitStatus.message}</AlertDescription>
           </Alert>
         )}
 

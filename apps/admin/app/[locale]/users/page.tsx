@@ -1,23 +1,24 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Button } from '@elevate/ui'
-import { Input, DataTable, StatusBadge, Modal, ConfirmModal } from '@elevate/ui'
-import type { Column } from '@elevate/ui'
-import { withRoleGuard } from '@elevate/auth/context'
 
-interface User extends Record<string, unknown> {
-  id: string
-  handle: string
-  name: string
-  email: string
-  avatar_url?: string
-  role: 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
-  school?: string
-  cohort?: string
-  created_at: string
-  totalPoints: number
-  _count: {
+import { withRoleGuard } from '@elevate/auth/context'
+import { adminClient, type UsersQuery } from '@/lib/admin-client'
+import { Button , Input, DataTable, StatusBadge, Modal, ConfirmModal, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, createColumns, Alert } from '@elevate/ui'
+import type { Column } from '@elevate/ui'
+
+type User = {
+  readonly id: string
+  readonly handle: string
+  readonly name: string
+  readonly email: string
+  readonly avatar_url?: string | null | undefined
+  readonly role: 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
+  readonly school?: string | null | undefined
+  readonly cohort?: string | null | undefined
+  readonly created_at: string
+  readonly totalPoints: number
+  readonly _count: {
     submissions: number
     ledger: number
     earned_badges: number
@@ -36,6 +37,7 @@ function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [cohorts, setCohorts] = useState<string[]>([])
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 50,
@@ -76,8 +78,9 @@ function UsersPage() {
   })
 
   const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const columns: Column<User>[] = [
+  const columns = createColumns<User>()([
     {
       key: 'name',
       header: 'User',
@@ -169,11 +172,25 @@ function UsersPage() {
       width: '80px',
       sortable: false
     }
-  ]
+  ])
 
   useEffect(() => {
-    fetchUsers()
+    void fetchUsers()
   }, [pagination.page, pagination.limit, filters])
+
+  useEffect(() => {
+    const fetchCohorts = async () => {
+      try {
+        setCohorts(await adminClient.getCohorts())
+      } catch (error) {
+        // Cohorts are optional for UI, don't break on fetch failure
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to fetch cohorts:', error);
+        }
+      }
+    }
+    void fetchCohorts()
+  }, [])
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -189,19 +206,11 @@ function UsersPage() {
       if (filters.search) params.set('search', filters.search)
       if (filters.cohort !== 'ALL') params.set('cohort', filters.cohort)
 
-      const response = await fetch(`/api/admin/users?${params}`)
-      const data = await response.json()
-      
-      if (response.ok) {
-        setUsers(data.users)
-        setPagination(prev => ({
-          ...prev,
-          total: data.pagination.total,
-          pages: data.pagination.pages
-        }))
-      } else {
-      }
+      const { users, pagination: pageInfo } = await adminClient.getUsers(Object.fromEntries(params) as UsersQuery)
+      setUsers(users)
+      setPagination(prev => ({ ...prev, total: pageInfo.total, pages: pageInfo.pages }))
     } catch (error) {
+      setError('Failed to fetch users')
     } finally {
       setLoading(false)
     }
@@ -243,25 +252,20 @@ function UsersPage() {
 
     setProcessing(true)
     try {
-      const response = await fetch('/api/admin/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: editModal.user.id,
-          ...editForm
-        })
-      })
-
-      const data = await response.json()
-      
-      if (response.ok) {
-        await fetchUsers() // Refresh data
-        closeEditModal()
-      } else {
-        alert(`Error: ${data.error}`)
+      const updateData: Parameters<typeof adminClient.updateUser>[0] = {
+        userId: editModal.user.id,
       }
+      if (editForm.name) updateData.name = editForm.name
+      if (editForm.handle) updateData.handle = editForm.handle
+      if (editForm.school) updateData.school = editForm.school
+      if (editForm.cohort) updateData.cohort = editForm.cohort
+      if (editForm.role) updateData.role = editForm.role as 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
+      
+      await adminClient.updateUser(updateData)
+      await fetchUsers()
+      closeEditModal()
     } catch (error) {
-      alert('Failed to update user')
+      setError('Failed to update user')
     } finally {
       setProcessing(false)
     }
@@ -272,26 +276,12 @@ function UsersPage() {
 
     setProcessing(true)
     try {
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userIds: Array.from(selectedRows),
-          role: bulkRoleModal.targetRole
-        })
-      })
-
-      const data = await response.json()
-      
-      if (response.ok) {
-        setSelectedRows(new Set())
-        await fetchUsers()
-        setBulkRoleModal({ isOpen: false, targetRole: 'PARTICIPANT' })
-      } else {
-        alert(`Error: ${data.error}`)
-      }
+      await adminClient.bulkUpdateUsers({ userIds: Array.from(selectedRows), role: bulkRoleModal.targetRole as 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN' })
+      setSelectedRows(new Set())
+      await fetchUsers()
+      setBulkRoleModal({ isOpen: false, targetRole: 'PARTICIPANT' })
     } catch (error) {
-      alert('Failed to update user roles')
+      setError('Failed to update user roles')
     } finally {
       setProcessing(false)
     }
@@ -308,8 +298,9 @@ function UsersPage() {
       <div className="bg-white p-4 rounded-lg border mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <label htmlFor="users-filter-search" className="block text-sm font-medium text-gray-700 mb-1">Search</label>
             <Input
+              id="users-filter-search"
               placeholder="Search by name, email, handle..."
               value={filters.search}
               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
@@ -317,32 +308,34 @@ function UsersPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filters.role}
-              onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
-            >
-              <option value="ALL">All Roles</option>
-              <option value="PARTICIPANT">Participant</option>
-              <option value="REVIEWER">Reviewer</option>
-              <option value="ADMIN">Admin</option>
-              <option value="SUPERADMIN">Superadmin</option>
-            </select>
+            <label id="users-filter-role-label" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <Select value={filters.role} onValueChange={(value) => setFilters(prev => ({ ...prev, role: value }))}>
+              <SelectTrigger aria-labelledby="users-filter-role-label">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Roles</SelectItem>
+                <SelectItem value="PARTICIPANT">Participant</SelectItem>
+                <SelectItem value="REVIEWER">Reviewer</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filters.cohort}
-              onChange={(e) => setFilters(prev => ({ ...prev, cohort: e.target.value }))}
-            >
-              <option value="ALL">All Cohorts</option>
-              <option value="Batch 1">Batch 1</option>
-              <option value="Batch 2">Batch 2</option>
-              <option value="Batch 3">Batch 3</option>
-            </select>
+            <label id="users-filter-cohort-label" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
+            <Select value={filters.cohort} onValueChange={(value) => setFilters(prev => ({ ...prev, cohort: value }))}>
+              <SelectTrigger aria-labelledby="users-filter-cohort-label">
+                <SelectValue placeholder="Select cohort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Cohorts</SelectItem>
+                {cohorts.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-end">
@@ -360,16 +353,17 @@ function UsersPage() {
                 {selectedRows.size} users selected
               </span>
               <div className="space-x-2">
-                <select
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={bulkRoleModal.targetRole}
-                  onChange={(e) => setBulkRoleModal(prev => ({ ...prev, targetRole: e.target.value }))}
-                >
-                  <option value="PARTICIPANT">Participant</option>
-                  <option value="REVIEWER">Reviewer</option>
-                  <option value="ADMIN">Admin</option>
-                  <option value="SUPERADMIN">Superadmin</option>
-                </select>
+                <Select value={bulkRoleModal.targetRole} onValueChange={(value) => setBulkRoleModal(prev => ({ ...prev, targetRole: value }))}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PARTICIPANT">Participant</SelectItem>
+                    <SelectItem value="REVIEWER">Reviewer</SelectItem>
+                    <SelectItem value="ADMIN">Admin</SelectItem>
+                    <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button
                   variant="default"
                   onClick={() => setBulkRoleModal(prev => ({ ...prev, isOpen: true }))}
@@ -383,7 +377,13 @@ function UsersPage() {
       </div>
 
       {/* Data Table */}
-      <DataTable
+      {error && (
+        <div className="mb-4">
+          <Alert variant="destructive">{error}</Alert>
+        </div>
+      )}
+
+      <DataTable<User>
         data={users}
         columns={columns}
         loading={loading}
@@ -429,8 +429,9 @@ function UsersPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label htmlFor="edit-user-name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
             <Input
+              id="edit-user-name"
               value={editForm.name}
               onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
               placeholder="Full name"
@@ -438,8 +439,9 @@ function UsersPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Handle</label>
+            <label htmlFor="edit-user-handle" className="block text-sm font-medium text-gray-700 mb-1">Handle</label>
             <Input
+              id="edit-user-handle"
               value={editForm.handle}
               onChange={(e) => setEditForm(prev => ({ ...prev, handle: e.target.value }))}
               placeholder="@username"
@@ -447,8 +449,9 @@ function UsersPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">School</label>
+            <label htmlFor="edit-user-school" className="block text-sm font-medium text-gray-700 mb-1">School</label>
             <Input
+              id="edit-user-school"
               value={editForm.school}
               onChange={(e) => setEditForm(prev => ({ ...prev, school: e.target.value }))}
               placeholder="School name"
@@ -456,31 +459,33 @@ function UsersPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={editForm.cohort}
-              onChange={(e) => setEditForm(prev => ({ ...prev, cohort: e.target.value }))}
-            >
-              <option value="">No Cohort</option>
-              <option value="Batch 1">Batch 1</option>
-              <option value="Batch 2">Batch 2</option>
-              <option value="Batch 3">Batch 3</option>
-            </select>
+            <label id="edit-user-cohort-label" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
+            <Select value={editForm.cohort} onValueChange={(value) => setEditForm(prev => ({ ...prev, cohort: value }))}>
+              <SelectTrigger aria-labelledby="edit-user-cohort-label">
+                <SelectValue placeholder="Select cohort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No Cohort</SelectItem>
+                {cohorts.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={editForm.role}
-              onChange={(e) => setEditForm(prev => ({ ...prev, role: e.target.value }))}
-            >
-              <option value="PARTICIPANT">Participant</option>
-              <option value="REVIEWER">Reviewer</option>
-              <option value="ADMIN">Admin</option>
-              <option value="SUPERADMIN">Superadmin</option>
-            </select>
+            <label id="edit-user-role-label" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <Select value={editForm.role} onValueChange={(value) => setEditForm(prev => ({ ...prev, role: value }))}>
+              <SelectTrigger aria-labelledby="edit-user-role-label">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PARTICIPANT">Participant</SelectItem>
+                <SelectItem value="REVIEWER">Reviewer</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </Modal>
@@ -500,4 +505,3 @@ function UsersPage() {
 }
 
 export default withRoleGuard(UsersPage, ['admin', 'superadmin'])
-

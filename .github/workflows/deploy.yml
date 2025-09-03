@@ -27,13 +27,17 @@ concurrency:
   group: deploy-${{ github.ref }}-${{ inputs.environment || 'production' }}-${{ inputs.apps || 'both' }}
   cancel-in-progress: false
 
+defaults:
+  run:
+    working-directory: elevate
+
 env:
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
   CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-  SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
   KAJABI_WEBHOOK_SECRET: ${{ secrets.KAJABI_WEBHOOK_SECRET }}
   NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
   KAJABI_API_KEY: ${{ secrets.KAJABI_API_KEY }}
@@ -91,7 +95,7 @@ jobs:
         uses: lewagon/wait-on-check-action@v1.3.4
         with:
           ref: ${{ github.ref }}
-          check-name: 'Status Check'
+          check-name: 'Build Apps'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 30
 

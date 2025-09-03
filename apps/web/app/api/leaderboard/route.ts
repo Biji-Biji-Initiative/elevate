@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+
 import { prisma } from '@elevate/db/client'
-import { Prisma } from '@prisma/client'
+
+import { LeaderboardQuerySchema } from '@elevate/types'
+
 
 export const runtime = 'nodejs';
 
@@ -50,52 +53,59 @@ type UserWithBadges = {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const period = searchParams.get('period') ?? 'all'
-    const limit = Math.min(parseInt(searchParams.get('limit') ?? '20'), 100)
-    const offset = parseInt(searchParams.get('offset') ?? '0')
-    const search = searchParams.get('search') ?? ''
+    const parsed = LeaderboardQuerySchema.safeParse(Object.fromEntries(searchParams))
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid query' }, { status: 400 })
+    }
+    const { period, limit, offset, search } = parsed.data
 
     // Calculate leaderboard using Prisma ORM with proper typing
     let leaderboardUsers: UserWithBadges[] = []
     let totalCount = 0
     
-    try {
       // Get users based on period and search criteria
       const dateFilter = period === '30d' ? 
         new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) : 
         new Date(0)
       
-      // Build search filter
-      const searchFilter: Prisma.UserWhereInput = search ? {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { handle: { contains: search, mode: 'insensitive' } },
-          { school: { contains: search, mode: 'insensitive' } }
-        ]
-      } : {}
-      
-      // Get users with public approved submissions
-      const usersWithSubmissions = await prisma.user.findMany({
-        where: {
-          ...searchFilter,
-          role: 'PARTICIPANT',
-          submissions: {
-            some: {
-              status: 'APPROVED',
-              visibility: 'PUBLIC',
-              updated_at: { gte: dateFilter }
-            }
-          }
-        },
-        select: {
-          id: true,
-          handle: true,
-          name: true,
-          avatar_url: true,
-          school: true,
-          cohort: true
-        }
-      })
+      // Use materialized views for leaderboard (faster and consistent)
+      const viewName = period === '30d' ? 'leaderboard_30d' : 'leaderboard_totals'
+      const params: any[] = []
+      const whereClauses: string[] = []
+      if (search && search.trim().length > 0) {
+        params.push(`%${search.trim()}%`, `%${search.trim()}%`, `%${search.trim()}%`)
+        whereClauses.push('(name ILIKE $1 OR handle ILIKE $2 OR school ILIKE $3)')
+      }
+      const whereSQL = whereClauses.length ? `WHERE ${whereClauses.join(' AND ')}` : ''
+
+      // Count
+      const countRows = await prisma.$queryRawUnsafe<{ count: bigint }[]>(
+        `SELECT COUNT(*)::bigint AS count FROM ${viewName} ${whereSQL}`,
+        ...params
+      )
+      totalCount = Number(countRows?.[0]?.count ?? 0)
+
+      // Page rows
+      const pageParams = [...params]
+      pageParams.push(limit, offset)
+      const pageRows = await prisma.$queryRawUnsafe<Array<{ user_id: string; handle: string; name: string; avatar_url: string | null; school: string | null; cohort: string | null; total_points: number; last_activity_at: Date | null }>>(
+        `SELECT user_id, handle, name, avatar_url, school, cohort, total_points, last_activity_at
+         FROM ${viewName}
+         ${whereSQL}
+         ORDER BY total_points DESC, COALESCE(last_activity_at, '1970-01-01') DESC
+         LIMIT $${pageParams.length - 1} OFFSET $${pageParams.length}`,
+        ...pageParams
+      )
+
+      // Shape to match downstream computation
+      const usersWithSubmissions = pageRows.map(r => ({
+        id: r.user_id,
+        handle: r.handle,
+        name: r.name,
+        avatar_url: r.avatar_url,
+        school: r.school,
+        cohort: r.cohort,
+      }))
       
       const userIds = usersWithSubmissions.map(u => u.id)
       
@@ -183,15 +193,18 @@ export async function GET(request: NextRequest) {
         })
         
         // Group badges by user
-        const badgesByUser = badges.reduce((acc, earnedBadge) => {
+        const badgesByUser = badges.reduce<Record<string, Array<{ badge: { code: string; name: string; icon_url: string | null } }>>>((acc, earnedBadge) => {
           if (!acc[earnedBadge.user_id]) {
             acc[earnedBadge.user_id] = []
           }
-          acc[earnedBadge.user_id].push({
-            badge: earnedBadge.badge
-          })
+          const userBadges = acc[earnedBadge.user_id]
+          if (userBadges) {
+            userBadges.push({
+              badge: earnedBadge.badge
+            })
+          }
           return acc
-        }, {} as Record<string, Array<{ badge: { code: string; name: string; icon_url: string | null } }>>)
+        }, {})
         
         // Format final result
         leaderboardUsers = paginatedUsers.map(user => ({
@@ -213,9 +226,6 @@ export async function GET(request: NextRequest) {
           }
         }))
       }
-    } catch (prismError) {
-      throw prismError
-    }
 
     // Format the response data with proper ranking
     const formattedData = leaderboardUsers.map((user, index) => ({
@@ -224,12 +234,15 @@ export async function GET(request: NextRequest) {
     }))
 
     return NextResponse.json({
-      period,
-      data: formattedData,
-      total: totalCount,
-      limit,
-      offset,
-      hasMore: offset + limit < totalCount
+      success: true,
+      data: {
+        period,
+        data: formattedData,
+        total: totalCount,
+        limit,
+        offset,
+        hasMore: offset + limit < totalCount
+      }
     }, {
       headers: {
         'Cache-Control': period === '30d' ? 'public, s-maxage=300' : 'public, s-maxage=600'
@@ -237,9 +250,6 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch leaderboard data' },
-      { status: 500 }
-    )
+    return NextResponse.json({ success: false, error: 'Failed to fetch leaderboard data' }, { status: 500 })
   }
 }

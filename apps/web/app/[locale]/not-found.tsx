@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Metadata } from 'next'
+
+import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Page Not Found',
@@ -42,9 +43,9 @@ export default function NotFound() {
               dashboard
             </Link>{' '}
             or{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-500">
+            <Link href="/docs" className="text-blue-600 hover:text-blue-500">
               contact support
-            </a>
+            </Link>
           </p>
         </div>
       </div>

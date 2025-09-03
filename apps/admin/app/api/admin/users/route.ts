@@ -1,27 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@elevate/db/client'
+import { NextResponse, type NextRequest } from 'next/server';
+
 import { requireRole, hasRole, createErrorResponse } from '@elevate/auth/server-helpers'
-import type { UserWhereClause } from '@elevate/types'
+import { roleToRoleName } from '@elevate/auth'
 import type { Role } from '@elevate/db'
+import { prisma, type Prisma } from '@elevate/db'
+import { parseRole, toPrismaJson, UpdateUserSchema, BulkUpdateUsersSchema, AdminUsersQuerySchema, buildAuditMeta } from '@elevate/types'
+import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const user = await requireRole('admin')
     const { searchParams } = new URL(request.url)
     
-    const search = searchParams.get('search')
-    const role = searchParams.get('role')
-    const cohort = searchParams.get('cohort')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const sortBy = searchParams.get('sortBy') || 'created_at'
-    const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const parsedQuery = AdminUsersQuerySchema.safeParse(Object.fromEntries(searchParams))
+    if (!parsedQuery.success) {
+      return createErrorResponse(new Error('Invalid query'), 400)
+    }
+    const { search, role, cohort, page, limit, sortBy, sortOrder } = parsedQuery.data
     
     const offset = (page - 1) * limit
     
-    const where: any = {}
+    const where: Prisma.UserWhereInput = {}
     
     if (search) {
       where.OR = [
@@ -33,7 +35,10 @@ export async function GET(request: NextRequest) {
     }
     
     if (role && role !== 'ALL') {
-      where.role = role
+      const parsedRole = parseRole(role)
+      if (parsedRole) {
+        where.role = parsedRole
+      }
     }
     
     if (cohort && cohort !== 'ALL') {
@@ -82,10 +87,10 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    const pointsMap = pointTotals.reduce((acc, pt) => {
+    const pointsMap = pointTotals.reduce<Record<string, number>>((acc, pt) => {
       acc[pt.user_id] = pt._sum.delta_points || 0
       return acc
-    }, {} as Record<string, number>)
+    }, {})
     
     const usersWithPoints = users.map(user => ({
       ...user,
@@ -93,24 +98,33 @@ export async function GET(request: NextRequest) {
     }))
     
     return NextResponse.json({
-      users: usersWithPoints,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
+      success: true,
+      data: {
+        users: usersWithPoints,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
       }
     })
   } catch (error) {
     return createErrorResponse(error, 500)
   }
+  })
 }
 
 export async function PATCH(request: NextRequest) {
+  return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const currentUser = await requireRole('admin')
     const body = await request.json()
-    const { userId, role, school, cohort, name, handle } = body
+    const parsed = UpdateUserSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+    const { userId, role, school, cohort, name, handle } = parsed.data
     
     if (!userId) {
       return NextResponse.json(
@@ -143,8 +157,9 @@ export async function PATCH(request: NextRequest) {
         }
       }
       
-      // Prevent self-demotion
-      if (currentUser.userId === userId && !hasRole(role.toLowerCase() as any, currentUser.role)) {
+      // Prevent self-demotion  
+      const parsedNewRole = parseRole(role)
+      if (currentUser.userId === userId && parsedNewRole && !hasRole(currentUser.role, roleToRoleName(parsedNewRole))) {
         return NextResponse.json(
           { error: 'Cannot demote your own role' },
           { status: 403 }
@@ -198,11 +213,11 @@ export async function PATCH(request: NextRequest) {
         actor_id: currentUser.userId,
         action: 'UPDATE_USER',
         target_id: userId,
-        meta: {
+        meta: buildAuditMeta({ entityType: 'user', entityId: userId }, {
           changes: updateData,
           originalRole: targetUser.role,
           newRole: role
-        }
+        }) as Prisma.InputJsonValue
       }
     })
     
@@ -215,14 +230,20 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     return createErrorResponse(error, 500)
   }
+  })
 }
 
 // Bulk role updates
 export async function POST(request: NextRequest) {
+  return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const currentUser = await requireRole('admin')
     const body = await request.json()
-    const { userIds, role } = body
+    const parsed = BulkUpdateUsersSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+    const { userIds, role } = parsed.data
     
     if (!Array.isArray(userIds) || userIds.length === 0) {
       return NextResponse.json(
@@ -258,7 +279,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Prevent self-demotion in bulk
-    if (userIds.includes(currentUser.userId) && !hasRole(role.toLowerCase() as any, currentUser.role)) {
+    const parsedBulkRole = parseRole(role)
+    if (userIds.includes(currentUser.userId) && parsedBulkRole && !hasRole(currentUser.role, roleToRoleName(parsedBulkRole))) {
       return NextResponse.json(
         { error: 'Cannot demote your own role in bulk operation' },
         { status: 403 }
@@ -319,11 +341,11 @@ export async function POST(request: NextRequest) {
               actor_id: currentUser.userId,
               action: 'UPDATE_USER_ROLE',
               target_id: user.id,
-              meta: {
+              meta: buildAuditMeta({ entityType: 'user', entityId: user.id }, {
                 originalRole: user.role,
                 newRole: role,
                 bulkOperation: true
-              }
+              }) as Prisma.InputJsonValue
             }
           })
           
@@ -344,4 +366,5 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return createErrorResponse(error, 500)
   }
+  })
 }

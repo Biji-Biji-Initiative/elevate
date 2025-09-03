@@ -6,12 +6,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Ensure dist directory exists
-const distDir = resolve(__dirname, '../dist');
-mkdirSync(distDir, { recursive: true });
+// Ensure src directory exists for SDK and client types
+const srcDir = resolve(__dirname, '../src');
+mkdirSync(srcDir, { recursive: true });
 
-// Read the generated TypeScript types
-const clientTypesPath = resolve(distDir, 'client.ts');
+// Read the generated TypeScript types (from src)
+const clientTypesPath = resolve(srcDir, 'client.ts');
 const clientTypes = readFileSync(clientTypesPath, 'utf-8');
 
 // Generate a comprehensive TypeScript client SDK
@@ -117,6 +117,28 @@ export class ElevateAPIClient {
     return this.request<paths['/api/dashboard']['get']['responses']['200']['content']['application/json']>('/api/dashboard');
   }
 
+  // Public Stats API
+  async getStats() {
+    return this.request<paths['/api/stats']['get']['responses']['200']['content']['application/json']>('/api/stats');
+  }
+
+  // Public Metrics API
+  async getMetrics(params: paths['/api/metrics']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value !== undefined) searchParams.append(key, String(value));
+    });
+    const endpoint = `/api/metrics${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    return this.request<paths['/api/metrics']['get']['responses']['200']['content']['application/json']>(endpoint);
+  }
+
+  // Public Profile API
+  async getProfile(handle: string) {
+    return this.request<paths['/api/profile/{handle}']['get']['responses']['200']['content']['application/json']>(
+      `/api/profile/${encodeURIComponent(handle)}`
+    );
+  }
+
   // Health Check API
   async healthCheck() {
     return this.request<paths['/api/health']['get']['responses']['200']['content']['application/json']>('/api/health');
@@ -135,6 +157,133 @@ export class ElevateAPIClient {
     
     const endpoint = \`/api/admin/submissions\${searchParams.toString() ? '?' + searchParams.toString() : ''}\`;
     return this.request<paths['/api/admin/submissions']['get']['responses']['200']['content']['application/json']>(endpoint);
+  }
+
+  async getAdminSubmissionById(id: string) {
+    const endpoint = \`/api/admin/submissions/\${encodeURIComponent(id)}\`;
+    return this.request<paths['/api/admin/submissions/{id}']['get']['responses']['200']['content']['application/json']>(endpoint);
+  }
+
+  async reviewSubmission(body: paths['/api/admin/submissions']['patch']['requestBody']['content']['application/json']) {
+    return this.request<paths['/api/admin/submissions']['patch']['responses']['200']['content']['application/json']>(
+      '/api/admin/submissions',
+      { method: 'PATCH', body: JSON.stringify(body) }
+    );
+  }
+
+  async bulkReview(body: paths['/api/admin/submissions']['post']['requestBody']['content']['application/json']) {
+    return this.request<paths['/api/admin/submissions']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/submissions',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
+  }
+
+  async getAdminUsers(params?: paths['/api/admin/users']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.append(key, String(value));
+        }
+      });
+    }
+    const endpoint = \`/api/admin/users\${searchParams.toString() ? '?' + searchParams.toString() : ''}\`;
+    return this.request<paths['/api/admin/users']['get']['responses']['200']['content']['application/json']>(endpoint);
+  }
+
+  async updateAdminUser(body: paths['/api/admin/users']['patch']['requestBody']['content']['application/json']) {
+    return this.request<paths['/api/admin/users']['patch']['responses']['200']['content']['application/json']>(
+      '/api/admin/users',
+      { method: 'PATCH', body: JSON.stringify(body) }
+    );
+  }
+
+  async bulkUpdateAdminUsers(body: paths['/api/admin/users']['post']['requestBody']['content']['application/json']) {
+    return this.request<paths['/api/admin/users']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/users',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
+  }
+
+  async getAdminBadges(params?: paths['/api/admin/badges']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) searchParams.append(key, String(value));
+      });
+    }
+    const endpoint = \`/api/admin/badges\${searchParams.toString() ? '?' + searchParams.toString() : ''}\`;
+    return this.request<paths['/api/admin/badges']['get']['responses']['200']['content']['application/json']>(endpoint);
+  }
+
+  async createAdminBadge(body: paths['/api/admin/badges']['post']['requestBody']['content']['application/json']) {
+    return this.request<paths['/api/admin/badges']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/badges',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
+  }
+
+  async updateAdminBadge(body: paths['/api/admin/badges']['patch']['requestBody']['content']['application/json']) {
+    return this.request<paths['/api/admin/badges']['patch']['responses']['200']['content']['application/json']>(
+      '/api/admin/badges',
+      { method: 'PATCH', body: JSON.stringify(body) }
+    );
+  }
+
+  async deleteAdminBadge(code: string) {
+    const url = \`/api/admin/badges?code=\${encodeURIComponent(code)}\`;
+    return this.request<paths['/api/admin/badges']['delete']['responses']['200']['content']['application/json']>(url, { method: 'DELETE' });
+  }
+
+  async assignAdminBadge(body: paths['/api/admin/badges/assign']['post']['requestBody']['content']['application/json']) {
+    return this.request<paths['/api/admin/badges/assign']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/badges/assign',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
+  }
+
+  async removeAdminBadge(body: paths['/api/admin/badges/assign']['delete']['requestBody']['content']['application/json']) {
+    return this.request<paths['/api/admin/badges/assign']['delete']['responses']['200']['content']['application/json']>(
+      '/api/admin/badges/assign',
+      { method: 'DELETE', body: JSON.stringify(body) }
+    );
+  }
+
+  async getAdminAnalytics(params?: paths['/api/admin/analytics']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) searchParams.append(key, String(value));
+      });
+    }
+    const endpoint = \`/api/admin/analytics\${searchParams.toString() ? '?' + searchParams.toString() : ''}\`;
+    return this.request<paths['/api/admin/analytics']['get']['responses']['200']['content']['application/json']>(endpoint);
+  }
+
+  async getAdminCohorts() {
+    return this.request<paths['/api/admin/meta/cohorts']['get']['responses']['200']['content']['application/json']>(
+      '/api/admin/meta/cohorts'
+    );
+  }
+
+  async getAdminKajabi() {
+    return this.request<paths['/api/admin/kajabi']['get']['responses']['200']['content']['application/json']>(
+      '/api/admin/kajabi'
+    );
+  }
+
+  async testAdminKajabi(body: paths['/api/admin/kajabi/test']['post']['requestBody']['content']['application/json']) {
+    return this.request<paths['/api/admin/kajabi/test']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/kajabi/test',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
+  }
+
+  async reprocessAdminKajabi(body: paths['/api/admin/kajabi/reprocess']['post']['requestBody']['content']['application/json']) {
+    return this.request<paths['/api/admin/kajabi/reprocess']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/kajabi/reprocess',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
   }
 
   // Utility methods
@@ -208,7 +357,7 @@ export default ElevateAPIClient;
 `;
 
 // Write the SDK to file
-const sdkPath = resolve(distDir, 'sdk.ts');
+const sdkPath = resolve(srcDir, 'sdk.ts');
 writeFileSync(sdkPath, clientSdk, 'utf-8');
 
 console.log(`✅ TypeScript SDK generated: ${sdkPath}`);
@@ -220,14 +369,14 @@ console.log('   - TypeScript intellisense support');
 console.log('   - Automatic request/response typing');
 
 // Generate usage examples
-const examplesPath = resolve(distDir, 'examples.ts');
+const examplesPath = resolve(srcDir, 'examples.ts');
 const examples = `// MS Elevate LEAPS API - Usage Examples
 
 import ElevateAPIClient, { 
   APIError, 
   ValidationError,
   AuthenticationError 
-} from './sdk';
+} from './sdk.js';
 
 // Initialize the client
 const api = new ElevateAPIClient({

@@ -5,42 +5,51 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/js/index.js"
     },
     "./spec": {
-      "types": "./dist/spec.d.ts",
-      "default": "./dist/spec.js"
+      "types": "./dist/types/spec.d.ts",
+      "default": "./dist/js/spec.js"
     },
     "./spec.json": "./dist/openapi.json",
     "./sdk": {
-      "default": "./dist/sdk.ts"
+      "types": "./dist/types/sdk.d.ts",
+      "default": "./dist/js/sdk.js"
     },
     "./client": {
-      "default": "./dist/client.ts"
+      "default": "./dist/js/client.js"
     },
     "./examples": {
-      "default": "./dist/examples.ts"
-    }
+      "default": "./dist/js/examples.js"
+    },
+    "./package.json": "./package.json"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/js/index.js",
+  "types": "./dist/types/index.d.ts",
   "files": [
-    "dist/**/*",
+    "dist/js",
+    "dist/types",
+    "README.md",
+    "LICENSE",
+    "dist/js/**/*.map",
     "openapi.json"
   ],
   "scripts": {
-    "build": "tsup src/index.ts src/spec.ts --format esm --clean",
+    "build": "pnpm run build:types && pnpm generate:spec && tsup --config tsup.config.ts",
     "generate": "tsx src/generator.ts",
     "generate:spec": "tsx src/generator.ts",
-    "generate:client": "openapi-typescript dist/openapi.json -o dist/client.ts",
+    "generate:client": "openapi-typescript dist/openapi.json -o src/client.ts",
     "generate:sdk": "tsx src/client-generator.ts",
     "generate:all": "pnpm generate && pnpm generate:sdk",
     "dev": "tsx watch src/generator.ts",
     "clean": "rm -rf dist",
-    "lint": "eslint . --max-warnings 0",
-    "lint:fix": "eslint . --fix",
-    "type-check": "tsc --noEmit"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --max-warnings 0",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --fix",
+    "type-check": "tsc --noEmit",
+    "build:types": "tsc -b --force tsconfig.build.json",
+    "api:extract": "../../node_modules/.bin/api-extractor run --local",
+    "api:check": "../../node_modules/.bin/api-extractor run"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "7.3.4",
@@ -53,5 +62,26 @@
     "tsup": "^8.3.7",
     "tsx": "^4.19.2",
     "typescript": "^5.9.2"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.11"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/types/*"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/elevate.git",
+    "directory": "packages/openapi"
   }
 }

@@ -1,0 +1,11 @@
+**/*.md
+**/*.mdx
+docs/
+node_modules/
+.next/
+.turbo/
+dist/
+build/
+coverage/
+
+

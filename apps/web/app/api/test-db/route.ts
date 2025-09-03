@@ -1,16 +1,36 @@
 import { NextResponse } from 'next/server';
 
+import { prisma } from '@elevate/db/client';
+
 export const runtime = 'nodejs';
 
 export async function GET() {
   const dbUrl = process.env.DATABASE_URL;
   
-  // Return just the env var info
-  return NextResponse.json({
-    hasDbUrl: !!dbUrl,
-    dbUrlLength: dbUrl?.length || 0,
-    dbUrlStart: dbUrl?.substring(0, 30) || 'undefined',
-    nodeEnv: process.env.NODE_ENV,
-    allEnvKeys: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('SUPABASE'))
-  });
+  try {
+    // Test the actual Prisma connection
+    await prisma.$connect();
+    const userCount = await prisma.user.count();
+    await prisma.$disconnect();
+    
+    return NextResponse.json({
+      status: 'success',
+      hasDbUrl: !!dbUrl,
+      dbUrlLength: dbUrl?.length || 0,
+      dbUrlStart: dbUrl?.substring(0, 30) || 'undefined',
+      nodeEnv: process.env.NODE_ENV,
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('SUPABASE')),
+      userCount
+    });
+  } catch (error) {
+    return NextResponse.json({
+      status: 'error',
+      hasDbUrl: !!dbUrl,
+      dbUrlLength: dbUrl?.length || 0,
+      dbUrlStart: dbUrl?.substring(0, 30) || 'undefined',
+      nodeEnv: process.env.NODE_ENV,
+      allEnvKeys: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('SUPABASE')),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
+  }
 }

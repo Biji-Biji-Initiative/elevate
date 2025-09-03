@@ -1,81 +1,17 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "ES6"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.mts",
-    "**/*.cts",
-    "**/*.js",
-    "**/*.mjs",
-    "**/*.cjs"
-  ],
-  "exclude": [
-    "node_modules",
-    ".next",
-    "dist",
-    "build",
-    "**/.turbo",
-    "**/coverage",
-    "**/*.md",
-    "**/*.mdx",
-    "docs/**/*",
-    "*.md"
-  ],
+  "extends": "./tsconfig.base.json",
+  "files": [],
   "references": [
-    {
-      "path": "./apps/web"
-    },
-    {
-      "path": "./apps/admin"
-    },
-    {
-      "path": "./packages/ui"
-    },
-    {
-      "path": "./packages/types"
-    },
-    {
-      "path": "./packages/config"
-    },
-    {
-      "path": "./packages/auth"
-    },
-    {
-      "path": "./packages/emails"
-    },
-    {
-      "path": "./packages/logic"
-    },
-    {
-      "path": "./packages/openapi"
-    },
-    {
-      "path": "./packages/storage"
-    },
-    {
-      "path": "./packages/integrations"
-    },
-    {
-      "path": "./packages/db"
-    }
+    { "path": "./packages/db/tsconfig.build.json" },
+    { "path": "./packages/types/tsconfig.build.json" },
+    { "path": "./packages/config/tsconfig.build.json" },
+    { "path": "./packages/storage/tsconfig.build.json" },
+    { "path": "./packages/security/tsconfig.build.json" },
+    { "path": "./packages/ui/tsconfig.build.json" },
+    { "path": "./packages/auth/tsconfig.build.json" },
+    { "path": "./packages/emails/tsconfig.build.json" },
+    { "path": "./packages/integrations/tsconfig.build.json" },
+    { "path": "./packages/logic/tsconfig.build.json" },
+    { "path": "./packages/openapi/tsconfig.build.json" }
   ]
 }

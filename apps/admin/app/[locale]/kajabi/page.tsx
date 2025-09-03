@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, LoadingSpinner, Card, CardContent, Input, Alert } from '@elevate/ui';
+
 import { withRoleGuard } from '@elevate/auth/context';
+import { adminClient } from '@/lib/admin-client'
+import { Button, LoadingSpinner, Card, CardContent, Input, Alert } from '@elevate/ui';
 
 interface KajabiEvent {
-  id: string;
-  received_at: string;
-  processed_at: string | null;
-  user_match: string | null;
-  payload: Record<string, unknown>;
+  readonly id: string;
+  readonly received_at: string;
+  readonly processed_at: string | null;
+  readonly user_match: string | null;
+  readonly payload: Record<string, unknown>; // Keep as Record for webhook payload flexibility
 }
 
 interface Stats {
@@ -27,17 +29,15 @@ function KajabiPage() {
   const [error, setError] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState('');
   const [testLoading, setTestLoading] = useState(false);
-  const [testResult, setTestResult] = useState<Record<string, unknown> | null>(null);
+  const [testResult, setTestResult] = useState<{ success: boolean; message?: string | undefined; test_mode?: boolean | undefined } | null>(null);
 
   useEffect(() => {
-    fetchKajabiData();
+    void fetchKajabiData();
   }, []);
 
   const fetchKajabiData = async () => {
     try {
-      const response = await fetch('/api/admin/kajabi');
-      if (!response.ok) throw new Error('Failed to fetch Kajabi data');
-      const data = await response.json();
+      const data = await adminClient.getKajabi()
       setEvents(data.events || []);
       setStats(data.stats || null);
     } catch (err) {
@@ -58,24 +58,9 @@ function KajabiPage() {
     setError(null);
 
     try {
-      const response = await fetch('/api/admin/kajabi/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_email: testEmail,
-          course_name: 'Test Course - Admin Console',
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Test failed');
-      }
-
-      setTestResult(data);
-      // Refresh the events list
-      await fetchKajabiData();
+      const res = await adminClient.testKajabi({ user_email: testEmail, course_name: 'Test Course - Admin Console' })
+      setTestResult(res)
+      await fetchKajabiData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Test failed');
     } finally {
@@ -85,15 +70,8 @@ function KajabiPage() {
 
   const handleReprocess = async (eventId: string) => {
     try {
-      const response = await fetch(`/api/admin/kajabi/reprocess`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_id: eventId }),
-      });
-
-      if (!response.ok) throw new Error('Failed to reprocess event');
-      
-      await fetchKajabiData();
+      await adminClient.reprocessKajabi({ event_id: eventId })
+      await fetchKajabiData()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Reprocess failed');
     }

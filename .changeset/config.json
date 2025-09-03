@@ -1,0 +1,32 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@elevate/ui",
+      "@elevate/types",
+      "@elevate/config",
+      "@elevate/security",
+      "@elevate/auth",
+      "@elevate/emails",
+      "@elevate/logic",
+      "@elevate/openapi",
+      "@elevate/storage",
+      "@elevate/integrations",
+      "@elevate/db"
+    ]
+  ],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [],
+  "privatePackages": {
+    "version": true,
+    "tag": true
+  },
+  "snapshot": {
+    "useCalculatedVersion": true
+  }
+}

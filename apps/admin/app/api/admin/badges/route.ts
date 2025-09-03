@@ -1,64 +1,64 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@elevate/db/client'
+import { type NextRequest, NextResponse } from 'next/server'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import { prisma, type Prisma } from '@elevate/db'
+import { BadgeSchema, toPrismaJson, parseBadgeAuditMeta, buildAuditMeta } from '@elevate/types'
 import { z } from 'zod'
+// TODO: Re-enable when @elevate/security package is available
+// import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs';
 
-const BadgeSchema = z.object({
-  code: z.string().min(2).max(50),
-  name: z.string().min(2).max(100),
-  description: z.string().min(10).max(500),
-  criteria: z.object({
-    type: z.enum(['points', 'submissions', 'activities', 'streak']),
-    threshold: z.number().positive(),
-    activity_codes: z.array(z.string()).optional(),
-    conditions: z.record(z.unknown()).optional()
-  }),
-  icon_url: z.string().url().optional()
-})
-
 export async function GET(request: NextRequest) {
+  // TODO: Re-enable rate limiting when @elevate/security is available
+  // return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const user = await requireRole('admin')
     const { searchParams } = new URL(request.url)
     
     const includeStats = searchParams.get('includeStats') === 'true'
     
-    const badges = await prisma.badge.findMany({
-      include: includeStats ? {
-        earned_badges: {
+    // Use separate calls based on includeStats to avoid type inference issues
+    const badges = includeStats 
+      ? await prisma.badge.findMany({
           include: {
-            user: {
+            earned_badges: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    handle: true
+                  }
+                }
+              }
+            },
+            _count: {
               select: {
-                id: true,
-                name: true,
-                handle: true
+                earned_badges: true
               }
             }
+          },
+          orderBy: {
+            code: 'asc'
           }
-        },
-        _count: {
-          select: {
-            earned_badges: true
+        })
+      : await prisma.badge.findMany({
+          orderBy: {
+            code: 'asc'
           }
-        }
-      } : undefined,
-      orderBy: {
-        code: 'asc'
-      }
-    })
+        })
     
-    return NextResponse.json({ badges })
+    return NextResponse.json({ success: true, data: { badges } })
   } catch (error) {
     return createErrorResponse(error, 500)
   }
+  // })
 }
 
 export async function POST(request: NextRequest) {
   try {
     const user = await requireRole('admin')
-    const body = await request.json()
+    const body: unknown = await request.json()
     
     const validation = BadgeSchema.safeParse(body)
     if (!validation.success) {
@@ -87,8 +87,8 @@ export async function POST(request: NextRequest) {
         code: data.code,
         name: data.name,
         description: data.description,
-        criteria: data.criteria as any,
-        icon_url: data.icon_url
+        criteria: toPrismaJson(data.criteria) as Prisma.InputJsonValue,
+        icon_url: data.icon_url ?? null
       }
     })
     
@@ -98,10 +98,10 @@ export async function POST(request: NextRequest) {
         actor_id: user.userId,
         action: 'CREATE_BADGE',
         target_id: badge.code,
-        meta: {
+        meta: buildAuditMeta({ entityType: 'badge', entityId: badge.code }, {
           badgeName: badge.name,
           criteria: badge.criteria
-        } as any
+        }) as Prisma.InputJsonValue
       }
     })
     
@@ -119,12 +119,22 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const user = await requireRole('admin')
-    const body = await request.json()
-    const { code, ...updates } = body
+    const body: unknown = await request.json()
     
-    if (!code) {
+    // Type-safe extraction of code and updates
+    if (!body || typeof body !== 'object') {
       return NextResponse.json(
-        { error: 'Badge code is required' },
+        { error: 'Invalid request body' },
+        { status: 400 }
+      )
+    }
+    
+    const bodyObj = body as Record<string, unknown>
+    const { code, ...updates } = bodyObj
+    
+    if (!code || typeof code !== 'string') {
+      return NextResponse.json(
+        { error: 'Badge code is required and must be a string' },
         { status: 400 }
       )
     }
@@ -151,12 +161,18 @@ export async function PATCH(request: NextRequest) {
       )
     }
     
+    // Build update data object conditionally to avoid passing undefined
+    const updateData: Prisma.BadgeUpdateInput = {}
+    if (validation.data.name !== undefined) updateData.name = validation.data.name
+    if (validation.data.description !== undefined) updateData.description = validation.data.description
+    if (validation.data.icon_url !== undefined) updateData.icon_url = validation.data.icon_url ?? null
+    if (validation.data.criteria !== undefined) {
+      updateData.criteria = toPrismaJson(validation.data.criteria) as Prisma.InputJsonValue
+    }
+    
     const badge = await prisma.badge.update({
       where: { code },
-      data: {
-        ...validation.data,
-        criteria: validation.data.criteria ? validation.data.criteria as any : undefined
-      }
+      data: updateData
     })
     
     // Create audit log
@@ -165,10 +181,10 @@ export async function PATCH(request: NextRequest) {
         actor_id: user.userId,
         action: 'UPDATE_BADGE',
         target_id: code,
-        meta: {
+        meta: buildAuditMeta({ entityType: 'badge', entityId: code }, {
           updates: validation.data,
           original: existing
-        } as any
+        }) as Prisma.InputJsonValue
       }
     })
     
@@ -187,14 +203,13 @@ export async function DELETE(request: NextRequest) {
   try {
     const user = await requireRole('admin')
     const { searchParams } = new URL(request.url)
-    const code = searchParams.get('code')
-    
-    if (!code) {
-      return NextResponse.json(
-        { error: 'Badge code is required' },
-        { status: 400 }
-      )
+    const queryObj = Object.fromEntries(searchParams)
+    const querySchema = z.object({ code: z.string().min(1) })
+    const queryParsed = querySchema.safeParse(queryObj)
+    if (!queryParsed.success) {
+      return createErrorResponse(new Error('Badge code is required'), 400)
     }
+    const { code } = queryParsed.data
     
     const existing = await prisma.badge.findUnique({
       where: { code },
@@ -231,10 +246,10 @@ export async function DELETE(request: NextRequest) {
         actor_id: user.userId,
         action: 'DELETE_BADGE',
         target_id: code,
-        meta: {
+        meta: buildAuditMeta({ entityType: 'badge', entityId: code }, {
           badgeName: existing.name,
           criteria: existing.criteria
-        } as any
+        }) as Prisma.InputJsonValue
       }
     })
     

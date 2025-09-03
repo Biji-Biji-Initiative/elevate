@@ -4,8 +4,8 @@
  */
 
 import { PrismaClient, Role } from '@prisma/client';
-import { TestDatabase, DatabaseAssertions, withTestDatabase } from './helpers';
-import { DatabaseFixtures } from './fixtures';
+import { TestDatabase, DatabaseAssertions, withTestDatabase } from './helpers.js';
+import { DatabaseFixtures } from './fixtures.js';
 
 describe('Row Level Security Policies', () => {
   let testDb: TestDatabase;

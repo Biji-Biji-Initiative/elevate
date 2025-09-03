@@ -1,11 +1,16 @@
 import { headers } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server';
+
 import { Webhook } from 'svix'
-import { WebhookEvent } from '@clerk/nextjs/server'
+
+import { parseClerkPublicMetadata } from '@elevate/auth'
 import { prisma } from '@elevate/db/client'
 import { getKajabiClient } from '@elevate/integrations'
 import { withRateLimit, webhookRateLimiter } from '@elevate/security'
-import type { Role } from '@prisma/client'
+import { parseRole, parseClerkWebhook } from '@elevate/types'
+
+import type { WebhookEvent } from '@clerk/nextjs/server'
+import type { Role , Prisma } from '@prisma/client'
 
 export const runtime = 'nodejs';
 
@@ -34,7 +39,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get the body
-    let payload: WebhookEvent;
+    let payload: unknown;
     let body: string;
     
     try {
@@ -45,20 +50,30 @@ export async function POST(req: NextRequest) {
         status: 400,
       });
     }
+    
+    // Validate the payload structure early
+    const validatedEvent = parseClerkWebhook(payload);
+    if (!validatedEvent) {
+      return new NextResponse('Invalid Clerk webhook event format', {
+        status: 400,
+      });
+    }
 
     // Store raw event for audit trail (before verification)
     try {
+      const auditMeta: Prisma.InputJsonValue = {
+        event_type: validatedEvent.type,
+        svix_id: svixId,
+        timestamp: svixTimestamp,
+        verified: false
+      };
+      
       await prisma.auditLog.create({
         data: {
           actor_id: 'clerk-webhook',
           action: 'WEBHOOK_RECEIVED',
-          target_id: payload?.data?.id || 'unknown',
-          meta: {
-            event_type: payload?.type,
-            svix_id: svixId,
-            timestamp: svixTimestamp,
-            verified: false
-          }
+          target_id: validatedEvent.data.id,
+          meta: auditMeta
         }
       });
     } catch (auditError) {
@@ -76,20 +91,22 @@ export async function POST(req: NextRequest) {
         'svix-id': svixId,
         'svix-timestamp': svixTimestamp,
         'svix-signature': svixSignature,
-      }) as WebhookEvent
+      }) as WebhookEvent  // Safe cast since we validated the structure earlier
     } catch (err) {
       
       // Log failed verification attempt
+      const failureMeta: Prisma.InputJsonValue = {
+        error: err instanceof Error ? err.message : String(err),
+        svix_id: svixId,
+        event_type: validatedEvent.type
+      };
+      
       await prisma.auditLog.create({
         data: {
           actor_id: 'clerk-webhook',
           action: 'WEBHOOK_VERIFICATION_FAILED',
-          target_id: payload?.data?.id || 'unknown',
-          meta: {
-            error: err instanceof Error ? err.message : String(err),
-            svix_id: svixId,
-            event_type: payload?.type
-          }
+          target_id: validatedEvent.data.id,
+          meta: failureMeta
         }
       });
       
@@ -116,7 +133,8 @@ export async function POST(req: NextRequest) {
 
         // Create a unique handle from email or name
         const name = `${first_name || ''} ${last_name || ''}`.trim() || 'Anonymous User'
-        const baseHandle = (first_name?.toLowerCase() || email.split('@')[0]).replace(/[^a-z0-9]/g, '')
+        const emailParts = email.split('@')
+        const baseHandle = (first_name?.toLowerCase() || emailParts[0] || 'user').replace(/[^a-z0-9]/g, '')
         let handle = baseHandle
         let counter = 1
 
@@ -132,27 +150,38 @@ export async function POST(req: NextRequest) {
         }
 
         // Get role from metadata (defaults to PARTICIPANT)
-        const role = (public_metadata as Record<string, unknown>)?.role as string || 'PARTICIPANT'
-        const validRoles = ['PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN']
-        const userRole = validRoles.includes(role) ? role : 'PARTICIPANT'
+        const publicMetadata = parseClerkPublicMetadata(public_metadata)
+        const userRole = parseRole(publicMetadata.role) || 'PARTICIPANT' as Role
 
         // Upsert user in database
+        const updateData: {
+          name: string;
+          email: string;
+          avatar_url: string | null;
+          role: any;
+          handle?: string;
+        } = {
+          name,
+          email,
+          avatar_url: image_url || null,
+          role: userRole,
+        }
+        
+        // Only include handle field for user creation events
+        if (eventType === 'user.created' && handle) {
+          updateData.handle = handle
+        }
+        
         const upsertedUser = await prisma.user.upsert({
           where: { id },
-          update: {
-            name,
-            email,
-            avatar_url: image_url || null,
-            role: userRole as Role,
-            handle: eventType === 'user.created' ? handle : undefined, // Only update handle on creation
-          },
+          update: updateData,
           create: {
             id,
-            handle,
+            handle: handle || 'user',
             name,
             email,
             avatar_url: image_url || null,
-            role: userRole as Role,
+            role: userRole,
           },
         })
 
@@ -169,32 +198,36 @@ export async function POST(req: NextRequest) {
             });
 
             // Create audit log for Kajabi enrollment
+            const enrollmentMeta: Prisma.InputJsonValue = {
+              kajabi_contact_id: kajabiContact.id,
+              email: email,
+              name: name
+            };
+            
             await prisma.auditLog.create({
               data: {
                 actor_id: 'system',
                 action: 'KAJABI_USER_ENROLLED',
                 target_id: id,
-                meta: {
-                  kajabi_contact_id: kajabiContact.id,
-                  email: email,
-                  name: name
-                }
+                meta: enrollmentMeta
               }
             });
 
           } catch (kajabiError) {
             // Don't fail the webhook if Kajabi enrollment fails
             // Log the error for manual follow-up
+            const enrollmentFailureMeta: Prisma.InputJsonValue = {
+              error: kajabiError instanceof Error ? kajabiError.message : String(kajabiError),
+              email: email,
+              name: name
+            };
+            
             await prisma.auditLog.create({
               data: {
                 actor_id: 'system',
                 action: 'KAJABI_ENROLLMENT_FAILED',
                 target_id: id,
-                meta: {
-                  error: kajabiError instanceof Error ? kajabiError.message : String(kajabiError),
-                  email: email,
-                  name: name
-                }
+                meta: enrollmentFailureMeta
               }
             });
           }
@@ -205,11 +238,11 @@ export async function POST(req: NextRequest) {
 
       case 'user.deleted': {
         const { id } = evt.data
-        
+        if (!id) break
         // Note: Instead of deleting, we might want to mark as inactive
         // For GDPR compliance, we'll actually delete the user data
         await prisma.user.delete({
-          where: { id: id! },
+          where: { id },
         })
 
         break
@@ -222,15 +255,26 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     
     // Log error for debugging
+    const errorMeta: Prisma.InputJsonValue = {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    };
+    
+    // Try to get target_id from the payload if available
+    let targetId = 'unknown';
+    try {
+      const parsedPayload = parseClerkWebhook(payload);
+      targetId = parsedPayload?.data?.id || 'unknown';
+    } catch {
+      // Keep default 'unknown'
+    }
+    
     await prisma.auditLog.create({
       data: {
         actor_id: 'clerk-webhook',
         action: 'WEBHOOK_ERROR',
-        target_id: 'unknown',
-        meta: {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined
-        }
+        target_id: targetId,
+        meta: errorMeta
       }
     });
     

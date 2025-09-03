@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@elevate/db/client';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
-import type { KajabiTagEvent } from '@elevate/types';
+import { prisma, type Prisma } from '@elevate/db';
+import { toPrismaJson, parseKajabiWebhook, KajabiReprocessSchema, type KajabiTagEvent, buildAuditMeta } from '@elevate/types';
 
 export const runtime = 'nodejs';
 
@@ -14,8 +15,12 @@ export async function POST(request: NextRequest) {
     // Check admin role
     await requireRole('admin');
 
-    const body: ReprocessRequest = await request.json();
-    const { event_id } = body;
+    const body: unknown = await request.json();
+    const parsed = KajabiReprocessSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+    const { event_id } = parsed.data;
 
     if (!event_id) {
       return NextResponse.json(
@@ -43,7 +48,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const eventData = kajabiEvent.payload as any;
+    // Parse and validate the event payload
+    const eventData = parseKajabiWebhook(kajabiEvent.payload);
+    
+    if (!eventData) {
+      return NextResponse.json(
+        { error: 'Invalid event payload format' },
+        { status: 400 }
+      );
+    }
 
     // Process tag-based events only (same logic as webhook)
     if (eventData.event_type !== 'contact.tagged') {
@@ -53,7 +66,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { contact, tag } = eventData.data;
+    const { contact, tag } = eventData;
     
     // Extract contact information
     const email = contact.email?.toLowerCase().trim();
@@ -154,15 +167,15 @@ export async function POST(request: NextRequest) {
           activity_code: 'LEARN',
           status: 'APPROVED',
           visibility: 'PRIVATE',
-          payload: {
+          payload: toPrismaJson({
             tag_name: tagName,
             kajabi_contact_id: contactId,
             completion_date: new Date().toISOString(),
             provider: 'Kajabi',
             auto_approved: true,
             source: 'reprocess_admin'
-          },
-          attachments: []
+          }) as Prisma.InputJsonValue,
+          attachments: toPrismaJson([]) as Prisma.InputJsonValue
         }
       });
 
@@ -181,13 +194,13 @@ export async function POST(request: NextRequest) {
           actor_id: 'admin',
           action: 'KAJABI_EVENT_REPROCESSED',
           target_id: user.id,
-          meta: {
+          meta: buildAuditMeta({ entityType: 'kajabi', entityId: event_id }, {
             event_id: event_id,
             tag_name: tagName,
             kajabi_contact_id: contactId,
             points_awarded: learnActivity.default_points,
             reprocessed_at: new Date().toISOString()
-          }
+          }) as Prisma.InputJsonValue
         }
       });
 

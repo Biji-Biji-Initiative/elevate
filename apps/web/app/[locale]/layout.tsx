@@ -1,10 +1,14 @@
+import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
-import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+
 import { ClientHeader, Footer, Button } from '@elevate/ui'
-import { Metadata } from 'next'
+
+
 import { locales } from '../../i18n'
 import LanguageSwitcher from '../components/LanguageSwitcher'
+
+import type { Metadata } from 'next'
 
 type Props = {
   children: React.ReactNode;

@@ -5,17 +5,24 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/js/index.js"
+    },
+    "./package.json": "./package.json"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/js/index.js",
+  "types": "./dist/types/index.d.ts",
   "scripts": {
     "dev": "echo 'Email templates ready'",
-    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build": "pnpm run build:types && tsup --config tsup.config.ts",
     "clean": "rm -rf dist",
-    "export": "echo 'Email templates exported'"
+    "export": "echo 'Email templates exported'",
+    "build:types": "tsc -b --force tsconfig.build.json",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --max-warnings 0",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --fix",
+    "type-check": "tsc --noEmit",
+    "api:extract": "../../node_modules/.bin/api-extractor run --local",
+    "api:check": "../../node_modules/.bin/api-extractor run"
   },
   "dependencies": {
     "@react-email/components": "^0.0.25",
@@ -32,5 +39,33 @@
     "react-email": "^3.0.1",
     "typescript": "^5.9.2",
     "tsup": "^8.3.7"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.11"
+  },
+  "files": [
+    "dist/js",
+    "dist/types",
+    "README.md",
+    "LICENSE",
+    "dist/js/**/*.map"
+  ],
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/types/*"
+      ]
+    }
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/elevate.git",
+    "directory": "packages/emails"
   }
 }

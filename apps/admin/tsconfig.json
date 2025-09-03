@@ -4,6 +4,7 @@
     "jsx": "preserve",
     "allowJs": true,
     "noEmit": true,
+    "composite": true,
     "incremental": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -20,7 +21,6 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "app",
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
@@ -29,5 +29,17 @@
     "**/*.md",
     "**/*.mdx",
     "*.md"
+  ],
+  "references": [
+    { "path": "../../packages/types" },
+    { "path": "../../packages/ui" },
+    { "path": "../../packages/auth" },
+    { "path": "../../packages/db" },
+    { "path": "../../packages/openapi" },
+    { "path": "../../packages/integrations" },
+    { "path": "../../packages/security" },
+    { "path": "../../packages/storage" },
+    { "path": "../../packages/config" },
+    { "path": "../../packages/logic" }
   ]
 }

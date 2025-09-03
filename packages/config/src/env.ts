@@ -101,6 +101,8 @@ export const WebEnvSchema = EnvSchema.extend({
     .startsWith("whsec_", "Clerk webhook secret must start with 'whsec_'"),
 });
 
+export type WebEnv = z.infer<typeof WebEnvSchema>
+
 // Admin app specific env vars - minimal requirements
 export const AdminEnvSchema = EnvSchema.pick({
   DATABASE_URL: true,
@@ -119,7 +121,7 @@ function withAliases(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return {
     ...env,
     // Support both SUPABASE_SERVICE_ROLE_KEY and SUPABASE_SERVICE_ROLE
-    SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY || (env as Record<string, string | undefined>).SUPABASE_SERVICE_ROLE,
+    SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY || ('SUPABASE_SERVICE_ROLE' in env ? env.SUPABASE_SERVICE_ROLE : undefined),
   }
 }
 
@@ -175,7 +177,7 @@ export function parseEnv(env: NodeJS.ProcessEnv, schema: z.ZodSchema = EnvSchema
 }
 
 // Helper functions for specific app types with enhanced error handling
-export function parseWebEnv(env: NodeJS.ProcessEnv = process.env) {
+export function parseWebEnv(env: NodeJS.ProcessEnv = process.env): WebEnv {
   
   try {
     const parsed = parseEnv(withAliases(env), WebEnvSchema);
@@ -190,7 +192,7 @@ export function parseWebEnv(env: NodeJS.ProcessEnv = process.env) {
       }
     }
     
-    return parsed;
+    return parsed as WebEnv;
   } catch (error) {
     console.error('❌ Web app environment validation failed:', error);
     process.exit(1); // Fail fast

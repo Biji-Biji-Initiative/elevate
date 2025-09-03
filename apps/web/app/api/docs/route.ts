@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { spec } from '@elevate/openapi';
 
 export const runtime = 'nodejs';

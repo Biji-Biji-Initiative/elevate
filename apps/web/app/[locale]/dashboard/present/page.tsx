@@ -1,12 +1,17 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+
 import { useAuth } from '@clerk/nextjs'
-import { Button, Input, Textarea, Card, CardContent, FormField, LoadingSpinner, Alert } from '@elevate/ui'
-import { FileUpload, FileList, UploadedFile } from '@elevate/ui/FileUpload'
-import { PresentSchema, PresentInput } from '@elevate/types/schemas'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+
+import { PresentSchema, type PresentInput } from '@elevate/types/schemas'
+import { Button, Input, Textarea, Card, FormField, LoadingSpinner, Alert, AlertTitle, AlertDescription, FileUpload, FileList, type UploadedFile } from '@elevate/ui'
+
+
+import { getApiClient } from '../../../../lib/api-client'
 
 export default function PresentFormPage() {
   const { userId } = useAuth()
@@ -37,6 +42,9 @@ export default function PresentFormPage() {
 
   const handleFileSelect = async (files: File[]) => {
     const file = files[0] // Only allow one screenshot file
+    if (!file) {
+      return // Early exit if no file selected
+    }
     
     // Validate that it's an image
     if (!file.type.startsWith('image/')) {
@@ -56,16 +64,8 @@ export default function PresentFormPage() {
       formData.append('file', file)
       formData.append('activityCode', 'PRESENT')
 
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Upload failed')
-      }
+      const api = getApiClient()
+      const result = await api.uploadFile(file, 'PRESENT')
 
       // Update the file with upload results
       setUploadedFiles([{
@@ -103,7 +103,8 @@ export default function PresentFormPage() {
       return
     }
 
-    if (uploadedFiles.length === 0 || !uploadedFiles[0].path) {
+    const firstFile = uploadedFiles[0]
+    if (uploadedFiles.length === 0 || !firstFile || !firstFile.path) {
       setSubmitStatus({ type: 'error', message: 'Please upload a screenshot of your LinkedIn post' })
       return
     }
@@ -115,28 +116,17 @@ export default function PresentFormPage() {
       const payload = {
         linkedinUrl: data.linkedinUrl,
         caption: data.caption,
-        screenshotFile: uploadedFiles[0].path,
-        screenshotHash: uploadedFiles[0].hash
+        screenshotFile: firstFile.path,
+        screenshotHash: firstFile.hash
       }
 
-      const response = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          activityCode: 'PRESENT',
-          payload,
-          attachments: [uploadedFiles[0].path],
-          visibility: makePublic ? 'PUBLIC' : 'PRIVATE'
-        })
+      const api2 = getApiClient()
+      await api2.createSubmission({
+        activityCode: 'PRESENT',
+        payload,
+        attachments: [firstFile.path],
+        visibility: makePublic ? 'PUBLIC' : 'PRIVATE'
       })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Submission failed')
-      }
 
       setSubmitStatus({ 
         type: 'success', 
@@ -172,8 +162,8 @@ export default function PresentFormPage() {
             variant={submitStatus.type === 'error' ? 'destructive' : 'default'} 
             className="mb-6"
           >
-            <h4 className="font-semibold">{submitStatus.type === 'success' ? 'Success!' : 'Error'}</h4>
-            {submitStatus.message}
+            <AlertTitle>{submitStatus.type === 'success' ? 'Success!' : 'Error'}</AlertTitle>
+            <AlertDescription>{submitStatus.message}</AlertDescription>
           </Alert>
         )}
 
@@ -189,7 +179,6 @@ export default function PresentFormPage() {
                 {...register('linkedinUrl')}
                 type="url"
                 placeholder="https://www.linkedin.com/posts/..."
-                error={!!errors.linkedinUrl || (!isValidLinkedInUrl(watchedUrl) && !!watchedUrl)}
               />
               {watchedUrl && isValidLinkedInUrl(watchedUrl) && (
                 <div className="text-sm text-green-600 mt-1">✓ Valid LinkedIn URL</div>
@@ -224,7 +213,6 @@ export default function PresentFormPage() {
                 {...register('caption')}
                 placeholder="Describe your LinkedIn post content, key message, and how it relates to AI in education..."
                 rows={4}
-                error={!!errors.caption}
               />
               <div className="text-right text-sm text-gray-500 mt-1">
                 {(watchedCaption?.length || 0)}/10 characters minimum

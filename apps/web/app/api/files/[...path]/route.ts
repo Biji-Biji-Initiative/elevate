@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import path from 'path'
+
+import { type NextRequest, NextResponse } from 'next/server'
+
 import { auth } from '@clerk/nextjs/server'
-import { getSignedUrl, parseStoragePath } from '@elevate/storage'
+
 import { prisma } from '@elevate/db/client'
 import { withRateLimit, apiRateLimiter } from '@elevate/security'
-import path from 'path'
+import { getSignedUrl, parseStoragePath, deleteEvidenceFile } from '@elevate/storage'
+
 
 export const runtime = 'nodejs';
 
@@ -205,12 +209,13 @@ export async function DELETE(
     }
 
       // Remove file from Supabase Storage (implemented in storage package)
-      // For now, we'll just return success as the actual deletion would be handled
-      // through the submission update process
-      return NextResponse.json({
-        success: true,
-        message: 'File marked for deletion'
-      })
+      try {
+        await deleteEvidenceFile(filePath)
+      } catch (e) {
+        return NextResponse.json({ error: 'Storage deletion failed' }, { status: 502 })
+      }
+
+      return NextResponse.json({ success: true, message: 'File deleted' })
 
     } catch (error) {
       

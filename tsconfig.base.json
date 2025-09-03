@@ -3,21 +3,28 @@
     "target": "ES2022",
     "lib": ["ES2022", "DOM"],
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
     "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "useUnknownInCatchVariables": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@elevate/db/*": ["packages/db/*"],
-      "@elevate/types/*": ["packages/types/*"],
-      "@elevate/auth/*": ["packages/auth/*"],
-      "@elevate/storage/*": ["packages/storage/*"],
-      "@elevate/logic/*": ["packages/logic/*"],
-      "@elevate/config/*": ["packages/config/*"],
-      "@elevate/ui/*": ["packages/ui/*"],
-      "@elevate/security/*": ["packages/security/*"]
+      "@elevate/db/*": ["packages/db/src/*"],
+      "@elevate/types/*": ["packages/types/src/*"],
+      "@elevate/auth/*": ["packages/auth/src/*"],
+      "@elevate/storage/*": ["packages/storage/src/*"],
+      "@elevate/logic/*": ["packages/logic/src/*"],
+      "@elevate/config/*": ["packages/config/src/*"],
+      "@elevate/ui/*": ["packages/ui/src/*"],
+      "@elevate/security/*": ["packages/security/src/*"],
+      "@elevate/emails/*": ["packages/emails/src/*"],
+      "@elevate/integrations/*": ["packages/integrations/src/*"],
+      "@elevate/openapi/*": ["packages/openapi/src/*"]
     }
   }
 }

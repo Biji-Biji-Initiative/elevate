@@ -1,37 +1,41 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@elevate/ui'
-import { Input, DataTable, StatusBadge, Modal, ConfirmModal, Textarea } from '@elevate/ui'
-import type { Column } from '@elevate/ui'
-import { withRoleGuard } from '@elevate/auth/context'
 
-interface Submission extends Record<string, unknown> {
+import { useRouter } from 'next/navigation'
+
+import { withRoleGuard } from '@elevate/auth/context'
+import { adminClient, type SubmissionsQuery } from '@/lib/admin-client'
+import type { TableFilters, PaginationConfig } from '@elevate/types'
+import { Button , Input, DataTable, StatusBadge, Modal, ConfirmModal, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, createColumns, Alert } from '@elevate/ui'
+import type { Column } from '@elevate/ui'
+
+// Define Submission type based on what adminClient actually returns
+type Submission = {
   id: string
+  created_at: string
+  updated_at?: string | undefined
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  visibility: 'PUBLIC' | 'PRIVATE'
+  review_note?: string | null | undefined
+  attachments?: unknown[] | undefined
   user: {
     id: string
     name: string
     handle: string
-    email: string
-    school?: string
-    cohort?: string
+    email?: string | undefined
+    school?: string | null | undefined
+    cohort?: string | null | undefined
   }
   activity: {
     code: string
     name: string
+    default_points?: number | undefined
   }
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-  visibility: 'PUBLIC' | 'PRIVATE'
-  payload: Record<string, unknown>
-  attachments: string[]
-  reviewer_id?: string
-  review_note?: string
-  created_at: string
-  updated_at: string
 }
 
-interface Filters {
+// Using TableFilters from @elevate/types with proper typing
+interface Filters extends TableFilters {
   status: string
   activity: string
   search: string
@@ -45,6 +49,7 @@ function SubmissionsPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [cohorts, setCohorts] = useState<string[]>([])
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 50,
@@ -60,6 +65,21 @@ function SubmissionsPage() {
     sortBy: 'created_at',
     sortOrder: 'desc'
   })
+
+  useEffect(() => {
+    const fetchCohorts = async () => {
+      try {
+        const result = await adminClient.getCohorts()
+        setCohorts(result)
+      } catch (error) {
+        // Cohorts are optional for UI, don't break on fetch failure
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to fetch cohorts:', error);
+        }
+      }
+    }
+    void fetchCohorts()
+  }, [])
   
   // Modal states
   const [reviewModal, setReviewModal] = useState<{
@@ -82,8 +102,9 @@ function SubmissionsPage() {
   const [reviewNote, setReviewNote] = useState('')
   const [pointAdjustment, setPointAdjustment] = useState<number | ''>('')
   const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const columns: Column<Submission>[] = [
+  const columns = createColumns<Submission>()([
     {
       key: 'created_at',
       header: 'Date',
@@ -130,11 +151,14 @@ function SubmissionsPage() {
     {
       key: 'attachments',
       header: 'Files',
-      render: (row) => (
-        <span className="text-sm text-gray-600">
-          {row.attachments?.length || 0} files
-        </span>
-      ),
+      render: (row) => {
+        const attachmentCount = Array.isArray(row.attachments) ? row.attachments.length : 0
+        return (
+          <span className="text-sm text-gray-600">
+            {attachmentCount} files
+          </span>
+        )
+      },
       width: '80px',
       sortable: false
     },
@@ -146,7 +170,7 @@ function SubmissionsPage() {
           <Button
             variant="ghost"
             style={{ padding: '4px 8px', fontSize: '12px' }}
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.stopPropagation()
               router.push(`/admin/review/${row.id}`)
             }}
@@ -162,7 +186,7 @@ function SubmissionsPage() {
                   fontSize: '12px',
                   backgroundColor: '#16a34a' 
                 }}
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.stopPropagation()
                   openReviewModal(row, 'approve')
                 }}
@@ -176,7 +200,7 @@ function SubmissionsPage() {
                   fontSize: '12px',
                   backgroundColor: '#dc2626' 
                 }}
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                   e.stopPropagation()
                   openReviewModal(row, 'reject')
                 }}
@@ -190,10 +214,10 @@ function SubmissionsPage() {
       width: '200px',
       sortable: false
     }
-  ]
+  ])
 
   useEffect(() => {
-    fetchSubmissions()
+    void fetchSubmissions()
   }, [pagination.page, pagination.limit, filters])
 
   const fetchSubmissions = async () => {
@@ -211,19 +235,11 @@ function SubmissionsPage() {
       if (filters.search) params.set('search', filters.search)
       if (filters.cohort !== 'ALL') params.set('cohort', filters.cohort)
 
-      const response = await fetch(`/api/admin/submissions?${params}`)
-      const data = await response.json()
-      
-      if (response.ok) {
-        setSubmissions(data.submissions)
-        setPagination(prev => ({
-          ...prev,
-          total: data.pagination.total,
-          pages: data.pagination.pages
-        }))
-      } else {
-      }
+      const { submissions, pagination: pageInfo } = await adminClient.getSubmissions(Object.fromEntries(params) as SubmissionsQuery)
+      setSubmissions(submissions)
+      setPagination(prev => ({ ...prev, total: pageInfo.total, pages: pageInfo.pages }))
     } catch (error) {
+      setError('Failed to fetch submissions')
     } finally {
       setLoading(false)
     }
@@ -259,27 +275,18 @@ function SubmissionsPage() {
 
     setProcessing(true)
     try {
-      const response = await fetch('/api/admin/submissions', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          submissionId: reviewModal.submission.id,
-          action: reviewModal.action,
-          reviewNote: reviewNote || undefined,
-          pointAdjustment: pointAdjustment !== '' ? Number(pointAdjustment) : undefined
-        })
-      })
-
-      const data = await response.json()
-      
-      if (response.ok) {
-        await fetchSubmissions() // Refresh data
-        closeReviewModal()
-      } else {
-        alert(`Error: ${data.error}`)
+      const reviewData: Parameters<typeof adminClient.reviewSubmission>[0] = {
+        submissionId: reviewModal.submission.id,
+        action: reviewModal.action,
       }
+      if (reviewNote) reviewData.reviewNote = reviewNote
+      if (pointAdjustment !== '') reviewData.pointAdjustment = Number(pointAdjustment)
+      
+      await adminClient.reviewSubmission(reviewData)
+      await fetchSubmissions()
+      closeReviewModal()
     } catch (error) {
-      alert('Failed to process review')
+      setError('Failed to process review')
     } finally {
       setProcessing(false)
     }
@@ -290,53 +297,51 @@ function SubmissionsPage() {
 
     setProcessing(true)
     try {
-      const response = await fetch('/api/admin/submissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          submissionIds: Array.from(selectedRows),
-          action: bulkModal.action,
-          reviewNote: reviewNote || undefined
-        })
-      })
-
-      const data = await response.json()
-      
-      if (response.ok) {
-        setSelectedRows(new Set())
-        await fetchSubmissions()
-        setBulkModal({ isOpen: false, action: 'approve' })
-        setReviewNote('')
-      } else {
-        alert(`Error: ${data.error}`)
+      const bulkReviewData: Parameters<typeof adminClient.bulkReview>[0] = {
+        submissionIds: Array.from(selectedRows),
+        action: bulkModal.action,
       }
+      if (reviewNote) bulkReviewData.reviewNote = reviewNote
+      
+      await adminClient.bulkReview(bulkReviewData)
+      setSelectedRows(new Set())
+      await fetchSubmissions()
+      setBulkModal({ isOpen: false, action: 'approve' })
+      setReviewNote('')
     } catch (error) {
-      alert('Failed to process bulk action')
+      setError('Failed to process bulk action')
     } finally {
       setProcessing(false)
     }
   }
 
   const getBasePoints = (submission: Submission): number => {
-    const activityPoints: Record<string, number> = {
+    const activityPoints: Readonly<Record<string, number>> = {
       'LEARN': 20,
       'EXPLORE': 50,
       'AMPLIFY': 0, // Calculated based on payload
       'PRESENT': 20,
       'SHINE': 0
-    }
+    } as const
 
+    // Note: The adminClient doesn't return payload data for submissions
+    // This calculation would need the payload to be included in the SubmissionSchema
+    // For now, returning default points
     if (submission.activity.code === 'AMPLIFY') {
-      const peers = Number(submission.payload?.peersTrained || 0)
-      const students = Number(submission.payload?.studentsTrained || 0)
-      return Math.min(peers, 50) * 2 + Math.min(students, 200) * 1
+      // TODO: Add payload to SubmissionSchema in adminClient
+      return submission.activity.default_points || 0
     }
 
-    return activityPoints[submission.activity.code] || 0
+    return activityPoints[submission.activity.code] ?? 0
   }
 
   return (
     <div className="p-6">
+      {error && (
+        <div className="mb-4">
+          <Alert variant="destructive">{error}</Alert>
+        </div>
+      )}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Review Queue</h1>
         <p className="text-gray-600">Review and approve participant submissions</p>
@@ -346,47 +351,50 @@ function SubmissionsPage() {
       <div className="bg-white p-4 rounded-lg border mb-6">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filters.status}
-              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-            >
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-              <option value="ALL">All Status</option>
-            </select>
+            <label id="submissions-filter-status-label" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
+              <SelectTrigger aria-labelledby="submissions-filter-status-label">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="PENDING">Pending</SelectItem>
+                <SelectItem value="APPROVED">Approved</SelectItem>
+                <SelectItem value="REJECTED">Rejected</SelectItem>
+                <SelectItem value="ALL">All Status</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Activity</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filters.activity}
-              onChange={(e) => setFilters(prev => ({ ...prev, activity: e.target.value }))}
-            >
-              <option value="ALL">All Activities</option>
-              <option value="LEARN">Learn</option>
-              <option value="EXPLORE">Explore</option>
-              <option value="AMPLIFY">Amplify</option>
-              <option value="PRESENT">Present</option>
-              <option value="SHINE">Shine</option>
-            </select>
+            <label id="submissions-filter-activity-label" className="block text-sm font-medium text-gray-700 mb-1">Activity</label>
+            <Select value={filters.activity} onValueChange={(value) => setFilters(prev => ({ ...prev, activity: value }))}>
+              <SelectTrigger aria-labelledby="submissions-filter-activity-label">
+                <SelectValue placeholder="Select activity" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Activities</SelectItem>
+                <SelectItem value="LEARN">Learn</SelectItem>
+                <SelectItem value="EXPLORE">Explore</SelectItem>
+                <SelectItem value="AMPLIFY">Amplify</SelectItem>
+                <SelectItem value="PRESENT">Present</SelectItem>
+                <SelectItem value="SHINE">Shine</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filters.cohort}
-              onChange={(e) => setFilters(prev => ({ ...prev, cohort: e.target.value }))}
-            >
-              <option value="ALL">All Cohorts</option>
-              <option value="Batch 1">Batch 1</option>
-              <option value="Batch 2">Batch 2</option>
-              <option value="Batch 3">Batch 3</option>
-            </select>
+            <label id="submissions-filter-cohort-label" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
+            <Select value={filters.cohort} onValueChange={(value) => setFilters(prev => ({ ...prev, cohort: value }))}>
+              <SelectTrigger aria-labelledby="submissions-filter-cohort-label">
+                <SelectValue placeholder="Select cohort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Cohorts</SelectItem>
+                {cohorts.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -440,7 +448,7 @@ function SubmissionsPage() {
       </div>
 
       {/* Data Table */}
-      <DataTable
+      <DataTable<Submission>
         data={submissions}
         columns={columns}
         loading={loading}
@@ -503,27 +511,29 @@ function SubmissionsPage() {
             </div>
 
             {reviewModal.action === 'approve' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Point Adjustment (Optional)
-                </label>
-                <Input
-                  type="number"
-                  placeholder={`Base points: ${getBasePoints(reviewModal.submission)}`}
-                  value={pointAdjustment}
-                  onChange={(e) => setPointAdjustment(e.target.value === '' ? '' : Number(e.target.value))}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Leave empty to use base points. Max ±20% adjustment allowed.
-                </p>
-              </div>
+            <div>
+              <label htmlFor="point-adjustment-input" className="block text-sm font-medium text-gray-700 mb-1">
+                Point Adjustment (Optional)
+              </label>
+              <Input
+                id="point-adjustment-input"
+                type="number"
+                placeholder={`Base points: ${getBasePoints(reviewModal.submission)}`}
+                value={pointAdjustment}
+                onChange={(e) => setPointAdjustment(e.target.value === '' ? '' : Number(e.target.value))}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Leave empty to use base points. Max ±20% adjustment allowed.
+              </p>
+            </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="review-notes-textarea" className="block text-sm font-medium text-gray-700 mb-1">
                 Review Notes (Optional)
               </label>
               <Textarea
+                id="review-notes-textarea"
                 placeholder="Add feedback for the participant..."
                 rows={3}
                 value={reviewNote}

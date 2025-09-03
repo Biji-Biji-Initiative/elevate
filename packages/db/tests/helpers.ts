@@ -4,7 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { DatabaseFixtures } from './fixtures';
+import { DatabaseFixtures } from './fixtures.js';
 
 // Test database configuration
 const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL;

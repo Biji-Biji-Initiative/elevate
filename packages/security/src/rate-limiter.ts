@@ -1,5 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Optional Redis client (Upstash) for multi-instance rate limiting
+type RedisLike = {
+  incr: (key: string) => Promise<number>
+  pexpire: (key: string, ttlMs: number) => Promise<unknown>
+  pttl: (key: string) => Promise<number>
+};
+
+let redis: RedisLike | null = null;
+async function getRedis(): Promise<RedisLike | null> {
+  if (redis !== null) return redis;
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) {
+    redis = null;
+    return null;
+  }
+  try {
+    // Dynamically import to keep it optional
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    const mod = await import('@upstash/redis');
+    const client = new mod.Redis({ url, token });
+    redis = client as unknown as RedisLike;
+    return redis;
+  } catch {
+    redis = null;
+    return null;
+  }
+}
+
 interface RateLimiterConfig {
   windowMs: number; // Time window in milliseconds
   maxRequests: number; // Max requests per window
@@ -13,7 +42,7 @@ interface RequestRecord {
   resetTime: number;
 }
 
-// In-memory store for rate limiting (use Redis in production)
+// In-memory store for rate limiting (fallback when Redis not configured)
 const store = new Map<string, RequestRecord>();
 
 // Cleanup old records every 5 minutes
@@ -52,7 +81,8 @@ export class RateLimiter {
     
     if (xForwardedFor) {
       // X-Forwarded-For can contain multiple IPs, take the first one
-      return xForwardedFor.split(',')[0].trim();
+      const firstIp = xForwardedFor.split(',')[0];
+      return firstIp ? firstIp.trim() : 'unknown-ip';
     }
     
     if (xRealIp) return xRealIp;
@@ -69,32 +99,33 @@ export class RateLimiter {
   }> {
     const key = this.getKey(request);
     const now = Date.now();
-    const windowStart = now;
     const windowEnd = now + this.config.windowMs;
 
-    let record = store.get(key);
-    
-    if (!record || record.resetTime <= now) {
-      // Create new record or reset expired one
-      record = {
-        count: 0,
-        resetTime: windowEnd
-      };
+    const client = await getRedis();
+    if (client) {
+      // Multi-instance safe using Redis INCR + PEXPIRE
+      const redisKey = `rl:${key}`;
+      const count = await client.incr(redisKey);
+      if (count === 1) {
+        await client.pexpire(redisKey, this.config.windowMs);
+      }
+      const ttl = await client.pttl(redisKey);
+      const reset = ttl > 0 ? now + ttl : windowEnd;
+      const allowed = count <= this.config.maxRequests;
+      const remaining = Math.max(0, this.config.maxRequests - count);
+      return { allowed, remaining, resetTime: reset, totalRequests: count };
     }
 
-    // Increment request count
+    // Fallback: in-memory (single instance only)
+    let record = store.get(key);
+    if (!record || record.resetTime <= now) {
+      record = { count: 0, resetTime: windowEnd };
+    }
     record.count++;
     store.set(key, record);
-
     const allowed = record.count <= this.config.maxRequests;
     const remaining = Math.max(0, this.config.maxRequests - record.count);
-
-    return {
-      allowed,
-      remaining,
-      resetTime: record.resetTime,
-      totalRequests: record.count
-    };
+    return { allowed, remaining, resetTime: record.resetTime, totalRequests: record.count };
   }
 
   public createMiddleware() {
@@ -136,7 +167,9 @@ export const webhookRateLimiter = new RateLimiter({
   maxRequests: parseInt(process.env.WEBHOOK_RATE_LIMIT_RPM || '120'),
   keyGenerator: (request) => {
     // For webhooks, rate limit by IP + User-Agent + specific headers
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+    const xForwardedFor = request.headers.get('x-forwarded-for');
+    const firstIp = xForwardedFor?.split(',')[0];
+    const ip = firstIp?.trim() || 
                request.headers.get('x-real-ip') || 
                'unknown-ip';
     const userAgent = request.headers.get('user-agent') || 'unknown';
@@ -150,6 +183,11 @@ export const webhookRateLimiter = new RateLimiter({
 export const apiRateLimiter = new RateLimiter({
   windowMs: 60 * 1000, // 1 minute
   maxRequests: parseInt(process.env.RATE_LIMIT_RPM || '60'),
+});
+
+export const adminRateLimiter = new RateLimiter({
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: parseInt(process.env.ADMIN_RATE_LIMIT_RPM || '40'),
 });
 
 // Helper function to apply rate limiting

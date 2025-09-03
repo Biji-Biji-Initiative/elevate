@@ -1,2 +1,2 @@
-export * from '../scoring'
-export * from '../badges'
+export * from './scoring.js'
+export * from './badges.js'

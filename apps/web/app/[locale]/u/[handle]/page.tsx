@@ -1,8 +1,14 @@
 import { Suspense } from 'react'
+
 import { notFound } from 'next/navigation'
-import { Metadata } from 'next'
+
+
+import { z } from 'zod'
+import { getProfileUrl, parseSubmissionPayload, parseLearnPayload, parseExplorePayload, parsePresentPayload, type LearnInput, type ExploreInput, type PresentInput, type SubmissionPayload } from '@elevate/types'
 import { ShareButton, SocialShareButtons, StageCard, PageLoading } from '@elevate/ui'
-import { getProfileUrl } from '@elevate/types'
+import { getApiClient } from '../../../../lib/api-client'
+
+import type { Metadata } from 'next'
 
 interface ProfilePageProps {
   params: Promise<{
@@ -28,7 +34,7 @@ interface UserProfile {
     }
     status: 'APPROVED' | 'PENDING' | 'REJECTED'
     visibility: 'PUBLIC' | 'PRIVATE'
-    payload: Record<string, unknown>
+    payload: SubmissionPayload
     created_at: string
     updated_at: string
   }>
@@ -48,21 +54,10 @@ interface UserProfile {
 
 async function fetchUserProfile(handle: string): Promise<UserProfile | null> {
   try {
-    const response = await fetch(`/api/profile/${handle}`, {
-      next: { revalidate: 300 } // Cache for 5 minutes
-    })
-    
-    if (response.status === 404) {
-      return null
-    }
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const profile = await response.json()
-    return profile
-  } catch (error) {
+    const api = getApiClient()
+    const res = await api.getProfile(handle)
+    return (res as any).data as UserProfile
+  } catch (_) {
     return null
   }
 }
@@ -110,30 +105,43 @@ function ActivityTimeline({ submissions }: { submissions: UserProfile['submissio
                   {formatDate(submission.created_at)}
                 </p>
                 
-                {submission.activity_code === 'LEARN' && (
-                  <p className="text-gray-700">
-                    Completed: {submission.payload.course} via {submission.payload.provider}
-                  </p>
-                )}
-                
-                {submission.activity_code === 'EXPLORE' && (
-                  <div>
-                    <p className="text-gray-700 mb-2">
-                      Applied AI in classroom on {formatDate(submission.payload.classDate)}
+                {submission.activity_code === 'LEARN' && (() => {
+                  const learnPayload = parseLearnPayload(submission.payload)
+                  if (!learnPayload) return null
+                  return (
+                    <p className="text-gray-700">
+                      Completed: {learnPayload.data.course} via {learnPayload.data.provider}
                     </p>
-                    <blockquote className="pl-4 border-l-2 border-blue-200 text-gray-700 italic">
-                      {submission.payload.reflection.substring(0, 200)}
-                      {submission.payload.reflection.length > 200 && '...'}
-                    </blockquote>
-                  </div>
-                )}
+                  )
+                })()}
                 
-                {submission.activity_code === 'PRESENT' && (
-                  <div>
-                    <p className="text-gray-700 mb-2">Shared experience on LinkedIn</p>
-                    <p className="text-blue-600 italic">"{submission.payload.caption}"</p>
-                  </div>
-                )}
+                {submission.activity_code === 'EXPLORE' && (() => {
+                  const explorePayload = parseExplorePayload(submission.payload)
+                  if (!explorePayload) return null
+                  const { classDate, reflection } = explorePayload.data
+                  return (
+                    <div>
+                      <p className="text-gray-700 mb-2">
+                        Applied AI in classroom on {formatDate(classDate)}
+                      </p>
+                      <blockquote className="pl-4 border-l-2 border-blue-200 text-gray-700 italic">
+                        {reflection.substring(0, 200)}
+                        {reflection.length > 200 && '...'}
+                      </blockquote>
+                    </div>
+                  )
+                })()}
+                
+                {submission.activity_code === 'PRESENT' && (() => {
+                  const presentPayload = parsePresentPayload(submission.payload)
+                  if (!presentPayload) return null
+                  return (
+                    <div>
+                      <p className="text-gray-700 mb-2">Shared experience on LinkedIn</p>
+                      <p className="text-blue-600 italic">"{presentPayload.data.caption}"</p>
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           ))}
@@ -153,10 +161,10 @@ async function ProfileContent({ handle }: { handle: string }) {
   const profileUrl = getProfileUrl(profile.handle)
   const stageBreakdown = profile.submissions
     .filter(s => s.status === 'APPROVED')
-    .reduce((acc, submission) => {
+    .reduce<Record<string, number>>((acc, submission) => {
       acc[submission.activity_code] = (acc[submission.activity_code] || 0) + 1
       return acc
-    }, {} as Record<string, number>)
+    }, {})
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -233,7 +241,7 @@ async function ProfileContent({ handle }: { handle: string }) {
                   return (
                     <div key={stage} className="relative">
                       <StageCard 
-                        stage={stage} 
+                        stage={stage === 'learn' || stage === 'explore' || stage === 'amplify' || stage === 'present' || stage === 'shine' ? stage : 'learn'} 
                         completedCount={completedCount}
                         isClickable={false}
                       />
@@ -353,4 +361,3 @@ export default async function PublicProfile({ params }: ProfilePageProps) {
     </Suspense>
   )
 }
-

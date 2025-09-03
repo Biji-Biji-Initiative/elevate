@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@elevate/db/client';
-import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
 import { randomUUID } from 'crypto';
+
+import { type NextRequest, NextResponse } from 'next/server';
+
+import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
+import { prisma, type Prisma } from '@elevate/db';
+import { KajabiTestSchema, buildAuditMeta } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
@@ -15,15 +18,12 @@ export async function POST(request: NextRequest) {
     // Check admin role
     await requireRole('admin');
 
-    const body: TestKajabiRequest = await request.json();
-    const { user_email, course_name = 'Test Course - Admin Console' } = body;
-
-    if (!user_email) {
-      return NextResponse.json(
-        { error: 'user_email is required' },
-        { status: 400 }
-      );
+    const body: unknown = await request.json();
+    const parsed = KajabiTestSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
     }
+    const { user_email, course_name = 'Test Course - Admin Console' } = parsed.data;
 
     const email = user_email.toLowerCase().trim();
 
@@ -135,14 +135,14 @@ export async function POST(request: NextRequest) {
           actor_id: 'admin_test',
           action: 'KAJABI_TEST_EVENT_CREATED',
           target_id: user.id,
-          meta: {
+          meta: buildAuditMeta({ entityType: 'kajabi', entityId: eventId }, {
             event_id: eventId,
             tag_name: 'LEARN_COMPLETED',
             course_name: course_name,
             points_awarded: learnActivity.default_points,
             test_mode: true,
             created_at: new Date().toISOString()
-          }
+          }) as Prisma.InputJsonValue
         }
       });
 

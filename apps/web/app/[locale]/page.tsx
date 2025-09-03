@@ -1,10 +1,15 @@
 'use client';
 
-import Link from 'next/link'
 import { Suspense, useEffect, useState } from 'react'
+
+import Link from 'next/link'
+
 import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
-import { StageCard, Button, LoadingSpinner } from '@elevate/ui'
 import { useTranslations } from 'next-intl'
+
+import { z } from 'zod'
+import { StageCard, Button, LoadingSpinner } from '@elevate/ui'
+import { getApiClient } from '../../lib/api-client'
 
 interface PlatformStats {
   totalEducators: number
@@ -21,12 +26,10 @@ interface PlatformStats {
 
 async function fetchPlatformStats(): Promise<PlatformStats | null> {
   try {
-    const response = await fetch('/api/stats')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    return await response.json()
-  } catch (error) {
+    const api = getApiClient()
+    const res = await api.getStats()
+    return (res as any).data as PlatformStats
+  } catch (_) {
     return null
   }
 }
@@ -47,7 +50,7 @@ function StatsSection() {
       }
     }
 
-    loadStats()
+    void loadStats()
   }, [])
 
   if (loading) {
@@ -128,7 +131,7 @@ function LeapsSection() {
       }
     }
 
-    loadStats()
+    void loadStats()
   }, [])
 
   const getStageCount = (stage: string): number => {

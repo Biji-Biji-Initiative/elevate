@@ -1,29 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@elevate/db/client'
-import type { SubmissionStatus } from '@elevate/db'
+import { type NextRequest, NextResponse } from 'next/server'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
-import type { UserWhereClause, SubmissionWhereClause, PointsLedgerWhereClause, ActivityCode } from '@elevate/types'
+import type { SubmissionStatus } from '@elevate/db'
+import { prisma, type Prisma } from '@elevate/db'
+import { parseActivityCode, parseSubmissionStatus, toPrismaJson, buildAuditMeta, ExportsQuerySchema, type UserWhereClause, type SubmissionWhereClause, type PointsLedgerWhereClause, type ActivityCode } from '@elevate/types'
+// TODO: Re-enable when @elevate/security package is available
+// import { withRateLimit, apiRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  // TODO: Re-enable rate limiting when @elevate/security is available
+  // return withRateLimit(request, apiRateLimiter, async () => {
   try {
     const user = await requireRole('admin')
     const { searchParams } = new URL(request.url)
-    
-    const type = searchParams.get('type') || 'submissions'
-    const format = searchParams.get('format') || 'csv'
-    const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate')
-    const activity = searchParams.get('activity')
-    const status = searchParams.get('status')
-    const cohort = searchParams.get('cohort')
+    const parsed = ExportsQuerySchema.safeParse(Object.fromEntries(searchParams))
+    if (!parsed.success) {
+      return createErrorResponse(new Error('Invalid export query'), 400)
+    }
+    const { type, format, startDate, endDate, activity, status, cohort } = parsed.data
     
     if (format !== 'csv') {
-      return NextResponse.json(
-        { error: 'Only CSV format is supported' },
-        { status: 400 }
-      )
+      return createErrorResponse(new Error('Only CSV format is supported'), 400)
     }
     
     let csvContent = ''
@@ -32,43 +30,40 @@ export async function GET(request: NextRequest) {
     switch (type) {
       case 'submissions':
         const result = await generateSubmissionsCSV({
-          startDate,
-          endDate,
-          activity,
-          status,
-          cohort
+          startDate: startDate ?? null,
+          endDate: endDate ?? null,
+          activity: activity ?? null,
+          status: status ?? null,
+          cohort: cohort ?? null
         })
         csvContent = result.csv
         filename = result.filename
         break
         
       case 'users':
-        const userResult = await generateUsersCSV({ cohort })
+        const userResult = await generateUsersCSV({ cohort: cohort ?? null })
         csvContent = userResult.csv
         filename = userResult.filename
         break
         
       case 'leaderboard':
-        const leaderboardResult = await generateLeaderboardCSV({ cohort })
+        const leaderboardResult = await generateLeaderboardCSV({ cohort: cohort ?? null })
         csvContent = leaderboardResult.csv
         filename = leaderboardResult.filename
         break
         
       case 'points':
         const pointsResult = await generatePointsLedgerCSV({
-          startDate,
-          endDate,
-          cohort
+          startDate: startDate ?? null,
+          endDate: endDate ?? null,
+          cohort: cohort ?? null
         })
         csvContent = pointsResult.csv
         filename = pointsResult.filename
         break
         
       default:
-        return NextResponse.json(
-          { error: 'Invalid export type' },
-          { status: 400 }
-        )
+        return createErrorResponse(new Error('Invalid export type'), 400)
     }
     
     // Create audit log
@@ -76,17 +71,11 @@ export async function GET(request: NextRequest) {
       data: {
         actor_id: user.userId,
         action: 'EXPORT_DATA',
-        meta: {
+        meta: buildAuditMeta({ entityType: 'export', entityId: type }, {
           type,
           format,
-          filters: {
-            startDate,
-            endDate,
-            activity,
-            status,
-            cohort
-          }
-        }
+          filters: { startDate, endDate, activity, status, cohort }
+        }) as Prisma.InputJsonValue
       }
     })
     
@@ -103,6 +92,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return createErrorResponse(error, 500)
   }
+  // })
 }
 
 async function generateSubmissionsCSV(filters: {
@@ -122,11 +112,17 @@ async function generateSubmissionsCSV(filters: {
   }
   
   if (filters.activity && filters.activity !== 'ALL') {
-    where.activity_code = filters.activity as ActivityCode
+    const parsedActivity = parseActivityCode(filters.activity)
+    if (parsedActivity) {
+      where.activity_code = parsedActivity
+    }
   }
   
   if (filters.status && filters.status !== 'ALL') {
-    where.status = filters.status as SubmissionStatus
+    const parsedStatus = parseSubmissionStatus(filters.status)
+    if (parsedStatus) {
+      where.status = parsedStatus
+    }
   }
   
   if (filters.cohort && filters.cohort !== 'ALL') {
@@ -233,10 +229,10 @@ async function generateUsersCSV(filters: { cohort?: string | null }) {
     }
   })
   
-  const pointsMap = pointTotals.reduce((acc, pt) => {
+  const pointsMap = pointTotals.reduce<Record<string, number>>((acc, pt) => {
     acc[pt.user_id] = pt._sum.delta_points || 0
     return acc
-  }, {} as Record<string, number>)
+  }, {})
   
   const headers = [
     'User ID',
@@ -334,6 +330,10 @@ async function generateLeaderboardCSV(filters: { cohort?: string | null }) {
     .filter(pt => usersMap[pt.user_id]) // Only include users that match filters
     .map((pt, index) => {
       const user = usersMap[pt.user_id]
+      if (!user) {
+        // This should never happen due to filter above, but TypeScript needs the check
+        return []
+      }
       return [
         index + 1,
         user.handle,
@@ -345,6 +345,7 @@ async function generateLeaderboardCSV(filters: { cohort?: string | null }) {
         user.created_at.toISOString()
       ]
     })
+    .filter(row => row.length > 0) // Remove any empty rows
   
   const csv = [headers, ...rows]
     .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))

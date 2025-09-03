@@ -58,5 +58,5 @@ export function isCanonicalProfileUrl(url: string): boolean {
  */
 export function extractHandleFromUrl(url: string): string | null {
   const match = url.match(`^${SITE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/u/([a-zA-Z0-9_-]+)$`)
-  return match ? match[1] : null
+  return match ? match[1] ?? null : null
 }

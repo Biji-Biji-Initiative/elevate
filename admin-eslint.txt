@@ -1,0 +1,237 @@
+
+/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/badges/page.tsx
+    6:150  warning  'Column' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   98:15   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  215:9    warning  Unexpected console statement                                                                                                                                                                                                                                                             no-console
+  217:22   warning  Empty block statement                                                                                                                                                                                                                                                                    no-empty
+  231:9    warning  Unexpected console statement                                                                                                                                                                                                                                                             no-console
+  234:7    warning  Unexpected console statement                                                                                                                                                                                                                                                             no-console
+  300:9    warning  Unexpected alert                                                                                                                                                                                                                                                                         no-alert
+  303:7    warning  Unexpected alert                                                                                                                                                                                                                                                                         no-alert
+  329:9    warning  Unexpected alert                                                                                                                                                                                                                                                                         no-alert
+  332:7    warning  Unexpected alert                                                                                                                                                                                                                                                                         no-alert
+  353:9    warning  Unexpected alert                                                                                                                                                                                                                                                                         no-alert
+  356:7    warning  Unexpected alert                                                                                                                                                                                                                                                                         no-alert
+  384:9    warning  Unexpected alert                                                                                                                                                                                                                                                                         no-alert
+  387:7    warning  Unexpected alert                                                                                                                                                                                                                                                                         no-alert
+  444:13   warning  A form label must be associated with a control                                                                                                                                                                                                                                           jsx-a11y/label-has-associated-control
+  454:13   warning  A form label must be associated with a control                                                                                                                                                                                                                                           jsx-a11y/label-has-associated-control
+  463:13   warning  A form label must be associated with a control                                                                                                                                                                                                                                           jsx-a11y/label-has-associated-control
+  473:13   warning  A form label must be associated with a control                                                                                                                                                                                                                                           jsx-a11y/label-has-associated-control
+  485:15   warning  A form label must be associated with a control                                                                                                                                                                                                                                           jsx-a11y/label-has-associated-control
+  506:15   warning  A form label must be associated with a control                                                                                                                                                                                                                                           jsx-a11y/label-has-associated-control
+  554:13   warning  A form label must be associated with a control                                                                                                                                                                                                                                           jsx-a11y/label-has-associated-control
+  577:13   warning  A form label must be associated with a control                                                                                                                                                                                                                                           jsx-a11y/label-has-associated-control
+
+/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/exports/page.tsx
+   33:15  warning  Unsafe assignment of an `any` value                                                       @typescript-eslint/no-unsafe-assignment
+   34:32  warning  Unsafe member access .cohorts on an `any` value                                           @typescript-eslint/no-unsafe-member-access
+   34:53  warning  Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<string[]>`  @typescript-eslint/no-unsafe-argument
+   34:58  warning  Unsafe member access .cohorts on an `any` value                                           @typescript-eslint/no-unsafe-member-access
+   35:19  warning  Empty block statement                                                                     no-empty
+   71:15  warning  Unsafe assignment of an `any` value                                                       @typescript-eslint/no-unsafe-assignment
+   72:9   warning  Unexpected alert                                                                          no-alert
+   72:38  warning  Unsafe member access .error on an `any` value                                             @typescript-eslint/no-unsafe-member-access
+   74:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u          @typescript-eslint/no-unused-vars
+   75:7   warning  Unexpected alert                                                                          no-alert
+  125:13  warning  A form label must be associated with a control                                            jsx-a11y/label-has-associated-control
+  134:13  warning  A form label must be associated with a control                                            jsx-a11y/label-has-associated-control
+  143:13  warning  A form label must be associated with a control                                            jsx-a11y/label-has-associated-control
+  160:13  warning  A form label must be associated with a control                                            jsx-a11y/label-has-associated-control
+  175:13  warning  A form label must be associated with a control                                            jsx-a11y/label-has-associated-control
+
+/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/kajabi/page.tsx
+  41:13  warning  Unsafe assignment of an `any` value                                                            @typescript-eslint/no-unsafe-assignment
+  42:17  warning  Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<KajabiEvent[]>`  @typescript-eslint/no-unsafe-argument
+  42:22  warning  Unsafe member access .events on an `any` value                                                 @typescript-eslint/no-unsafe-member-access
+  43:16  warning  Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<Stats | null>`   @typescript-eslint/no-unsafe-argument
+  43:21  warning  Unsafe member access .stats on an `any` value                                                  @typescript-eslint/no-unsafe-member-access
+  71:13  warning  Unsafe assignment of an `any` value                                                            @typescript-eslint/no-unsafe-assignment
+  74:25  warning  Unsafe argument of type `any` assigned to a parameter of type `string | undefined`             @typescript-eslint/no-unsafe-argument
+  74:30  warning  Unsafe member access .error on an `any` value                                                  @typescript-eslint/no-unsafe-member-access
+
+/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/page.tsx
+  104:6   warning  React Hook useEffect has a missing dependency: 'fetchAnalytics'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  111:15  warning  Unsafe assignment of an `any` value                                                                                @typescript-eslint/no-unsafe-assignment
+  112:32  warning  Unsafe member access .cohorts on an `any` value                                                                    @typescript-eslint/no-unsafe-member-access
+  112:53  warning  Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<string[]>`                           @typescript-eslint/no-unsafe-argument
+  112:58  warning  Unsafe member access .cohorts on an `any` value                                                                    @typescript-eslint/no-unsafe-member-access
+  113:19  warning  Empty block statement                                                                                              no-empty
+  127:13  warning  Unsafe assignment of an `any` value                                                                                @typescript-eslint/no-unsafe-assignment
+  130:22  warning  Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<AnalyticsData | null>`               @typescript-eslint/no-unsafe-argument
+  131:14  warning  Empty block statement                                                                                              no-empty
+  133:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                                   @typescript-eslint/no-unused-vars
+  133:21  warning  Empty block statement                                                                                              no-empty
+  145:15  warning  Unsafe spread of an `any` value in an array                                                                        @typescript-eslint/no-unsafe-assignment
+  146:25  warning  Do not use Array index in keys                                                                                     react/no-array-index-key
+  182:13  warning  A form label must be associated with a control                                                                     jsx-a11y/label-has-associated-control
+  191:13  warning  A form label must be associated with a control                                                                     jsx-a11y/label-has-associated-control
+  200:13  warning  A form label must be associated with a control                                                                     jsx-a11y/label-has-associated-control
+
+/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/review/[id]/page.tsx
+   44:5   error    Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator  @typescript-eslint/no-floating-promises
+   51:6   warning  React Hook useEffect has a missing dependency: 'fetchSubmission'. Either include it or remove the dependency array                                                  react-hooks/exhaustive-deps
+   57:13  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+   60:23  warning  Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<Submission | null>`                                                                   @typescript-eslint/no-unsafe-argument
+   60:28  warning  Unsafe member access .submission on an `any` value                                                                                                                  @typescript-eslint/no-unsafe-member-access
+   61:23  warning  Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<string>`                                                                              @typescript-eslint/no-unsafe-argument
+   61:28  warning  Unsafe member access .submission on an `any` value                                                                                                                  @typescript-eslint/no-unsafe-member-access
+   65:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                    @typescript-eslint/no-unused-vars
+  100:13  warning  Unsafe assignment of an `any` value                                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  107:9   warning  Unexpected alert                                                                                                                                                    no-alert
+  107:30  warning  Unsafe member access .error on an `any` value                                                                                                                       @typescript-eslint/no-unsafe-member-access
+  109:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                    @typescript-eslint/no-unused-vars
+  110:7   warning  Unexpected alert                                                                                                                                                    no-alert
+  135:46  error    'value' will use Object's default stringification format ('[object Object]') when stringified                                                                       @typescript-eslint/no-base-to-string
+  146:21  warning  Do not use Array index in keys                                                                                                                                      react/no-array-index-key
+  227:17  warning  A form label must be associated with a control                                                                                                                      jsx-a11y/label-has-associated-control
+  231:17  warning  A form label must be associated with a control                                                                                                                      jsx-a11y/label-has-associated-control
+  235:17  warning  A form label must be associated with a control                                                                                                                      jsx-a11y/label-has-associated-control
+  239:17  warning  A form label must be associated with a control                                                                                                                      jsx-a11y/label-has-associated-control
+  322:17  warning  A form label must be associated with a control                                                                                                                      jsx-a11y/label-has-associated-control
+  337:17  warning  A form label must be associated with a control                                                                                                                      jsx-a11y/label-has-associated-control
+
+/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/submissions/page.tsx
+    8:45  warning  'PaginationConfig' is defined but never used. Allowed unused vars must match /^_/u                                   @typescript-eslint/no-unused-vars
+    8:63  warning  'isString' is defined but never used. Allowed unused vars must match /^_/u                                           @typescript-eslint/no-unused-vars
+    8:73  warning  'isNumber' is defined but never used. Allowed unused vars must match /^_/u                                           @typescript-eslint/no-unused-vars
+    8:83  warning  'safeGet' is defined but never used. Allowed unused vars must match /^_/u                                            @typescript-eslint/no-unused-vars
+   10:1   warning  '@elevate/ui' import is duplicated                                                                                   no-duplicate-imports
+   10:15  warning  'Column' is defined but never used. Allowed unused vars must match /^_/u                                             @typescript-eslint/no-unused-vars
+   52:15  warning  Unsafe assignment of an `any` value                                                                                  @typescript-eslint/no-unsafe-assignment
+   53:32  warning  Unsafe member access .cohorts on an `any` value                                                                      @typescript-eslint/no-unsafe-member-access
+   53:53  warning  Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<string[]>`                             @typescript-eslint/no-unsafe-argument
+   53:58  warning  Unsafe member access .cohorts on an `any` value                                                                      @typescript-eslint/no-unsafe-member-access
+   54:19  warning  Empty block statement                                                                                                no-empty
+  195:6   warning  React Hook useEffect has a missing dependency: 'fetchSubmissions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  213:13  warning  Unsafe assignment of an `any` value                                                                                  @typescript-eslint/no-unsafe-assignment
+  216:24  warning  Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<SafeSubmission[]>`                     @typescript-eslint/no-unsafe-argument
+  216:29  warning  Unsafe member access .submissions on an `any` value                                                                  @typescript-eslint/no-unsafe-member-access
+  219:11  warning  Unsafe assignment of an `any` value                                                                                  @typescript-eslint/no-unsafe-assignment
+  219:23  warning  Unsafe member access .pagination on an `any` value                                                                   @typescript-eslint/no-unsafe-member-access
+  220:11  warning  Unsafe assignment of an `any` value                                                                                  @typescript-eslint/no-unsafe-assignment
+  220:23  warning  Unsafe member access .pagination on an `any` value                                                                   @typescript-eslint/no-unsafe-member-access
+  222:14  warning  Empty block statement                                                                                                no-empty
+  224:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                                     @typescript-eslint/no-unused-vars
+  224:21  warning  Empty block statement                                                                                                no-empty
+  271:13  warning  Unsafe assignment of an `any` value                                                                                  @typescript-eslint/no-unsafe-assignment
+  277:9   warning  Unexpected alert                                                                                                     no-alert
+  277:30  warning  Unsafe member access .error on an `any` value                                                                        @typescript-eslint/no-unsafe-member-access
+  279:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                                     @typescript-eslint/no-unused-vars
+  280:7   warning  Unexpected alert                                                                                                     no-alert
+  301:13  warning  Unsafe assignment of an `any` value                                                                                  @typescript-eslint/no-unsafe-assignment
+  309:9   warning  Unexpected alert                                                                                                     no-alert
+  309:30  warning  Unsafe member access .error on an `any` value                                                                        @typescript-eslint/no-unsafe-member-access
+  311:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                                     @typescript-eslint/no-unused-vars
+  312:7   warning  Unexpected alert                                                                                                     no-alert
+  354:13  warning  A form label must be associated with a control                                                                       jsx-a11y/label-has-associated-control
+  369:13  warning  A form label must be associated with a control                                                                       jsx-a11y/label-has-associated-control
+  386:13  warning  A form label must be associated with a control                                                                       jsx-a11y/label-has-associated-control
+  401:13  warning  A form label must be associated with a control                                                                       jsx-a11y/label-has-associated-control
+  515:17  warning  A form label must be associated with a control                                                                       jsx-a11y/label-has-associated-control
+  531:15  warning  A form label must be associated with a control                                                                       jsx-a11y/label-has-associated-control
+
+/Users/agent-g/elevate/elevate/apps/admin/app/[locale]/users/page.tsx
+    7:1   warning  '@elevate/ui' import is duplicated                                                                                                                  no-duplicate-imports
+    7:15  warning  'Column' is defined but never used. Allowed unused vars must match /^_/u                                                                            @typescript-eslint/no-unused-vars
+   39:19  warning  'setCohorts' is assigned a value but never used. Allowed unused vars must match /^_/u                                                               @typescript-eslint/no-unused-vars
+  177:6   warning  React Hook useEffect has a missing dependency: 'fetchUsers'. Either include it or remove the dependency array                                       react-hooks/exhaustive-deps
+  194:13  warning  Unsafe assignment of an `any` value                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  197:18  warning  Unsafe argument of type `any` assigned to a parameter of type `SetStateAction<User[]>`                                                              @typescript-eslint/no-unsafe-argument
+  197:23  warning  Unsafe member access .users on an `any` value                                                                                                       @typescript-eslint/no-unsafe-member-access
+  200:11  warning  Unsafe assignment of an `any` value                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  200:23  warning  Unsafe member access .pagination on an `any` value                                                                                                  @typescript-eslint/no-unsafe-member-access
+  201:11  warning  Unsafe assignment of an `any` value                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  201:23  warning  Unsafe member access .pagination on an `any` value                                                                                                  @typescript-eslint/no-unsafe-member-access
+  203:14  warning  Empty block statement                                                                                                                               no-empty
+  205:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                                                                    @typescript-eslint/no-unused-vars
+  205:21  warning  Empty block statement                                                                                                                               no-empty
+  256:13  warning  Unsafe assignment of an `any` value                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  262:9   warning  Unexpected alert                                                                                                                                    no-alert
+  262:30  warning  Unsafe member access .error on an `any` value                                                                                                       @typescript-eslint/no-unsafe-member-access
+  264:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                                                                    @typescript-eslint/no-unused-vars
+  265:7   warning  Unexpected alert                                                                                                                                    no-alert
+  285:13  warning  Unsafe assignment of an `any` value                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  292:9   warning  Unexpected alert                                                                                                                                    no-alert
+  292:30  warning  Unsafe member access .error on an `any` value                                                                                                       @typescript-eslint/no-unsafe-member-access
+  294:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                                                                    @typescript-eslint/no-unused-vars
+  295:7   warning  Unexpected alert                                                                                                                                    no-alert
+  312:13  warning  A form label must be associated with a control                                                                                                      jsx-a11y/label-has-associated-control
+  321:13  warning  A form label must be associated with a control                                                                                                      jsx-a11y/label-has-associated-control
+  337:13  warning  A form label must be associated with a control                                                                                                      jsx-a11y/label-has-associated-control
+  436:13  warning  A form label must be associated with a control                                                                                                      jsx-a11y/label-has-associated-control
+  445:13  warning  A form label must be associated with a control                                                                                                      jsx-a11y/label-has-associated-control
+  454:13  warning  A form label must be associated with a control                                                                                                      jsx-a11y/label-has-associated-control
+  463:13  warning  A form label must be associated with a control                                                                                                      jsx-a11y/label-has-associated-control
+  478:13  warning  A form label must be associated with a control                                                                                                      jsx-a11y/label-has-associated-control
+  509:3   error    React Hook "useEffect" cannot be called at the top level. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  514:15  warning  Unsafe assignment of an `any` value                                                                                                                 @typescript-eslint/no-unsafe-assignment
+  515:32  warning  Unsafe member access .cohorts on an `any` value                                                                                                     @typescript-eslint/no-unsafe-member-access
+  515:42  warning  Unsafe call of a(n) `error` type typed value                                                                                                        @typescript-eslint/no-unsafe-call
+  515:58  warning  Unsafe member access .cohorts on an `any` value                                                                                                     @typescript-eslint/no-unsafe-member-access
+  516:19  warning  Empty block statement                                                                                                                               no-empty
+
+/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/analytics/route.ts
+    6:1   warning  '@elevate/types' import is duplicated                                            no-duplicate-imports
+   36:11  warning  'user' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  256:15  warning  Unsafe member access .total on an `error` typed value                            @typescript-eslint/no-unsafe-member-access
+  259:17  warning  Unsafe member access [status] on an `error` typed value                          @typescript-eslint/no-unsafe-member-access
+  367:5   warning  Unsafe assignment of an error typed value                                        @typescript-eslint/no-unsafe-assignment
+
+/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/badges/assign/route.ts
+  1:1  warning  There should be at least one empty line between import groups  import/order
+
+/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/badges/route.ts
+   1:1   warning  There should be at least one empty line between import groups                          import/order
+   4:1   warning  There should be at least one empty line between import groups                          import/order
+   4:37  warning  'parseBadgeAuditMeta' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   5:1   warning  `zod` import should occur before import of `@elevate/auth/server-helpers`              import/order
+   5:10  warning  'z' is defined but never used. Allowed unused vars must match /^_/u                    @typescript-eslint/no-unused-vars
+  11:11  warning  'user' is assigned a value but never used. Allowed unused vars must match /^_/u        @typescript-eslint/no-unused-vars
+
+/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/exports/route.ts
+  1:1    warning  There should be at least one empty line between import groups                       import/order
+  3:15   warning  'SubmissionStatus' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  5:171  warning  'ActivityCode' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+
+/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/kajabi/reprocess/route.ts
+  5:72  warning  'KajabiTagEvent' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  9:11  warning  'ReprocessRequest' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/kajabi/test/route.ts
+  11:11  warning  'TestKajabiRequest' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/meta/cohorts/route.ts
+  1:1  warning  There should be at least one empty line between import groups                   import/order
+  2:1  warning  `@prisma/client` type import should occur after import of `@elevate/db/client`  import/order
+
+/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/submissions/[id]/route.ts
+  13:11  warning  'user' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/submissions/route.ts
+    4:15   warning  'SubmissionStatus' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+    7:176  warning  'ActivityCode' is defined but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+    7:195  warning  'ActivityPayload' is defined but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+   13:11   warning  'user' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+   88:11   warning  Unsafe assignment of an `any` value                                                 @typescript-eslint/no-unsafe-assignment
+  227:11   warning  Unsafe assignment of an `any` value                                                 @typescript-eslint/no-unsafe-assignment
+
+/Users/agent-g/elevate/elevate/apps/admin/app/api/admin/users/route.ts
+   14:11  warning  'user' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   30:13  warning  Unsafe member access .OR on an `error` typed value                               @typescript-eslint/no-unsafe-member-access
+   41:15  warning  Unsafe member access .role on an `error` typed value                             @typescript-eslint/no-unsafe-member-access
+   46:13  warning  Unsafe member access .cohort on an `error` typed value                           @typescript-eslint/no-unsafe-member-access
+   51:9   warning  Unsafe assignment of an error typed value                                        @typescript-eslint/no-unsafe-assignment
+   76:27  warning  Unsafe assignment of an error typed value                                        @typescript-eslint/no-unsafe-assignment
+  118:11  warning  Unsafe assignment of an `any` value                                              @typescript-eslint/no-unsafe-assignment
+  235:11  warning  Unsafe assignment of an `any` value                                              @typescript-eslint/no-unsafe-assignment
+
+/Users/agent-g/elevate/elevate/apps/admin/app/layout.tsx
+  7:1  warning  There should be no empty line within import group  import/order
+
+/Users/agent-g/elevate/elevate/apps/admin/i18n.ts
+  1:10  warning  'notFound' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+✖ 195 problems (3 errors, 192 warnings)
+  0 errors and 8 warnings potentially fixable with the `--fix` option.
+

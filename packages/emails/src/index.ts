@@ -1,10 +1,10 @@
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
-import WelcomeEmail from './templates/welcome';
-import SubmissionConfirmationEmail from './templates/submission-confirmation';
-import ApprovalNotificationEmail from './templates/approval-notification';
-import RejectionNotificationEmail from './templates/rejection-notification';
-import WeeklyProgressEmail from './templates/weekly-progress';
+import WelcomeEmail from './templates/welcome.js';
+import SubmissionConfirmationEmail from './templates/submission-confirmation.js';
+import ApprovalNotificationEmail from './templates/approval-notification.js';
+import RejectionNotificationEmail from './templates/rejection-notification.js';
+import WeeklyProgressEmail from './templates/weekly-progress.js';
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -16,20 +16,25 @@ const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'support@leaps.mereka.org';
 // Base email sending function
 async function sendEmail(to: string, subject: string, html: string, text?: string) {
   try {
-    const { data, error } = await resend.emails.send({
+    const emailOptions: any = {
       from: FROM_EMAIL,
       to,
       subject,
       html,
-      text,
       replyTo: REPLY_TO_EMAIL,
-    });
+    };
+    
+    if (text) {
+      emailOptions.text = text;
+    }
+    
+    const result = await resend.emails.send(emailOptions);
 
-    if (error) {
-      throw error;
+    if (result.error) {
+      throw result.error;
     }
 
-    return data;
+    return result.data;
   } catch (error) {
     throw error;
   }
@@ -74,16 +79,21 @@ export async function sendApprovalNotificationEmail(
   dashboardUrl: string,
   leaderboardUrl: string
 ) {
-  const html = await render(ApprovalNotificationEmail({ 
+  const props: any = {
     name, 
     activityName, 
     pointsAwarded,
-    reviewerNote,
     totalPoints,
     leaderboardPosition,
     dashboardUrl,
     leaderboardUrl
-  }));
+  };
+  
+  if (reviewerNote) {
+    props.reviewerNote = reviewerNote;
+  }
+  
+  const html = await render(ApprovalNotificationEmail(props));
   const subject = `🎉 Submisi ${activityName} Anda disetujui!`;
   
   return sendEmail(to, subject, html);
@@ -151,22 +161,29 @@ export async function sendBatchEmails(emails: Array<{
   text?: string;
 }>) {
   try {
-    const { data, error } = await resend.batch.send(
-      emails.map(email => ({
-        from: FROM_EMAIL,
-        to: email.to,
-        subject: email.subject,
-        html: email.html,
-        text: email.text,
-        reply_to: REPLY_TO_EMAIL,
-      }))
+    const result = await resend.batch.send(
+      emails.map(email => {
+        const emailOptions: any = {
+          from: FROM_EMAIL,
+          to: email.to,
+          subject: email.subject,
+          html: email.html,
+          reply_to: REPLY_TO_EMAIL,
+        };
+        
+        if (email.text) {
+          emailOptions.text = email.text;
+        }
+        
+        return emailOptions;
+      })
     );
 
-    if (error) {
-      throw error;
+    if (result.error) {
+      throw result.error;
     }
 
-    return data;
+    return result.data;
   } catch (error) {
     throw error;
   }

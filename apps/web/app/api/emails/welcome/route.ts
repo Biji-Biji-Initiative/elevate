@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { sendWelcomeEmail } from '@elevate/emails';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { auth } from '@clerk/nextjs/server';
+
+import { sendWelcomeEmail } from '@elevate/emails';
+import { WelcomeEmailSchema } from '@elevate/types';
 
 export const runtime = 'nodejs';
 
@@ -12,16 +15,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { email, name, dashboardUrl } = body;
-
-    // Validate required fields
-    if (!email || !name || !dashboardUrl) {
+    const body: unknown = await request.json();
+    const parsed = WelcomeEmailSchema.safeParse(body);
+    
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing required fields: email, name, dashboardUrl' },
+        { error: 'Invalid request body', details: parsed.error.issues },
         { status: 400 }
       );
     }
+
+    const { email, name, dashboardUrl } = parsed.data;
 
     // Send welcome email
     const result = await sendWelcomeEmail(email, name, dashboardUrl);

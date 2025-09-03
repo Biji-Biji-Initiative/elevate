@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { sendSubmissionConfirmationEmail } from '@elevate/emails';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { auth } from '@clerk/nextjs/server';
+
+import { sendSubmissionConfirmationEmail } from '@elevate/emails';
+import { SubmissionConfirmationEmailSchema } from '@elevate/types';
 
 export const runtime = 'nodejs';
 
@@ -12,16 +15,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { email, name, activityName, submissionDate, dashboardUrl } = body;
-
-    // Validate required fields
-    if (!email || !name || !activityName || !submissionDate || !dashboardUrl) {
+    const body: unknown = await request.json();
+    const parsed = SubmissionConfirmationEmailSchema.safeParse(body);
+    
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Invalid request body', details: parsed.error.issues },
         { status: 400 }
       );
     }
+
+    const { email, name, activityName, submissionDate, dashboardUrl } = parsed.data;
 
     // Send submission confirmation email
     const result = await sendSubmissionConfirmationEmail(

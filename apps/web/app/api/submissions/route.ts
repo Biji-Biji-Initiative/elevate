@@ -1,8 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server';
+
 import { auth } from '@clerk/nextjs/server'
-import { prisma } from '@elevate/db/client'
 import { z } from 'zod'
-import type { SubmissionWhereClause, ActivityPayload } from '@elevate/types'
+
+import { prisma } from '@elevate/db/client'
+import { parseActivityCode, parseSubmissionStatus, parseAmplifyPayload, parseSubmissionPayload, toJsonValue, toPrismaJson, type SubmissionWhereClause } from '@elevate/types'
+
+// Local wrapper to ensure type safety for object inputs to Prisma JSON fields
+function toPrismaJsonObject(obj: any): Exclude<ReturnType<typeof toPrismaJson>, null> {
+  const result = toPrismaJson(obj);
+  if (result === null) {
+    throw new Error('Unexpected null result from non-null object');
+  }
+  return result;
+}
+
+import type { Submission, Activity } from '@prisma/client'
+
+type SubmissionWithActivity = Submission & {
+  activity: Activity
+}
 
 export const runtime = 'nodejs';
 
@@ -31,8 +48,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const body = await request.json()
+    const body: unknown = await request.json()
     const validatedData = SubmissionRequestSchema.parse(body)
+
+    // Validate payload structure against activity-specific schema
+    const payloadValidation = parseSubmissionPayload({
+      activityCode: validatedData.activityCode,
+      data: validatedData.payload,
+    })
+    if (!payloadValidation) {
+      return NextResponse.json({ error: 'Invalid payload for selected activity' }, { status: 400 })
+    }
 
     // Verify activity exists
     const activity = await prisma.activity.findUnique({
@@ -76,18 +102,26 @@ export async function POST(request: NextRequest) {
       })
 
       // Calculate total peers and students trained in last 7 days
-      const totalPeers = recentSubmissions.reduce((sum, sub) => {
-        const payload = sub.payload as ActivityPayload
-        return sum + (payload.peersTrained || 0)
+      const totalPeers = recentSubmissions.reduce((sum: number, sub: Submission) => {
+        const parsedPayload = parseAmplifyPayload({ activityCode: 'AMPLIFY', data: sub.payload })
+        return sum + (parsedPayload?.data.peersTrained || 0)
       }, 0)
 
-      const totalStudents = recentSubmissions.reduce((sum, sub) => {
-        const payload = sub.payload as ActivityPayload
-        return sum + (payload.studentsTrained || 0)
+      const totalStudents = recentSubmissions.reduce((sum: number, sub: Submission) => {
+        const parsedPayload = parseAmplifyPayload({ activityCode: 'AMPLIFY', data: sub.payload })
+        return sum + (parsedPayload?.data.studentsTrained || 0)
       }, 0)
 
-      const newPeers = validatedData.payload.peersTrained || 0
-      const newStudents = validatedData.payload.studentsTrained || 0
+      // Parse the new submission payload
+      const newPayload = parseAmplifyPayload({ activityCode: 'AMPLIFY', data: validatedData.payload })
+      if (!newPayload) {
+        return NextResponse.json({ 
+          error: 'Invalid AMPLIFY payload format' 
+        }, { status: 400 })
+      }
+      
+      const newPeers = newPayload.data.peersTrained || 0
+      const newStudents = newPayload.data.studentsTrained || 0
 
       if (totalPeers + newPeers > 50) {
         return NextResponse.json({ 
@@ -107,8 +141,8 @@ export async function POST(request: NextRequest) {
       data: {
         user_id: userId,
         activity_code: validatedData.activityCode,
-        payload: validatedData.payload,
-        attachments: validatedData.attachments || [],
+        payload: toPrismaJsonObject(validatedData.payload),
+        attachments: toPrismaJsonObject(validatedData.attachments || []),
         visibility: validatedData.visibility || 'PRIVATE'
       },
       include: {
@@ -168,11 +202,17 @@ export async function GET(request: NextRequest) {
     }
 
     if (activityCode) {
-      whereClause.activity_code = activityCode
+      const parsedActivity = parseActivityCode(activityCode)
+      if (parsedActivity) {
+        whereClause.activity_code = parsedActivity
+      }
     }
 
     if (status) {
-      whereClause.status = status
+      const parsedStatus = parseSubmissionStatus(status)
+      if (parsedStatus) {
+        whereClause.status = parsedStatus
+      }
     }
 
     const submissions = await prisma.submission.findMany({
@@ -187,7 +227,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: submissions.map(submission => ({
+      data: submissions.map((submission: SubmissionWithActivity) => ({
         id: submission.id,
         activityCode: submission.activity_code,
         activityName: submission.activity.name,

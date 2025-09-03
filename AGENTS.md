@@ -90,3 +90,7 @@ Next Actions (awaiting approval)
 - Confirm scope: MVP pages, scoring caps, localization.
 - Produce OpenAPI draft and SQL schema under /docs.
 - Prepare Next.js app scaffold (no deployment, no integrations) for review.
+Build & Lint Rules (must follow)
+- Read elevate/BUILDING.md and adhere to the solution-style TS + two-stage build, dist-only exports, and server/client boundaries.
+- Do not modify build scripts to inline entries; use tsup.config.ts entries only.
+- Keep libraries (packages/*) type-safe with strict ESLint; apps use progressive hardening during migration (see BUILDING.md).

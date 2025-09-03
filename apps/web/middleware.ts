@@ -1,6 +1,8 @@
+import { type NextRequest } from 'next/server';
+
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import createIntlMiddleware from 'next-intl/middleware';
-import { NextRequest, NextResponse } from 'next/server';
+
 import { locales, defaultLocale } from './i18n';
 
 // Create the intl middleware
@@ -27,17 +29,8 @@ const isPublicRoute = createRouteMatcher([
 const isApiRoute = createRouteMatcher(['/api/(.*)']);
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
-  // Skip all middleware processing for API routes except protected ones
-  if (isApiRoute(req)) {
-    // Only apply auth to protected API routes
-    if (req.nextUrl.pathname.startsWith('/api/admin') || req.nextUrl.pathname === '/api/user') {
-      const { userId, redirectToSignIn } = await auth();
-      if (!userId) {
-        return redirectToSignIn();
-      }
-    }
-    return; // Skip further processing for API routes
-  }
+  // Bypass API routes; enforce auth at route level for JSON semantics
+  if (isApiRoute(req)) return;
 
   // Handle internationalization first
   const intlResponse = intlMiddleware(req);
@@ -61,7 +54,5 @@ export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
   ],
 };

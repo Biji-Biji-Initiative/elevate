@@ -1,1 +1,1 @@
-export * from './rate-limiter';
+export * from './rate-limiter.js';

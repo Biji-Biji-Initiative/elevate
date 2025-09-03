@@ -1,0 +1,13 @@
+{
+  "timestamp": "2025-09-03T01:08:57.753Z",
+  "filesScanned": 163,
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "passed": true
+  },
+  "issues": {
+    "errors": [],
+    "warnings": []
+  }
+}

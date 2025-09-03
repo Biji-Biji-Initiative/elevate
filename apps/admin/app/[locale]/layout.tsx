@@ -1,9 +1,12 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
-import { AdminLayout } from '@elevate/ui'
-import { AuthProvider } from '@elevate/auth/context'
-import { Metadata } from 'next'
+
 import { locales } from '../../i18n'
+
+import type { Metadata } from 'next'
+
+// Force dynamic rendering for admin pages
+export const dynamic = 'force-dynamic'
 
 type Props = {
   children: React.ReactNode;
@@ -12,9 +15,10 @@ type Props = {
   }>;
 };
 
-export async function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
-}
+// Remove generateStaticParams to prevent static generation
+// export async function generateStaticParams() {
+//   return locales.map((locale) => ({ locale }));
+// }
 
 export async function generateMetadata({ 
   params 
@@ -45,14 +49,8 @@ export default async function LocaleLayout({
   const messages = await getMessages();
   
   return (
-    <html lang={locale}>
-      <body>
-        <NextIntlClientProvider messages={messages}>
-          <AuthProvider>
-            <AdminLayout>{children}</AdminLayout>
-          </AuthProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider messages={messages}>
+      {children}
+    </NextIntlClientProvider>
   );
 }

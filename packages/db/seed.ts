@@ -1,4 +1,5 @@
-import { prisma } from './client'
+import { prisma } from './client.js'
+import { toPrismaJson } from './src/utils.js'
 
 async function main() {
   console.log('🌱 Seeding database...')
@@ -61,29 +62,29 @@ async function main() {
       code: 'FIRST_LEARN',
       name: 'First Steps',
       description: 'Completed your first Learn activity',
-      criteria: { activity: 'LEARN', count: 1 },
+      criteria: toPrismaJson({ activity: 'LEARN', count: 1 }),
     },
     {
       code: 'EXPLORER',
       name: 'AI Explorer',
       description: 'Successfully applied AI in the classroom',
-      criteria: { activity: 'EXPLORE', count: 1 },
+      criteria: toPrismaJson({ activity: 'EXPLORE', count: 1 }),
     },
     {
       code: 'AMPLIFIER',
       name: 'Knowledge Amplifier',
       description: 'Trained 10+ peers or 25+ students',
-      criteria: { 
+      criteria: toPrismaJson({ 
         activity: 'AMPLIFY', 
         peers: 10, 
         students: 25 
-      },
+      }),
     },
     {
       code: 'PUBLIC_VOICE',
       name: 'Public Voice',
       description: 'Shared your AI journey publicly',
-      criteria: { activity: 'PRESENT', count: 1 },
+      criteria: toPrismaJson({ activity: 'PRESENT', count: 1 }),
     },
   ]
 
@@ -93,7 +94,7 @@ async function main() {
       update: { 
         name: badge.name, 
         description: badge.description,
-        criteria: badge.criteria 
+        criteria: toPrismaJson(badge.criteria) 
       },
       create: badge,
     })
@@ -106,7 +107,7 @@ async function main() {
     SEED_ADMIN_EMAIL: email,
     SEED_ADMIN_NAME: name = 'Admin User',
     SEED_ADMIN_HANDLE: handle = 'admin',
-  } = process.env as Record<string, string>
+  } = process.env
 
   if (id && email) {
     console.log('👤 Seeding admin user...')

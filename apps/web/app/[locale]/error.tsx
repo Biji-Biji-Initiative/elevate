@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+
 import Link from 'next/link'
 
 interface ErrorProps {
@@ -65,9 +66,9 @@ export default function Error({ error, reset }: ErrorProps) {
         <div className="mt-8">
           <p className="text-sm text-gray-500">
             If this problem persists, please{' '}
-            <a href="#" className="text-blue-600 hover:text-blue-500">
+            <Link href="/docs" className="text-blue-600 hover:text-blue-500">
               contact support
-            </a>
+            </Link>
           </p>
         </div>
       </div>

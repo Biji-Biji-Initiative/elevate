@@ -1,4 +1,4 @@
-import { getKajabiClient } from './kajabi';
+import { getKajabiClient } from './kajabi.js';
 
 /**
  * Utility functions for Kajabi integration

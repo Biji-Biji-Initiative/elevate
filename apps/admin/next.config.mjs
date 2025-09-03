@@ -8,10 +8,28 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable experimental features for React 19
+  // Fix workspace root warning
+  outputFileTracingRoot: '../../',
+  
+  // React 19 and Next.js 15 configuration
   experimental: {
     reactCompiler: false, // Disable React Compiler for now
   },
+
+  // Transpile internal packages with React
+  transpilePackages: [
+    '@elevate/ui',
+    '@elevate/auth',
+    '@elevate/emails',
+    '@elevate/types',
+    '@elevate/db',
+    '@elevate/storage',
+    '@elevate/openapi',
+    '@elevate/security',
+    '@elevate/integrations',
+    '@elevate/logic',
+    '@elevate/config'
+  ],
   
   // ESLint configuration
   eslint: {
@@ -28,15 +46,21 @@ const nextConfig = {
   // Image configuration
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      },
+      { protocol: 'https', hostname: '**.supabase.co' },
+      { protocol: 'https', hostname: 'images.clerk.dev' },
+      { protocol: 'https', hostname: 'img.clerk.com' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' }
     ],
   },
 
   // Webpack configuration for optimized bundle splitting
   webpack: (config, { isServer }) => {
+    // Add resolution for .ts files in openapi dist
+    config.resolve.extensionAlias = {
+      ...config.resolve.extensionAlias,
+      ".ts": [".ts", ".js"],
+    };
+    
     // Optimize chunk splitting for i18n
     if (!isServer) {
       config.optimization = {

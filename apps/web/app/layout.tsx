@@ -1,5 +1,9 @@
-import { ClerkProvider } from '@clerk/nextjs'
+import * as React from 'react'
+
 import { Inter } from 'next/font/google'
+import Script from 'next/script'
+
+import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' })
@@ -24,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html className="scroll-smooth">
+      <html lang="en" className="scroll-smooth">
         <head>
           <link rel="icon" href="/favicon.ico" sizes="any" />
           <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -42,17 +46,15 @@ export default function RootLayout({
           {process.env.NODE_ENV === 'production' && (
             <>
               {/* Google Analytics */}
-              <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID" />
-              <script
-                dangerouslySetInnerHTML={{
-                  __html: `
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
-                    gtag('js', new Date());
-                    gtag('config', 'GA_MEASUREMENT_ID');
-                  `,
-                }}
-              />
+              <Script src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID" strategy="afterInteractive" />
+              <Script id="ga" strategy="afterInteractive">
+                {`
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);} 
+                  gtag('js', new Date());
+                  gtag('config', 'GA_MEASUREMENT_ID');
+                `}
+              </Script>
             </>
           )}
         </body>

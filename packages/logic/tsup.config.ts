@@ -3,7 +3,8 @@ import { defineConfig } from 'tsup'
 export default defineConfig({
   entry: ['src/index.ts', 'src/scoring.ts', 'src/badges.ts'],
   format: ['esm'],
-  dts: true,
+  outDir: 'dist/js',
+  dts: false,
   sourcemap: true,
   clean: true,
   external: [

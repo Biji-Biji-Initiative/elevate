@@ -1,47 +1,62 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "ui": "tui",
-  "globalDependencies": ["**/.env.*local", "pnpm-lock.yaml", "turbo.json"],
-  "remoteCache": {
-    "signature": true
-  },
   "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": [
-        "NODE_ENV",
-        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
-        "NEXT_PUBLIC_SUPABASE_URL",
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-        "NEXT_PUBLIC_SITE_URL"
-      ],
-      "outputLogs": "new-only"
+    "typecheck": {
+      "outputs": ["packages/*/tsconfig.tsbuildinfo", "**/*.tsbuildinfo"]
     },
-    "dev": {
-      "cache": false,
-      "persistent": true
+    "build:types": {
+      "dependsOn": ["^typecheck"],
+      "outputs": ["packages/*/dist/types/**", "dist/types/**"]
+    },
+    "build:js": {
+      "dependsOn": ["build:types"],
+      "outputs": ["packages/*/dist/js/**", "dist/js/**"]
+    },
+    "build": {
+      "dependsOn": ["build:js"],
+      "outputs": ["dist/**"]
     },
     "lint": {
-      "outputs": [],
-      "outputLogs": "new-only"
-    },
-    "type-check": {
-      "outputs": [],
-      "outputLogs": "new-only"
+      "outputs": []
     },
     "test": {
-      "outputs": ["coverage/**"],
-      "outputLogs": "new-only"
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
     },
-    "db:generate": {
-      "cache": false
+    "api:extract": {
+      "dependsOn": ["build:types"],
+      "outputs": ["**/*.api.md"]
     },
-    "db:push": {
-      "cache": false
-    },
-    "clean": {
-      "cache": false
+    "api:check": {
+      "dependsOn": ["build:types"],
+      "outputs": []
     }
   }
+  ,
+  "globalEnv": [
+    "DATABASE_URL",
+    "NODE_ENV",
+    "VERCEL_ENV",
+    "VERCEL_GIT_COMMIT_SHA",
+    "ANALYZE",
+    "CRON_SECRET",
+    "CLERK_WEBHOOK_SECRET",
+    "KAJABI_WEBHOOK_SECRET",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_ANON_KEY",
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+    "CLERK_SECRET_KEY",
+    "NEXT_PUBLIC_SITE_URL",
+    "CLERK_SIGN_IN_URL",
+    "CLERK_SIGN_UP_URL",
+    "CLERK_AFTER_SIGN_IN_URL",
+    "CLERK_AFTER_SIGN_UP_URL",
+    "NEXTAUTH_SECRET",
+    "NEXTAUTH_URL",
+    "WEBHOOK_SECRET",
+    "TURBO_TOKEN",
+    "TURBO_TEAM",
+    "CI"
+  ]
 }

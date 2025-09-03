@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+
 import { auth } from '@clerk/nextjs/server'
+
 import { prisma } from '@elevate/db/client'
 
 export const runtime = 'nodejs';
@@ -47,4 +49,3 @@ export async function GET(request: NextRequest) {
     )
   }
 }
-

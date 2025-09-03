@@ -1,6 +1,8 @@
-import { MetadataRoute } from 'next'
+
 import { prisma } from '@elevate/db/client'
 import { getProfileUrl, getMetricsUrl } from '@elevate/types'
+
+import type { MetadataRoute } from 'next'
 
 /**
  * Next.js 15 sitemap generation
@@ -69,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
       select: {
         handle: true,
-        updated_at: true,
+        created_at: true,
         submissions: {
           where: {
             visibility: 'PUBLIC',
@@ -91,7 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Build profile pages
     const profilePages: MetadataRoute.Sitemap = publicProfiles.map(user => {
-      const lastSubmissionUpdate = user.submissions[0]?.updated_at || user.updated_at
+      const lastSubmissionUpdate = user.submissions[0]?.updated_at || user.created_at
       return {
         url: getProfileUrl(user.handle),
         lastModified: new Date(lastSubmissionUpdate),
@@ -102,7 +104,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [...staticPages, ...profilePages]
 
-  } catch (error) {
+  } catch (_error) {
     
     // Return minimal sitemap on error
     return [

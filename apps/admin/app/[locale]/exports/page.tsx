@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Button, Input } from '@elevate/ui'
+import React, { useEffect, useState } from 'react'
+
 import { withRoleGuard } from '@elevate/auth/context'
+import { adminClient } from '@/lib/admin-client'
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Alert } from '@elevate/ui'
 
 interface ExportFilters {
   startDate: string
@@ -22,6 +24,22 @@ function ExportsPage() {
   })
   
   const [loading, setLoading] = useState<Record<string, boolean>>({})
+  const [cohorts, setCohorts] = useState<string[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchCohorts = async () => {
+      try {
+        setCohorts(await adminClient.getCohorts())
+      } catch (error) {
+        // Cohorts are optional for UI, don't break on fetch failure
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to fetch cohorts:', error);
+        }
+      }
+    }
+    void fetchCohorts()
+  }, [])
 
   const handleExport = async (type: string) => {
     setLoading(prev => ({ ...prev, [type]: true }))
@@ -55,10 +73,10 @@ function ExportsPage() {
         document.body.removeChild(a)
       } else {
         const data = await response.json()
-        alert(`Export failed: ${data.error}`)
+        setError(`Export failed: ${String(data.error)}`)
       }
     } catch (error) {
-      alert('Failed to export data')
+      setError('Failed to export data')
     } finally {
       setLoading(prev => ({ ...prev, [type]: false }))
     }
@@ -97,6 +115,11 @@ function ExportsPage() {
 
   return (
     <div className="p-6">
+      {error && (
+        <div className="mb-4">
+          <Alert variant="destructive">{error}</Alert>
+        </div>
+      )}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Data Exports</h1>
         <p className="text-gray-600">Export system data to CSV files for analysis and reporting</p>
@@ -127,46 +150,49 @@ function ExportsPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Activity</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filters.activity}
-              onChange={(e) => setFilters(prev => ({ ...prev, activity: e.target.value }))}
-            >
-              <option value="ALL">All Activities</option>
-              <option value="LEARN">Learn</option>
-              <option value="EXPLORE">Explore</option>
-              <option value="AMPLIFY">Amplify</option>
-              <option value="PRESENT">Present</option>
-              <option value="SHINE">Shine</option>
-            </select>
+            <Select value={filters.activity} onValueChange={(value) => setFilters(prev => ({ ...prev, activity: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select activity" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Activities</SelectItem>
+                <SelectItem value="LEARN">Learn</SelectItem>
+                <SelectItem value="EXPLORE">Explore</SelectItem>
+                <SelectItem value="AMPLIFY">Amplify</SelectItem>
+                <SelectItem value="PRESENT">Present</SelectItem>
+                <SelectItem value="SHINE">Shine</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filters.status}
-              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-            >
-              <option value="ALL">All Status</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-            </select>
+            <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Status</SelectItem>
+                <SelectItem value="PENDING">Pending</SelectItem>
+                <SelectItem value="APPROVED">Approved</SelectItem>
+                <SelectItem value="REJECTED">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={filters.cohort}
-              onChange={(e) => setFilters(prev => ({ ...prev, cohort: e.target.value }))}
-            >
-              <option value="ALL">All Cohorts</option>
-              <option value="Batch 1">Batch 1</option>
-              <option value="Batch 2">Batch 2</option>
-              <option value="Batch 3">Batch 3</option>
-            </select>
+            <Select value={filters.cohort} onValueChange={(value) => setFilters(prev => ({ ...prev, cohort: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select cohort" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">All Cohorts</SelectItem>
+                {cohorts.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -245,4 +271,3 @@ function ExportsPage() {
 }
 
 export default withRoleGuard(ExportsPage, ['admin', 'superadmin'])
-

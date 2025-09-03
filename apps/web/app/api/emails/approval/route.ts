@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { sendApprovalNotificationEmail } from '@elevate/emails';
+import { type NextRequest, NextResponse } from 'next/server';
+
 import { auth } from '@clerk/nextjs/server';
+
+import { sendApprovalNotificationEmail } from '@elevate/emails';
+import { ApprovalEmailSchema } from '@elevate/types';
 
 export const runtime = 'nodejs';
 
@@ -12,7 +15,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body: unknown = await request.json();
+    const parsed = ApprovalEmailSchema.safeParse(body);
+    
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid request body', details: parsed.error.issues },
+        { status: 400 }
+      );
+    }
+
     const { 
       email, 
       name, 
@@ -23,16 +35,7 @@ export async function POST(request: NextRequest) {
       leaderboardPosition,
       dashboardUrl,
       leaderboardUrl 
-    } = body;
-
-    // Validate required fields
-    if (!email || !name || !activityName || pointsAwarded === undefined || 
-        !totalPoints || !leaderboardPosition || !dashboardUrl || !leaderboardUrl) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+    } = parsed.data;
 
     // Send approval notification email
     const result = await sendApprovalNotificationEmail(

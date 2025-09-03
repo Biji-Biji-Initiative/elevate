@@ -1,59 +1,19 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '@clerk/nextjs'
-import Link from 'next/link'
-import { Button, Card, CardContent, LoadingSpinner, Alert } from '@elevate/ui'
-import { getProfilePath } from '@elevate/types'
 
-interface DashboardData {
-  user: {
-    id: string
-    name: string
-    handle: string
-    school?: string
-    cohort?: string
-  }
-  points: {
-    total: number
-    breakdown: Record<string, number>
-  }
-  progress: Array<{
-    activityCode: string
-    activityName: string
-    defaultPoints: number
-    pointsEarned: number
-    submissionCounts: {
-      total: number
-      approved: number
-      pending: number
-      rejected: number
-    }
-    latestSubmission: Record<string, unknown> | null
-    hasCompleted: boolean
-  }>
-  badges: Array<{
-    code: string
-    name: string
-    description: string
-    iconUrl?: string
-    earnedAt: string
-  }>
-  recentActivity: Array<{
-    id: string
-    activityCode: string
-    activityName: string
-    status: string
-    createdAt: string
-    updatedAt: string
-  }>
-  stats: {
-    totalSubmissions: number
-    approvedSubmissions: number
-    pendingSubmissions: number
-    completedStages: number
-  }
-}
+import Link from 'next/link'
+import Image from 'next/image'
+
+import { useAuth } from '@clerk/nextjs'
+
+import { z } from 'zod'
+import { getProfilePath, type SafeDashboardData } from '@elevate/types'
+import { Button, Card, LoadingSpinner, Alert, AlertTitle, AlertDescription } from '@elevate/ui'
+import { getApiClient } from '../../../lib/api-client'
+
+// Using SafeDashboardData from @elevate/types for better type safety
+type DashboardData = SafeDashboardData
 
 const ACTIVITY_ROUTES = {
   LEARN: '/dashboard/learn',
@@ -63,11 +23,23 @@ const ACTIVITY_ROUTES = {
   SHINE: '/dashboard/shine'
 } as const
 
+type ActivityCode = keyof typeof ACTIVITY_ROUTES
+
+function isActivityCode(code: string): code is ActivityCode {
+  return code in ACTIVITY_ROUTES
+}
+
 const STATUS_COLORS = {
   PENDING: 'bg-yellow-100 text-yellow-800',
   APPROVED: 'bg-green-100 text-green-800',
   REJECTED: 'bg-red-100 text-red-800'
 } as const
+
+type StatusColor = keyof typeof STATUS_COLORS
+
+function isStatusColor(status: string): status is StatusColor {
+  return status in STATUS_COLORS
+}
 
 export default function DashboardPage() {
   const { isLoaded, userId } = useAuth()
@@ -77,23 +49,41 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (isLoaded && userId) {
-      fetchDashboardData()
+      void fetchDashboardData()
     }
   }, [isLoaded, userId])
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/dashboard')
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch dashboard data')
-      }
-
-      setData(result.data)
+      const SubmissionCountsZ = z.object({ total: z.number(), approved: z.number(), pending: z.number(), rejected: z.number() })
+      const ProgressZ = z.object({
+        activityCode: z.string(),
+        activityName: z.string(),
+        defaultPoints: z.number(),
+        pointsEarned: z.number(),
+        submissionCounts: SubmissionCountsZ,
+        latestSubmission: z.unknown().nullable(),
+        hasCompleted: z.boolean()
+      })
+      const BadgeZ = z.object({ code: z.string(), name: z.string(), icon_url: z.string().nullable().optional(), earned_at: z.string().optional() })
+      const ActivityZ = z.object({ id: z.string(), activityName: z.string(), status: z.string(), created_at: z.string() })
+      const StatsZ = z.object({ totalSubmissions: z.number(), approvedSubmissions: z.number(), pendingSubmissions: z.number(), completedStages: z.number() })
+      const DataZ = z.object({
+        user: z.object({ name: z.string(), handle: z.string(), school: z.string().nullable().optional(), cohort: z.string().nullable().optional() }),
+        points: z.object({ total: z.number() }),
+        progress: z.array(ProgressZ),
+        badges: z.array(BadgeZ),
+        recentActivity: z.array(ActivityZ).optional(),
+        stats: StatsZ
+      })
+      const api = getApiClient()
+      const result = await api.getDashboard()
+      const data = (result as unknown as { data?: unknown }).data as DashboardData
+      setData(data)
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to load dashboard')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load dashboard'
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -113,11 +103,12 @@ export default function DashboardPage() {
     return (
       <main style={{ padding: 24, fontFamily: 'system-ui' }}>
         <div className="max-w-4xl mx-auto">
-          <Alert type="error" title="Error Loading Dashboard">
-            {error}
+          <Alert variant="destructive">
+            <AlertTitle>Error Loading Dashboard</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
           <div className="mt-4">
-            <Button onClick={fetchDashboardData}>Retry</Button>
+            <Button onClick={() => void fetchDashboardData()}>Retry</Button>
           </div>
         </div>
       </main>
@@ -128,8 +119,9 @@ export default function DashboardPage() {
     return (
       <main style={{ padding: 24, fontFamily: 'system-ui' }}>
         <div className="max-w-4xl mx-auto">
-          <Alert type="info">
-            No dashboard data available.
+          <Alert variant="default">
+            <AlertTitle>No Data</AlertTitle>
+            <AlertDescription>No dashboard data available.</AlertDescription>
           </Alert>
         </div>
       </main>
@@ -254,7 +246,7 @@ export default function DashboardPage() {
                                 </span>
                               )}
                               
-                              <Link href={ACTIVITY_ROUTES[stage.activityCode as keyof typeof ACTIVITY_ROUTES]}>
+                              <Link href={isActivityCode(stage.activityCode) ? ACTIVITY_ROUTES[stage.activityCode] : '/dashboard'}>
                                 <Button>
                                   {stage.hasCompleted ? 'View' : 'Start'}
                                 </Button>
@@ -286,8 +278,8 @@ export default function DashboardPage() {
                     {data.badges.slice(0, 3).map((badge) => (
                       <div key={badge.code} className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                          {badge.iconUrl ? (
-                            <img src={badge.iconUrl} alt={badge.name} className="w-5 h-5" />
+                          {badge.icon_url ? (
+                            <Image src={badge.icon_url} alt={badge.name} width={20} height={20} className="w-5 h-5" />
                           ) : (
                             <span className="text-purple-600 font-bold text-xs">B</span>
                           )}
@@ -297,7 +289,7 @@ export default function DashboardPage() {
                             {badge.name}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {new Date(badge.earnedAt).toLocaleDateString()}
+                            {badge.earned_at ? new Date(badge.earned_at).toLocaleDateString() : 'N/A'}
                           </div>
                         </div>
                       </div>
@@ -320,10 +312,10 @@ export default function DashboardPage() {
                             {activity.activityName}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {new Date(activity.createdAt).toLocaleDateString()}
+                            {new Date(activity.created_at).toLocaleDateString()}
                           </div>
                         </div>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[activity.status as keyof typeof STATUS_COLORS]}`}>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${isStatusColor(activity.status) ? STATUS_COLORS[activity.status] : 'bg-gray-100 text-gray-800'}`}>
                           {activity.status.toLowerCase()}
                         </span>
                       </div>

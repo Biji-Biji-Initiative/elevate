@@ -1,12 +1,17 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+
 import { useAuth } from '@clerk/nextjs'
-import { Button, Input, Card, CardContent, FormField, LoadingSpinner, Alert } from '@elevate/ui'
-import { FileUpload, FileList, UploadedFile } from '@elevate/ui/FileUpload'
-import { AmplifySchema, AmplifyInput } from '@elevate/types/schemas'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+
+import { AmplifySchema, type AmplifyInput } from '@elevate/types/schemas'
+import { Button, Input, Card, FormField, LoadingSpinner, Alert, AlertTitle, AlertDescription, FileUpload, FileList, type UploadedFile } from '@elevate/ui'
+
+import { isSuccessfulUpload, filterSuccessfulUploads } from '../../../../lib/file-upload-helpers'
+import { getApiClient } from '../../../../lib/api-client'
 
 export default function AmplifyFormPage() {
   const { userId } = useAuth()
@@ -31,6 +36,15 @@ export default function AmplifyFormPage() {
   const watchedPeers = watch('peersTrained')
   const watchedStudents = watch('studentsTrained')
 
+  // Narrow to successful uploaded files with path
+  const filterSuccessfulUploads = <T extends { path?: string; error?: unknown }>(
+    files: T[]
+  ): Array<T & { path: string }> => {
+    return files.filter((f) => typeof (f as any).path === 'string' && !(f as any).error) as Array<
+      T & { path: string }
+    >
+  }
+
   // Calculate potential points (2 points per peer, 1 point per student)
   const calculatePoints = () => {
     const peersPoints = Math.min(watchedPeers || 0, 50) * 2
@@ -53,23 +67,10 @@ export default function AmplifyFormPage() {
         formData.append('file', file)
         formData.append('activityCode', 'AMPLIFY')
 
-        const response = await fetch('/api/files/upload', {
-          method: 'POST',
-          body: formData
-        })
+        const api = getApiClient()
+        const result = await api.uploadFile(file, 'AMPLIFY')
 
-        const result = await response.json()
-
-        if (!response.ok) {
-          throw new Error(result.error || 'Upload failed')
-        }
-
-        return {
-          file,
-          path: result.data.path,
-          hash: result.data.hash,
-          uploading: false
-        }
+        return { file, path: result.data.path, hash: result.data.hash, uploading: false }
 
       } catch (error) {
         return {
@@ -93,9 +94,7 @@ export default function AmplifyFormPage() {
     })
 
     // Update form value with successful uploads
-    const successfulPaths = results
-      .filter(result => result.path && !result.error)
-      .map(result => result.path!)
+    const successfulPaths = filterSuccessfulUploads(results).map(r => r.path)
     
     setValue('attendanceProofFiles', successfulPaths)
   }
@@ -104,9 +103,7 @@ export default function AmplifyFormPage() {
     const newFiles = uploadedFiles.filter((_, i) => i !== index)
     setUploadedFiles(newFiles)
     
-    const successfulPaths = newFiles
-      .filter(file => file.path && !file.error)
-      .map(file => file.path!)
+    const successfulPaths = filterSuccessfulUploads(newFiles).map(f => f.path)
     
     setValue('attendanceProofFiles', successfulPaths)
   }
@@ -136,26 +133,16 @@ export default function AmplifyFormPage() {
       const payload = {
         peersTrained: Math.min(data.peersTrained || 0, 50),
         studentsTrained: Math.min(data.studentsTrained || 0, 200),
-        attendanceProofFiles: successfulFiles.map(f => f.path!)
+        attendanceProofFiles: filterSuccessfulUploads(successfulFiles).map(f => f.path)
       }
 
-      const response = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          activityCode: 'AMPLIFY',
-          payload,
-          attachments: successfulFiles.map(f => f.path!)
-        })
+      const api2 = getApiClient()
+      await api2.createSubmission({
+        activityCode: 'AMPLIFY',
+        payload,
+        attachments: filterSuccessfulUploads(successfulFiles).map(f => f.path),
+        visibility: 'PRIVATE'
       })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Submission failed')
-      }
 
       const potentialPoints = calculatePoints()
       
@@ -192,8 +179,8 @@ export default function AmplifyFormPage() {
             variant={submitStatus.type === 'error' ? 'destructive' : 'default'} 
             className="mb-6"
           >
-            <h4 className="font-semibold">{submitStatus.type === 'success' ? 'Success!' : 'Error'}</h4>
-            {submitStatus.message}
+            <AlertTitle>{submitStatus.type === 'success' ? 'Success!' : 'Error'}</AlertTitle>
+            <AlertDescription>{submitStatus.message}</AlertDescription>
           </Alert>
         )}
 

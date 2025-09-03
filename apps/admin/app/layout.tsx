@@ -1,8 +1,14 @@
-import { ClerkProvider } from '@clerk/nextjs'
+import * as React from 'react'
+
 import { Inter } from 'next/font/google'
+
+import { Providers } from './providers'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
+
+// Force dynamic rendering for the entire admin app
+export const dynamic = 'force-dynamic'
 
 export default function RootLayout({
   children,
@@ -10,12 +16,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
-      <html className="scroll-smooth">
-        <body className={inter.className}>
+    <html lang="en" className="scroll-smooth">
+      <body className={inter.className}>
+        <Providers>
           {children}
-        </body>
-      </html>
-    </ClerkProvider>
+        </Providers>
+      </body>
+    </html>
   )
 }

@@ -1,8 +1,14 @@
 import { Suspense } from 'react'
-import { notFound } from 'next/navigation'
-import { Metadata } from 'next'
+
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { z } from 'zod'
+
 import { MetricsChart, StatsGrid, StageCard, PageLoading } from '@elevate/ui'
+import { getApiClient } from '../../../../lib/api-client'
+
+import type { Metadata } from 'next'
+
 
 interface MetricsPageProps {
   params: Promise<{
@@ -34,7 +40,13 @@ interface StageMetrics {
   completionRate: number
 }
 
-const validStages = ['learn', 'explore', 'amplify', 'present', 'shine']
+const validStages = ['learn', 'explore', 'amplify', 'present', 'shine'] as const
+
+type ValidStage = typeof validStages[number]
+
+function isValidStage(stage: string): stage is ValidStage {
+  return validStages.includes(stage as ValidStage)
+}
 
 const stageInfo = {
   learn: {
@@ -71,27 +83,16 @@ const stageInfo = {
 
 async function fetchStageMetrics(stage: string): Promise<StageMetrics | null> {
   try {
-    const response = await fetch(`/api/metrics?stage=${stage}`, {
-      next: { revalidate: 900 } // Cache for 15 minutes
-    })
-    
-    if (response.status === 404) {
-      return null
-    }
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const metrics = await response.json()
-    return metrics
-  } catch (error) {
+    const api = getApiClient()
+    const res = await api.getMetrics({ stage: stage as any })
+    return (res as any).data as StageMetrics
+  } catch (_) {
     return null
   }
 }
 
 async function MetricsContent({ stage }: { stage: string }) {
-  if (!validStages.includes(stage)) {
+  if (!isValidStage(stage)) {
     notFound()
   }
   
@@ -100,7 +101,8 @@ async function MetricsContent({ stage }: { stage: string }) {
     notFound()
   }
   
-  const info = stageInfo[stage as keyof typeof stageInfo]
+  // Now stage is typed as ValidStage after the type guard
+  const info = stageInfo[stage]
   const approvalRate = (metrics.approvedSubmissions / metrics.totalSubmissions) * 100
 
   return (
@@ -127,7 +129,7 @@ async function MetricsContent({ stage }: { stage: string }) {
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {stageInfo[s as keyof typeof stageInfo].title}
+                {stageInfo[s].title}
               </Link>
             ))}
           </div>
@@ -290,14 +292,15 @@ export async function generateMetadata({ params }: MetricsPageProps): Promise<Me
   const { stage } = await params
   const stageKey = stage.toLowerCase()
   
-  if (!validStages.includes(stageKey)) {
+  if (!isValidStage(stageKey)) {
     return {
       title: 'Stage Not Found - MS Elevate LEAPS Tracker',
       description: 'The requested LEAPS stage could not be found.',
     }
   }
   
-  const info = stageInfo[stageKey as keyof typeof stageInfo]
+  // Now stageKey is typed as ValidStage after the type guard
+  const info = stageInfo[stageKey]
   
   return {
     title: `${info.title} Metrics - MS Elevate LEAPS Tracker`,
@@ -320,4 +323,3 @@ export default async function MetricsStagePage({ params }: MetricsPageProps) {
     </Suspense>
   )
 }
-

@@ -1,12 +1,17 @@
 'use client'
 
 import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+
 import { useAuth } from '@clerk/nextjs'
-import { Button, Input, Card, CardContent, FormField, LoadingSpinner, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
-import { FileUpload, FileList, UploadedFile } from '@elevate/ui/FileUpload'
-import { LearnSchema, LearnInput } from '@elevate/types/schemas'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+
+import { LearnSchema, type LearnInput } from '@elevate/types/schemas'
+import { Button, Input, Card, FormField, LoadingSpinner, Alert, AlertTitle, AlertDescription, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, FileUpload, FileList, type UploadedFile } from '@elevate/ui'
+
+
+import { getApiClient } from '../../../../lib/api-client'
 
 const providerOptions = [
   { value: 'SPL', label: 'SPL (School of Professional Learning)' },
@@ -33,6 +38,9 @@ export default function LearnFormPage() {
 
   const handleFileSelect = async (files: File[]) => {
     const file = files[0] // Only allow one certificate file
+    if (!file) {
+      return // Early exit if no file selected
+    }
     
     const newUploadedFile: UploadedFile = {
       file,
@@ -46,16 +54,8 @@ export default function LearnFormPage() {
       formData.append('file', file)
       formData.append('activityCode', 'LEARN')
 
-      const response = await fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Upload failed')
-      }
+      const api = getApiClient()
+      const result = await api.uploadFile(file, 'LEARN')
 
       // Update the file with upload results
       setUploadedFiles([{
@@ -88,7 +88,8 @@ export default function LearnFormPage() {
       return
     }
 
-    if (uploadedFiles.length === 0 || !uploadedFiles[0].path) {
+    const firstFile = uploadedFiles[0]
+    if (uploadedFiles.length === 0 || !firstFile || !firstFile.path) {
       setSubmitStatus({ type: 'error', message: 'Please upload a certificate file' })
       return
     }
@@ -101,27 +102,17 @@ export default function LearnFormPage() {
         provider: data.provider,
         course: data.course,
         completedAt: data.completedAt,
-        certificateFile: uploadedFiles[0].path,
-        certificateHash: uploadedFiles[0].hash
+        certificateFile: firstFile.path,
+        certificateHash: firstFile.hash
       }
 
-      const response = await fetch('/api/submissions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          activityCode: 'LEARN',
-          payload,
-          attachments: [uploadedFiles[0].path]
-        })
+      const api2 = getApiClient()
+      await api2.createSubmission({
+        activityCode: 'LEARN',
+        payload,
+        attachments: [firstFile.path],
+        visibility: 'PRIVATE'
       })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Submission failed')
-      }
 
       setSubmitStatus({ 
         type: 'success', 
@@ -156,8 +147,8 @@ export default function LearnFormPage() {
             variant={submitStatus.type === 'error' ? 'destructive' : 'default'} 
             className="mb-6"
           >
-            <h4 className="font-semibold">{submitStatus.type === 'success' ? 'Success!' : 'Error'}</h4>
-            {submitStatus.message}
+            <AlertTitle>{submitStatus.type === 'success' ? 'Success!' : 'Error'}</AlertTitle>
+            <AlertDescription>{submitStatus.message}</AlertDescription>
           </Alert>
         )}
 
@@ -168,7 +159,11 @@ export default function LearnFormPage() {
               required
               error={errors.provider?.message}
             >
-              <Select value={watchedProvider || ''} onValueChange={(value) => setValue('provider', value as 'SPL' | 'ILS')}>
+              <Select value={watchedProvider || ''} onValueChange={(value) => {
+                if (value === 'SPL' || value === 'ILS') {
+                  setValue('provider', value)
+                }
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select your training provider" />
                 </SelectTrigger>
@@ -191,7 +186,6 @@ export default function LearnFormPage() {
               <Input
                 {...register('course')}
                 placeholder="e.g. AI in Education Fundamentals"
-                error={!!errors.course}
               />
             </FormField>
 
@@ -203,7 +197,6 @@ export default function LearnFormPage() {
               <Input
                 {...register('completedAt')}
                 type="date"
-                error={!!errors.completedAt}
               />
             </FormField>
 

@@ -1,4 +1,20 @@
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+
+// Helper function to extract error message from Axios error
+function extractAxiosErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  // Handle Axios error response
+  if (axios.isAxiosError(error)) {
+    const axiosError = error as AxiosError<{ message?: string }>;
+    return axiosError.response?.data?.message || axiosError.message || 'Request failed';
+  }
+  
+  return String(error);
+}
 
 export interface KajabiContact {
   id: number;
@@ -84,7 +100,7 @@ export class KajabiClient {
     try {
       // Parse name into first and last name
       const nameParts = name.trim().split(' ');
-      const firstName = nameParts[0] || '';
+      const firstName = nameParts[0] ?? '';
       const lastName = nameParts.slice(1).join(' ') || '';
 
       const contactData: CreateContactData = {
@@ -112,9 +128,7 @@ export class KajabiClient {
         return response.data.contact;
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : (error as any)?.response?.data?.message || String(error);
+      const errorMessage = extractAxiosErrorMessage(error);
       throw new Error(`Failed to create or update contact: ${errorMessage}`);
     }
   }
@@ -128,14 +142,13 @@ export class KajabiClient {
         `/contacts?email=${encodeURIComponent(email.toLowerCase().trim())}`
       );
       
-      return response.data.contacts.length > 0 ? response.data.contacts[0] : null;
+      const firstContact = response.data.contacts[0];
+      return firstContact ?? null;
     } catch (error: unknown) {
-      if ((error as any)?.response?.status === 404) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
         return null;
       }
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : (error as any)?.response?.data?.message || String(error);
+      const errorMessage = extractAxiosErrorMessage(error);
       throw new Error(`Failed to find contact: ${errorMessage}`);
     }
   }
@@ -151,9 +164,7 @@ export class KajabiClient {
       
       return response.data.success || response.status === 200 || response.status === 201;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : (error as any)?.response?.data?.message || String(error);
+      const errorMessage = extractAxiosErrorMessage(error);
       throw new Error(`Failed to grant offer: ${errorMessage}`);
     }
   }
@@ -169,9 +180,7 @@ export class KajabiClient {
       
       return response.data.success || response.status === 200 || response.status === 201;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : (error as any)?.response?.data?.message || String(error);
+      const errorMessage = extractAxiosErrorMessage(error);
       throw new Error(`Failed to tag contact: ${errorMessage}`);
     }
   }
@@ -187,9 +196,7 @@ export class KajabiClient {
       
       return response.status === 200 || response.status === 204;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : (error as any)?.response?.data?.message || String(error);
+      const errorMessage = extractAxiosErrorMessage(error);
       throw new Error(`Failed to remove tag: ${errorMessage}`);
     }
   }
@@ -202,9 +209,7 @@ export class KajabiClient {
       const response: AxiosResponse<KajabiTagsResponse> = await this.client.get(`/contacts/${contactId}/tags`);
       return response.data.tags || [];
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : (error as any)?.response?.data?.message || String(error);
+      const errorMessage = extractAxiosErrorMessage(error);
       throw new Error(`Failed to get contact tags: ${errorMessage}`);
     }
   }

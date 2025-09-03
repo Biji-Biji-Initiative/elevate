@@ -108,6 +108,17 @@
    - Web app: http://localhost:3000
    - Admin app: http://localhost:3001
 
+## 📘 API Documentation
+
+- Interactive Swagger UI: visit `/docs` on the web app
+- Raw OpenAPI spec JSON: `GET /api/docs`
+- Generate spec + SDK locally: `pnpm openapi:generate` (artifacts in `packages/openapi/dist`)
+
+### Admin API Envelopes
+
+- Success: `{ success: true, data: { ... } }`
+- Errors: standardized via `createErrorResponse(error, status)`
+
 ## 📁 Project Structure
 
 ```

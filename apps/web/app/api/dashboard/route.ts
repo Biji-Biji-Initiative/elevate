@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
+
 import { auth } from '@clerk/nextjs/server'
+
 import { prisma } from '@elevate/db/client'
 
 export const runtime = 'nodejs';
@@ -59,14 +61,14 @@ export async function GET(request: NextRequest) {
     })
 
     // Group submissions by activity
-    const submissionsByActivity = submissions.reduce((acc, submission) => {
+    const submissionsByActivity = submissions.reduce<Record<string, typeof submissions>>((acc, submission) => {
       const activityCode = submission.activity_code
       if (!acc[activityCode]) {
         acc[activityCode] = []
       }
       acc[activityCode].push(submission)
       return acc
-    }, {} as Record<string, typeof submissions>)
+    }, {})
 
     // Calculate progress for each LEAPS stage
     const activities = await prisma.activity.findMany({
@@ -120,10 +122,10 @@ export async function GET(request: NextRequest) {
         },
         points: {
           total: totalPoints,
-          breakdown: progress.reduce((acc, p) => {
+          breakdown: progress.reduce<Record<string, number>>((acc, p) => {
             acc[p.activityCode] = p.pointsEarned
             return acc
-          }, {} as Record<string, number>)
+          }, {})
         },
         progress,
         badges: earnedBadges.map(eb => ({

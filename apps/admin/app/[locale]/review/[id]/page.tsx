@@ -1,34 +1,40 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@elevate/ui'
-import { Textarea, Input, StatusBadge, ConfirmModal } from '@elevate/ui'
-import { withRoleGuard } from '@elevate/auth/context'
 
-interface Submission {
+import { useRouter } from 'next/navigation'
+
+import { withRoleGuard } from '@elevate/auth/context'
+import { adminClient } from '@/lib/admin-client'
+import { Button , Textarea, Input, StatusBadge, ConfirmModal, Alert } from '@elevate/ui'
+
+type Submission = {
   id: string
+  created_at: string
+  updated_at?: string | undefined
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  visibility: 'PUBLIC' | 'PRIVATE'
+  review_note?: string | null | undefined
+  reviewer_id?: string | null | undefined
+  attachments?: unknown[] | undefined
+  payload?: {
+    peersTrained?: number | undefined
+    studentsTrained?: number | undefined
+    [key: string]: unknown
+  } | undefined
   user: {
     id: string
     name: string
     handle: string
-    email: string
-    school?: string
-    cohort?: string
+    email?: string | undefined
+    school?: string | null | undefined
+    cohort?: string | null | undefined
   }
   activity: {
     code: string
     name: string
-    default_points: number
+    default_points?: number | undefined
   }
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-  visibility: 'PUBLIC' | 'PRIVATE'
-  payload: Record<string, unknown>
-  attachments: string[]
-  reviewer_id?: string
-  review_note?: string
-  created_at: string
-  updated_at: string
 }
 
 function ReviewSubmissionPage({
@@ -40,6 +46,7 @@ function ReviewSubmissionPage({
   const [submission, setSubmission] = useState<Submission | null>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [reviewNote, setReviewNote] = useState('')
   const [pointAdjustment, setPointAdjustment] = useState<number | ''>('')
   const [confirmModal, setConfirmModal] = useState<{
@@ -62,22 +69,17 @@ function ReviewSubmissionPage({
 
   useEffect(() => {
     if (submissionId) {
-      fetchSubmission()
+      void fetchSubmission()
     }
   }, [submissionId])
 
   const fetchSubmission = async () => {
+    if (!submissionId) return
     setLoading(true)
     try {
-      const response = await fetch(`/api/admin/submissions/${submissionId}`)
-      const data = await response.json()
-      
-      if (response.ok) {
-        setSubmission(data.submission)
-        setReviewNote(data.submission.review_note || '')
-      } else {
-        router.push('/admin/submissions')
-      }
+      const sub = await adminClient.getSubmissionById(submissionId)
+      setSubmission(sub)
+      setReviewNote(sub.review_note || '')
     } catch (error) {
       router.push('/admin/submissions')
     } finally {
@@ -94,7 +96,7 @@ function ReviewSubmissionPage({
       return Math.min(peers, 50) * 2 + Math.min(students, 200) * 1
     }
 
-    return submission.activity.default_points
+    return submission.activity.default_points || 0
   }
 
   const handleReview = async (action: 'approve' | 'reject') => {
@@ -102,28 +104,18 @@ function ReviewSubmissionPage({
 
     setProcessing(true)
     try {
-      const response = await fetch('/api/admin/submissions', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          submissionId: submission.id,
-          action,
-          reviewNote: reviewNote || undefined,
-          pointAdjustment: pointAdjustment !== '' ? Number(pointAdjustment) : undefined
-        })
-      })
-
-      const data = await response.json()
-      
-      if (response.ok) {
-        // Refresh submission data
-        await fetchSubmission()
-        setConfirmModal({ isOpen: false, action: 'approve' })
-      } else {
-        alert(`Error: ${data.error}`)
+      const reviewData: Parameters<typeof adminClient.reviewSubmission>[0] = {
+        submissionId: submission.id,
+        action,
       }
+      if (reviewNote) reviewData.reviewNote = reviewNote
+      if (pointAdjustment !== '') reviewData.pointAdjustment = Number(pointAdjustment)
+      
+      await adminClient.reviewSubmission(reviewData)
+      await fetchSubmission()
+      setConfirmModal({ isOpen: false, action: 'approve' })
     } catch (error) {
-      alert('Failed to process review')
+      setError('Failed to process review')
     } finally {
       setProcessing(false)
     }
@@ -148,7 +140,10 @@ function ReviewSubmissionPage({
       )
     }
     
-    return <span className="text-sm">{String(value)}</span>
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      return <span className="text-sm">{value.toString()}</span>
+    }
+    return <span className="text-sm">-</span>
   }
 
   const renderAttachments = () => {
@@ -161,13 +156,15 @@ function ReviewSubmissionPage({
         {submission.attachments.map((attachment, index) => (
           <div key={index} className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">📎</span>
-            <span className="text-sm">{attachment.split('/').pop() || attachment}</span>
+            <span className="text-sm">{typeof attachment === 'string' ? (attachment.split('/').pop() || attachment) : 'Unknown file'}</span>
             <Button
               variant="ghost"
               style={{ padding: '2px 8px', fontSize: '12px' }}
               onClick={() => {
                 // In a real implementation, you'd generate a signed URL
-                window.open(`/api/files/${attachment}`, '_blank')
+                if (typeof attachment === 'string') {
+                  window.open(`/api/files/${attachment}`, '_blank')
+                }
               }}
             >
               View
@@ -196,6 +193,11 @@ function ReviewSubmissionPage({
   if (!submission) {
     return (
       <div className="p-6">
+        {error && (
+          <div className="mb-4">
+            <Alert variant="destructive">{error}</Alert>
+          </div>
+        )}
         <div className="text-center py-12">
           <p className="text-gray-500">Submission not found</p>
           <Button 
@@ -253,7 +255,7 @@ function ReviewSubmissionPage({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
-                <p className="text-sm">{new Date(submission.updated_at).toLocaleString()}</p>
+                <p className="text-sm">{submission.updated_at ? new Date(submission.updated_at).toLocaleString() : 'Never'}</p>
               </div>
             </div>
 
@@ -430,4 +432,3 @@ function ReviewSubmissionPage({
 }
 
 export default withRoleGuard(ReviewSubmissionPage, ['reviewer', 'admin', 'superadmin'])
-

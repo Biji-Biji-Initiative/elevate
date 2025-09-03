@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@elevate/db/client'
+import { type NextRequest, NextResponse } from 'next/server'
+
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import { prisma } from '@elevate/db'
+import { parseActivityCode, AnalyticsQuerySchema } from '@elevate/types'
+// import { withRateLimit, adminRateLimiter } from '@elevate/security' // TODO: Add security package
 import type {
   AnalyticsDateFilter,
   AnalyticsCohortFilter,
@@ -30,13 +33,16 @@ import type {
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  // TODO: Add rate limiting when security package is available
+  // return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const user = await requireRole('reviewer')
     const { searchParams } = new URL(request.url)
-    
-    const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate') 
-    const cohort = searchParams.get('cohort')
+    const parsed = AnalyticsQuerySchema.safeParse(Object.fromEntries(searchParams))
+    if (!parsed.success) {
+      return createErrorResponse(new Error('Invalid query'), 400)
+    }
+    const { startDate, endDate, cohort } = parsed.data
     
     // Build date filter
     const dateFilter: AnalyticsDateFilter = {}
@@ -104,9 +110,9 @@ export async function GET(request: NextRequest) {
       getUserRegistrationsByDate(userFilter),
       
       // Points statistics
-      getPointsStats({ ...dateFilter, user: cohortFilter.user }),
-      getPointsByActivity({ ...dateFilter, user: cohortFilter.user }),
-      getPointsDistribution({ user: cohortFilter.user }),
+      getPointsStats({ ...dateFilter, ...(cohortFilter.user && { user: cohortFilter.user }) }),
+      getPointsByActivity({ ...dateFilter, ...(cohortFilter.user && { user: cohortFilter.user }) }),
+      getPointsDistribution({ ...(cohortFilter.user && { user: cohortFilter.user }) }),
       
       // Recent activity
       getRecentSubmissions(10),
@@ -123,38 +129,42 @@ export async function GET(request: NextRequest) {
     ])
     
     return NextResponse.json({
-      overview: {
-        submissions: submissionStats,
-        users: userStats,
-        points: pointsStats,
-        badges: badgeStats,
-        reviews: reviewStats
-      },
-      distributions: {
-        submissionsByStatus,
-        submissionsByActivity,
-        usersByRole,
-        usersByCohort,
-        pointsByActivity,
-        pointsDistribution
-      },
-      trends: {
-        submissionsByDate,
-        userRegistrationsByDate
-      },
-      recentActivity: {
-        submissions: recentSubmissions,
-        approvals: recentApprovals,
-        users: recentUsers
-      },
-      performance: {
-        reviewers: reviewerPerformance,
-        topBadges
+      success: true,
+      data: {
+        overview: {
+          submissions: submissionStats,
+          users: userStats,
+          points: pointsStats,
+          badges: badgeStats,
+          reviews: reviewStats
+        },
+        distributions: {
+          submissionsByStatus,
+          submissionsByActivity,
+          usersByRole,
+          usersByCohort,
+          pointsByActivity,
+          pointsDistribution
+        },
+        trends: {
+          submissionsByDate,
+          userRegistrationsByDate
+        },
+        recentActivity: {
+          submissions: recentSubmissions,
+          approvals: recentApprovals,
+          users: recentUsers
+        },
+        performance: {
+          reviewers: reviewerPerformance,
+          topBadges
+        }
       }
     })
   } catch (error) {
     return createErrorResponse(error, 500)
   }
+  // })
 }
 
 async function getSubmissionStats(filter: AnalyticsSubmissionFilter): Promise<SubmissionStats> {
@@ -213,11 +223,14 @@ async function getSubmissionsByActivity(filter: AnalyticsSubmissionFilter): Prom
     return acc
   }, {} as Record<string, string>)
   
-  return result.map(item => ({
-    activity: item.activity_code as ActivityCode,
-    activityName: activityMap[item.activity_code],
-    count: item._count
-  }))
+  return result.map(item => {
+    const activityCode = parseActivityCode(item.activity_code)
+    return {
+      activity: activityCode || item.activity_code as ActivityCode,
+      activityName: activityMap[item.activity_code] || 'Unknown',
+      count: item._count
+    }
+  })
 }
 
 async function getSubmissionsByDate(filter: AnalyticsSubmissionFilter): Promise<DailySubmissionStats[]> {
@@ -244,12 +257,15 @@ async function getSubmissionsByDate(filter: AnalyticsSubmissionFilter): Promise<
   // Group by date
   const dailyStats = submissions.reduce((acc, sub) => {
     const date = sub.created_at.toISOString().split('T')[0]
+    if (!date) return acc // Safety check for noUncheckedIndexedAccess
     if (!acc[date]) {
       acc[date] = { total: 0, approved: 0, rejected: 0, pending: 0 }
     }
     acc[date].total++
-    const statusKey = sub.status.toLowerCase() as 'approved' | 'rejected' | 'pending'
-    acc[date][statusKey]++
+    const status = sub.status.toLowerCase()
+    if (status === 'approved' || status === 'rejected' || status === 'pending') {
+      acc[date][status]++
+    }
     return acc
   }, {} as Record<string, { total: number; approved: number; rejected: number; pending: number }>)
   
@@ -356,6 +372,7 @@ async function getUserRegistrationsByDate(filter: AnalyticsUserFilter): Promise<
   // Group by date
   const dailyRegistrations = users.reduce((acc, user) => {
     const date = user.created_at.toISOString().split('T')[0]
+    if (!date) return acc // Safety check for noUncheckedIndexedAccess
     acc[date] = (acc[date] || 0) + 1
     return acc
   }, {} as Record<string, number>)
@@ -411,12 +428,15 @@ async function getPointsByActivity(filter: AnalyticsSubmissionFilter): Promise<P
     return acc
   }, {} as Record<string, string>)
   
-  return result.map(item => ({
-    activity: item.activity_code as ActivityCode,
-    activityName: activityMap[item.activity_code],
-    totalPoints: item._sum.delta_points || 0,
-    entries: item._count
-  }))
+  return result.map(item => {
+    const activityCode = parseActivityCode(item.activity_code)
+    return {
+      activity: activityCode || item.activity_code as ActivityCode,
+      activityName: activityMap[item.activity_code] || 'Unknown',
+      totalPoints: item._sum.delta_points || 0,
+      entries: item._count
+    }
+  })
 }
 
 async function getPointsDistribution(filter: AnalyticsSubmissionFilter): Promise<PointsDistributionStats> {
@@ -470,10 +490,13 @@ async function getRecentSubmissions(limit: number): Promise<RecentSubmission[]> 
     }
   })
   
-  return submissions.map(sub => ({
-    ...sub,
-    activity_code: sub.activity_code as ActivityCode
-  }))
+  return submissions.map(sub => {
+    const activityCode = parseActivityCode(sub.activity_code)
+    return {
+      ...sub,
+      activity_code: activityCode || sub.activity_code as ActivityCode
+    }
+  })
 }
 
 async function getRecentApprovals(limit: number): Promise<RecentApproval[]> {
@@ -500,10 +523,13 @@ async function getRecentApprovals(limit: number): Promise<RecentApproval[]> {
     }
   })
   
-  return approvals.map(approval => ({
-    ...approval,
-    activity_code: approval.activity_code as ActivityCode
-  }))
+  return approvals.map(approval => {
+    const activityCode = parseActivityCode(approval.activity_code)
+    return {
+      ...approval,
+      activity_code: activityCode || approval.activity_code as ActivityCode
+    }
+  })
 }
 
 async function getRecentUsers(limit: number): Promise<RecentUser[]> {
@@ -563,13 +589,20 @@ async function getTopBadges(limit: number): Promise<TopBadge[]> {
     return acc
   }, {} as Record<string, typeof badges[0]>)
   
-  return result.map(item => ({
-    badge: {
-      ...badgeMap[item.badge_code],
-      icon_url: badgeMap[item.badge_code].icon_url ?? undefined
-    },
-    earnedCount: item._count
-  }))
+  return result.map(item => {
+    const badge = badgeMap[item.badge_code]
+    if (!badge) return null // Skip if badge not found
+    return {
+      badge: {
+        code: badge.code || item.badge_code,
+        name: badge.name || 'Unknown',
+        description: badge.description || '',
+        criteria: badge.criteria || {},
+        icon_url: badge.icon_url || ''
+      },
+      earnedCount: item._count
+    }
+  }).filter((item): item is NonNullable<typeof item> => item !== null)
 }
 
 async function getReviewStats(filter: AnalyticsSubmissionFilter): Promise<ReviewStats> {
@@ -648,10 +681,15 @@ async function getReviewerPerformance(): Promise<ReviewerPerformance[]> {
   }, {} as Record<string, ReviewerPerformance>)
   
   performance.forEach(p => {
-    if (p.reviewer_id && reviewerMap[p.reviewer_id]) {
-      const statusKey = p.status.toLowerCase() as 'approved' | 'rejected'
-      reviewerMap[p.reviewer_id][statusKey] = p._count
-      reviewerMap[p.reviewer_id].total += p._count
+    if (p.reviewer_id) {
+      const reviewer = reviewerMap[p.reviewer_id]
+      if (reviewer) {
+        const status = p.status.toLowerCase()
+        if (status === 'approved' || status === 'rejected') {
+          reviewer[status] = p._count
+          reviewer.total += p._count
+        }
+      }
     }
   })
   

@@ -24,7 +24,7 @@
         "strings": false,
         "other": false
       },
-      "editor.wordBasedSuggestions": false,
+      "editor.wordBasedSuggestions": "off",
       "editor.suggest.showWords": false,
       "editor.renderValidationDecorations": "off"
     }
