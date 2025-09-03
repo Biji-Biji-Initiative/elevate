@@ -3,6 +3,8 @@
  * This avoids TypeScript strict mode issues with generated code
  */
 
+import { mergeHeaders, addAuthHeader } from '@elevate/types/src/http'
+
 export interface APIResponse<T = unknown> {
   success: boolean;
   data?: T;

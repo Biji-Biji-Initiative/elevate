@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { Button } from './ui/button.js'
 
 interface NavItem {
@@ -27,6 +26,7 @@ interface AdminLayoutProps {
   subtitle?: string
   onSignOut?: () => void
   isLoaded?: boolean
+  pathname?: string // Add pathname as optional prop
 }
 
 const defaultNavItems: NavItem[] = [
@@ -71,10 +71,10 @@ export function AdminLayout({
   title = "MS Elevate",
   subtitle = "Admin",
   onSignOut,
-  isLoaded = true
+  isLoaded = true,
+  pathname = '/admin' // Use provided pathname or default
 }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const pathname = usePathname()
   
   if (!isLoaded) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>

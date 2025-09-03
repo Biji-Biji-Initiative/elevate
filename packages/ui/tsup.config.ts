@@ -8,6 +8,9 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   splitting: false,
+  bundle: true,
+  jsx: 'preserve',
+  target: 'es2022',
   banner: {
     js: '"use client";',
   },
@@ -16,12 +19,21 @@ export default defineConfig({
     'react-dom',
     'react/jsx-runtime',
     'react/jsx-dev-runtime',
+    'next',
+    'next/link',
+    'next/navigation',
     '@radix-ui/react-slot',
     '@radix-ui/react-label',
+    '@radix-ui/react-select',
+    '@radix-ui/react-dialog',
     'class-variance-authority',
     'clsx',
     'lucide-react',
     'tailwind-merge',
-    'react-hook-form'
+    'react-hook-form',
   ],
+  esbuildOptions(options) {
+    options.jsx = 'automatic'
+    options.jsxImportSource = 'react'
+  },
 })

@@ -17,6 +17,10 @@
       "types": "./dist/types/sdk.d.ts",
       "default": "./dist/js/sdk.js"
     },
+    "./schemas": {
+      "types": "./dist/types/schemas.d.ts",
+      "default": "./dist/js/schemas.js"
+    },
     "./client": {
       "default": "./dist/js/client.js"
     },

@@ -2,7 +2,6 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { Button } from './ui/button.js'
 
 interface HeaderProps {
@@ -21,6 +20,8 @@ interface HeaderProps {
   logo?: React.ReactNode
   // Internationalization
   languageSwitcher?: React.ReactNode
+  // Current path for navigation highlighting
+  pathname?: string
 }
 
 export function Header({
@@ -31,9 +32,9 @@ export function Header({
   title = "MS Elevate",
   subtitle = "LEAPS Tracker",
   logo,
-  languageSwitcher
+  languageSwitcher,
+  pathname = '/' // Use provided pathname or default
 }: HeaderProps) {
-  const pathname = usePathname()
   
   const defaultNavigation = [
     { name: 'Home', href: '/' },

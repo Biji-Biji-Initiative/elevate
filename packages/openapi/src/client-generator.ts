@@ -15,7 +15,7 @@ const clientTypesPath = resolve(srcDir, 'client.ts');
 const clientTypes = readFileSync(clientTypesPath, 'utf-8');
 
 // Generate a comprehensive TypeScript client SDK
-const clientSdk = `${clientTypes}
+const clientSdk = clientTypes + `
 
 // API Client SDK
 export class ElevateAPIClient {
@@ -31,14 +31,14 @@ export class ElevateAPIClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = \`\${this.baseUrl}\${endpoint}\`;
+    const url = ` + '`${this.baseUrl}${endpoint}`' + `;
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
 
     if (this.token) {
-      headers.Authorization = \`Bearer \${this.token}\`;
+      headers.Authorization = ` + '`Bearer ${this.token}`' + `;
     }
 
     const response = await fetch(url, {
@@ -77,7 +77,7 @@ export class ElevateAPIClient {
       });
     }
     
-    const endpoint = \`/api/submissions\${searchParams.toString() ? '?' + searchParams.toString() : ''}\`;
+    const endpoint = ` + '`/api/submissions${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
     return this.request<paths['/api/submissions']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
@@ -108,7 +108,7 @@ export class ElevateAPIClient {
       });
     }
     
-    const endpoint = \`/api/leaderboard\${searchParams.toString() ? '?' + searchParams.toString() : ''}\`;
+    const endpoint = ` + '`/api/leaderboard${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
     return this.request<paths['/api/leaderboard']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
@@ -128,14 +128,14 @@ export class ElevateAPIClient {
     Object.entries(params || {}).forEach(([key, value]) => {
       if (value !== undefined) searchParams.append(key, String(value));
     });
-    const endpoint = `/api/metrics${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    const endpoint = ` + '`/api/metrics${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
     return this.request<paths['/api/metrics']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
   // Public Profile API
   async getProfile(handle: string) {
     return this.request<paths['/api/profile/{handle}']['get']['responses']['200']['content']['application/json']>(
-      `/api/profile/${encodeURIComponent(handle)}`
+      ` + '`/api/profile/${encodeURIComponent(handle)}`' + `
     );
   }
 
@@ -155,12 +155,12 @@ export class ElevateAPIClient {
       });
     }
     
-    const endpoint = \`/api/admin/submissions\${searchParams.toString() ? '?' + searchParams.toString() : ''}\`;
+    const endpoint = ` + '`/api/admin/submissions${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
     return this.request<paths['/api/admin/submissions']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
   async getAdminSubmissionById(id: string) {
-    const endpoint = \`/api/admin/submissions/\${encodeURIComponent(id)}\`;
+    const endpoint = ` + '`/api/admin/submissions/${encodeURIComponent(id)}`' + `;
     return this.request<paths['/api/admin/submissions/{id}']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
@@ -187,7 +187,7 @@ export class ElevateAPIClient {
         }
       });
     }
-    const endpoint = \`/api/admin/users\${searchParams.toString() ? '?' + searchParams.toString() : ''}\`;
+    const endpoint = ` + '`/api/admin/users${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
     return this.request<paths['/api/admin/users']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
@@ -212,7 +212,7 @@ export class ElevateAPIClient {
         if (value !== undefined) searchParams.append(key, String(value));
       });
     }
-    const endpoint = \`/api/admin/badges\${searchParams.toString() ? '?' + searchParams.toString() : ''}\`;
+    const endpoint = ` + '`/api/admin/badges${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
     return this.request<paths['/api/admin/badges']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
@@ -231,7 +231,7 @@ export class ElevateAPIClient {
   }
 
   async deleteAdminBadge(code: string) {
-    const url = \`/api/admin/badges?code=\${encodeURIComponent(code)}\`;
+    const url = ` + '`/api/admin/badges?code=${encodeURIComponent(code)}`' + `;
     return this.request<paths['/api/admin/badges']['delete']['responses']['200']['content']['application/json']>(url, { method: 'DELETE' });
   }
 
@@ -256,7 +256,7 @@ export class ElevateAPIClient {
         if (value !== undefined) searchParams.append(key, String(value));
       });
     }
-    const endpoint = \`/api/admin/analytics\${searchParams.toString() ? '?' + searchParams.toString() : ''}\`;
+    const endpoint = ` + '`/api/admin/analytics${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
     return this.request<paths['/api/admin/analytics']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
@@ -443,7 +443,7 @@ async function getTopEducators(searchTerm?: string) {
     });
     
     console.log('Top educators:', leaderboard.data);
-    console.log(\`Total participants: \${leaderboard.total}\`);
+    console.log(` + '`Total participants: ${leaderboard.total}`' + `);
   } catch (error) {
     console.error('Leaderboard fetch failed:', error);
   }
@@ -457,7 +457,7 @@ async function reviewSubmissions() {
       limit: 50
     });
     
-    console.log(\`\${submissions.data.length} submissions need review\`);
+    console.log(` + '`${submissions.data.length} submissions need review`' + `);
     return submissions.data;
   } catch (error) {
     if (error instanceof ForbiddenError) {

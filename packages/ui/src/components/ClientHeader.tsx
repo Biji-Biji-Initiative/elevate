@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { usePathname } from 'next/navigation'
 import { Header } from './Header.js'
 
 interface ClientHeaderProps {
@@ -18,5 +19,6 @@ interface ClientHeaderProps {
 }
 
 export function ClientHeader(props: ClientHeaderProps) {
-  return <Header {...props} />
+  const pathname = usePathname()
+  return <Header {...props} pathname={pathname} />
 }

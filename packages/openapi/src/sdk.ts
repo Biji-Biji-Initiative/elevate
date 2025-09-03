@@ -2742,6 +2742,28 @@ export class ElevateAPIClient {
     return this.request<paths['/api/dashboard']['get']['responses']['200']['content']['application/json']>('/api/dashboard');
   }
 
+  // Public Stats API
+  async getStats() {
+    return this.request<paths['/api/stats']['get']['responses']['200']['content']['application/json']>('/api/stats');
+  }
+
+  // Public Metrics API
+  async getMetrics(params: paths['/api/metrics']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value !== undefined) searchParams.append(key, String(value));
+    });
+    const endpoint = `/api/metrics${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    return this.request<paths['/api/metrics']['get']['responses']['200']['content']['application/json']>(endpoint);
+  }
+
+  // Public Profile API
+  async getProfile(handle: string) {
+    return this.request<paths['/api/profile/{handle}']['get']['responses']['200']['content']['application/json']>(
+      `/api/profile/${encodeURIComponent(handle)}`
+    );
+  }
+
   // Health Check API
   async healthCheck() {
     return this.request<paths['/api/health']['get']['responses']['200']['content']['application/json']>('/api/health');

@@ -23,6 +23,10 @@
       "types": "./dist/types/schemas.d.ts",
       "default": "./dist/js/schemas.js"
     },
+    "./query-schemas": {
+      "types": "./dist/types/query-schemas.d.ts",
+      "default": "./dist/js/query-schemas.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/js/index.js",
