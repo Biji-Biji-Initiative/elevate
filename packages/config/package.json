@@ -8,6 +8,10 @@
       "types": "./dist/types/index.d.ts",
       "import": "./dist/js/index.js"
     },
+    "./next": {
+      "types": "./dist/types/next.d.ts",
+      "import": "./dist/js/next.js"
+    },
     "./env": {
       "types": "./dist/types/env.d.ts",
       "import": "./dist/js/env.js"

@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
-import { prisma, type Prisma } from '@elevate/db'
+import { Prisma, prisma } from '@elevate/db'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import { createSuccessResponse } from '@elevate/types'
 

@@ -40,7 +40,7 @@ describe('Files API - GET forbidden for non-owner non-reviewer', () => {
     userFindUniqueMock.mockResolvedValueOnce({ role: 'PARTICIPANT' })
     parseStoragePathMock.mockReturnValueOnce({ userId: 'someone_else', activityCode: 'LEARN' })
     const req = new Request('http://localhost/api/files/evidence/learn/someone_else/file.pdf')
-    const ctx: { params: Promise<{ path: string[] }> } = { params: Promise.resolve({ path: ['evidence','learn','someone_else','file.pdf'] }) }
+    const ctx: { params: { path: string[] } } = { params: { path: ['evidence','learn','someone_else','file.pdf'] } }
     const res = await GET(req, ctx)
     expect(res.status).toBe(403)
   })

@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
-import { prisma, type Prisma } from '@elevate/db';
+import { Prisma, prisma } from '@elevate/db';
 import { createSuccessResponse, createErrorResponse as createHttpError } from '@elevate/http'
 import { KajabiTestSchema, buildAuditMeta } from '@elevate/types'
 

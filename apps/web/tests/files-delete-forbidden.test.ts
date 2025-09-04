@@ -36,7 +36,7 @@ describe('Files API - DELETE forbidden cases', () => {
     const { DELETE } = await import('../app/api/files/[...path]/route')
     parseStoragePathMock.mockReturnValueOnce({ userId: 'someone_else', activityCode: 'LEARN' })
     const req = new Request('http://localhost/api/files/evidence/learn/someone_else/file.pdf', { method: 'DELETE' })
-    const ctx: { params: Promise<{ path: string[] }> } = { params: Promise.resolve({ path: ['evidence','learn','someone_else','file.pdf'] }) }
+    const ctx: { params: { path: string[] } } = { params: { path: ['evidence','learn','someone_else','file.pdf'] } }
     const res = await DELETE(req, ctx)
     expect(res.status).toBe(403)
   })
@@ -46,7 +46,7 @@ describe('Files API - DELETE forbidden cases', () => {
     parseStoragePathMock.mockReturnValueOnce({ userId: 'owner', activityCode: 'LEARN' })
     submissionFindFirstMock.mockResolvedValueOnce({ id: 'sub_1', status: 'APPROVED' })
     const req = new Request('http://localhost/api/files/evidence/learn/owner/file.pdf', { method: 'DELETE' })
-    const ctx: { params: Promise<{ path: string[] }> } = { params: Promise.resolve({ path: ['evidence','learn','owner','file.pdf'] }) }
+    const ctx: { params: { path: string[] } } = { params: { path: ['evidence','learn','owner','file.pdf'] } }
     const res = await DELETE(req, ctx)
     expect(res.status).toBe(400)
   })

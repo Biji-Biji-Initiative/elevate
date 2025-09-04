@@ -12,9 +12,9 @@ import type { Metadata } from 'next'
 
 type Props = {
   children: React.ReactNode
-  params: {
+  params: Promise<{
     locale: string
-  }
+  }>
 }
 
 export async function generateStaticParams() {
@@ -24,9 +24,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }): Promise<Metadata> {
-  const { locale } = params
+  const { locale } = await params
   const _t = await getTranslations({ locale, namespace: 'homepage' })
 
   return {
@@ -107,7 +107,7 @@ export async function generateMetadata({
 }
 
 export default async function LocaleLayout({ children, params }: Props) {
-  const { locale: _locale } = params
+  const { locale: _locale } = await params
   const messages = await getMessages()
 
   return (

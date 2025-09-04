@@ -356,7 +356,7 @@ export default function Page() {
         countersLoading={loading}
         partnersLogos={
           <div className="flex flex-wrap justify-center items-center gap-8 text-white/70">
-            {t<string[]>('partners.list', { returnObjects: true }).map(
+            {['Microsoft', 'MOE', 'Biji-biji', 'Mata Garuda', 'MIEE'].map(
               (partner: string, index: number) => (
                 <span key={index} className="text-lg font-medium">
                   {partner}
@@ -385,7 +385,13 @@ export default function Page() {
       {/* Program Flow */}
       <ProgramFlow
         title={t('flow.title')}
-        bullets={t<string[]>('flow.bullets', { returnObjects: true })}
+        bullets={[
+          'MOE identifies participating schools; database anchors outreach.',
+          'Registration via form routes educators to the LEAPS tracker (Entry & Sign-In → Tracker).',
+          'Educators progress through LEAPS stages with support from Mentors.',
+          'Points, leaderboards, and badges keep educators motivated.',
+          'Top performers qualify for the Shine showcase in Jakarta.'
+        ]}
       />
 
       {/* Stories Wall */}
@@ -430,7 +436,7 @@ export default function Page() {
 
       {/* Partners & Contact */}
       <PartnersContact
-        partners={t<string[]>('partners.list', { returnObjects: true })}
+        partners={['Microsoft', 'MOE', 'Biji-biji', 'Mata Garuda', 'MIEE']}
         contacts={[
           {
             email: 'rashvin@biji-biji.com',

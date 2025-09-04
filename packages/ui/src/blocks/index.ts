@@ -1,3 +1,5 @@
+'use client'
+
 // UI Blocks - Reusable components for complex functionality
 export { FileUpload, FileList } from './FileUpload'
 export type { FileUploadProps, FileListProps } from './FileUpload'

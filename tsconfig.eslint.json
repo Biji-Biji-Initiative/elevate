@@ -4,11 +4,19 @@
     "noEmit": true
   },
   "include": [
-    "apps/**/*.{ts,tsx}",
-    "packages/**/*.{ts,tsx}",
-    "tests/**/*.{ts,tsx}",
-    "scripts/**/*.{js,mjs,ts,cjs}",
-    "playwright.config.ts"
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "scripts/**/*.js",
+    "scripts/**/*.mjs",
+    "scripts/**/*.ts",
+    "scripts/**/*.cjs",
+    "playwright.config.ts",
+    "fixtures/**/*.ts",
+    "fixtures/**/*.tsx",
+    "tsup.base.ts"
   ]
 }
-

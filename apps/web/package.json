@@ -17,6 +17,7 @@
     "@clerk/nextjs": "^6.31.8",
     "@clerk/themes": "^2.4.16",
     "@elevate/auth": "workspace:*",
+    "@elevate/config": "workspace:*",
     "@elevate/db": "workspace:*",
     "@elevate/emails": "workspace:*",
     "@elevate/forms": "workspace:*",

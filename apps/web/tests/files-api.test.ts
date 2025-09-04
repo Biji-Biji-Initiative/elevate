@@ -46,7 +46,7 @@ describe('Files API', () => {
     const { GET } = await import('../app/api/files/[...path]/route')
     currentUserId = null
     const req = new Request('http://localhost/api/files/evidence/learn/user_1/file.pdf')
-    const ctx: { params: Promise<{ path: string[] }> } = { params: Promise.resolve({ path: ['evidence', 'learn', 'user_1', 'file.pdf'] }) }
+    const ctx: { params: { path: string[] } } = { params: { path: ['evidence', 'learn', 'user_1', 'file.pdf'] } }
     const res = await GET(req, ctx)
     expect(res.status).toBe(401)
   })
@@ -60,7 +60,7 @@ describe('Files API', () => {
     getSignedUrlMock.mockResolvedValueOnce('https://signed.url/test')
 
     const req = new Request('http://localhost/api/files/evidence/learn/user_1/file.pdf')
-    const ctx: { params: Promise<{ path: string[] }> } = { params: Promise.resolve({ path: ['evidence', 'learn', 'user_1', 'file.pdf'] }) }
+    const ctx: { params: { path: string[] } } = { params: { path: ['evidence', 'learn', 'user_1', 'file.pdf'] } }
     const res = await GET(req, ctx)
     expect(res.status).toBe(200)
     const json = await res.json()

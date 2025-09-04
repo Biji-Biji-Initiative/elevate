@@ -49,11 +49,8 @@ export function baseTsupClient(options) {
   const config = baseTsup(options)
   return defineConfig({
     ...config,
-    esbuildOptions(options) {
-      options.banner = {
-        js: '"use client"',
-      }
-    },
+    // Client components configuration - base config for packages that need 'use client'
+    // Individual packages should implement onSuccess to add 'use client' to their bundled files
   })
 }
 

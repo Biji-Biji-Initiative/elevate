@@ -261,6 +261,9 @@ importers:
       '@elevate/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@elevate/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@elevate/db':
         specifier: workspace:*
         version: link:../../packages/db
