@@ -39,7 +39,7 @@ export class APIError extends Error {
 }
 
 export class ValidationError extends APIError {
-  constructor(message: string, details?: unknown[]) {
+  constructor(message: string, details?: unknown[], traceId?: string) {
     super(message, 400, details);
     this.name = 'ValidationError';
   }

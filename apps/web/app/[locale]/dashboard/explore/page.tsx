@@ -48,7 +48,7 @@ export default function ExploreFormPage() {
   const filterSuccessfulUploads = <T extends { path?: string; error?: unknown }>(
     files: T[]
   ): Array<T & { path: string }> => {
-    return files.filter((f) => typeof (f as any).path === 'string' && !(f as any).error) as Array<
+    return files.filter((f) => typeof f.path === 'string' && !f.error) as Array<
       T & { path: string }
     >
   }

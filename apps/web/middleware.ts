@@ -1,58 +1,96 @@
-import { type NextRequest } from 'next/server'
-
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import createIntlMiddleware from 'next-intl/middleware'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { csrfManager } from '@elevate/security/csrf'
+import { createSecurityMiddleware, getSecurityConfig, withSecurity } from '@elevate/security/security-middleware'
 
-import { locales, defaultLocale } from './i18n'
-
-// Create the intl middleware
-const intlMiddleware = createIntlMiddleware({
-  locales,
-  defaultLocale,
-  localePrefix: 'as-needed',
-})
-
+// Routes that should be publicly accessible
 const isPublicRoute = createRouteMatcher([
   '/',
   '/leaderboard',
   '/metrics/(.*)',
-  '/u/(.*)', // Canonical public profile routes
-  '/api/kajabi/webhook',
+  '/u/(.*)', 
   '/api/health',
-  // Include localized versions of public routes
-  '/(en|id)/',
-  '/(en|id)/leaderboard',
-  '/(en|id)/metrics/(.*)',
-  '/(en|id)/u/(.*)',
+  '/api/docs',
+  '/api/webhooks/(.*)',
+  '/api/leaderboard',
+  '/api/metrics',
+  '/api/profile/(.*)',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/csrf-token' // Public endpoint for CSRF token generation
 ])
 
-const isApiRoute = createRouteMatcher(['/api/(.*)'])
+// API routes that need CSRF protection (state-changing operations)
+const isProtectedApiRoute = createRouteMatcher([
+  '/api/submissions',
+  '/api/files/upload',
+  '/api/admin/(.*)'
+])
 
-export default clerkMiddleware(async (auth, req: NextRequest) => {
-  // Bypass API routes; enforce auth at route level for JSON semantics
-  if (isApiRoute(req)) return
+// Main application middleware with security, CSRF, and authentication
+const appMiddleware = clerkMiddleware(async (auth, req: NextRequest) => {
+  const { pathname } = req.nextUrl
 
-  // Handle internationalization first
-  const intlResponse = intlMiddleware(req)
-
-  // If intl middleware returns a response (redirect), use it
-  if (intlResponse) {
-    return intlResponse
-  }
-
-  // Apply authentication for protected routes
-  if (!isPublicRoute(req)) {
-    const { userId, redirectToSignIn } = await auth()
-
-    if (!userId) {
-      return redirectToSignIn()
+  // Apply CSRF protection to protected API routes
+  if (isProtectedApiRoute(req)) {
+    const method = req.method.toUpperCase()
+    
+    // Only protect state-changing methods
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      const isValid = await csrfManager.validateRequest(req)
+      
+      if (!isValid) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'CSRF token validation failed. Please refresh the page and try again.',
+            code: 'CSRF_INVALID'
+          },
+          { status: 403 }
+        )
+      }
     }
   }
+
+  // Protect non-public routes with authentication
+  if (!isPublicRoute(req)) {
+    await auth.protect()
+  }
+
+  return NextResponse.next()
 })
+
+// Configure security options based on environment
+const securityConfig = getSecurityConfig()
+
+// Add additional domains specific to the web app
+const webSecurityConfig = {
+  ...securityConfig,
+  skipPaths: [
+    '/api/health',
+    '/api/webhooks/kajabi', // Skip CSP for webhook endpoints
+    '/_next/static',
+    '/favicon.ico'
+  ],
+  allowedDomains: {
+    ...securityConfig.allowedDomains,
+    external: [
+      ...(securityConfig.allowedDomains?.external || []),
+      // Add any web-specific external domains here
+    ]
+  },
+  reportUri: '/api/csp-report'
+}
+
+// Export combined middleware with security headers and application logic
+export default withSecurity(appMiddleware, webSecurityConfig)
 
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|json)).*)',
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 }

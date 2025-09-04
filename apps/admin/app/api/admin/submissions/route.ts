@@ -1,26 +1,43 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 
-import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import { requireRole } from '@elevate/auth/server-helpers'
 import type { SubmissionStatus } from '@elevate/db'
 import { prisma, type Prisma } from '@elevate/db'
 import { computePoints } from '@elevate/logic'
 // TODO: Re-enable when @elevate/security package is available
 // import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import { parseSubmissionStatus, parseActivityCode, parseSubmissionPayload, toPrismaJson, buildAuditMeta, ReviewSubmissionSchema, BulkReviewSubmissionsSchema, AdminSubmissionsQuerySchema, type SubmissionWhereClause, type ActivityCode, type ActivityPayload } from '@elevate/types'
+import { 
+  parseSubmissionStatus, 
+  parseActivityCode, 
+  parseSubmissionPayload, 
+  toPrismaJson, 
+  buildAuditMeta, 
+  ReviewSubmissionSchema, 
+  BulkReviewSubmissionsSchema, 
+  AdminSubmissionsQuerySchema, 
+  type SubmissionWhereClause, 
+  type ActivityCode, 
+  type ActivityPayload,
+  createSuccessResponse,
+  createErrorResponse,
+  withApiErrorHandling,
+  ValidationError,
+  NotFoundError,
+  ElevateApiError,
+  validationError
+} from '@elevate/types'
 
 export const runtime = 'nodejs';
 
-export async function GET(request: NextRequest) {
-  // TODO: Re-enable rate limiting when @elevate/security package is available
-  // return withRateLimit(request, adminRateLimiter, async () => {
-  try {
-    const user = await requireRole('reviewer')
-    const { searchParams } = new URL(request.url)
-    
-    const parsedQuery = AdminSubmissionsQuerySchema.safeParse(Object.fromEntries(searchParams))
-    if (!parsedQuery.success) {
-      return createErrorResponse(new Error('Invalid query'), 400)
-    }
+export const GET = withApiErrorHandling(async (request: NextRequest, context) => {
+  const user = await requireRole('reviewer')
+  const { searchParams } = new URL(request.url)
+  
+  const parsedQuery = AdminSubmissionsQuerySchema.safeParse(Object.fromEntries(searchParams))
+  if (!parsedQuery.success) {
+    throw new ValidationError(parsedQuery.error, 'Invalid query parameters', context.traceId)
+  }
     const { status, activity, userId, page, limit, sortBy, sortOrder } = parsedQuery.data
     
     const offset = (page - 1) * limit
@@ -71,75 +88,65 @@ export async function GET(request: NextRequest) {
       prisma.submission.count({ where })
     ])
     
-    // Map to include attachmentCount sourced from relational table (fallback to JSON array length)
+    // Map to include attachmentCount sourced from relation
     const mapped = submissions.map((s) => ({
       ...s,
-      attachmentCount: Array.isArray(s.attachments_rel) && s.attachments_rel.length > 0
-        ? s.attachments_rel.length
-        : (Array.isArray(s.attachments) ? (s.attachments as unknown[]).length : 0),
+      attachmentCount: s.attachments_rel.length,
     }))
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        submissions: mapped,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit)
-        }
-      }
-    })
-  } catch (error) {
-    return createErrorResponse(error, 500)
-  }
-  // TODO: Re-enable rate limiting when @elevate/security package is available
-  // })
-}
+  return createSuccessResponse({
+    submissions: mapped,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  })
+})
 
-export async function PATCH(request: NextRequest) {
-  try {
-    const user = await requireRole('reviewer')
-    const body = await request.json()
-    const parsed = ReviewSubmissionSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
-    }
-    const { submissionId, action, reviewNote, pointAdjustment } = parsed.data
-    
-    if (!submissionId || !action) {
-      return NextResponse.json(
-        { error: 'submissionId and action are required' },
-        { status: 400 }
-      )
-    }
-    
-    if (!['approve', 'reject'].includes(action)) {
-      return NextResponse.json(
-        { error: 'action must be approve or reject' },
-        { status: 400 }
-      )
-    }
-    
-    const submission = await prisma.submission.findUnique({
-      where: { id: submissionId },
-      include: { activity: true }
-    })
-    
-    if (!submission) {
-      return NextResponse.json(
-        { error: 'Submission not found' },
-        { status: 404 }
-      )
-    }
-    
-    if (submission.status !== 'PENDING') {
-      return NextResponse.json(
-        { error: 'Submission has already been reviewed' },
-        { status: 400 }
-      )
-    }
+export const PATCH = withApiErrorHandling(async (request: NextRequest, context) => {
+  const user = await requireRole('reviewer')
+  const body = await request.json()
+  const parsed = ReviewSubmissionSchema.safeParse(body)
+  if (!parsed.success) {
+    throw new ValidationError(parsed.error, 'Invalid request body', context.traceId)
+  }
+  const { submissionId, action, reviewNote, pointAdjustment } = parsed.data
+  
+  if (!submissionId || !action) {
+    throw new ValidationError(
+      new z.ZodError([{ code: 'custom', message: 'submissionId and action are required', path: ['submissionId', 'action'] }]),
+      'Missing required fields',
+      context.traceId
+    )
+  }
+  
+  if (!['approve', 'reject'].includes(action)) {
+    throw new ValidationError(
+      new z.ZodError([{ code: 'custom', message: 'action must be approve or reject', path: ['action'] }]),
+      'Invalid action',
+      context.traceId
+    )
+  }
+  
+  const submission = await prisma.submission.findUnique({
+    where: { id: submissionId },
+    include: { activity: true }
+  })
+  
+  if (!submission) {
+    throw new NotFoundError('Submission', submissionId, context.traceId)
+  }
+  
+  if (submission.status !== 'PENDING') {
+    throw new ElevateApiError(
+      'Submission has already been reviewed',
+      'INVALID_SUBMISSION_STATUS',
+      { currentStatus: submission.status },
+      context.traceId
+    )
+  }
     
     const newStatus = action === 'approve' ? 'APPROVED' : 'REJECTED'
     
@@ -186,7 +193,12 @@ export async function PATCH(request: NextRequest) {
         if (pointAdjustment !== undefined) {
           const maxAdjustment = Math.ceil(basePoints * 0.2)
           if (Math.abs(pointAdjustment - basePoints) > maxAdjustment) {
-            throw new Error(`Point adjustment must be within ±${maxAdjustment} of base points (${basePoints})`)
+            throw new ElevateApiError(
+              `Point adjustment must be within ±${maxAdjustment} of base points (${basePoints})`,
+              'POINT_ADJUSTMENT_OUT_OF_BOUNDS',
+              { basePoints, pointAdjustment, maxAdjustment },
+              context.traceId
+            )
           }
         }
         
@@ -225,64 +237,59 @@ export async function PATCH(request: NextRequest) {
     // The leaderboard API now calculates data in real-time using proper Prisma aggregations
     // This provides better consistency and eliminates the need for manual view refreshes
     
-    return NextResponse.json({
-      success: true,
-      submission: result,
-      message: `Submission ${action}d successfully`
-    })
-    
-  } catch (error) {
-    return createErrorResponse(error, 500)
-  }
-}
+  return createSuccessResponse({
+    submission: result,
+    message: `Submission ${action}d successfully`
+  })
+})
 
 // Bulk operations
-export async function POST(request: NextRequest) {
-  try {
-    const user = await requireRole('reviewer')
-    const body = await request.json()
-    const parsed = BulkReviewSubmissionsSchema.safeParse(body)
-    if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
-    }
-    const { submissionIds, action, reviewNote } = parsed.data
-    
-    if (!Array.isArray(submissionIds) || submissionIds.length === 0) {
-      return NextResponse.json(
-        { error: 'submissionIds array is required' },
-        { status: 400 }
-      )
-    }
-    
-    if (!['approve', 'reject'].includes(action)) {
-      return NextResponse.json(
-        { error: 'action must be approve or reject' },
-        { status: 400 }
-      )
-    }
-    
-    // Limit bulk operations to prevent abuse
-    if (submissionIds.length > 50) {
-      return NextResponse.json(
-        { error: 'Maximum 50 submissions per bulk operation' },
-        { status: 400 }
-      )
-    }
-    
-    const submissions = await prisma.submission.findMany({
-      where: {
-        id: { in: submissionIds },
-        status: 'PENDING'
-      },
-      include: { activity: true }
-    })
-    
-    if (submissions.length === 0) {
-      return NextResponse.json(
-        { error: 'No pending submissions found' },
-        { status: 404 }
-      )
-    }
+export const POST = withApiErrorHandling(async (request: NextRequest, context) => {
+  const user = await requireRole('reviewer')
+  const body = await request.json()
+  const parsed = BulkReviewSubmissionsSchema.safeParse(body)
+  if (!parsed.success) {
+    throw new ValidationError(parsed.error, 'Invalid request body', context.traceId)
+  }
+  const { submissionIds, action, reviewNote } = parsed.data
+  
+  if (!Array.isArray(submissionIds) || submissionIds.length === 0) {
+    throw new ValidationError(
+      new z.ZodError([{ code: 'custom', message: 'submissionIds array is required', path: ['submissionIds'] }]),
+      'Missing submission IDs',
+      context.traceId
+    )
+  }
+  
+  if (!['approve', 'reject'].includes(action)) {
+    throw new ValidationError(
+      new z.ZodError([{ code: 'custom', message: 'action must be approve or reject', path: ['action'] }]),
+      'Invalid action',
+      context.traceId
+    )
+  }
+  
+  // Limit bulk operations to prevent abuse
+  if (submissionIds.length > 50) {
+    throw new ElevateApiError(
+      'Maximum 50 submissions per bulk operation',
+      'SUBMISSION_LIMIT_EXCEEDED',
+      { limit: 50, provided: submissionIds.length },
+      context.traceId
+    )
+  }
+  
+  const submissions = await prisma.submission.findMany({
+    where: {
+      id: { in: submissionIds },
+      status: 'PENDING'
+    },
+    include: { activity: true }
+  })
+  
+  if (submissions.length === 0) {
+    throw new NotFoundError('Pending submissions', undefined, context.traceId)
+  }
     
     const newStatus = action === 'approve' ? 'APPROVED' : 'REJECTED'
     const results = []
@@ -346,13 +353,8 @@ export async function POST(request: NextRequest) {
     // The leaderboard API now calculates data in real-time using proper Prisma aggregations
     // This provides better consistency and eliminates the need for manual view refreshes
     
-    return NextResponse.json({
-      success: true,
-      processed: results.length,
-      message: `${results.length} submissions ${action}d successfully`
-    })
-    
-  } catch (error) {
-    return createErrorResponse(error, 500)
-  }
-}
+  return createSuccessResponse({
+    processed: results.length,
+    message: `${results.length} submissions ${action}d successfully`
+  })
+})

@@ -62,7 +62,12 @@ export const ClerkUserDataSchema = z.object({
     last_name: z.string(),
     image_url: z.string(),
     username: z.string().nullable(),
-    public_metadata: z.record(z.unknown()),
+    public_metadata: z.object({
+      provider: z.string().optional(),
+      emailAddress: z.string().email().optional(),
+      firstName: z.string().optional(),
+      lastName: z.string().optional()
+    }).optional(),
     label: z.string().nullable(),
     verification: z.object({
       status: z.string(),
@@ -81,9 +86,18 @@ export const ClerkUserDataSchema = z.object({
   locked: z.boolean(),
   lockout_expires_in_seconds: z.number().nullable(),
   verification_attempts_remaining: z.number(),
-  public_metadata: z.record(z.unknown()),
-  private_metadata: z.record(z.unknown()),
-  unsafe_metadata: z.record(z.unknown()),
+  public_metadata: z.object({
+    role: z.enum(['PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN']).optional(),
+    profileVisible: z.boolean().optional(),
+    onboardingCompleted: z.boolean().optional()
+  }).optional(),
+  private_metadata: z.object({
+    internalNotes: z.string().optional(),
+    migrationFlags: z.record(z.boolean()).optional()
+  }).optional(),
+  unsafe_metadata: z.object({
+    temporaryData: z.record(z.string()).optional()
+  }).optional(),
 })
 
 export const ClerkWebhookEventSchema = z.object({

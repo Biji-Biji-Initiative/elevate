@@ -1,41 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 
 import { useRouter } from 'next/navigation'
 
 import { withRoleGuard } from '@elevate/auth/context'
-import { adminClient } from '@/lib/admin-client'
+import { adminClient, AdminClientError, type AdminSubmission } from '@/lib/admin-client'
 import { Button , Textarea, Input, StatusBadge, ConfirmModal, Alert } from '@elevate/ui'
-
-type Submission = {
-  id: string
-  created_at: string
-  updated_at?: string | undefined
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-  visibility: 'PUBLIC' | 'PRIVATE'
-  review_note?: string | null | undefined
-  reviewer_id?: string | null | undefined
-  attachments?: unknown[] | undefined
-  payload?: {
-    peersTrained?: number | undefined
-    studentsTrained?: number | undefined
-    [key: string]: unknown
-  } | undefined
-  user: {
-    id: string
-    name: string
-    handle: string
-    email?: string | undefined
-    school?: string | null | undefined
-    cohort?: string | null | undefined
-  }
-  activity: {
-    code: string
-    name: string
-    default_points?: number | undefined
-  }
-}
 
 function ReviewSubmissionPage({
   params
@@ -43,7 +14,8 @@ function ReviewSubmissionPage({
   params: Promise<{ id: string }>
 }) {
   const router = useRouter()
-  const [submission, setSubmission] = useState<Submission | null>(null)
+  const [submission, setSubmission] = useState<AdminSubmission | null>(null)
+  const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -64,28 +36,35 @@ function ReviewSubmissionPage({
       const { id } = await params
       setSubmissionId(id)
     }
-    getParams()
+    void getParams()
   }, [params])
+
+  const fetchSubmission = useCallback(async () => {
+    if (!submissionId) return
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await adminClient.getSubmissionById(submissionId)
+      setSubmission(data.submission)
+      setEvidenceUrl(data.evidence || null)
+      setReviewNote(data.submission.review_note || '')
+    } catch (error) {
+      if (error instanceof AdminClientError) {
+        setError(error.message)
+      } else {
+        setError('Failed to fetch submission')
+      }
+      // Don't automatically redirect on error, let user decide
+    } finally {
+      setLoading(false)
+    }
+  }, [submissionId])
 
   useEffect(() => {
     if (submissionId) {
       void fetchSubmission()
     }
-  }, [submissionId])
-
-  const fetchSubmission = async () => {
-    if (!submissionId) return
-    setLoading(true)
-    try {
-      const sub = await adminClient.getSubmissionById(submissionId)
-      setSubmission(sub)
-      setReviewNote(sub.review_note || '')
-    } catch (error) {
-      router.push('/admin/submissions')
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [submissionId, fetchSubmission])
 
   const getBasePoints = (): number => {
     if (!submission) return 0
@@ -100,22 +79,28 @@ function ReviewSubmissionPage({
   }
 
   const handleReview = async (action: 'approve' | 'reject') => {
-    if (!submission) return
+    if (!submission || !submissionId) return
 
     setProcessing(true)
+    setError(null)
+    
     try {
       const reviewData: Parameters<typeof adminClient.reviewSubmission>[0] = {
-        submissionId: submission.id,
+        submissionId,
         action,
       }
-      if (reviewNote) reviewData.reviewNote = reviewNote
+      if (reviewNote.trim()) reviewData.reviewNote = reviewNote.trim()
       if (pointAdjustment !== '') reviewData.pointAdjustment = Number(pointAdjustment)
       
       await adminClient.reviewSubmission(reviewData)
       await fetchSubmission()
       setConfirmModal({ isOpen: false, action: 'approve' })
     } catch (error) {
-      setError('Failed to process review')
+      if (error instanceof AdminClientError) {
+        setError(error.message)
+      } else {
+        setError('Failed to process review')
+      }
     } finally {
       setProcessing(false)
     }
@@ -141,30 +126,28 @@ function ReviewSubmissionPage({
     }
     
     if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-      return <span className="text-sm">{value.toString()}</span>
+      return <span className="text-sm">{String(value)}</span>
     }
     return <span className="text-sm">-</span>
   }
 
   const renderAttachments = () => {
-    if (!submission?.attachments || submission.attachments.length === 0) {
+    const files = submission?.attachments_rel || []
+    if (!files || files.length === 0) {
       return <p className="text-gray-500">No attachments</p>
     }
 
     return (
       <div className="space-y-2">
-        {submission.attachments.map((attachment, index) => (
-          <div key={index} className="flex items-center space-x-2">
+        {files.map((att) => (
+          <div key={att.id} className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">📎</span>
-            <span className="text-sm">{typeof attachment === 'string' ? (attachment.split('/').pop() || attachment) : 'Unknown file'}</span>
+            <span className="text-sm">{att.path.split('/').pop() || att.path}</span>
             <Button
               variant="ghost"
               style={{ padding: '2px 8px', fontSize: '12px' }}
               onClick={() => {
-                // In a real implementation, you'd generate a signed URL
-                if (typeof attachment === 'string') {
-                  window.open(`/api/files/${attachment}`, '_blank')
-                }
+                window.open(`/api/files/${att.path}`, '_blank')
               }}
             >
               View
@@ -337,10 +320,11 @@ function ReviewSubmissionPage({
               <h3 className="font-semibold">Review Actions</h3>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="point-adjustment" className="block text-sm font-medium text-gray-700 mb-1">
                   Point Adjustment (Optional)
                 </label>
                 <Input
+                  id="point-adjustment"
                   type="number"
                   placeholder={`Base: ${basePoints}`}
                   value={pointAdjustment}
@@ -352,10 +336,11 @@ function ReviewSubmissionPage({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="review-notes" className="block text-sm font-medium text-gray-700 mb-1">
                   Review Notes
                 </label>
                 <Textarea
+                  id="review-notes"
                   placeholder="Add feedback for the participant..."
                   rows={4}
                   value={reviewNote}

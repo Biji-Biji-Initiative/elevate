@@ -1,5 +1,8 @@
 import { z } from 'zod';
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
+import { SubmissionPayloadSchema } from '@elevate/types/submission-payloads';
+import { BadgeCriteriaSchema } from '@elevate/types/common';
+import { KajabiTagEventSchema } from '@elevate/types/webhooks';
 
 // Extend Zod with OpenAPI functionality
 extendZodWithOpenApi(z);
@@ -365,7 +368,9 @@ export const ProfileSubmissionSchema = z.object({
   activity: z.object({ name: z.string(), code: ActivityCodeSchema }),
   status: SubmissionStatusSchema,
   visibility: VisibilitySchema,
-  payload: z.record(z.unknown()),
+  payload: SubmissionPayloadSchema.transform(p => p.data).openapi({
+    description: 'Submission payload data specific to each activity type'
+  }),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime().optional(),
 })
@@ -462,7 +467,7 @@ export const AdminSubmissionsListResponseSchema = z.object({
           status: 'PENDING',
           visibility: 'PRIVATE',
           review_note: null,
-          attachments: [],
+          attachmentCount: 0,
           user: {
             id: 'user_123',
             name: 'Ahmad Sutanto',
@@ -523,11 +528,8 @@ export const AdminUsersListResponseSchema = z.object({
   }
 })
 
-export const AdminBadgeCriteriaSchema = z.object({
-  type: z.enum(['points', 'submissions', 'activities', 'streak']),
-  threshold: z.number(),
-  activity_codes: z.array(z.string()).optional(),
-  conditions: z.record(z.unknown()).optional(),
+export const AdminBadgeCriteriaSchema = BadgeCriteriaSchema.openapi({
+  description: 'Badge criteria configuration'
 })
 
 export const AdminBadgeSchema = z.object({
@@ -653,7 +655,9 @@ export const AdminKajabiResponseSchema = z.object({
       received_at: z.string().datetime(),
       processed_at: z.string().datetime().nullable(),
       user_match: z.string().nullable(),
-      payload: z.record(z.unknown()),
+      payload: KajabiTagEventSchema.openapi({
+        description: 'Kajabi webhook event payload'
+      }),
     })),
     stats: z.object({
       total_events: z.number(),
@@ -684,6 +688,7 @@ export const AdminCohortsResponseSchema = z.object({
 
 export const ErrorResponseSchema = z
   .object({
+    success: z.literal(false).openapi({ description: 'Operation failed', example: false }),
     error: z.string().openapi({
       description: 'Error message',
       example: 'Invalid submission data',

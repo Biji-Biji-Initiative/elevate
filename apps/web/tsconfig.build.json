@@ -1,0 +1,40 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.json",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.md",
+    "**/*.mdx",
+    "*.md",
+    ".next/**/*",
+    "dist/**/*"
+  ],
+  "references": [
+    { "path": "../../packages/types/tsconfig.build.json" },
+    { "path": "../../packages/ui/tsconfig.build.json" },
+    { "path": "../../packages/auth/tsconfig.build.json" },
+    { "path": "../../packages/db/tsconfig.build.json" },
+    { "path": "../../packages/openapi/tsconfig.build.json" },
+    { "path": "../../packages/integrations/tsconfig.build.json" },
+    { "path": "../../packages/security/tsconfig.build.json" },
+    { "path": "../../packages/storage/tsconfig.build.json" },
+    { "path": "../../packages/config/tsconfig.build.json" },
+    { "path": "../../packages/logic/tsconfig.build.json" }
+  ]
+}

@@ -1,0 +1,702 @@
+name: Build Artifact Policy Enforcement
+
+on:
+  pull_request:
+    paths:
+      - 'packages/*/src/**'
+      - 'packages/*/tsup.config.ts'
+      - 'packages/*/package.json'
+      - 'turbo.json'
+      - '.gitignore'
+      - 'scripts/build-policy-check.js'
+  push:
+    branches: [main, staging]
+    paths:
+      - 'packages/**'
+      - 'turbo.json'
+  schedule:
+    # Daily build artifact audit
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      clean_build:
+        description: 'Perform clean build'
+        required: false
+        default: 'true'
+        type: boolean
+      deep_analysis:
+        description: 'Run deep analysis'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  enforce-build-policy:
+    name: Build Artifact Policy Enforcement
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Comprehensive Build Artifact Policy Check
+        id: policy-check
+        run: |
+          echo "🏗️ Starting comprehensive build artifact policy enforcement..."
+          
+          # Create results directory
+          mkdir -p build-policy-results
+          
+          policy_violations=false
+          policy_warnings=false
+          
+          log() {
+            echo "[$(date +'%H:%M:%S')] $1"
+          }
+          
+          log "📊 Step 1: Pre-enforcement validation"
+          
+          # Run the existing build policy check
+          {
+            echo "# Basic Build Policy Check Results"
+            echo "Timestamp: $(date)"
+            echo ""
+            
+            if node scripts/build-policy-check.js --clean 2>&1; then
+              echo "✅ Basic policy check passed"
+              echo "basic-policy-check=passed" >> $GITHUB_OUTPUT
+            else
+              echo "❌ Basic policy check failed"
+              policy_violations=true
+              echo "basic-policy-check=failed" >> $GITHUB_OUTPUT
+            fi
+            
+          } > build-policy-results/basic-check.md 2>&1
+          
+          log "📊 Step 2: Git artifact tracking analysis"
+          
+          # Check for tracked build artifacts
+          {
+            echo "# Git Artifact Tracking Analysis"
+            echo ""
+            
+            # Check .gitignore completeness
+            echo "## .gitignore Validation"
+            
+            required_ignores=(
+              "dist/"
+              "*.tsbuildinfo"
+              ".next/"
+              ".turbo/"
+              "node_modules/"
+              ".env.local"
+            )
+            
+            gitignore_issues=0
+            
+            for ignore_pattern in "${required_ignores[@]}"; do
+              if grep -q "^$ignore_pattern" .gitignore; then
+                echo "✅ $ignore_pattern is properly ignored"
+              else
+                echo "❌ $ignore_pattern is NOT ignored"
+                gitignore_issues=$((gitignore_issues + 1))
+                policy_violations=true
+              fi
+            done
+            
+            echo ""
+            echo "## Tracked Artifact Detection"
+            
+            # Check for tracked dist files
+            tracked_dist=$(git ls-files | grep -E "^packages/.*/dist/" || true)
+            if [[ -n "$tracked_dist" ]]; then
+              echo "❌ Found tracked dist files:"
+              echo "$tracked_dist" | while read -r file; do
+                echo "  - $file"
+              done
+              policy_violations=true
+            else
+              echo "✅ No tracked dist files found"
+            fi
+            
+            # Check for tracked tsbuildinfo files  
+            tracked_buildinfo=$(git ls-files | grep "\.tsbuildinfo$" || true)
+            if [[ -n "$tracked_buildinfo" ]]; then
+              echo "❌ Found tracked .tsbuildinfo files:"
+              echo "$tracked_buildinfo" | while read -r file; do
+                echo "  - $file"
+              done
+              policy_violations=true
+            else
+              echo "✅ No tracked .tsbuildinfo files found"
+            fi
+            
+            # Check for other build artifacts
+            tracked_artifacts=$(git ls-files | grep -E "\.(next|turbo)/" || true)
+            if [[ -n "$tracked_artifacts" ]]; then
+              echo "⚠️ Found other tracked build artifacts:"
+              echo "$tracked_artifacts" | while read -r file; do
+                echo "  - $file"
+              done
+              policy_warnings=true
+            fi
+            
+            echo ""
+            echo "**Summary**: $gitignore_issues .gitignore issues found"
+            
+          } > build-policy-results/git-analysis.md
+          
+          log "📊 Step 3: Package configuration audit"
+          
+          # Analyze package configurations
+          {
+            echo "# Package Configuration Audit"
+            echo ""
+            
+            package_paths=$(find packages -name "package.json" -type f | sort)
+            
+            echo "## Package Analysis"
+            
+            config_violations=0
+            
+            while IFS= read -r package_file; do
+              if [[ -n "$package_file" ]]; then
+                package_dir=$(dirname "$package_file")
+                package_name=$(jq -r '.name // "unnamed"' "$package_file")
+                
+                echo ""
+                echo "### $package_name ($package_dir)"
+                
+                # Check for build script
+                if jq -e '.scripts.build' "$package_file" >/dev/null; then
+                  echo "✅ Build script present"
+                else
+                  echo "⚠️ Build script missing"
+                  policy_warnings=true
+                fi
+                
+                # Check for main/exports field
+                if jq -e '.main // .exports' "$package_file" >/dev/null; then
+                  echo "✅ Entry point defined"
+                else
+                  echo "❌ No entry point (main/exports) defined"
+                  config_violations=$((config_violations + 1))
+                  policy_violations=true
+                fi
+                
+                # Check tsup config if it exists
+                tsup_config="$package_dir/tsup.config.ts"
+                if [[ -f "$tsup_config" ]]; then
+                  echo "✅ tsup config exists"
+                  
+                  # Check for clean: true
+                  if grep -q "clean: true" "$tsup_config"; then
+                    echo "✅ tsup clean option enabled"
+                  else
+                    echo "❌ tsup clean option not enabled"
+                    config_violations=$((config_violations + 1))
+                    policy_violations=true
+                  fi
+                else
+                  echo "ℹ️ No tsup config (may use different build system)"
+                fi
+                
+                # Check dist directory
+                dist_dir="$package_dir/dist"
+                if [[ -d "$dist_dir" ]]; then
+                  dist_size=$(du -sh "$dist_dir" | cut -f1)
+                  echo "ℹ️ Dist directory exists (size: $dist_size)"
+                  
+                  # Check for source maps
+                  if find "$dist_dir" -name "*.map" | grep -q .; then
+                    echo "ℹ️ Source maps present"
+                  fi
+                else
+                  echo "ℹ️ No dist directory (not built yet)"
+                fi
+              fi
+            done <<< "$package_paths"
+            
+            echo ""
+            echo "**Summary**: $config_violations configuration violations found"
+            
+          } > build-policy-results/package-audit.md
+          
+          log "📊 Step 4: Build consistency verification"
+          
+          # Test build consistency
+          {
+            echo "# Build Consistency Verification"
+            echo ""
+            
+            echo "## Clean Build Test"
+            
+            # Clean all artifacts
+            log "Cleaning all build artifacts..."
+            if rm -rf packages/*/dist/ packages/*/*.tsbuildinfo .turbo/ apps/*/.next/; then
+              echo "✅ Successfully cleaned all artifacts"
+            else
+              echo "❌ Failed to clean artifacts"
+              policy_violations=true
+            fi
+            
+            echo ""
+            echo "## TypeScript Compilation Check"
+            
+            # Run TypeScript check
+            if pnpm run typecheck:build 2>/dev/null; then
+              echo "✅ TypeScript compilation successful"
+            else
+              echo "❌ TypeScript compilation failed"
+              policy_violations=true
+            fi
+            
+            echo ""
+            echo "## Package Build Test"
+            
+            # Build packages only (not apps)
+            if pnpm -r --filter='./packages/*' run build 2>/dev/null; then
+              echo "✅ Package builds successful"
+              
+              # Verify all expected dist directories exist
+              expected_packages=$(find packages -name "package.json" -type f -exec dirname {} \;)
+              
+              while IFS= read -r pkg_dir; do
+                if [[ -n "$pkg_dir" ]]; then
+                  package_json="$pkg_dir/package.json"
+                  
+                  # Skip if no build script
+                  if jq -e '.scripts.build' "$package_json" >/dev/null; then
+                    if [[ -d "$pkg_dir/dist" ]]; then
+                      echo "✅ $pkg_dir/dist exists after build"
+                    else
+                      echo "❌ $pkg_dir/dist missing after build"
+                      policy_violations=true
+                    fi
+                  fi
+                fi
+              done <<< "$expected_packages"
+              
+            else
+              echo "❌ Package builds failed"
+              policy_violations=true
+            fi
+            
+            echo ""
+            echo "## Build Artifact Verification"
+            
+            # Check build artifact integrity
+            build_hash_check=true
+            if [[ -f ".build-hashes.json" ]]; then
+              echo "✅ Build hashes file exists"
+              
+              if jq empty .build-hashes.json 2>/dev/null; then
+                echo "✅ Build hashes file is valid JSON"
+              else
+                echo "❌ Build hashes file is corrupted"
+                build_hash_check=false
+                policy_violations=true
+              fi
+            else
+              echo "ℹ️ No build hashes file (will be created)"
+            fi
+            
+            # Generate new hashes
+            if node scripts/build-policy-check.js --build --verify 2>/dev/null; then
+              echo "✅ Build hash verification passed"
+            else
+              echo "❌ Build hash verification failed"
+              policy_violations=true
+            fi
+            
+          } > build-policy-results/build-consistency.md
+          
+          log "📊 Step 5: Turbo cache impact analysis"
+          
+          # Analyze Turbo cache effectiveness
+          {
+            echo "# Turbo Cache Impact Analysis"
+            echo ""
+            
+            echo "## Cache Configuration Check"
+            
+            if [[ -f "turbo.json" ]]; then
+              echo "✅ turbo.json exists"
+              
+              # Check cache configuration
+              if jq -e '.tasks.build.cache' turbo.json >/dev/null; then
+                echo "✅ Build task caching enabled"
+              else
+                echo "❌ Build task caching not enabled"
+                policy_warnings=true
+              fi
+              
+              # Check outputs configuration
+              if jq -e '.tasks.build.outputs' turbo.json >/dev/null; then
+                outputs=$(jq -r '.tasks.build.outputs[]' turbo.json)
+                echo "✅ Build outputs configured:"
+                echo "$outputs" | while read -r output; do
+                  echo "  - $output"
+                done
+              else
+                echo "⚠️ Build outputs not configured"
+                policy_warnings=true
+              fi
+              
+            else
+              echo "❌ turbo.json missing"
+              policy_violations=true
+            fi
+            
+            echo ""
+            echo "## Cache Performance Test"
+            
+            # Test cache performance
+            if [[ -d ".turbo" ]]; then
+              cache_size=$(du -sh .turbo | cut -f1)
+              echo "ℹ️ Current cache size: $cache_size"
+            fi
+            
+            # Run cache benchmark if requested
+            if [[ "${{ github.event.inputs.deep_analysis }}" == "true" || "${{ github.event_name }}" == "schedule" ]]; then
+              echo ""
+              echo "## Deep Cache Analysis (enabled)"
+              
+              # Clean cache for test
+              rm -rf .turbo
+              
+              # Cold build
+              cold_start=$(date +%s)
+              if pnpm -r --filter='./packages/*' run build >/dev/null 2>&1; then
+                cold_end=$(date +%s)
+                cold_time=$((cold_end - cold_start))
+                echo "Cold build time: ${cold_time}s"
+                
+                # Cached build
+                warm_start=$(date +%s)
+                if pnpm -r --filter='./packages/*' run build >/dev/null 2>&1; then
+                  warm_end=$(date +%s)
+                  warm_time=$((warm_end - warm_start))
+                  echo "Cached build time: ${warm_time}s"
+                  
+                  # Calculate improvement
+                  if [[ $cold_time -gt 0 ]]; then
+                    improvement=$((100 - (warm_time * 100 / cold_time)))
+                    echo "Cache improvement: ${improvement}%"
+                    
+                    if [[ $improvement -lt 30 ]]; then
+                      echo "⚠️ Cache improvement less than 30%"
+                      policy_warnings=true
+                    else
+                      echo "✅ Good cache performance"
+                    fi
+                  fi
+                else
+                  echo "❌ Cached build failed"
+                  policy_violations=true
+                fi
+              else
+                echo "❌ Cold build failed"
+                policy_violations=true
+              fi
+            else
+              echo "Deep analysis skipped (enable with deep_analysis input)"
+            fi
+            
+          } > build-policy-results/turbo-analysis.md
+          
+          log "📊 Step 6: Security and cleanup validation"
+          
+          # Security and cleanup checks
+          {
+            echo "# Security and Cleanup Validation"
+            echo ""
+            
+            echo "## File Permissions Check"
+            
+            # Check for executable dist files (security risk)
+            executable_dist=$(find packages -path "*/dist/*" -type f -executable 2>/dev/null || true)
+            if [[ -n "$executable_dist" ]]; then
+              echo "⚠️ Found executable files in dist:"
+              echo "$executable_dist" | while read -r file; do
+                echo "  - $file"
+              done
+              policy_warnings=true
+            else
+              echo "✅ No executable files in dist directories"
+            fi
+            
+            echo ""
+            echo "## Temporary File Cleanup"
+            
+            # Check for temporary files
+            temp_files=$(find . -name "*.tmp" -o -name "*.temp" -o -name ".DS_Store" | grep -v node_modules || true)
+            if [[ -n "$temp_files" ]]; then
+              echo "⚠️ Found temporary files:"
+              echo "$temp_files" | while read -r file; do
+                echo "  - $file"
+              done
+              policy_warnings=true
+            else
+              echo "✅ No temporary files found"
+            fi
+            
+            echo ""
+            echo "## Large File Detection"
+            
+            # Check for unexpectedly large build artifacts
+            large_files=$(find packages -path "*/dist/*" -type f -size +1M 2>/dev/null || true)
+            if [[ -n "$large_files" ]]; then
+              echo "⚠️ Found large build artifacts (>1MB):"
+              echo "$large_files" | while read -r file; do
+                size=$(ls -lh "$file" | awk '{print $5}')
+                echo "  - $file ($size)"
+              done
+              policy_warnings=true
+            else
+              echo "✅ No unusually large build artifacts"
+            fi
+            
+            echo ""
+            echo "## Source Map Security"
+            
+            # Check for source maps in production builds
+            if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+              source_maps=$(find packages -path "*/dist/*" -name "*.map" || true)
+              if [[ -n "$source_maps" ]]; then
+                echo "⚠️ Source maps found in production build:"
+                echo "$source_maps" | while read -r file; do
+                  echo "  - $file"
+                done
+                policy_warnings=true
+              else
+                echo "✅ No source maps in production build"
+              fi
+            else
+              echo "ℹ️ Source map check skipped (not main branch)"
+            fi
+            
+          } > build-policy-results/security-cleanup.md
+          
+          log "📊 Step 7: Final policy assessment"
+          
+          # Generate final assessment
+          {
+            echo "# Build Artifact Policy Assessment"
+            echo "Generated: $(date)"
+            echo ""
+            echo "## Overall Status"
+            echo "- **Policy Violations**: $(if [[ "$policy_violations" == "true" ]]; then echo "YES ❌"; else echo "NO ✅"; fi)"
+            echo "- **Policy Warnings**: $(if [[ "$policy_warnings" == "true" ]]; then echo "YES ⚠️"; else echo "NO ✅"; fi)"
+            echo ""
+            echo "## Checks Performed"
+            echo "- ✅ Git artifact tracking"
+            echo "- ✅ Package configurations"
+            echo "- ✅ Build consistency"
+            echo "- ✅ Turbo cache analysis"
+            echo "- ✅ Security validation"
+            echo "- ✅ Cleanup verification"
+            echo ""
+            
+            if [[ "$policy_violations" == "true" ]]; then
+              echo "## ❌ Critical Issues"
+              echo "Policy violations must be fixed before merging:"
+              echo "- Check git-analysis.md for tracking issues"
+              echo "- Review package-audit.md for configuration problems"
+              echo "- Examine build-consistency.md for build failures"
+              echo ""
+            fi
+            
+            if [[ "$policy_warnings" == "true" ]]; then
+              echo "## ⚠️ Warnings"
+              echo "Consider addressing these improvements:"
+              echo "- Review turbo-analysis.md for cache optimizations"
+              echo "- Check security-cleanup.md for best practices"
+              echo ""
+            fi
+            
+            if [[ "$policy_violations" != "true" && "$policy_warnings" != "true" ]]; then
+              echo "## 🎉 Excellent Compliance"
+              echo "All build artifact policies are properly followed!"
+              echo "- Build process is clean and consistent"
+              echo "- No tracked artifacts in git"
+              echo "- Turbo cache is optimized"
+              echo "- Security best practices followed"
+            fi
+            
+          } > build-policy-results/final-assessment.md
+          
+          # Set outputs
+          echo "policy-violations=$policy_violations" >> $GITHUB_OUTPUT
+          echo "policy-warnings=$policy_warnings" >> $GITHUB_OUTPUT
+          
+          if [[ "$policy_violations" == "true" ]]; then
+            log "❌ BUILD POLICY VIOLATIONS DETECTED"
+            echo "final-status=violations" >> $GITHUB_OUTPUT
+            exit 1
+          elif [[ "$policy_warnings" == "true" ]]; then
+            log "⚠️ BUILD POLICY WARNINGS FOUND"
+            echo "final-status=warnings" >> $GITHUB_OUTPUT
+          else
+            log "✅ ALL BUILD POLICIES COMPLIANT"
+            echo "final-status=compliant" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📊 Upload policy enforcement results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-policy-results-${{ github.sha }}
+          path: build-policy-results/
+          retention-days: 30
+
+      - name: 📝 Comment on PR with policy violations
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let assessment = '';
+            try {
+              assessment = fs.readFileSync('build-policy-results/final-assessment.md', 'utf8');
+            } catch (error) {
+              assessment = 'Could not read assessment file';
+            }
+            
+            const hasViolations = '${{ steps.policy-check.outputs.policy-violations }}' === 'true';
+            const hasWarnings = '${{ steps.policy-check.outputs.policy-warnings }}' === 'true';
+            
+            const comment = `## 🏗️ Build Artifact Policy Enforcement ${hasViolations ? '❌' : '⚠️'}
+            
+            ${hasViolations ? 'Your changes violate build artifact policies and must be fixed before merging.' : 'Build policy warnings detected - please review.'}
+            
+            ### 📊 Policy Assessment
+            ${assessment}
+            
+            ### 🛠️ How to Fix Policy Violations
+            
+            #### Git Artifact Issues:
+            \`\`\`bash
+            # Add missing entries to .gitignore
+            echo "dist/" >> .gitignore
+            echo "*.tsbuildinfo" >> .gitignore
+            
+            # Remove tracked artifacts
+            git rm -r --cached packages/*/dist/
+            git commit -m "Remove tracked build artifacts"
+            \`\`\`
+            
+            #### Package Configuration Issues:
+            \`\`\`bash
+            # Add missing build script
+            npm pkg set scripts.build="tsup"
+            
+            # Add entry point
+            npm pkg set main="dist/index.js"
+            npm pkg set exports.=./dist/index.js
+            \`\`\`
+            
+            #### tsup Configuration:
+            \`\`\`typescript
+            // tsup.config.ts
+            import { defineConfig } from 'tsup'
+            
+            export default defineConfig({
+              entry: ['src/index.ts'],
+              format: ['cjs', 'esm'],
+              dts: true,
+              clean: true, // ← Important!
+            })
+            \`\`\`
+            
+            ### 🧪 Local Testing
+            \`\`\`bash
+            # Run policy check locally
+            pnpm run build:check
+            
+            # Clean build test
+            node scripts/build-policy-check.js --clean --build
+            
+            # Verify git cleanliness
+            git status --porcelain
+            \`\`\`
+            
+            ### 📚 Documentation
+            - [Build Artifact Policies](https://github.com/${{ github.repository }}/blob/main/docs/build-policy.md)
+            - [Turbo Cache Guide](https://turbo.build/repo/docs/core-concepts/caching)
+            
+            ### 🔗 View Full Analysis
+            [Download policy enforcement results](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ---
+            *This enforcement prevents build artifacts from polluting the repository and ensures consistent builds.*`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: 📧 Create issue for scheduled violations
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🏗️ Build Policy Violations Detected - ${new Date().toISOString().split('T')[0]}`,
+              body: `## 🚨 Scheduled Build Policy Enforcement Alert
+              
+              The daily build policy check has detected violations that need immediate attention.
+              
+              ### 📊 Detection Details
+              - **Detection Time**: ${new Date().toISOString()}
+              - **Policy Violations**: YES ❌
+              - **Trigger**: Scheduled audit
+              
+              ### 🔧 Immediate Actions Required
+              1. Review the policy enforcement artifacts
+              2. Identify the root cause of violations
+              3. Fix git tracking issues
+              4. Update build configurations
+              5. Test locally before pushing fixes
+              
+              ### 🔗 Resources
+              - [View policy analysis](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              - [Build policy documentation](https://github.com/${{ github.repository }}/blob/main/docs/build-policy.md)
+              
+              **Priority**: High - Fix within 24 hours to prevent accumulation of technical debt.`,
+              labels: ['bug', 'build', 'policy-violation', 'high-priority']
+            });
+
+      - name: 🎉 Policy compliance success
+        if: success() && steps.policy-check.outputs.final-status == 'compliant'
+        run: |
+          echo "🎉 Build Artifact Policy Enforcement Successful!"
+          echo ""
+          echo "✅ All policies are compliant"
+          echo "🏗️ Build process is clean and consistent"  
+          echo "📦 No unwanted artifacts tracked in git"
+          echo "🚀 Ready for production deployment"

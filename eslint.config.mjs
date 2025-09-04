@@ -367,6 +367,7 @@ export default [
           selector: 'CallExpression[callee.property.name="$queryRawUnsafe"]',
           message: 'Use prisma.$queryRaw with Prisma.sql to avoid SQL injection risks.'
         },
+        
       ],
       // Code quality
       'prefer-const': 'error',

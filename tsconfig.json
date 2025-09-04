@@ -1,5 +1,4 @@
 {
-  "extends": "./tsconfig.base.json",
   "files": [],
   "references": [
     { "path": "./packages/db/tsconfig.build.json" },
@@ -12,6 +11,9 @@
     { "path": "./packages/emails/tsconfig.build.json" },
     { "path": "./packages/integrations/tsconfig.build.json" },
     { "path": "./packages/logic/tsconfig.build.json" },
-    { "path": "./packages/openapi/tsconfig.build.json" }
+    { "path": "./packages/logging/tsconfig.build.json" },
+    { "path": "./packages/openapi/tsconfig.build.json" },
+    { "path": "./apps/web/tsconfig.build.json" },
+    { "path": "./apps/admin/tsconfig.build.json" }
   ]
 }

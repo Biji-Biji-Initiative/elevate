@@ -1,0 +1,710 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/elevate_test
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
+  CLERK_SECRET_KEY: sk_test_dummy
+  NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_key
+  SUPABASE_SERVICE_ROLE: dummy_key
+  KAJABI_WEBHOOK_SECRET: test_secret
+  NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+jobs:
+  # Pre-flight checks - fail fast on critical issues
+  preflight:
+    name: Pre-flight Checks
+    runs-on: ubuntu-latest
+    outputs:
+      has-schema-changes: ${{ steps.detect-changes.outputs.has-schema-changes }}
+      has-config-changes: ${{ steps.detect-changes.outputs.has-config-changes }}
+      has-route-changes: ${{ steps.detect-changes.outputs.has-route-changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changes
+        id: detect-changes
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+
+          # Check for schema changes
+          if git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E "(packages/db/|\.prisma$|supabase/)"; then
+            echo "has-schema-changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-schema-changes=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check for config changes
+          if git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E "(vercel\.json|turbo\.json|package\.json|tsconfig\.json)"; then
+            echo "has-config-changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-config-changes=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check for route changes
+          if git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E "(app/|pages/|route\.ts$|page\.ts$)"; then
+            echo "has-route-changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-route-changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔒 Security scan - secrets
+        run: pnpm run verify:secrets
+
+      - name: 🧹 Git hygiene check
+        run: |
+          # Check for merge conflicts
+          if grep -r "<<<<<<< HEAD\|>>>>>>> \|=======" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" .; then
+            echo "❌ Merge conflict markers found"
+            exit 1
+          fi
+
+          # Check for large files
+          find . -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | xargs ls -la | awk '{if ($5 > 100000) print "Large file: " $9 " (" $5 " bytes)"}' | head -10
+
+          # Check for missing gitignore entries
+          if [[ ! -f .gitignore ]]; then
+            echo "❌ .gitignore missing"
+            exit 1
+          fi
+
+          # Check for tracked dist files
+          if git ls-files | grep -E "^(packages/.*/)?dist/"; then
+            echo "❌ Build artifacts are tracked in git"
+            exit 1
+          fi
+
+          echo "✅ Git hygiene check passed"
+
+  # Core testing pipeline
+  test:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+    needs: preflight
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: elevate_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Setup Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🗄️ Setup database
+        run: |
+          pnpm db:push
+          pnpm db:seed
+
+      - name: 📦 Generate Prisma client
+        run: pnpm db:generate
+
+      - name: 🔍 Type check
+        run: pnpm run type-check
+
+      - name: 🎨 Lint
+        run: pnpm run lint:check
+
+      - name: 🧪 Test
+        run: pnpm run test
+
+      - name: 📊 Upload coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # Build validation
+  build:
+    name: Build Validation
+    runs-on: ubuntu-latest
+    needs: preflight
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Setup Turbo cache
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-build-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🧹 Build artifact policy check
+        run: pnpm run build:check
+
+      - name: 🏗️ Build all packages
+        run: pnpm run build
+
+      - name: 🔍 Verify exports
+        run: pnpm run verify:exports
+
+      - name: 🧪 Consumer verification
+        run: pnpm run verify:consumer
+
+      - name: 📊 Bundle analysis
+        run: pnpm run analyze:bundles
+
+      - name: 📦 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ github.sha }}
+          path: |
+            apps/web/.next/
+            apps/admin/.next/
+            packages/*/dist/
+          retention-days: 7
+
+  # Schema drift detection (conditional)
+  schema-drift:
+    name: Schema Drift Check
+    runs-on: ubuntu-latest
+    needs: preflight
+    if: needs.preflight.outputs.has-schema-changes == 'true'
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: elevate_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Check schema drift
+        run: pnpm run db:check-drift
+
+      - name: 📝 Comment on PR
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `❌ **Schema Drift Detected**
+              
+              The database schema is out of sync with your Prisma schema. Please:
+              
+              1. Review the schema changes in your PR
+              2. Run \`pnpm db:push\` locally to sync your dev database
+              3. Create proper migrations if needed: \`pnpm scripts/db/generate-migrations.sh\`
+              4. Commit the migration files
+              
+              See the [Schema Drift Check](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) job for details.`
+            })
+
+  # Route conflict detection (conditional)
+  route-conflicts:
+    name: Route Conflict Check
+    runs-on: ubuntu-latest
+    needs: preflight
+    if: needs.preflight.outputs.has-route-changes == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Check for route conflicts
+        run: |
+          echo "🔍 Checking for route conflicts..."
+          
+          # Function to check for conflicts
+          check_route_conflicts() {
+            local app_dir=$1
+            local app_name=$2
+            
+            echo "Checking routes in $app_name..."
+            
+            # Check for sitemap conflicts
+            sitemap_files=$(find "$app_dir" -name "sitemap*" -type f 2>/dev/null || true)
+            if [[ -n "$sitemap_files" ]]; then
+              echo "Found sitemap files in $app_name:"
+              echo "$sitemap_files" | while read -r file; do
+                echo "  - $file"
+              done
+              
+              # Check if multiple sitemap files exist
+              sitemap_count=$(echo "$sitemap_files" | wc -l)
+              if [[ $sitemap_count -gt 1 ]]; then
+                echo "❌ Multiple sitemap files found - this may cause conflicts"
+                return 1
+              fi
+            fi
+            
+            # Check for route shadowing (same route in different files)
+            route_patterns=(
+              "route.ts"
+              "page.ts"
+              "page.tsx"
+              "layout.ts"
+              "layout.tsx"
+            )
+            
+            for pattern in "${route_patterns[@]}"; do
+              files=$(find "$app_dir/app" -name "$pattern" 2>/dev/null || true)
+              if [[ -n "$files" ]]; then
+                # Check for potential conflicts by looking at directory structure
+                echo "$files" | while read -r file; do
+                  dir_path=$(dirname "$file" | sed "s|$app_dir/app||")
+                  if [[ -n "$dir_path" && "$dir_path" != "." ]]; then
+                    # Check if there's a conflicting route structure
+                    conflicting_path="${app_dir}/app${dir_path}"
+                    if [[ -f "$conflicting_path/route.ts" && -f "$conflicting_path/page.tsx" ]]; then
+                      echo "❌ Potential route conflict: Both route.ts and page.tsx exist in $dir_path"
+                      return 1
+                    fi
+                  fi
+                done
+              fi
+            done
+            
+            return 0
+          }
+          
+          # Check both apps
+          apps=(
+            "apps/web:Web App"
+            "apps/admin:Admin App"
+          )
+          
+          for app_info in "${apps[@]}"; do
+            app_dir="${app_info%:*}"
+            app_name="${app_info#*:}"
+            
+            if [[ -d "$app_dir" ]]; then
+              if ! check_route_conflicts "$app_dir" "$app_name"; then
+                exit 1
+              fi
+            fi
+          done
+          
+          echo "✅ No route conflicts detected"
+
+  # Configuration validation (conditional)
+  config-validation:
+    name: Configuration Validation
+    runs-on: ubuntu-latest
+    needs: preflight
+    if: needs.preflight.outputs.has-config-changes == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔧 Verify Vercel configuration
+        run: node scripts/verify-vercel-config.js
+
+      - name: 🏃 Validate Turbo configuration
+        run: |
+          echo "🔍 Validating Turbo configuration..."
+          
+          # Check if turbo.json exists and is valid JSON
+          if [[ ! -f "turbo.json" ]]; then
+            echo "❌ turbo.json not found"
+            exit 1
+          fi
+          
+          # Validate JSON syntax
+          if ! jq empty turbo.json 2>/dev/null; then
+            echo "❌ turbo.json is not valid JSON"
+            exit 1
+          fi
+          
+          # Check for required tasks
+          required_tasks=("build" "lint" "test" "typecheck")
+          for task in "${required_tasks[@]}"; do
+            if ! jq -e ".tasks.\"$task\"" turbo.json >/dev/null; then
+              echo "❌ Required task '$task' not found in turbo.json"
+              exit 1
+            fi
+          done
+          
+          # Check cache configuration
+          if ! jq -e '.remoteCache.signature' turbo.json >/dev/null; then
+            echo "⚠️ Remote cache signature not enabled - recommended for security"
+          fi
+          
+          echo "✅ Turbo configuration is valid"
+
+      - name: 📦 Validate package.json files
+        run: |
+          echo "🔍 Validating package.json configurations..."
+          
+          # Check root package.json
+          if ! jq empty package.json 2>/dev/null; then
+            echo "❌ Root package.json is not valid JSON"
+            exit 1
+          fi
+          
+          # Check workspace configuration
+          if ! jq -e '.workspaces' package.json >/dev/null; then
+            echo "❌ Workspace configuration missing from root package.json"
+            exit 1
+          fi
+          
+          # Validate app package.json files
+          for app in apps/web apps/admin; do
+            if [[ -f "$app/package.json" ]]; then
+              if ! jq empty "$app/package.json" 2>/dev/null; then
+                echo "❌ $app/package.json is not valid JSON"
+                exit 1
+              fi
+              
+              # Check required scripts
+              if ! jq -e '.scripts.build' "$app/package.json" >/dev/null; then
+                echo "❌ Build script missing from $app/package.json"
+                exit 1
+              fi
+            fi
+          done
+          
+          echo "✅ All package.json files are valid"
+
+  # Turbo cache health check
+  turbo-cache:
+    name: Turbo Cache Health
+    runs-on: ubuntu-latest
+    needs: preflight
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏃 Turbo cache benchmark
+        run: |
+          echo "🔍 Running Turbo cache performance check..."
+          
+          # Clean state
+          rm -rf .turbo
+          
+          # First run (cold)
+          echo "Running cold build..."
+          cold_start=$(date +%s)
+          pnpm run build >/dev/null 2>&1
+          cold_end=$(date +%s)
+          cold_time=$((cold_end - cold_start))
+          
+          # Second run (cached)
+          echo "Running cached build..."
+          warm_start=$(date +%s)
+          pnpm run build >/dev/null 2>&1
+          warm_end=$(date +%s)
+          warm_time=$((warm_end - warm_start))
+          
+          # Calculate cache efficiency
+          if [[ $cold_time -gt 0 ]]; then
+            improvement=$((100 - (warm_time * 100 / cold_time)))
+          else
+            improvement=0
+          fi
+          
+          echo "📊 Turbo Cache Performance:"
+          echo "  Cold build: ${cold_time}s"
+          echo "  Cached build: ${warm_time}s"
+          echo "  Cache improvement: ${improvement}%"
+          
+          # Check if cache is effective
+          if [[ $improvement -lt 50 ]]; then
+            echo "⚠️ Cache improvement is less than 50% - consider reviewing task configuration"
+          else
+            echo "✅ Cache is performing well"
+          fi
+          
+          # Check cache size
+          if [[ -d ".turbo" ]]; then
+            cache_size=$(du -sh .turbo | cut -f1)
+            echo "  Cache size: $cache_size"
+          fi
+
+  # Security scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: preflight
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔒 Audit dependencies
+        run: pnpm audit --prod
+
+      - name: 🔍 Advanced secret scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  # Final status check
+  ci-complete:
+    name: CI Complete
+    runs-on: ubuntu-latest
+    needs: [preflight, test, build, turbo-cache, security]
+    # Also depend on conditional jobs if they ran
+    if: always()
+
+    steps:
+      - name: Check all required jobs
+        run: |
+          echo "🔍 Checking CI job results..."
+          
+          # Check core required jobs
+          if [[ "${{ needs.test.result }}" != "success" ]]; then
+            echo "❌ Tests failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "❌ Build failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.turbo-cache.result }}" != "success" ]]; then
+            echo "❌ Turbo cache check failed"
+            exit 1
+          fi
+          
+          if [[ "${{ needs.security.result }}" != "success" ]]; then
+            echo "❌ Security scan failed"
+            exit 1
+          fi
+          
+          # Check conditional jobs if they ran
+          if [[ "${{ needs.preflight.outputs.has-schema-changes }}" == "true" ]]; then
+            if [[ "${{ needs.schema-drift.result }}" != "success" ]]; then
+              echo "❌ Schema drift check failed"
+              exit 1
+            fi
+          fi
+          
+          if [[ "${{ needs.preflight.outputs.has-route-changes }}" == "true" ]]; then
+            if [[ "${{ needs.route-conflicts.result }}" != "success" ]]; then
+              echo "❌ Route conflict check failed"
+              exit 1
+            fi
+          fi
+          
+          if [[ "${{ needs.preflight.outputs.has-config-changes }}" == "true" ]]; then
+            if [[ "${{ needs.config-validation.result }}" != "success" ]]; then
+              echo "❌ Configuration validation failed"
+              exit 1
+            fi
+          fi
+          
+          echo "✅ All CI checks passed successfully!"
+
+      - name: 🎉 CI Success
+        run: |
+          echo "🎉 CI Pipeline completed successfully!"
+          echo "📊 Summary:"
+          echo "  ✅ Pre-flight checks"
+          echo "  ✅ Tests and linting"
+          echo "  ✅ Build validation"
+          echo "  ✅ Security scanning"
+          echo "  ✅ Cache performance"
+          if [[ "${{ needs.preflight.outputs.has-schema-changes }}" == "true" ]]; then
+            echo "  ✅ Schema drift check"
+          fi
+          if [[ "${{ needs.preflight.outputs.has-route-changes }}" == "true" ]]; then
+            echo "  ✅ Route conflict check"
+          fi
+          if [[ "${{ needs.preflight.outputs.has-config-changes }}" == "true" ]]; then
+            echo "  ✅ Configuration validation"
+          fi

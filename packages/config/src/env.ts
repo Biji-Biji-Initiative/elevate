@@ -73,6 +73,28 @@ export const EnvSchema = z.object({
     .transform((val) => val === 'true' || val === '1')
     .default("false")
     .optional(),
+
+  // Logging Configuration
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
+    .default("info")
+    .optional(),
+  
+  LOG_PRETTY: z.string()
+    .transform((val) => val === 'true' || val === '1')
+    .default("false")
+    .optional(),
+  
+  LOG_REDACT: z.string()
+    .default("password,secret,token,key,authorization,auth,cookie,session,apiKey,api_key,client_secret,access_token,refresh_token,jwt,privateKey,private_key,credentials,ssn,social_security,credit_card,card_number,cvv,pin")
+    .optional(),
+
+  LOG_NAME: z.string()
+    .default("elevate")
+    .optional(),
+
+  // Monitoring and Observability
+  SENTRY_DSN: z.string().url().optional(),
+  LOGTAIL_TOKEN: z.string().optional(),
 })
 
 // Web app specific env vars - stricter requirements

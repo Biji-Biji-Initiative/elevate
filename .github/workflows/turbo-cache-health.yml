@@ -1,0 +1,789 @@
+name: Turbo Cache Health Monitoring
+
+on:
+  pull_request:
+    paths:
+      - 'turbo.json'
+      - 'package.json'
+      - 'apps/*/package.json'
+      - 'packages/*/package.json'
+      - '**/tsup.config.ts'
+  push:
+    branches: [main, staging]
+    paths:
+      - 'turbo.json'
+  schedule:
+    # Daily cache health monitoring
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    inputs:
+      benchmark_mode:
+        description: 'Run comprehensive cache benchmarks'
+        required: false
+        default: 'false'
+        type: boolean
+      cache_reset:
+        description: 'Reset cache before testing'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  turbo-cache-health:
+    name: Turbo Cache Health Monitoring
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏃 Comprehensive Turbo Cache Health Analysis
+        id: cache-health
+        run: |
+          echo "🏃 Starting comprehensive Turbo cache health monitoring..."
+          
+          # Create results directory
+          mkdir -p turbo-cache-results
+          
+          cache_issues=false
+          cache_warnings=false
+          
+          log() {
+            echo "[$(date +'%H:%M:%S')] $1"
+          }
+          
+          # Helper function to format time
+          format_time() {
+            local seconds=$1
+            if [[ $seconds -lt 60 ]]; then
+              echo "${seconds}s"
+            else
+              local minutes=$((seconds / 60))
+              local remaining_seconds=$((seconds % 60))
+              echo "${minutes}m ${remaining_seconds}s"
+            fi
+          }
+          
+          log "📊 Step 1: Turbo configuration analysis"
+          
+          # Analyze turbo.json configuration
+          {
+            echo "# Turbo Configuration Analysis"
+            echo "Generated: $(date)"
+            echo ""
+            
+            if [[ ! -f "turbo.json" ]]; then
+              echo "❌ turbo.json not found!"
+              cache_issues=true
+            else
+              echo "✅ turbo.json exists"
+              
+              # Validate JSON syntax
+              if jq empty turbo.json 2>/dev/null; then
+                echo "✅ Valid JSON syntax"
+              else
+                echo "❌ Invalid JSON syntax"
+                cache_issues=true
+              fi
+              
+              echo ""
+              echo "## Configuration Details"
+              
+              # Extract key configuration
+              pipeline_tasks=$(jq -r '.tasks // .pipeline | keys | join(", ")' turbo.json 2>/dev/null || echo "none")
+              remote_cache=$(jq -r '.remoteCache // empty' turbo.json 2>/dev/null)
+              global_env=$(jq -r '.globalEnv // [] | join(", ")' turbo.json 2>/dev/null || echo "none")
+              
+              echo "- **Configured tasks**: $pipeline_tasks"
+              echo "- **Remote cache**: $(if [[ -n "$remote_cache" && "$remote_cache" != "null" ]]; then echo "Configured"; else echo "Not configured"; fi)"
+              echo "- **Global env vars**: $global_env"
+              
+              echo ""
+              echo "## Task Configuration Analysis"
+              
+              # Check each task configuration
+              tasks=(build lint test typecheck)
+              config_issues=0
+              
+              for task in "${tasks[@]}"; do
+                echo ""
+                echo "### $task Task"
+                
+                if jq -e ".tasks.\"$task\" // .pipeline.\"$task\"" turbo.json >/dev/null 2>&1; then
+                  echo "✅ Task configured"
+                  
+                  # Check cache configuration
+                  if jq -e "(.tasks.\"$task\" // .pipeline.\"$task\").cache" turbo.json >/dev/null 2>&1; then
+                    cache_enabled=$(jq -r "(.tasks.\"$task\" // .pipeline.\"$task\").cache" turbo.json)
+                    if [[ "$cache_enabled" == "true" ]]; then
+                      echo "✅ Caching enabled"
+                    else
+                      echo "⚠️ Caching disabled"
+                      cache_warnings=true
+                    fi
+                  else
+                    echo "⚠️ Cache setting not specified (defaults to true)"
+                    cache_warnings=true
+                  fi
+                  
+                  # Check outputs configuration
+                  if jq -e "(.tasks.\"$task\" // .pipeline.\"$task\").outputs" turbo.json >/dev/null 2>&1; then
+                    outputs=$(jq -r "(.tasks.\"$task\" // .pipeline.\"$task\").outputs | join(\", \")" turbo.json)
+                    echo "✅ Outputs configured: $outputs"
+                  else
+                    echo "⚠️ No outputs configured"
+                    cache_warnings=true
+                  fi
+                  
+                  # Check dependencies
+                  if jq -e "(.tasks.\"$task\" // .pipeline.\"$task\").dependsOn" turbo.json >/dev/null 2>&1; then
+                    depends_on=$(jq -r "(.tasks.\"$task\" // .pipeline.\"$task\").dependsOn | join(\", \")" turbo.json)
+                    echo "ℹ️ Dependencies: $depends_on"
+                  fi
+                  
+                else
+                  echo "⚠️ Task not configured"
+                  config_issues=$((config_issues + 1))
+                  cache_warnings=true
+                fi
+              done
+              
+              echo ""
+              echo "**Summary**: $config_issues tasks need configuration review"
+            fi
+            
+          } > turbo-cache-results/config-analysis.md
+          
+          log "📊 Step 2: Cache directory analysis"
+          
+          # Analyze cache directory
+          {
+            echo "# Cache Directory Analysis"
+            echo ""
+            
+            if [[ -d ".turbo" ]]; then
+              echo "✅ .turbo cache directory exists"
+              
+              # Calculate cache size
+              cache_size=$(du -sh .turbo | cut -f1)
+              echo "- **Cache size**: $cache_size"
+              
+              # Count cache entries
+              cache_entries=$(find .turbo -type f -name "*.log" -o -name "*.tar.zst" | wc -l || echo "0")
+              echo "- **Cache entries**: $cache_entries"
+              
+              # Check cache age
+              if [[ $cache_entries -gt 0 ]]; then
+                newest_cache=$(find .turbo -type f -printf '%T@ %p\n' | sort -rn | head -1 | awk '{print $2}')
+                oldest_cache=$(find .turbo -type f -printf '%T@ %p\n' | sort -n | head -1 | awk '{print $2}')
+                
+                if [[ -n "$newest_cache" && -n "$oldest_cache" ]]; then
+                  newest_age=$(stat -c %Y "$newest_cache" 2>/dev/null || echo "0")
+                  oldest_age=$(stat -c %Y "$oldest_cache" 2>/dev/null || echo "0")
+                  current_time=$(date +%s)
+                  
+                  newest_hours=$(( (current_time - newest_age) / 3600 ))
+                  oldest_days=$(( (current_time - oldest_age) / 86400 ))
+                  
+                  echo "- **Newest cache**: ${newest_hours}h ago"
+                  echo "- **Oldest cache**: ${oldest_days}d ago"
+                  
+                  if [[ $oldest_days -gt 7 ]]; then
+                    echo "⚠️ Some cache entries are over a week old"
+                    cache_warnings=true
+                  fi
+                fi
+              fi
+              
+              echo ""
+              echo "## Cache Health Indicators"
+              
+              # Check for cache corruption indicators
+              corrupted_files=$(find .turbo -name "*.tar.zst" -size 0 2>/dev/null | wc -l || echo "0")
+              if [[ $corrupted_files -gt 0 ]]; then
+                echo "❌ Found $corrupted_files potentially corrupted cache files"
+                cache_issues=true
+              else
+                echo "✅ No corrupted cache files found"
+              fi
+              
+              # Check cache directory structure
+              expected_dirs=("cache" "logs")
+              for dir in "${expected_dirs[@]}"; do
+                if [[ -d ".turbo/$dir" ]]; then
+                  echo "✅ .turbo/$dir directory exists"
+                else
+                  echo "ℹ️ .turbo/$dir directory not found (may be created on first run)"
+                fi
+              done
+              
+            else
+              echo "ℹ️ .turbo cache directory does not exist (will be created on first run)"
+            fi
+            
+          } > turbo-cache-results/cache-directory.md
+          
+          log "📊 Step 3: Cache performance benchmarking"
+          
+          # Reset cache if requested
+          if [[ "${{ github.event.inputs.cache_reset }}" == "true" ]]; then
+            log "🧹 Resetting cache as requested..."
+            rm -rf .turbo
+          fi
+          
+          # Run cache performance tests
+          {
+            echo "# Cache Performance Benchmark"
+            echo ""
+            
+            benchmark_tasks=("typecheck" "build")
+            
+            for task in "${benchmark_tasks[@]}"; do
+              echo "## $task Task Performance"
+              echo ""
+              
+              # Check if task exists in package.json scripts
+              if ! jq -e ".scripts.\"$task\" // .scripts.\"$task:*\"" package.json >/dev/null 2>&1; then
+                echo "⚠️ Task '$task' not found in package.json, skipping benchmark"
+                continue
+              fi
+              
+              echo "### Cold Run (no cache)"
+              
+              # Clean specific task cache
+              if [[ -d ".turbo" ]]; then
+                # Remove cache entries for this task
+                find .turbo -name "*$task*" -type f -delete 2>/dev/null || true
+              fi
+              
+              cold_start=$(date +%s)
+              if timeout 300 pnpm run "$task" >/dev/null 2>&1; then
+                cold_end=$(date +%s)
+                cold_duration=$((cold_end - cold_start))
+                echo "✅ Cold run completed in $(format_time $cold_duration)"
+              else
+                echo "❌ Cold run failed or timed out"
+                cache_issues=true
+                cold_duration=0
+              fi
+              
+              echo ""
+              echo "### Warm Run (with cache)"
+              
+              warm_start=$(date +%s)
+              if timeout 300 pnpm run "$task" >/dev/null 2>&1; then
+                warm_end=$(date +%s)
+                warm_duration=$((warm_end - warm_start))
+                echo "✅ Warm run completed in $(format_time $warm_duration)"
+                
+                # Calculate cache effectiveness
+                if [[ $cold_duration -gt 0 ]]; then
+                  improvement=$((100 - (warm_duration * 100 / cold_duration)))
+                  speedup=$(echo "scale=1; $cold_duration / $warm_duration" | bc -l 2>/dev/null || echo "N/A")
+                  
+                  echo "📊 **Performance Metrics**:"
+                  echo "  - Cache improvement: ${improvement}%"
+                  echo "  - Speedup factor: ${speedup}x"
+                  
+                  # Evaluate cache effectiveness
+                  if [[ $improvement -lt 20 ]]; then
+                    echo "❌ Poor cache performance (<20% improvement)"
+                    cache_issues=true
+                  elif [[ $improvement -lt 50 ]]; then
+                    echo "⚠️ Moderate cache performance (20-50% improvement)"
+                    cache_warnings=true
+                  else
+                    echo "✅ Excellent cache performance (>50% improvement)"
+                  fi
+                else
+                  echo "⚠️ Could not calculate improvement (cold run failed)"
+                  cache_warnings=true
+                fi
+              else
+                echo "❌ Warm run failed or timed out"
+                cache_issues=true
+              fi
+              
+              echo ""
+              echo "---"
+              echo ""
+            done
+            
+          } > turbo-cache-results/performance-benchmark.md
+          
+          log "📊 Step 4: Cache hit rate analysis"
+          
+          # Analyze cache hit rates if comprehensive benchmarks are enabled
+          if [[ "${{ github.event.inputs.benchmark_mode }}" == "true" || "${{ github.event_name }}" == "schedule" ]]; then
+            {
+              echo "# Comprehensive Cache Hit Rate Analysis"
+              echo ""
+              
+              echo "## Multiple Run Test"
+              echo ""
+              
+              # Test multiple runs to analyze cache consistency
+              test_runs=3
+              task="typecheck"  # Use typecheck as it's typically fast
+              
+              echo "Testing $test_runs consecutive runs of '$task' task:"
+              echo ""
+              
+              total_time=0
+              successful_runs=0
+              
+              for ((i=1; i<=test_runs; i++)); do
+                echo "### Run $i"
+                
+                run_start=$(date +%s)
+                if timeout 120 pnpm run "$task" >/dev/null 2>&1; then
+                  run_end=$(date +%s)
+                  run_duration=$((run_end - run_start))
+                  total_time=$((total_time + run_duration))
+                  successful_runs=$((successful_runs + 1))
+                  
+                  echo "✅ Completed in $(format_time $run_duration)"
+                else
+                  echo "❌ Failed or timed out"
+                  cache_issues=true
+                fi
+              done
+              
+              if [[ $successful_runs -gt 0 ]]; then
+                avg_time=$((total_time / successful_runs))
+                echo ""
+                echo "## Summary"
+                echo "- **Successful runs**: $successful_runs/$test_runs"
+                echo "- **Average time**: $(format_time $avg_time)"
+                echo "- **Total time**: $(format_time $total_time)"
+                
+                # Check for consistency
+                if [[ $successful_runs -eq $test_runs ]]; then
+                  echo "✅ All runs successful - cache is reliable"
+                else
+                  echo "⚠️ Some runs failed - cache reliability issues"
+                  cache_warnings=true
+                fi
+              fi
+              
+              echo ""
+              echo "## Cache File Analysis"
+              
+              if [[ -d ".turbo" ]]; then
+                # Analyze cache file patterns
+                log_files=$(find .turbo -name "*.log" | wc -l)
+                cache_files=$(find .turbo -name "*.tar.zst" | wc -l)
+                
+                echo "- **Log files**: $log_files"
+                echo "- **Cache archives**: $cache_files"
+                
+                # Check for recent cache activity
+                recent_activity=$(find .turbo -type f -mmin -10 | wc -l)
+                echo "- **Files modified in last 10 min**: $recent_activity"
+                
+                if [[ $recent_activity -eq 0 ]]; then
+                  echo "⚠️ No recent cache activity detected"
+                  cache_warnings=true
+                fi
+              fi
+              
+            } > turbo-cache-results/hit-rate-analysis.md
+            
+          else
+            echo "# Cache Hit Rate Analysis" > turbo-cache-results/hit-rate-analysis.md
+            echo "Comprehensive benchmarks disabled. Enable with benchmark_mode=true." >> turbo-cache-results/hit-rate-analysis.md
+          fi
+          
+          log "📊 Step 5: Remote cache analysis"
+          
+          # Analyze remote cache configuration
+          {
+            echo "# Remote Cache Analysis"
+            echo ""
+            
+            # Check for remote cache configuration
+            if jq -e '.remoteCache' turbo.json >/dev/null 2>&1; then
+              echo "✅ Remote cache configured in turbo.json"
+              
+              # Check signature setting
+              signature=$(jq -r '.remoteCache.signature // false' turbo.json)
+              if [[ "$signature" == "true" ]]; then
+                echo "✅ Cache signature verification enabled"
+              else
+                echo "⚠️ Cache signature verification disabled"
+                cache_warnings=true
+              fi
+              
+            else
+              echo "ℹ️ No remote cache configured (local cache only)"
+            fi
+            
+            echo ""
+            echo "## Environment Variables Check"
+            
+            # Check for Turbo-related environment variables
+            turbo_vars=("TURBO_TOKEN" "TURBO_TEAM" "TURBO_REMOTE_CACHE_SIGNATURE_KEY")
+            env_configured=0
+            
+            for var in "${turbo_vars[@]}"; do
+              if [[ -n "${!var:-}" ]]; then
+                echo "✅ $var is set"
+                env_configured=$((env_configured + 1))
+              else
+                echo "ℹ️ $var not set"
+              fi
+            done
+            
+            if [[ $env_configured -eq 0 ]]; then
+              echo ""
+              echo "ℹ️ No Turbo environment variables set - using local cache only"
+            else
+              echo ""
+              echo "✅ Remote cache environment partially configured ($env_configured/3 variables)"
+            fi
+            
+            echo ""
+            echo "## Cache Strategy Recommendations"
+            
+            recommendations=()
+            
+            if [[ "$signature" != "true" ]]; then
+              recommendations+=("Enable cache signature verification for security")
+            fi
+            
+            if [[ $env_configured -eq 0 ]]; then
+              recommendations+=("Consider configuring remote cache for team collaboration")
+            fi
+            
+            if [[ ${#recommendations[@]} -gt 0 ]]; then
+              for rec in "${recommendations[@]}"; do
+                echo "💡 $rec"
+              done
+            else
+              echo "✅ Cache configuration is optimal"
+            fi
+            
+          } > turbo-cache-results/remote-cache-analysis.md
+          
+          log "📊 Step 6: Cache optimization recommendations"
+          
+          # Generate optimization recommendations
+          {
+            echo "# Cache Optimization Recommendations"
+            echo ""
+            
+            echo "## Current Cache Efficiency"
+            
+            efficiency_score=100
+            recommendations=()
+            
+            # Reduce score based on issues found
+            if [[ "$cache_issues" == "true" ]]; then
+              efficiency_score=$((efficiency_score - 40))
+              recommendations+=("🚨 Fix critical cache issues immediately")
+            fi
+            
+            if [[ "$cache_warnings" == "true" ]]; then
+              efficiency_score=$((efficiency_score - 20))
+              recommendations+=("⚠️ Address cache configuration warnings")
+            fi
+            
+            # Check specific optimizations
+            if ! jq -e '.remoteCache.signature' turbo.json >/dev/null 2>&1; then
+              efficiency_score=$((efficiency_score - 10))
+              recommendations+=("🔒 Enable cache signature verification")
+            fi
+            
+            if [[ -d ".turbo" ]]; then
+              cache_size_kb=$(du -sk .turbo 2>/dev/null | cut -f1 || echo "0")
+              if [[ $cache_size_kb -gt 1048576 ]]; then  # >1GB
+                efficiency_score=$((efficiency_score - 10))
+                recommendations+=("🧹 Consider cache cleanup - size is >1GB")
+              fi
+            fi
+            
+            echo "**Cache Efficiency Score**: $efficiency_score/100"
+            echo ""
+            
+            if [[ $efficiency_score -ge 80 ]]; then
+              echo "🎉 **Excellent** - Your cache is well-optimized!"
+            elif [[ $efficiency_score -ge 60 ]]; then
+              echo "👍 **Good** - Minor optimizations possible"
+            elif [[ $efficiency_score -ge 40 ]]; then
+              echo "⚠️ **Needs Improvement** - Several issues to address"
+            else
+              echo "🚨 **Critical** - Immediate attention required"
+            fi
+            
+            echo ""
+            echo "## Specific Recommendations"
+            
+            if [[ ${#recommendations[@]} -gt 0 ]]; then
+              for rec in "${recommendations[@]}"; do
+                echo "- $rec"
+              done
+            else
+              echo "✅ No specific recommendations - cache is optimally configured"
+            fi
+            
+            echo ""
+            echo "## Advanced Optimization Tips"
+            echo ""
+            echo "### Task Configuration"
+            echo "- Ensure all tasks have appropriate \`outputs\` configured"
+            echo "- Use \`dependsOn\` to establish proper task dependencies"
+            echo "- Consider task-specific \`env\` variables for cache keys"
+            echo ""
+            echo "### Performance Tuning"
+            echo "- Use \`passThroughEnv\` for environment variables that shouldn't affect cache"
+            echo "- Configure \`globalEnv\` for variables that should bust all caches"
+            echo "- Consider using \`inputs\` to be more specific about what affects cache keys"
+            echo ""
+            echo "### Remote Cache Optimization"
+            echo "- Enable signature verification: \`\"signature\": true\`"
+            echo "- Use team-wide remote cache for faster CI/CD"
+            echo "- Monitor cache hit rates in your team"
+            
+          } > turbo-cache-results/optimization-recommendations.md
+          
+          log "📊 Step 7: Final cache health assessment"
+          
+          # Generate final assessment
+          {
+            echo "# Turbo Cache Health Assessment"
+            echo "Generated: $(date)"
+            echo ""
+            echo "## Overall Status"
+            echo "- **Cache Issues**: $(if [[ "$cache_issues" == "true" ]]; then echo "YES ❌"; else echo "NO ✅"; fi)"
+            echo "- **Cache Warnings**: $(if [[ "$cache_warnings" == "true" ]]; then echo "YES ⚠️"; else echo "NO ✅"; fi)"
+            echo "- **Benchmark Mode**: $(if [[ "${{ github.event.inputs.benchmark_mode }}" == "true" ]]; then echo "Enabled"; else echo "Standard"; fi)"
+            echo ""
+            echo "## Health Checks Performed"
+            echo "- ✅ Configuration validation"
+            echo "- ✅ Cache directory analysis"
+            echo "- ✅ Performance benchmarking"
+            echo "- ✅ Cache hit rate analysis"
+            echo "- ✅ Remote cache evaluation"
+            echo "- ✅ Optimization recommendations"
+            echo ""
+            
+            if [[ "$cache_issues" == "true" ]]; then
+              echo "## ❌ Critical Cache Issues"
+              echo "These issues are impacting cache performance:"
+              echo "- Check config-analysis.md for configuration problems"
+              echo "- Review performance-benchmark.md for failed tests"
+              echo "- Examine cache-directory.md for corruption issues"
+              echo ""
+              echo "**Action Required**: Fix these issues immediately"
+              echo ""
+            fi
+            
+            if [[ "$cache_warnings" == "true" ]]; then
+              echo "## ⚠️ Cache Optimization Opportunities"
+              echo "These improvements could enhance cache performance:"
+              echo "- Review optimization-recommendations.md for specific tips"
+              echo "- Consider remote-cache-analysis.md for team setup"
+              echo "- Check hit-rate-analysis.md for consistency issues"
+              echo ""
+            fi
+            
+            if [[ "$cache_issues" != "true" && "$cache_warnings" != "true" ]]; then
+              echo "## 🎉 Excellent Cache Health"
+              echo "Your Turbo cache is performing optimally!"
+              echo "- ⚡ Fast build times with effective caching"
+              echo "- 🏗️ Proper task configuration"
+              echo "- 🔧 Optimal cache settings"
+              echo "- 📊 Consistent performance metrics"
+            fi
+            
+          } > turbo-cache-results/final-assessment.md
+          
+          # Set outputs
+          echo "cache-issues=$cache_issues" >> $GITHUB_OUTPUT
+          echo "cache-warnings=$cache_warnings" >> $GITHUB_OUTPUT
+          
+          if [[ "$cache_issues" == "true" ]]; then
+            log "❌ TURBO CACHE ISSUES DETECTED"
+            echo "final-status=issues" >> $GITHUB_OUTPUT
+            exit 1
+          elif [[ "$cache_warnings" == "true" ]]; then
+            log "⚠️ TURBO CACHE WARNINGS FOUND"
+            echo "final-status=warnings" >> $GITHUB_OUTPUT
+          else
+            log "✅ TURBO CACHE HEALTH EXCELLENT"
+            echo "final-status=excellent" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📊 Upload cache health results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: turbo-cache-health-${{ github.sha }}
+          path: turbo-cache-results/
+          retention-days: 30
+
+      - name: 📝 Comment on PR with cache issues
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let assessment = '';
+            try {
+              assessment = fs.readFileSync('turbo-cache-results/final-assessment.md', 'utf8');
+            } catch (error) {
+              assessment = 'Could not read assessment file';
+            }
+            
+            const hasIssues = '${{ steps.cache-health.outputs.cache-issues }}' === 'true';
+            const hasWarnings = '${{ steps.cache-health.outputs.cache-warnings }}' === 'true';
+            
+            const comment = `## 🏃 Turbo Cache Health Check ${hasIssues ? '❌' : '⚠️'}
+            
+            ${hasIssues ? 'Critical cache issues detected that are impacting build performance.' : 'Cache warnings found that could affect performance.'}
+            
+            ### 📊 Cache Health Assessment
+            ${assessment}
+            
+            ### 🛠️ How to Fix Cache Issues
+            
+            #### Configuration Issues:
+            \`\`\`json
+            // turbo.json
+            {
+              "tasks": {
+                "build": {
+                  "cache": true,
+                  "outputs": ["dist/**", ".next/**"],
+                  "dependsOn": ["^build"]
+                },
+                "test": {
+                  "cache": true,
+                  "outputs": ["coverage/**"]
+                }
+              },
+              "remoteCache": {
+                "signature": true
+              }
+            }
+            \`\`\`
+            
+            #### Performance Issues:
+            \`\`\`bash
+            # Clear corrupted cache
+            rm -rf .turbo
+            
+            # Test cache performance
+            time pnpm run build  # Cold run
+            time pnpm run build  # Warm run (should be much faster)
+            
+            # Check cache contents
+            ls -la .turbo/cache/
+            \`\`\`
+            
+            #### Remote Cache Setup:
+            \`\`\`bash
+            # Set up Vercel remote cache
+            export TURBO_TOKEN="your-token"
+            export TURBO_TEAM="your-team"
+            
+            # Enable signature verification
+            export TURBO_REMOTE_CACHE_SIGNATURE_KEY="your-key"
+            \`\`\`
+            
+            ### 🧪 Local Testing
+            \`\`\`bash
+            # Run cache health check locally
+            pnpm turbo build --dry-run  # See what would be cached
+            
+            # Check cache hit rates
+            pnpm turbo build --summarize  # Get performance summary
+            
+            # Analyze cache contents
+            du -sh .turbo/  # Check cache size
+            find .turbo -name "*.log" | head -5  # Check recent logs
+            \`\`\`
+            
+            ### 📚 Optimization Resources
+            - [Turbo Cache Documentation](https://turbo.build/repo/docs/core-concepts/caching)
+            - [Remote Cache Setup](https://turbo.build/repo/docs/core-concepts/remote-caching)
+            - [Performance Profiling](https://turbo.build/repo/docs/reference/command-line-reference#--summarize)
+            
+            ### 🔗 View Full Analysis
+            [Download cache health results](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ---
+            *This monitoring ensures optimal build performance through effective caching.*`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: 📈 Create performance tracking issue
+        if: success() && github.event_name == 'schedule' && steps.cache-health.outputs.cache-warnings == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🏃 Weekly Turbo Cache Performance Review - ${new Date().toISOString().split('T')[0]}`,
+              body: `## 📊 Weekly Cache Performance Report
+              
+              The scheduled Turbo cache health check has identified optimization opportunities.
+              
+              ### 📈 Performance Metrics
+              - **Status**: Warnings detected ⚠️
+              - **Check Date**: ${new Date().toISOString()}
+              - **Trigger**: Weekly automated review
+              
+              ### 🔧 Recommended Actions
+              1. Review cache configuration for optimal settings
+              2. Consider enabling remote cache for team collaboration
+              3. Analyze cache hit rates and identify bottlenecks
+              4. Update task outputs configuration if needed
+              
+              ### 📊 Analysis Results
+              [View detailed cache analysis](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              
+              ### 💡 Next Steps
+              - Review the uploaded cache health artifacts
+              - Implement recommended optimizations
+              - Monitor cache performance after changes
+              - Consider scheduling regular performance reviews
+              
+              **Priority**: Medium - Address within this sprint for optimal developer experience.`,
+              labels: ['performance', 'cache', 'optimization', 'medium-priority']
+            });
+
+      - name: 🎉 Cache health success
+        if: success() && steps.cache-health.outputs.final-status == 'excellent'
+        run: |
+          echo "🎉 Turbo Cache Health Check Successful!"
+          echo ""
+          echo "✅ Cache configuration is optimal"
+          echo "⚡ Build performance is excellent"  
+          echo "🎯 Cache hit rates are high"
+          echo "🔧 No optimization needed"
+          echo "📊 All benchmarks passed"

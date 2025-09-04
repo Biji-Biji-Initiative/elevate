@@ -1,0 +1,621 @@
+name: Vercel Configuration Validation
+
+on:
+  pull_request:
+    paths:
+      - 'vercel.json'
+      - 'apps/*/vercel.json'
+      - 'apps/*/package.json'
+      - 'package.json'
+      - 'scripts/deploy-*.sh'
+      - 'scripts/verify-vercel-config.js'
+  push:
+    branches: [main, staging]
+    paths:
+      - 'vercel.json'
+      - 'apps/*/vercel.json'
+  schedule:
+    # Weekly verification of Vercel configs
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  validate-vercel-config:
+    name: Vercel Configuration Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: '9'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔧 Comprehensive Vercel Configuration Validation
+        id: vercel-validation
+        run: |
+          echo "🔧 Starting comprehensive Vercel configuration validation..."
+          
+          # Create validation results directory
+          mkdir -p vercel-validation
+          
+          validation_errors=false
+          validation_warnings=false
+          
+          log() {
+            echo "[$(date +'%H:%M:%S')] $1"
+          }
+          
+          log "📊 Step 1: Running existing validation script"
+          
+          # Run the existing verification script and capture output
+          if node scripts/verify-vercel-config.js > vercel-validation/basic-validation.log 2>&1; then
+            log "✅ Basic Vercel config validation passed"
+            echo "basic-validation=passed" >> $GITHUB_OUTPUT
+          else
+            log "❌ Basic Vercel config validation failed"
+            validation_errors=true
+            echo "basic-validation=failed" >> $GITHUB_OUTPUT
+          fi
+          
+          log "📊 Step 2: Advanced configuration analysis"
+          
+          # Analyze root vercel.json (web app)
+          if [[ -f "vercel.json" ]]; then
+            log "🔍 Analyzing root vercel.json (web app)..."
+            
+            {
+              echo "# Web App Configuration Analysis"
+              echo "File: vercel.json"
+              echo ""
+              
+              # Check JSON validity
+              if jq empty vercel.json 2>/dev/null; then
+                echo "✅ Valid JSON structure"
+              else
+                echo "❌ Invalid JSON structure"
+                validation_errors=true
+              fi
+              
+              # Extract and validate key configurations
+              project_name=$(jq -r '.name // "null"' vercel.json)
+              build_command=$(jq -r '.buildCommand // "null"' vercel.json)
+              output_dir=$(jq -r '.outputDirectory // "null"' vercel.json)
+              install_command=$(jq -r '.installCommand // "null"' vercel.json)
+              
+              echo ""
+              echo "## Configuration Details"
+              echo "- **Project Name**: $project_name"
+              echo "- **Build Command**: $build_command"
+              echo "- **Output Directory**: $output_dir"
+              echo "- **Install Command**: $install_command"
+              
+              # Validate specific settings
+              echo ""
+              echo "## Validation Results"
+              
+              if [[ "$project_name" == "elevate-web" ]]; then
+                echo "✅ Project name is correct"
+              else
+                echo "❌ Project name should be 'elevate-web', found: $project_name"
+                validation_errors=true
+              fi
+              
+              if [[ "$build_command" == "pnpm turbo run build --filter=web" ]]; then
+                echo "✅ Build command is correct for monorepo"
+              else
+                echo "❌ Build command incorrect, expected: 'pnpm turbo run build --filter=web'"
+                validation_errors=true
+              fi
+              
+              if [[ "$output_dir" == "apps/web/.next" ]]; then
+                echo "✅ Output directory is correct"
+              else
+                echo "❌ Output directory incorrect, expected: 'apps/web/.next'"
+                validation_errors=true
+              fi
+              
+              # Check for essential configurations
+              if jq -e '.functions' vercel.json >/dev/null; then
+                echo "✅ Function configuration present"
+                
+                # Check API function configuration
+                if jq -e '.functions["apps/web/app/api/**/*.ts"]' vercel.json >/dev/null; then
+                  echo "✅ API function configuration correct"
+                else
+                  echo "⚠️ API function configuration may be incorrect"
+                  validation_warnings=true
+                fi
+              else
+                echo "⚠️ No function configuration found"
+                validation_warnings=true
+              fi
+              
+              # Check headers configuration
+              if jq -e '.headers' vercel.json >/dev/null; then
+                echo "✅ Headers configuration present"
+                
+                # Check for security headers
+                if jq -e '.headers[].headers[] | select(.key == "X-App-Name")' vercel.json >/dev/null; then
+                  echo "✅ App identification header present"
+                else
+                  echo "⚠️ App identification header missing"
+                  validation_warnings=true
+                fi
+              else
+                echo "⚠️ Headers configuration missing"
+                validation_warnings=true
+              fi
+              
+              # Check rewrites/redirects
+              if jq -e '.rewrites' vercel.json >/dev/null; then
+                rewrite_count=$(jq '.rewrites | length' vercel.json)
+                echo "✅ Rewrites configuration present ($rewrite_count rules)"
+              fi
+              
+              if jq -e '.redirects' vercel.json >/dev/null; then
+                redirect_count=$(jq '.redirects | length' vercel.json)
+                echo "✅ Redirects configuration present ($redirect_count rules)"
+              fi
+              
+            } > vercel-validation/web-config-analysis.md
+            
+          else
+            log "❌ Root vercel.json not found"
+            validation_errors=true
+          fi
+          
+          log "📊 Step 3: Analyzing admin app configuration"
+          
+          # Analyze admin vercel.json
+          if [[ -f "apps/admin/vercel.json" ]]; then
+            log "🔍 Analyzing apps/admin/vercel.json..."
+            
+            {
+              echo "# Admin App Configuration Analysis"
+              echo "File: apps/admin/vercel.json"
+              echo ""
+              
+              # Check JSON validity
+              if jq empty apps/admin/vercel.json 2>/dev/null; then
+                echo "✅ Valid JSON structure"
+              else
+                echo "❌ Invalid JSON structure"
+                validation_errors=true
+              fi
+              
+              # Extract and validate key configurations
+              project_name=$(jq -r '.name // "null"' apps/admin/vercel.json)
+              build_command=$(jq -r '.buildCommand // "null"' apps/admin/vercel.json)
+              output_dir=$(jq -r '.outputDirectory // "null"' apps/admin/vercel.json)
+              
+              echo ""
+              echo "## Configuration Details"
+              echo "- **Project Name**: $project_name"
+              echo "- **Build Command**: $build_command"
+              echo "- **Output Directory**: $output_dir"
+              
+              echo ""
+              echo "## Validation Results"
+              
+              if [[ "$project_name" == "elevate-admin" ]]; then
+                echo "✅ Project name is correct"
+              else
+                echo "❌ Project name should be 'elevate-admin', found: $project_name"
+                validation_errors=true
+              fi
+              
+              if [[ "$build_command" == "cd ../.. && pnpm turbo run build --filter=elevate-admin" ]]; then
+                echo "✅ Build command is correct for admin app"
+              else
+                echo "❌ Build command incorrect for admin app"
+                validation_errors=true
+              fi
+              
+              if [[ "$output_dir" == ".next" ]]; then
+                echo "✅ Output directory is correct for admin app"
+              else
+                echo "❌ Output directory incorrect, expected: '.next'"
+                validation_errors=true
+              fi
+              
+            } > vercel-validation/admin-config-analysis.md
+            
+          else
+            log "❌ Admin vercel.json not found"
+            validation_errors=true
+          fi
+          
+          log "📊 Step 4: Checking deployment script consistency"
+          
+          # Check deployment scripts
+          {
+            echo "# Deployment Script Analysis"
+            echo ""
+            
+            scripts=("deploy-web.sh" "deploy-admin.sh" "deploy-apps.sh")
+            
+            for script in "${scripts[@]}"; do
+              script_path="scripts/$script"
+              echo "## $script"
+              
+              if [[ -f "$script_path" ]]; then
+                echo "✅ Script exists"
+                
+                # Check for proper error handling
+                if grep -q "set -e" "$script_path"; then
+                  echo "✅ Error handling enabled (set -e)"
+                else
+                  echo "⚠️ Missing error handling (set -e)"
+                  validation_warnings=true
+                fi
+                
+                # Check for Vercel CLI usage
+                if grep -q "vercel deploy" "$script_path"; then
+                  echo "✅ Uses Vercel CLI"
+                else
+                  echo "⚠️ No Vercel CLI usage found"
+                  validation_warnings=true
+                fi
+                
+                # Check for environment variable usage
+                if grep -q "VERCEL_" "$script_path"; then
+                  echo "✅ Uses Vercel environment variables"
+                else
+                  echo "⚠️ No Vercel environment variables found"
+                  validation_warnings=true
+                fi
+                
+              else
+                echo "❌ Script missing"
+                validation_errors=true
+              fi
+              echo ""
+            done
+            
+          } > vercel-validation/deployment-script-analysis.md
+          
+          log "📊 Step 5: Package.json consistency check"
+          
+          # Check package.json consistency
+          {
+            echo "# Package.json Consistency Check"
+            echo ""
+            
+            # Check root package.json
+            echo "## Root Package.json"
+            if [[ -f "package.json" ]]; then
+              echo "✅ Exists"
+              
+              # Check deployment scripts
+              if jq -e '.scripts.deploy' package.json >/dev/null; then
+                echo "✅ Deploy script present"
+              else
+                echo "⚠️ Deploy script missing"
+                validation_warnings=true
+              fi
+              
+              # Check Vercel-related scripts
+              vercel_scripts=$(jq -r '.scripts | to_entries[] | select(.key | contains("deploy")) | .key' package.json || true)
+              if [[ -n "$vercel_scripts" ]]; then
+                echo "✅ Deployment scripts found:"
+                echo "$vercel_scripts" | sed 's/^/  - /'
+              fi
+              
+            else
+              echo "❌ Root package.json missing"
+              validation_errors=true
+            fi
+            
+            echo ""
+            echo "## Web App Package.json"
+            if [[ -f "apps/web/package.json" ]]; then
+              web_name=$(jq -r '.name' apps/web/package.json)
+              echo "✅ Exists (name: $web_name)"
+              
+              if [[ "$web_name" == "web" ]]; then
+                echo "✅ Package name is correct"
+              else
+                echo "❌ Package name should be 'web'"
+                validation_errors=true
+              fi
+            else
+              echo "❌ Web app package.json missing"
+              validation_errors=true
+            fi
+            
+            echo ""
+            echo "## Admin App Package.json"
+            if [[ -f "apps/admin/package.json" ]]; then
+              admin_name=$(jq -r '.name' apps/admin/package.json)
+              echo "✅ Exists (name: $admin_name)"
+              
+              if [[ "$admin_name" == "elevate-admin" ]]; then
+                echo "✅ Package name is correct"
+              else
+                echo "❌ Package name should be 'elevate-admin'"
+                validation_errors=true
+              fi
+            else
+              echo "❌ Admin app package.json missing"
+              validation_errors=true
+            fi
+            
+          } > vercel-validation/package-consistency.md
+          
+          log "📊 Step 6: Environment variable validation"
+          
+          # Check for required environment variables in configs
+          {
+            echo "# Environment Variable Validation"
+            echo ""
+            
+            required_vars=(
+              "DATABASE_URL"
+              "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+              "CLERK_SECRET_KEY"
+              "NEXT_PUBLIC_SUPABASE_URL"
+              "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+              "SUPABASE_SERVICE_ROLE"
+              "KAJABI_WEBHOOK_SECRET"
+              "NEXT_PUBLIC_SITE_URL"
+            )
+            
+            echo "## Required Environment Variables"
+            for var in "${required_vars[@]}"; do
+              echo "- $var"
+            done
+            
+            echo ""
+            echo "## Vercel Configuration Check"
+            
+            # Check if vercel configs reference env vars
+            for config in vercel.json apps/admin/vercel.json; do
+              if [[ -f "$config" ]]; then
+                echo ""
+                echo "### $config"
+                
+                if jq -e '.env' "$config" >/dev/null 2>&1; then
+                  echo "✅ Environment variables configured"
+                  env_count=$(jq '.env | length' "$config" 2>/dev/null || echo "0")
+                  echo "  Variables: $env_count"
+                else
+                  echo "⚠️ No environment variables in config"
+                  validation_warnings=true
+                fi
+              fi
+            done
+            
+          } > vercel-validation/env-validation.md
+          
+          log "📊 Step 7: Configuration security check"
+          
+          # Security validation
+          {
+            echo "# Security Configuration Check"
+            echo ""
+            
+            security_issues=0
+            
+            echo "## Header Security"
+            for config in vercel.json apps/admin/vercel.json; do
+              if [[ -f "$config" ]]; then
+                echo ""
+                echo "### $config"
+                
+                if jq -e '.headers' "$config" >/dev/null; then
+                  # Check for security headers
+                  security_headers=("X-Frame-Options" "X-Content-Type-Options" "X-XSS-Protection" "Referrer-Policy")
+                  
+                  for header in "${security_headers[@]}"; do
+                    if jq -e ".headers[].headers[] | select(.key == \"$header\")" "$config" >/dev/null; then
+                      echo "✅ $header configured"
+                    else
+                      echo "⚠️ $header missing"
+                      validation_warnings=true
+                    fi
+                  done
+                else
+                  echo "⚠️ No security headers configured"
+                  validation_warnings=true
+                fi
+              fi
+            done
+            
+            echo ""
+            echo "## Function Configuration Security"
+            
+            for config in vercel.json apps/admin/vercel.json; do
+              if [[ -f "$config" ]]; then
+                echo ""
+                echo "### $config"
+                
+                if jq -e '.functions' "$config" >/dev/null; then
+                  # Check function timeout settings
+                  if jq -e '.functions | to_entries[] | select(.value.maxDuration)' "$config" >/dev/null; then
+                    echo "✅ Function timeouts configured"
+                  else
+                    echo "⚠️ Function timeouts not set"
+                    validation_warnings=true
+                  fi
+                else
+                  echo "ℹ️ No function configuration"
+                fi
+              fi
+            done
+            
+          } > vercel-validation/security-check.md
+          
+          log "📊 Step 8: Final validation summary"
+          
+          # Generate final summary
+          {
+            echo "# Vercel Configuration Validation Summary"
+            echo "Generated: $(date)"
+            echo ""
+            echo "## Status"
+            echo "- **Validation Errors**: $(if [[ "$validation_errors" == "true" ]]; then echo "YES ❌"; else echo "NO ✅"; fi)"
+            echo "- **Validation Warnings**: $(if [[ "$validation_warnings" == "true" ]]; then echo "YES ⚠️"; else echo "NO ✅"; fi)"
+            echo ""
+            echo "## Checked Components"
+            echo "- ✅ Root vercel.json (web app)"
+            echo "- ✅ Admin vercel.json"
+            echo "- ✅ Deployment scripts"
+            echo "- ✅ Package.json consistency"
+            echo "- ✅ Environment variable references"
+            echo "- ✅ Security configuration"
+            echo ""
+            echo "## Recommendations"
+            
+            if [[ "$validation_errors" == "true" ]]; then
+              echo "- 🚨 **Critical**: Fix configuration errors before deployment"
+              echo "- 📋 Review error details in validation artifacts"
+            fi
+            
+            if [[ "$validation_warnings" == "true" ]]; then
+              echo "- ⚠️ **Important**: Address warnings for optimal configuration"
+              echo "- 🔒 Consider adding missing security headers"
+              echo "- 🏗️ Review deployment script consistency"
+            fi
+            
+            if [[ "$validation_errors" != "true" && "$validation_warnings" != "true" ]]; then
+              echo "- 🎉 **Excellent**: All configurations are optimal"
+              echo "- 🚀 Ready for production deployment"
+            fi
+            
+          } > vercel-validation/validation-summary.md
+          
+          # Set outputs
+          echo "validation-errors=$validation_errors" >> $GITHUB_OUTPUT
+          echo "validation-warnings=$validation_warnings" >> $GITHUB_OUTPUT
+          
+          if [[ "$validation_errors" == "true" ]]; then
+            log "❌ VALIDATION FAILED - Critical configuration errors found"
+            echo "final-status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          elif [[ "$validation_warnings" == "true" ]]; then
+            log "⚠️ VALIDATION COMPLETED WITH WARNINGS"
+            echo "final-status=warnings" >> $GITHUB_OUTPUT
+          else
+            log "✅ VALIDATION PASSED - All configurations are correct"
+            echo "final-status=passed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📊 Upload validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vercel-validation-results-${{ github.sha }}
+          path: vercel-validation/
+          retention-days: 30
+
+      - name: 📝 Comment on PR with validation results
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let summary = '';
+            try {
+              summary = fs.readFileSync('vercel-validation/validation-summary.md', 'utf8');
+            } catch (error) {
+              summary = 'Could not read validation summary';
+            }
+            
+            const hasErrors = '${{ steps.vercel-validation.outputs.validation-errors }}' === 'true';
+            const hasWarnings = '${{ steps.vercel-validation.outputs.validation-warnings }}' === 'true';
+            
+            const comment = `## 🔧 Vercel Configuration Validation ${hasErrors ? '❌' : '⚠️'}
+            
+            ${hasErrors ? 'Critical configuration errors detected that must be fixed before deployment.' : 'Configuration warnings found - review recommended.'}
+            
+            ### 📊 Validation Summary
+            ${summary}
+            
+            ### 🛠️ How to Fix Configuration Issues
+            
+            #### Common Fixes:
+            
+            **For JSON validation errors:**
+            \`\`\`bash
+            # Validate JSON syntax
+            jq empty vercel.json
+            jq empty apps/admin/vercel.json
+            \`\`\`
+            
+            **For build command issues:**
+            \`\`\`json
+            {
+              "buildCommand": "pnpm turbo run build --filter=web",
+              "outputDirectory": "apps/web/.next"
+            }
+            \`\`\`
+            
+            **For missing configurations:**
+            \`\`\`json
+            {
+              "functions": {
+                "apps/web/app/api/**/*.ts": {
+                  "maxDuration": 30
+                }
+              },
+              "headers": [
+                {
+                  "source": "/(.*)",
+                  "headers": [
+                    {
+                      "key": "X-App-Name",
+                      "value": "elevate-web"
+                    }
+                  ]
+                }
+              ]
+            }
+            \`\`\`
+            
+            ### 🧪 Local Testing
+            \`\`\`bash
+            # Test configuration locally
+            pnpm deploy:verify
+            
+            # Run validation script
+            node scripts/verify-vercel-config.js
+            \`\`\`
+            
+            ### 📚 Documentation
+            - [Vercel Configuration Reference](https://vercel.com/docs/projects/project-configuration)
+            - [Next.js Deployment Guide](https://nextjs.org/docs/deployment#vercel)
+            
+            ### 🔗 View Full Results
+            [Download validation artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ---
+            *This validation ensures your Vercel deployment configurations are correct and secure.*`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: 🎉 Success notification
+        if: success() && steps.vercel-validation.outputs.final-status == 'passed'
+        run: |
+          echo "🎉 Vercel Configuration Validation Successful!"
+          echo ""
+          echo "✅ All configurations are correct and secure"
+          echo "🚀 Ready for deployment to Vercel"
+          echo "🔒 Security headers properly configured"
+          echo "⚙️ Build commands are optimized for monorepo"

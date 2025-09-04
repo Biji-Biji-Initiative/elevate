@@ -31,16 +31,30 @@
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --fix",
     "type-check": "tsc --noEmit",
     "api:extract": "../../node_modules/.bin/api-extractor run --local",
-    "api:check": "../../node_modules/.bin/api-extractor run"
+    "api:check": "../../node_modules/.bin/api-extractor run",
+    "db:generate": "prisma generate --schema=./schema.prisma",
+    "db:migrate": "prisma migrate deploy --schema=./schema.prisma",
+    "db:migrate:dev": "prisma migrate dev --schema=./schema.prisma",
+    "db:migrate:reset": "prisma migrate reset --schema=./schema.prisma",
+    "db:migrate:status": "prisma migrate status --schema=./schema.prisma",
+    "db:migrate:resolve": "prisma migrate resolve --schema=./schema.prisma",
+    "db:push": "prisma db push --schema=./schema.prisma",
+    "db:pull": "prisma db pull --schema=./schema.prisma",
+    "db:studio": "prisma studio --schema=./schema.prisma",
+    "db:seed": "tsx seed.ts",
+    "db:reset": "pnpm db:migrate:reset --force && pnpm db:seed",
+    "db:check": "tsx scripts/check-migrations.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0"
+    "@prisma/client": "^6.15.0",
+    "@elevate/logging": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
     "typescript": "^5.9.2",
     "prisma": "^6.15.0",
-    "tsup": "^8.3.7"
+    "tsup": "^8.3.7",
+    "tsx": "^4.7.1"
   },
   "sideEffects": false,
   "engines": {

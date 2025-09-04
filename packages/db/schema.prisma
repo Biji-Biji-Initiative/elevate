@@ -43,7 +43,6 @@ model Submission {
   status        SubmissionStatus @default(PENDING)
   visibility    Visibility       @default(PRIVATE)
   payload       Json
-  attachments   Json
   attachments_rel SubmissionAttachment[]
   reviewer_id   String?
   review_note   String?

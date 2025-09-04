@@ -16,7 +16,14 @@ const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'support@leaps.mereka.org';
 // Base email sending function
 async function sendEmail(to: string, subject: string, html: string, text?: string) {
   try {
-    const emailOptions: any = {
+    const emailOptions: {
+      from: string;
+      to: string;
+      subject: string;
+      html: string;
+      replyTo: string;
+      text?: string;
+    } = {
       from: FROM_EMAIL,
       to,
       subject,
@@ -79,7 +86,16 @@ export async function sendApprovalNotificationEmail(
   dashboardUrl: string,
   leaderboardUrl: string
 ) {
-  const props: any = {
+  const props: {
+    name: string;
+    activityName: string;
+    pointsAwarded: number;
+    totalPoints: number;
+    leaderboardPosition: number;
+    dashboardUrl: string;
+    leaderboardUrl: string;
+    reviewerNote?: string;
+  } = {
     name, 
     activityName, 
     pointsAwarded,
@@ -163,7 +179,14 @@ export async function sendBatchEmails(emails: Array<{
   try {
     const result = await resend.batch.send(
       emails.map(email => {
-        const emailOptions: any = {
+        const emailOptions: {
+          from: string;
+          to: string;
+          subject: string;
+          html: string;
+          reply_to: string;
+          text?: string;
+        } = {
           from: FROM_EMAIL,
           to: email.to,
           subject: email.subject,

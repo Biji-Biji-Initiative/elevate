@@ -117,7 +117,18 @@
 ### Admin API Envelopes
 
 - Success: `{ success: true, data: { ... } }`
-- Errors: standardized via `createErrorResponse(error, status)`
+- Errors: `{ success: false, error, details? }` (via `createErrorResponse`)
+
+### Attachments (Canonical Source)
+
+- Submissions persist attachments in the relational table `submission_attachments`.
+- The legacy JSON `attachments` field is deprecated and remains empty for compatibility.
+- All APIs derive `attachmentCount` exclusively from `attachments_rel`.
+
+### Deterministic SQL Migrations
+
+- All SQL migrations live under `packages/db/migrations` and are applied in lexical order by `scripts/db-setup.sh`.
+- Prisma schema in `packages/db/schema.prisma` remains the single source of truth; additional SQL augments constraints, views, and triggers.
 
 ## 📁 Project Structure
 

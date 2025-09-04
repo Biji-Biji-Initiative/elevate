@@ -3,16 +3,20 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 
 import { prisma } from '@elevate/db/client'
+import { 
+  createSuccessResponse,
+  withApiErrorHandling,
+  AuthenticationError
+} from '@elevate/types'
 
 export const runtime = 'nodejs';
 
-export async function GET(request: NextRequest) {
-  try {
-    const { userId } = await auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const GET = withApiErrorHandling(async (request: NextRequest, context) => {
+  const { userId } = await auth()
+  
+  if (!userId) {
+    throw new AuthenticationError()
+  }
 
     // Get authenticated user's earned badges
     const earnedBadges = await prisma.earnedBadge.findMany({
@@ -40,12 +44,5 @@ export async function GET(request: NextRequest) {
       earnedAt: eb.earned_at
     }))
 
-    return NextResponse.json({ badges })
-
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch badges data' },
-      { status: 500 }
-    )
-  }
-}
+  return createSuccessResponse({ badges })
+})

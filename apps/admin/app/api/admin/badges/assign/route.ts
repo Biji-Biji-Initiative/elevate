@@ -2,22 +2,24 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { AssignBadgeSchema, RemoveBadgeSchema, buildAuditMeta } from '@elevate/types'
+import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
+  return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const user = await requireRole('admin')
     const body: unknown = await request.json()
     const parsed = AssignBadgeSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
     }
     const { badgeCode, userIds, reason } = parsed.data
     
     if (!badgeCode || !Array.isArray(userIds) || userIds.length === 0) {
       return NextResponse.json(
-        { error: 'badgeCode and userIds array are required' },
+        { success: false, error: 'badgeCode and userIds array are required' },
         { status: 400 }
       )
     }
@@ -25,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Limit bulk operations
     if (userIds.length > 100) {
       return NextResponse.json(
-        { error: 'Maximum 100 users per bulk badge assignment' },
+        { success: false, error: 'Maximum 100 users per bulk badge assignment' },
         { status: 400 }
       )
     }
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
     
     if (!badge) {
       return NextResponse.json(
-        { error: 'Badge not found' },
+        { success: false, error: 'Badge not found' },
         { status: 404 }
       )
     }
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
     
     if (users.length === 0) {
       return NextResponse.json(
-        { error: 'No valid users found' },
+        { success: false, error: 'No valid users found' },
         { status: 404 }
       )
     }
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
     
     if (newUserIds.length === 0) {
       return NextResponse.json(
-        { error: 'All specified users already have this badge' },
+        { success: false, error: 'All specified users already have this badge' },
         { status: 400 }
       )
     }
@@ -122,33 +124,29 @@ export async function POST(request: NextRequest) {
       return assignments
     })
     
-    return NextResponse.json({
-      success: true,
-      assigned: results.length,
-      skipped: userIds.length - results.length,
-      assignments: results,
-      message: `Badge "${badge.name}" assigned to ${results.length} users`
-    })
+    return NextResponse.json({ success: true, data: { message: `Badge "${badge.name}" assigned to ${results.length} users`, processed: results.length, failed: userIds.length - results.length } })
     
   } catch (error) {
     return createErrorResponse(error, 500)
   }
+  })
 }
 
 // Remove badge from users
 export async function DELETE(request: NextRequest) {
+  return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const user = await requireRole('admin')
     const body: unknown = await request.json()
     const parsed = RemoveBadgeSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
     }
     const { badgeCode, userIds, reason } = parsed.data
     
     if (!badgeCode || !Array.isArray(userIds) || userIds.length === 0) {
       return NextResponse.json(
-        { error: 'badgeCode and userIds array are required' },
+        { success: false, error: 'badgeCode and userIds array are required' },
         { status: 400 }
       )
     }
@@ -156,7 +154,7 @@ export async function DELETE(request: NextRequest) {
     // Limit bulk operations
     if (userIds.length > 100) {
       return NextResponse.json(
-        { error: 'Maximum 100 users per bulk badge removal' },
+        { success: false, error: 'Maximum 100 users per bulk badge removal' },
         { status: 400 }
       )
     }
@@ -181,7 +179,7 @@ export async function DELETE(request: NextRequest) {
     
     if (assignments.length === 0) {
       return NextResponse.json(
-        { error: 'No badge assignments found for specified users' },
+        { success: false, error: 'No badge assignments found for specified users' },
         { status: 404 }
       )
     }
@@ -214,13 +212,10 @@ export async function DELETE(request: NextRequest) {
     // We already checked assignments.length === 0 above, but TypeScript needs this check
     const badgeName = assignments[0]?.badge.name ?? 'Unknown Badge'
     
-    return NextResponse.json({
-      success: true,
-      removed: assignments.length,
-      message: `Badge "${badgeName}" removed from ${assignments.length} users`
-    })
+    return NextResponse.json({ success: true, data: { message: `Badge "${badgeName}" removed from ${assignments.length} users`, processed: assignments.length, failed: 0 } })
     
   } catch (error) {
     return createErrorResponse(error, 500)
   }
+  })
 }

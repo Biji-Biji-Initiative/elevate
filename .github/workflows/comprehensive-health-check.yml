@@ -1,0 +1,869 @@
+name: Comprehensive Health Check
+
+on:
+  schedule:
+    # Weekly comprehensive health check on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      check_scope:
+        description: 'Health check scope'
+        required: false
+        default: 'full'
+        type: choice
+        options:
+          - 'full'
+          - 'critical'
+          - 'performance'
+          - 'security'
+      create_report:
+        description: 'Create comprehensive report'
+        required: false
+        default: 'true'
+        type: boolean
+      auto_fix:
+        description: 'Auto-fix non-critical issues'
+        required: false
+        default: 'false'
+        type: boolean
+
+concurrency:
+  group: health-check-${{ github.ref }}
+  cancel-in-progress: false  # Let health checks complete
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/elevate_test
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
+  CLERK_SECRET_KEY: sk_test_dummy
+  NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_key
+  SUPABASE_SERVICE_ROLE: dummy_key
+  KAJABI_WEBHOOK_SECRET: test_secret
+  NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+jobs:
+  # Health check orchestration
+  health-check-orchestrator:
+    name: Health Check Orchestrator
+    runs-on: ubuntu-latest
+    outputs:
+      run-schema-check: ${{ steps.scope.outputs.run-schema-check }}
+      run-route-check: ${{ steps.scope.outputs.run-route-check }}
+      run-vercel-check: ${{ steps.scope.outputs.run-vercel-check }}
+      run-build-check: ${{ steps.scope.outputs.run-build-check }}
+      run-git-check: ${{ steps.scope.outputs.run-git-check }}
+      run-cache-check: ${{ steps.scope.outputs.run-cache-check }}
+      run-security-check: ${{ steps.scope.outputs.run-security-check }}
+      run-performance-check: ${{ steps.scope.outputs.run-performance-check }}
+      health-check-id: ${{ steps.generate-id.outputs.id }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate health check ID
+        id: generate-id
+        run: |
+          check_id="health-check-$(date +%Y%m%d-%H%M%S)"
+          echo "id=$check_id" >> $GITHUB_OUTPUT
+          echo "🆔 Health Check ID: $check_id"
+
+      - name: Determine check scope
+        id: scope
+        run: |
+          scope="${{ github.event.inputs.check_scope || 'full' }}"
+          
+          echo "📊 Health Check Scope: $scope"
+          
+          case "$scope" in
+            "full")
+              echo "run-schema-check=true" >> $GITHUB_OUTPUT
+              echo "run-route-check=true" >> $GITHUB_OUTPUT
+              echo "run-vercel-check=true" >> $GITHUB_OUTPUT
+              echo "run-build-check=true" >> $GITHUB_OUTPUT
+              echo "run-git-check=true" >> $GITHUB_OUTPUT
+              echo "run-cache-check=true" >> $GITHUB_OUTPUT
+              echo "run-security-check=true" >> $GITHUB_OUTPUT
+              echo "run-performance-check=true" >> $GITHUB_OUTPUT
+              ;;
+            "critical")
+              echo "run-schema-check=true" >> $GITHUB_OUTPUT
+              echo "run-route-check=true" >> $GITHUB_OUTPUT
+              echo "run-vercel-check=true" >> $GITHUB_OUTPUT
+              echo "run-build-check=true" >> $GITHUB_OUTPUT
+              echo "run-git-check=false" >> $GITHUB_OUTPUT
+              echo "run-cache-check=false" >> $GITHUB_OUTPUT
+              echo "run-security-check=true" >> $GITHUB_OUTPUT
+              echo "run-performance-check=false" >> $GITHUB_OUTPUT
+              ;;
+            "performance")
+              echo "run-schema-check=false" >> $GITHUB_OUTPUT
+              echo "run-route-check=false" >> $GITHUB_OUTPUT
+              echo "run-vercel-check=false" >> $GITHUB_OUTPUT
+              echo "run-build-check=true" >> $GITHUB_OUTPUT
+              echo "run-git-check=false" >> $GITHUB_OUTPUT
+              echo "run-cache-check=true" >> $GITHUB_OUTPUT
+              echo "run-security-check=false" >> $GITHUB_OUTPUT
+              echo "run-performance-check=true" >> $GITHUB_OUTPUT
+              ;;
+            "security")
+              echo "run-schema-check=true" >> $GITHUB_OUTPUT
+              echo "run-route-check=false" >> $GITHUB_OUTPUT
+              echo "run-vercel-check=true" >> $GITHUB_OUTPUT
+              echo "run-build-check=true" >> $GITHUB_OUTPUT
+              echo "run-git-check=true" >> $GITHUB_OUTPUT
+              echo "run-cache-check=false" >> $GITHUB_OUTPUT
+              echo "run-security-check=true" >> $GITHUB_OUTPUT
+              echo "run-performance-check=false" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+      - name: Initialize health check report
+        run: |
+          mkdir -p comprehensive-health-report
+          
+          {
+            echo "# Comprehensive Health Check Report"
+            echo "Generated: $(date)"
+            echo "Check ID: ${{ steps.generate-id.outputs.id }}"
+            echo "Scope: ${{ github.event.inputs.check_scope || 'full' }}"
+            echo ""
+            echo "## Executive Summary"
+            echo "*This report will be populated by individual health checks.*"
+            echo ""
+            echo "## Health Check Components"
+            echo ""
+          } > comprehensive-health-report/README.md
+
+  # Database schema drift check
+  schema-drift-health:
+    name: Schema Drift Health
+    runs-on: ubuntu-latest
+    needs: health-check-orchestrator
+    if: needs.health-check-orchestrator.outputs.run-schema-check == 'true'
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: elevate_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🗄️ Database schema health check
+        id: schema-health
+        continue-on-error: true
+        run: |
+          echo "🗄️ Running database schema health check..."
+          
+          if pnpm run db:check-drift; then
+            echo "schema-status=healthy" >> $GITHUB_OUTPUT
+            echo "schema-message=No schema drift detected" >> $GITHUB_OUTPUT
+          else
+            echo "schema-status=issues" >> $GITHUB_OUTPUT
+            echo "schema-message=Schema drift detected" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload schema health results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-health-${{ needs.health-check-orchestrator.outputs.health-check-id }}
+          path: |
+            packages/db/schema.prisma
+            supabase/migrations/
+          retention-days: 7
+
+  # Route conflict health check
+  route-conflict-health:
+    name: Route Conflict Health
+    runs-on: ubuntu-latest
+    needs: health-check-orchestrator
+    if: needs.health-check-orchestrator.outputs.run-route-check == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 🛣️ Route structure health check
+        id: route-health
+        continue-on-error: true
+        run: |
+          echo "🛣️ Running route structure health check..."
+          
+          route_conflicts=0
+          
+          # Check for sitemap conflicts
+          web_sitemaps=$(find apps/web -name "sitemap*" -type f 2>/dev/null | wc -l || echo "0")
+          admin_sitemaps=$(find apps/admin -name "sitemap*" -type f 2>/dev/null | wc -l || echo "0")
+          
+          # Check for route/page conflicts
+          route_page_conflicts=$(find apps -name "route.ts" -exec dirname {} \; | while read -r dir; do
+            if [[ -f "$dir/page.tsx" ]]; then
+              echo "$dir"
+            fi
+          done | wc -l || echo "0")
+          
+          total_conflicts=$((web_sitemaps + admin_sitemaps + route_page_conflicts))
+          
+          if [[ $total_conflicts -eq 0 ]]; then
+            echo "route-status=healthy" >> $GITHUB_OUTPUT
+            echo "route-message=No route conflicts detected" >> $GITHUB_OUTPUT
+          else
+            echo "route-status=issues" >> $GITHUB_OUTPUT
+            echo "route-message=Found $total_conflicts potential route conflicts" >> $GITHUB_OUTPUT
+          fi
+
+  # Vercel configuration health
+  vercel-config-health:
+    name: Vercel Config Health
+    runs-on: ubuntu-latest
+    needs: health-check-orchestrator
+    if: needs.health-check-orchestrator.outputs.run-vercel-check == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔧 Vercel configuration health check
+        id: vercel-health
+        continue-on-error: true
+        run: |
+          echo "🔧 Running Vercel configuration health check..."
+          
+          if node scripts/verify-vercel-config.js; then
+            echo "vercel-status=healthy" >> $GITHUB_OUTPUT
+            echo "vercel-message=All Vercel configurations are valid" >> $GITHUB_OUTPUT
+          else
+            echo "vercel-status=issues" >> $GITHUB_OUTPUT
+            echo "vercel-message=Vercel configuration issues detected" >> $GITHUB_OUTPUT
+          fi
+
+  # Build artifact policy health
+  build-artifact-health:
+    name: Build Artifact Health
+    runs-on: ubuntu-latest
+    needs: health-check-orchestrator
+    if: needs.health-check-orchestrator.outputs.run-build-check == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏗️ Build artifact policy health check
+        id: build-health
+        continue-on-error: true
+        run: |
+          echo "🏗️ Running build artifact policy health check..."
+          
+          if pnpm run build:check; then
+            echo "build-status=healthy" >> $GITHUB_OUTPUT
+            echo "build-message=All build policies are compliant" >> $GITHUB_OUTPUT
+          else
+            echo "build-status=issues" >> $GITHUB_OUTPUT
+            echo "build-message=Build policy violations detected" >> $GITHUB_OUTPUT
+          fi
+
+  # Git repository hygiene health
+  git-hygiene-health:
+    name: Git Hygiene Health
+    runs-on: ubuntu-latest
+    needs: health-check-orchestrator
+    if: needs.health-check-orchestrator.outputs.run-git-check == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🧹 Git hygiene health check
+        id: git-health
+        continue-on-error: true
+        run: |
+          echo "🧹 Running Git hygiene health check..."
+          
+          hygiene_issues=0
+          
+          # Check for large files
+          large_files=$(find . -type f -size +10M | grep -v '\.git/' | wc -l || echo "0")
+          
+          # Check for tracked build artifacts
+          build_artifacts=$(git ls-files | grep -E '\.(log|tmp|cache)$|/dist/|/build/' | wc -l || echo "0")
+          
+          # Check gitignore completeness
+          if [[ ! -f ".gitignore" ]]; then
+            hygiene_issues=$((hygiene_issues + 1))
+          fi
+          
+          total_issues=$((large_files + build_artifacts + hygiene_issues))
+          
+          if [[ $total_issues -eq 0 ]]; then
+            echo "git-status=healthy" >> $GITHUB_OUTPUT
+            echo "git-message=Repository hygiene is excellent" >> $GITHUB_OUTPUT
+          else
+            echo "git-status=issues" >> $GITHUB_OUTPUT
+            echo "git-message=Found $total_issues hygiene issues" >> $GITHUB_OUTPUT
+          fi
+
+  # Turbo cache health
+  cache-health-check:
+    name: Cache Health
+    runs-on: ubuntu-latest
+    needs: health-check-orchestrator
+    if: needs.health-check-orchestrator.outputs.run-cache-check == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🏃 Cache performance health check
+        id: cache-health
+        continue-on-error: true
+        run: |
+          echo "🏃 Running cache performance health check..."
+          
+          # Validate turbo.json
+          if [[ ! -f "turbo.json" ]]; then
+            echo "cache-status=issues" >> $GITHUB_OUTPUT
+            echo "cache-message=turbo.json not found" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          if ! jq empty turbo.json 2>/dev/null; then
+            echo "cache-status=issues" >> $GITHUB_OUTPUT
+            echo "cache-message=Invalid turbo.json syntax" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Quick cache test
+          rm -rf .turbo 2>/dev/null || true
+          
+          cold_start=$(date +%s)
+          if timeout 180 pnpm run typecheck >/dev/null 2>&1; then
+            cold_end=$(date +%s)
+            cold_time=$((cold_end - cold_start))
+            
+            warm_start=$(date +%s)
+            if timeout 180 pnpm run typecheck >/dev/null 2>&1; then
+              warm_end=$(date +%s)
+              warm_time=$((warm_end - warm_start))
+              
+              if [[ $cold_time -gt 0 && $warm_time -lt $cold_time ]]; then
+                improvement=$((100 - (warm_time * 100 / cold_time)))
+                echo "cache-status=healthy" >> $GITHUB_OUTPUT
+                echo "cache-message=Cache effective with ${improvement}% improvement" >> $GITHUB_OUTPUT
+              else
+                echo "cache-status=issues" >> $GITHUB_OUTPUT
+                echo "cache-message=Cache not improving performance" >> $GITHUB_OUTPUT
+              fi
+            else
+              echo "cache-status=issues" >> $GITHUB_OUTPUT
+              echo "cache-message=Cached run failed" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "cache-status=issues" >> $GITHUB_OUTPUT
+            echo "cache-message=Cold run failed" >> $GITHUB_OUTPUT
+          fi
+
+  # Security health check
+  security-health-check:
+    name: Security Health
+    runs-on: ubuntu-latest
+    needs: health-check-orchestrator
+    if: needs.health-check-orchestrator.outputs.run-security-check == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔒 Security health check
+        id: security-health
+        continue-on-error: true
+        run: |
+          echo "🔒 Running security health check..."
+          
+          security_issues=0
+          
+          # Check for obvious secrets
+          if pnpm run verify:secrets; then
+            echo "✅ No obvious secrets detected"
+          else
+            echo "❌ Potential secrets found"
+            security_issues=$((security_issues + 1))
+          fi
+          
+          # Check dependency vulnerabilities
+          if pnpm audit --prod --audit-level moderate 2>/dev/null; then
+            echo "✅ No critical dependency vulnerabilities"
+          else
+            echo "⚠️ Dependency vulnerabilities found"
+            security_issues=$((security_issues + 1))
+          fi
+          
+          if [[ $security_issues -eq 0 ]]; then
+            echo "security-status=healthy" >> $GITHUB_OUTPUT
+            echo "security-message=No security issues detected" >> $GITHUB_OUTPUT
+          else
+            echo "security-status=issues" >> $GITHUB_OUTPUT
+            echo "security-message=Found $security_issues security concerns" >> $GITHUB_OUTPUT
+          fi
+
+  # Performance health check
+  performance-health-check:
+    name: Performance Health
+    runs-on: ubuntu-latest
+    needs: health-check-orchestrator
+    if: needs.health-check-orchestrator.outputs.run-performance-check == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: ⚡ Performance health check
+        id: performance-health
+        continue-on-error: true
+        run: |
+          echo "⚡ Running performance health check..."
+          
+          performance_score=100
+          
+          # Check build times
+          build_start=$(date +%s)
+          if timeout 600 pnpm run build >/dev/null 2>&1; then
+            build_end=$(date +%s)
+            build_time=$((build_end - build_start))
+            
+            echo "Build completed in ${build_time}s"
+            
+            if [[ $build_time -gt 300 ]]; then  # > 5 minutes
+              echo "⚠️ Build time is slow (>5min)"
+              performance_score=$((performance_score - 20))
+            fi
+          else
+            echo "❌ Build failed or timed out"
+            performance_score=$((performance_score - 50))
+          fi
+          
+          # Check bundle sizes
+          web_next_dir="apps/web/.next"
+          if [[ -d "$web_next_dir" ]]; then
+            bundle_size=$(du -sm "$web_next_dir" | cut -f1)
+            echo "Web app bundle size: ${bundle_size}MB"
+            
+            if [[ $bundle_size -gt 100 ]]; then  # > 100MB
+              echo "⚠️ Bundle size is large (>100MB)"
+              performance_score=$((performance_score - 15))
+            fi
+          fi
+          
+          if [[ $performance_score -ge 80 ]]; then
+            echo "performance-status=healthy" >> $GITHUB_OUTPUT
+            echo "performance-message=Performance is good (score: $performance_score)" >> $GITHUB_OUTPUT
+          else
+            echo "performance-status=issues" >> $GITHUB_OUTPUT
+            echo "performance-message=Performance issues detected (score: $performance_score)" >> $GITHUB_OUTPUT
+          fi
+
+  # Comprehensive report generation
+  generate-health-report:
+    name: Generate Health Report
+    runs-on: ubuntu-latest
+    needs: [
+      health-check-orchestrator,
+      schema-drift-health,
+      route-conflict-health,
+      vercel-config-health,
+      build-artifact-health,
+      git-hygiene-health,
+      cache-health-check,
+      security-health-check,
+      performance-health-check
+    ]
+    if: always() && needs.health-check-orchestrator.outputs.health-check-id != ''
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 📊 Generate comprehensive health report
+        run: |
+          echo "📊 Generating comprehensive health report..."
+          
+          mkdir -p health-report-final
+          check_id="${{ needs.health-check-orchestrator.outputs.health-check-id }}"
+          
+          # Collect results from all checks
+          declare -A health_results
+          declare -A health_messages
+          
+          # Map job results
+          health_results[schema]="${{ needs.schema-drift-health.outputs.schema-status || 'skipped' }}"
+          health_messages[schema]="${{ needs.schema-drift-health.outputs.schema-message || 'Check was skipped' }}"
+          
+          health_results[routes]="${{ needs.route-conflict-health.outputs.route-status || 'skipped' }}"
+          health_messages[routes]="${{ needs.route-conflict-health.outputs.route-message || 'Check was skipped' }}"
+          
+          health_results[vercel]="${{ needs.vercel-config-health.outputs.vercel-status || 'skipped' }}"
+          health_messages[vercel]="${{ needs.vercel-config-health.outputs.vercel-message || 'Check was skipped' }}"
+          
+          health_results[build]="${{ needs.build-artifact-health.outputs.build-status || 'skipped' }}"
+          health_messages[build]="${{ needs.build-artifact-health.outputs.build-message || 'Check was skipped' }}"
+          
+          health_results[git]="${{ needs.git-hygiene-health.outputs.git-status || 'skipped' }}"
+          health_messages[git]="${{ needs.git-hygiene-health.outputs.git-message || 'Check was skipped' }}"
+          
+          health_results[cache]="${{ needs.cache-health-check.outputs.cache-status || 'skipped' }}"
+          health_messages[cache]="${{ needs.cache-health-check.outputs.cache-message || 'Check was skipped' }}"
+          
+          health_results[security]="${{ needs.security-health-check.outputs.security-status || 'skipped' }}"
+          health_messages[security]="${{ needs.security-health-check.outputs.security-message || 'Check was skipped' }}"
+          
+          health_results[performance]="${{ needs.performance-health-check.outputs.performance-status || 'skipped' }}"
+          health_messages[performance]="${{ needs.performance-health-check.outputs.performance-message || 'Check was skipped' }}"
+          
+          # Calculate overall health score
+          total_checks=0
+          healthy_checks=0
+          issues_found=0
+          
+          for component in schema routes vercel build git cache security performance; do
+            status=${health_results[$component]}
+            if [[ "$status" != "skipped" ]]; then
+              total_checks=$((total_checks + 1))
+              if [[ "$status" == "healthy" ]]; then
+                healthy_checks=$((healthy_checks + 1))
+              elif [[ "$status" == "issues" ]]; then
+                issues_found=$((issues_found + 1))
+              fi
+            fi
+          done
+          
+          if [[ $total_checks -gt 0 ]]; then
+            health_percentage=$((healthy_checks * 100 / total_checks))
+          else
+            health_percentage=0
+          fi
+          
+          # Generate comprehensive report
+          {
+            echo "# 🏥 MS Elevate LEAPS Tracker - Comprehensive Health Report"
+            echo ""
+            echo "**Report ID**: $check_id"
+            echo "**Generated**: $(date)"
+            echo "**Scope**: ${{ github.event.inputs.check_scope || 'full' }}"
+            echo "**Trigger**: ${{ github.event_name }}"
+            echo ""
+            echo "## 📊 Executive Summary"
+            echo ""
+            if [[ $health_percentage -ge 90 ]]; then
+              echo "🎉 **EXCELLENT** - System health is outstanding ($health_percentage%)"
+              overall_status="excellent"
+            elif [[ $health_percentage -ge 70 ]]; then
+              echo "✅ **GOOD** - System health is good with minor issues ($health_percentage%)"
+              overall_status="good"
+            elif [[ $health_percentage -ge 50 ]]; then
+              echo "⚠️ **NEEDS ATTENTION** - Several issues require resolution ($health_percentage%)"
+              overall_status="attention"
+            else
+              echo "🚨 **CRITICAL** - Immediate action required ($health_percentage%)"
+              overall_status="critical"
+            fi
+            echo ""
+            echo "- **Total Checks**: $total_checks"
+            echo "- **Healthy Components**: $healthy_checks"
+            echo "- **Components with Issues**: $issues_found"
+            echo "- **Overall Health Score**: $health_percentage%"
+            echo ""
+            echo "## 🔍 Component Health Status"
+            echo ""
+            
+            # Component details
+            components=(
+              "schema:Database Schema:🗄️"
+              "routes:Route Structure:🛣️" 
+              "vercel:Vercel Config:🔧"
+              "build:Build Artifacts:🏗️"
+              "git:Git Hygiene:🧹"
+              "cache:Turbo Cache:🏃"
+              "security:Security:🔒"
+              "performance:Performance:⚡"
+            )
+            
+            for component_info in "${components[@]}"; do
+              IFS=':' read -r key name icon <<< "$component_info"
+              status=${health_results[$key]}
+              message=${health_messages[$key]}
+              
+              echo "### $icon $name"
+              case "$status" in
+                "healthy")
+                  echo "**Status**: ✅ Healthy"
+                  ;;
+                "issues")
+                  echo "**Status**: ❌ Issues Detected"
+                  ;;
+                "skipped")
+                  echo "**Status**: ➖ Skipped"
+                  ;;
+                *)
+                  echo "**Status**: ❓ Unknown"
+                  ;;
+              esac
+              echo "**Details**: $message"
+              echo ""
+            done
+            
+            echo "## 🎯 Action Items"
+            echo ""
+            
+            if [[ $issues_found -eq 0 ]]; then
+              echo "🎉 **No action items** - All checked components are healthy!"
+            else
+              echo "### Immediate Actions Required"
+              
+              priority_items=()
+              for component in schema routes vercel build git cache security performance; do
+                status=${health_results[$component]}
+                if [[ "$status" == "issues" ]]; then
+                  case "$component" in
+                    "schema")
+                      priority_items+=("🗄️ **Database Schema**: Review and fix schema drift issues")
+                      ;;
+                    "routes")
+                      priority_items+=("🛣️ **Routes**: Resolve route conflicts to prevent runtime errors")
+                      ;;
+                    "vercel")
+                      priority_items+=("🔧 **Vercel Config**: Fix configuration issues for proper deployment")
+                      ;;
+                    "build")
+                      priority_items+=("🏗️ **Build Artifacts**: Address build policy violations")
+                      ;;
+                    "git")
+                      priority_items+=("🧹 **Git Hygiene**: Clean up repository hygiene issues")
+                      ;;
+                    "cache")
+                      priority_items+=("🏃 **Cache Performance**: Optimize Turbo cache configuration")
+                      ;;
+                    "security")
+                      priority_items+=("🔒 **Security**: Address security vulnerabilities immediately")
+                      ;;
+                    "performance")
+                      priority_items+=("⚡ **Performance**: Investigate and fix performance bottlenecks")
+                      ;;
+                  esac
+                fi
+              done
+              
+              if [[ ${#priority_items[@]} -gt 0 ]]; then
+                for item in "${priority_items[@]}"; do
+                  echo "- $item"
+                done
+              fi
+            fi
+            
+            echo ""
+            echo "## 📈 Health Trends"
+            echo ""
+            echo "*(Trend analysis would be available with historical data)*"
+            echo ""
+            echo "## 🔗 Related Resources"
+            echo ""
+            echo "- [CI/CD Pipeline Status](${{ github.server_url }}/${{ github.repository }}/actions)"
+            echo "- [Project Documentation](https://github.com/${{ github.repository }}/blob/main/CLAUDE.md)"
+            echo "- [Troubleshooting Guide](https://github.com/${{ github.repository }}/blob/main/.github/WORKFLOWS.md)"
+            echo ""
+            echo "---"
+            echo ""
+            echo "**Next Health Check**: $(date -d '+1 week' --iso-8601)"
+            echo "**Report Generated By**: GitHub Actions Comprehensive Health Check"
+            echo "**Repository**: ${{ github.repository }}"
+            echo "**Commit**: ${{ github.sha }}"
+            
+          } > health-report-final/comprehensive-report.md
+          
+          # Generate JSON summary for programmatic use
+          {
+            echo "{"
+            echo "  \"checkId\": \"$check_id\","
+            echo "  \"timestamp\": \"$(date --iso-8601)\","
+            echo "  \"scope\": \"${{ github.event.inputs.check_scope || 'full' }}\","
+            echo "  \"overallStatus\": \"$overall_status\","
+            echo "  \"healthPercentage\": $health_percentage,"
+            echo "  \"totalChecks\": $total_checks,"
+            echo "  \"healthyComponents\": $healthy_checks,"
+            echo "  \"issuesFound\": $issues_found,"
+            echo "  \"components\": {"
+            
+            first=true
+            for component in schema routes vercel build git cache security performance; do
+              status=${health_results[$component]}
+              message=${health_messages[$component]}
+              
+              if [[ "$first" == "true" ]]; then
+                first=false
+              else
+                echo ","
+              fi
+              
+              echo -n "    \"$component\": {"
+              echo -n "\"status\": \"$status\", "
+              echo -n "\"message\": \"$message\""
+              echo -n "}"
+            done
+            
+            echo ""
+            echo "  }"
+            echo "}"
+          } > health-report-final/health-summary.json
+          
+          echo "✅ Comprehensive health report generated"
+
+      - name: 📤 Upload comprehensive health report
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-health-report-${{ needs.health-check-orchestrator.outputs.health-check-id }}
+          path: health-report-final/
+          retention-days: 30
+
+      - name: 🚨 Create critical health issue
+        if: needs.schema-drift-health.outputs.schema-status == 'issues' || needs.security-health-check.outputs.security-status == 'issues'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const checkId = '${{ needs.health-check-orchestrator.outputs.health-check-id }}';
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Critical Health Issues Detected - ${checkId}`,
+              body: `## 🚨 Critical System Health Alert
+              
+              The comprehensive health check has detected critical issues that require immediate attention.
+              
+              ### 🔍 Critical Issues
+              ${needs.schema-drift-health.outputs.schema-status === 'issues' ? '- 🗄️ **Database Schema Issues**: ' + (needs.schema-drift-health.outputs.schema-message || 'Unknown schema issues') : ''}
+              ${needs.security-health-check.outputs.security-status === 'issues' ? '- 🔒 **Security Issues**: ' + (needs.security-health-check.outputs.security-message || 'Unknown security issues') : ''}
+              
+              ### ⚡ Immediate Actions Required
+              1. Review the comprehensive health report
+              2. Address critical issues within 24 hours
+              3. Run targeted fixes for each affected component
+              4. Verify fixes with follow-up health checks
+              
+              ### 📊 Full Health Report
+              [View comprehensive health report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              
+              ### 🔗 Resources
+              - [Emergency Response Guide](https://github.com/${{ github.repository }}/blob/main/.github/WORKFLOWS.md#troubleshooting-guide)
+              - [Component-Specific Workflows](https://github.com/${{ github.repository }}/actions)
+              
+              **Report ID**: ${checkId}
+              **Priority**: Critical - Address within 24 hours
+              `,
+              labels: ['critical', 'health-check', 'high-priority', 'bug']
+            });
+
+      - name: 🎉 Health check success summary
+        if: needs.schema-drift-health.outputs.schema-status != 'issues' && needs.security-health-check.outputs.security-status != 'issues'
+        run: |
+          echo "🎉 Comprehensive Health Check Completed!"
+          echo ""
+          echo "📊 Health Report Summary:"
+          echo "  - Check ID: ${{ needs.health-check-orchestrator.outputs.health-check-id }}"
+          echo "  - Scope: ${{ github.event.inputs.check_scope || 'full' }}"
+          echo "  - Status: No critical issues detected"
+          echo ""
+          echo "✅ All critical systems are healthy"
+          echo "📈 System is ready for production workload"
+          echo "🔄 Next scheduled check: $(date -d '+1 week' --iso-8601)"

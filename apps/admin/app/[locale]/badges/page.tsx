@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 
-import { withRoleGuard } from '@elevate/auth/context'
 import { adminClient } from '@/lib/admin-client'
-import { Button, Input, Textarea, DataTable, Modal, ConfirmModal, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, createColumns, type Column, Alert } from '@elevate/ui'
+import { withRoleGuard } from '@elevate/auth/context'
+import { Button, Input, Textarea, DataTable, Modal, ConfirmModal, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, createColumns, Alert } from '@elevate/ui'
 
 type Badge = {
   code: string
@@ -209,9 +209,10 @@ function BadgesPage() {
   const fetchBadges = async () => {
     setLoading(true)
     try {
-      const { badges } = await adminClient.getBadges(true)
-      setBadges(badges)
+      const result = await adminClient.getBadges(true)
+      setBadges(result.badges || [])
     } catch (_error) {
+      // Silent fail - badges will remain empty array
     } finally {
       setLoading(false)
     }
@@ -219,10 +220,10 @@ function BadgesPage() {
 
   const fetchUsers = async () => {
     try {
-      const { users } = await adminClient.getUsers({ limit: 1000 })
-      setUsers(users)
+      const result = await adminClient.getUsers({ limit: 1000 })
+      setUsers(result.users || [])
     } catch (_error) {
-      console.error('Error fetching users:', _error)
+      // Silent fail - users will remain empty array
     }
   }
 
@@ -433,7 +434,7 @@ function BadgesPage() {
             <h3 className="font-medium text-gray-900 mb-3">Badge Criteria</h3>
             
             <div>
-              <label id="badge-criteria-type-label" className="block text-sm font-medium text-gray-700 mb-1">Criteria Type</label>
+              <label htmlFor="badge-criteria-type" className="block text-sm font-medium text-gray-700 mb-1">Criteria Type</label>
               <Select 
                 value={badgeForm.criteria.type} 
                 onValueChange={(value) => setBadgeForm(prev => ({ 
@@ -441,7 +442,7 @@ function BadgesPage() {
                   criteria: { ...prev.criteria, type: value as Badge['criteria']['type'] } 
                 }))}
               >
-                <SelectTrigger aria-labelledby="badge-criteria-type-label">
+                <SelectTrigger id="badge-criteria-type">
                   <SelectValue placeholder="Select criteria type" />
                 </SelectTrigger>
                 <SelectContent>

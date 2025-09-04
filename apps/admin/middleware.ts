@@ -4,6 +4,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import createIntlMiddleware from 'next-intl/middleware';
 
 import { parseClerkPublicMetadata, safeParseRole, type RoleName } from '@elevate/auth';
+import { createSecurityMiddleware, getSecurityConfig, withSecurity } from '@elevate/security/security-middleware'
 
 import { locales, defaultLocale } from './i18n';
 
@@ -27,7 +28,8 @@ const isPublicRoute = createRouteMatcher([
 ])
 
 
-export default clerkMiddleware(async (auth, req) => {
+// Main admin middleware with internationalization, authentication, and role checking
+const adminMiddleware = clerkMiddleware(async (auth, req) => {
   // Bypass API routes; route handlers enforce JSON auth semantics
   if (req.nextUrl.pathname.startsWith('/api/')) return NextResponse.next()
 
@@ -62,6 +64,30 @@ export default clerkMiddleware(async (auth, req) => {
 
   return NextResponse.next()
 })
+
+// Configure security options based on environment for admin app
+const securityConfig = getSecurityConfig()
+
+// Add additional domains specific to the admin app
+const adminSecurityConfig = {
+  ...securityConfig,
+  skipPaths: [
+    '/api/health',
+    '/_next/static',
+    '/favicon.ico'
+  ],
+  allowedDomains: {
+    ...securityConfig.allowedDomains,
+    external: [
+      ...(securityConfig.allowedDomains?.external || []),
+      // Add any admin-specific external domains here
+    ]
+  },
+  reportUri: '/api/csp-report'
+}
+
+// Export combined middleware with security headers and admin logic
+export default withSecurity(adminMiddleware, adminSecurityConfig)
 
 export const config = {
   matcher: [

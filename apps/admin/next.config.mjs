@@ -8,6 +8,8 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Remove X-Powered-By header for security
+  poweredByHeader: false,
   // Fix workspace root warning
   outputFileTracingRoot: '/Users/agent-g/elevate/elevate',
   
@@ -51,6 +53,100 @@ const nextConfig = {
       { protocol: 'https', hostname: 'img.clerk.com' },
       { protocol: 'https', hostname: 'res.cloudinary.com' }
     ],
+  },
+
+  // Security headers configuration - comprehensive security posture
+  async headers() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          // Core security headers - CSP is handled by middleware for dynamic nonce support
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
+          },
+          // Enhanced Permissions Policy - restrict powerful browser features
+          {
+            key: 'Permissions-Policy',
+            value: [
+              'camera=()',
+              'microphone=()',
+              'geolocation=()',
+              'interest-cohort=()',
+              'payment=()',
+              'sync-xhr=()',
+              'usb=()',
+              'magnetometer=()',
+              'accelerometer=()',
+              'gyroscope=()',
+              'bluetooth=()',
+              'midi=()',
+              'notifications=()',
+              'push=()',
+              'speaker-selection=()',
+              'ambient-light-sensor=()',
+              'battery=()',
+              'display-capture=()',
+              'document-domain=()',
+              'execution-while-not-rendered=()',
+              'execution-while-out-of-viewport=()',
+              'fullscreen=(self)',
+              'gamepad=()',
+              'hid=()',
+              'idle-detection=()',
+              'local-fonts=()',
+              'serial=()',
+              'storage-access=()',
+              'window-management=()',
+              'xr-spatial-tracking=()'
+            ].join(', '),
+          },
+          // HSTS for production - force HTTPS and include subdomains
+          ...(isProduction ? [
+            {
+              key: 'Strict-Transport-Security',
+              value: 'max-age=63072000; includeSubDomains; preload',
+            },
+          ] : []),
+          // Additional security headers
+          {
+            key: 'X-Permitted-Cross-Domain-Policies',
+            value: 'none',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'credentialless',
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'same-origin',
+          },
+        ],
+      },
+    ];
   },
 
   // Webpack configuration for optimized bundle splitting

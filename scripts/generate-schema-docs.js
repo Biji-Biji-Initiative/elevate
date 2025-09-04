@@ -264,7 +264,7 @@ function getFieldDescription(modelName, fieldName) {
     'User.handle': 'Unique username/handle for public profile URLs',
     'User.kajabi_contact_id': 'Kajabi contact ID for webhook matching',
     'Submission.payload': 'Activity-specific submission data (JSON)',
-    'Submission.attachments': 'Array of file storage paths',
+    'Submission.attachments_rel': 'Relational attachment rows (canonical)',
     'Submission.visibility': 'Controls public/private visibility on profiles',
     'PointsLedger.external_event_id': 'Unique ID for idempotent webhook processing',
     'PointsLedger.delta_points': 'Point change (positive or negative)',

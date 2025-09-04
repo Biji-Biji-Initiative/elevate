@@ -229,7 +229,6 @@ export type Database = {
       submissions: {
         Row: {
           activity_code: string
-          attachments: Json
           created_at: string
           id: string
           payload: Json
@@ -242,7 +241,6 @@ export type Database = {
         }
         Insert: {
           activity_code: string
-          attachments: Json
           created_at?: string
           id: string
           payload: Json
@@ -255,7 +253,6 @@ export type Database = {
         }
         Update: {
           activity_code?: string
-          attachments?: Json
           created_at?: string
           id?: string
           payload?: Json

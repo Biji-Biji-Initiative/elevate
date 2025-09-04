@@ -26,7 +26,7 @@ export interface TestSubmission {
   status: SubmissionStatus;
   visibility: Visibility;
   payload: ActivityPayload;
-  attachments: string[];
+  attachments_rel?: Array<{ id: string; submission_id: string; path: string }>;
   reviewer_id?: string;
   review_note?: string;
 }
@@ -87,7 +87,7 @@ export class DatabaseFixtures {
       status: SubmissionStatus.PENDING,
       visibility: Visibility.PRIVATE,
       payload,
-      attachments: [`/uploads/test-file-${this.submissionCounter}.pdf`],
+      attachments_rel: [{ id: `att-${randomBytes(4).toString('hex')}`, submission_id: 'sub', path: `/uploads/test-file-${this.submissionCounter}.pdf` }],
       reviewer_id: null,
       review_note: null,
       ...overrides,
@@ -222,7 +222,6 @@ export class DatabaseFixtures {
         status: submission.status,
         visibility: submission.visibility,
         payload: submission.payload,
-        attachments: submission.attachments,
         reviewer_id: submission.reviewer_id,
         review_note: submission.review_note,
       },

@@ -1,59 +1,77 @@
 import { z } from 'zod'
 import type { LearnInput, ExploreInput, AmplifyInput, PresentInput, ShineInput } from './schemas.js'
 
-// Core domain enums (decoupled from Prisma)
-export type Role = 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
-export type SubmissionStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
-export type Visibility = 'PRIVATE' | 'PUBLIC'
+// Import all domain constants from single source of truth
+import {
+  // Types
+  type ActivityCode,
+  type UserRole,
+  type SubmissionStatus,
+  type Visibility,
+  type PaginationParams,
+  type ApiError,
+  
+  // Schemas
+  ActivityCodeSchema,
+  UserRoleSchema,
+  SubmissionStatusSchema,
+  VisibilitySchema,
+  EmailSchema,
+  UrlSchema,
+  HandleSchema,
+  CohortSchema,
+  SchoolSchema,
+  DateStringSchema,
+  PaginationParamsSchema,
+  
+  // Legacy aliases for backward compatibility
+  type Role,
+  type ActivityCodeType,
+  type RoleType,
+  type SubmissionStatusType,
+  type VisibilityType,
+  type PaginationType,
+  type ApiErrorType,
+  RoleSchema,
+  PaginationSchema
+} from './domain-constants.js'
 
-// Activity types with Zod schema
-export type ActivityCode = 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
+// Re-export domain types for backward compatibility
+export type {
+  ActivityCode,
+  UserRole,
+  SubmissionStatus,
+  Visibility,
+  PaginationParams,
+  ApiError,
+  Role,
+  ActivityCodeType,
+  RoleType,
+  SubmissionStatusType,
+  VisibilityType,
+  PaginationType,
+  ApiErrorType
+} from './domain-constants.js'
 
-export const ActivityCodeSchema = z.enum(['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE'])
-export const RoleSchema = z.enum(['PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN'])
-export const SubmissionStatusSchema = z.enum(['PENDING', 'APPROVED', 'REJECTED'])
-export const VisibilitySchema = z.enum(['PRIVATE', 'PUBLIC'])
+// Re-export schemas
+export {
+  ActivityCodeSchema,
+  UserRoleSchema,
+  SubmissionStatusSchema,
+  VisibilitySchema,
+  EmailSchema,
+  UrlSchema,
+  HandleSchema,
+  CohortSchema,
+  SchoolSchema,
+  DateStringSchema,
+  PaginationParamsSchema,
+  RoleSchema,
+  PaginationSchema
+} from './domain-constants.js'
 
-// Common utility schemas
-export const EmailSchema = z.string().email()
-export const UrlSchema = z.string().url()
-export const HandleSchema = z.string().min(2).max(50).regex(/^[a-zA-Z0-9_-]+$/, 'Handle must contain only letters, numbers, underscores, and hyphens')
-export const CohortSchema = z.string().min(1).max(100)
-export const SchoolSchema = z.string().min(1).max(200)
-
-// Date schemas
-export const DateStringSchema = z.string().refine((date: string) => !isNaN(Date.parse(date)), 'Invalid date string')
-export const PaginationSchema = z.object({
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
-  offset: z.number().int().min(0).optional()
-})
-
-// API Response schemas
-export const ApiSuccessSchema = <T extends z.ZodTypeAny>(dataSchema: T) => z.object({
-  success: z.literal(true),
-  data: dataSchema,
-  message: z.string().optional()
-})
-
-export const ApiErrorSchema = z.object({
-  success: z.literal(false),
-  error: z.string(),
-  details: z.record(z.unknown()).optional()
-})
-
-export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) => z.discriminatedUnion('success', [
-  ApiSuccessSchema(dataSchema),
-  ApiErrorSchema
-])
-
-// Infer types from schemas to ensure consistency
-export type ActivityCodeType = z.infer<typeof ActivityCodeSchema>
-export type RoleType = z.infer<typeof RoleSchema>
-export type SubmissionStatusType = z.infer<typeof SubmissionStatusSchema>
-export type VisibilityType = z.infer<typeof VisibilitySchema>
-export type PaginationType = z.infer<typeof PaginationSchema>
-export type ApiErrorType = z.infer<typeof ApiErrorSchema>
+// API Response schemas - imported from domain constants
+export { ApiSuccessSchema, ApiErrorSchema, ApiResponseSchema } from './domain-constants.js'
 
 // Helper types for API responses - using types from http.ts to avoid conflicts
 
@@ -389,7 +407,15 @@ export const SubmissionAuditMetaSchema = z.object({
 })
 
 export const UserAuditMetaSchema = z.object({
-  changes: z.record(z.unknown()).optional(),
+  changes: z.object({
+    name: z.string().optional(),
+    email: z.string().email().optional(),
+    handle: z.string().optional(),
+    school: z.string().optional(),
+    cohort: z.string().optional(),
+    role: RoleSchema.optional(),
+    profileVisible: z.boolean().optional()
+  }).optional(),
   originalRole: RoleSchema.optional(),
   newRole: RoleSchema.optional(),
   bulkOperation: z.boolean().optional()
@@ -425,7 +451,14 @@ export const AuditMetaUnionSchema = z.union([
   BadgeAuditMetaSchema,
   ExportAuditMetaSchema,
   KajabiAuditMetaSchema,
-  z.record(z.unknown()) // Fallback for generic metadata
+  z.object({
+    // Fallback for generic metadata with known fields
+    action: z.string().optional(),
+    entityId: z.string().optional(),
+    entityType: z.string().optional(),
+    timestamp: z.string().optional(),
+    additionalInfo: z.string().optional()
+  })
 ])
 
 export type SubmissionAuditMeta = z.infer<typeof SubmissionAuditMetaSchema>
@@ -444,14 +477,9 @@ export interface UserWithRole {
   name?: string
 }
 
-// Pagination types
-export interface PaginationParams {
-  page?: number
-  limit?: number
-  offset?: number
-}
-
-export interface PaginatedResult<T> {
+// Pagination types - using imported types from domain constants
+// PaginationParams and PaginatedResult types are imported above
+export type PaginatedResult<T> = {
   data: T[]
   total: number
   page: number
@@ -509,20 +537,20 @@ export interface StorageMetadata {
   [key: string]: string | number | boolean | undefined
 }
 
-// Safe parser functions - replace all enum casts with these
+// Safe parser functions - use imported schemas from domain constants
 export function parseRole(value: unknown): Role | null {
   const result = RoleSchema.safeParse(value)
-  return result.success ? (result.data as Role) : null
+  return result.success ? result.data : null
 }
 
 export function parseSubmissionStatus(value: unknown): SubmissionStatus | null {
   const result = SubmissionStatusSchema.safeParse(value)
-  return result.success ? (result.data as SubmissionStatus) : null
+  return result.success ? result.data : null
 }
 
 export function parseVisibility(value: unknown): Visibility | null {
   const result = VisibilitySchema.safeParse(value)
-  return result.success ? (result.data as Visibility) : null
+  return result.success ? result.data : null
 }
 
 export function parseActivityCode(value: unknown): ActivityCode | null {
@@ -570,7 +598,17 @@ export function parsePagination(value: unknown): PaginationType | null {
 export function parseApiResponse<T>(value: unknown, dataSchema: z.ZodType<T>): unknown {
   const result = z.union([
     z.object({ success: z.literal(true), data: dataSchema, message: z.string().optional() }),
-    z.object({ success: z.literal(false), error: z.string(), details: z.record(z.unknown()).optional() })
+    z.object({ success: z.literal(false), error: z.string(), details: z.object({
+      code: z.string().optional(),
+      field: z.string().optional(),
+      traceId: z.string().optional(),
+      timestamp: z.string().optional(),
+      validationErrors: z.array(z.object({
+        path: z.array(z.union([z.string(), z.number()])),
+        message: z.string(),
+        code: z.string()
+      })).optional()
+    }).optional() })
   ]).safeParse(value)
   return result.success ? result.data : null
 }

@@ -3,16 +3,21 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 
 import { prisma } from '@elevate/db/client'
+import { 
+  createSuccessResponse,
+  withApiErrorHandling,
+  AuthenticationError,
+  NotFoundError
+} from '@elevate/types'
 
 export const runtime = 'nodejs';
 
-export async function GET(request: NextRequest) {
-  try {
-    const { userId } = await auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const GET = withApiErrorHandling(async (request: NextRequest, context) => {
+  const { userId } = await auth()
+  
+  if (!userId) {
+    throw new AuthenticationError()
+  }
 
     // Get user information
     const user = await prisma.user.findUnique({
@@ -27,38 +32,41 @@ export async function GET(request: NextRequest) {
     })
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      throw new NotFoundError('User', userId, context.traceId)
     }
 
-    // Get user's total points
-    const pointsResult = await prisma.pointsLedger.aggregate({
-      where: { user_id: userId },
-      _sum: { delta_points: true }
-    })
+    // Get all user data in parallel for better performance
+    const [pointsResult, submissions, earnedBadges] = await Promise.all([
+      // Get user's total points
+      prisma.pointsLedger.aggregate({
+        where: { user_id: userId },
+        _sum: { delta_points: true }
+      }),
+      
+      // Get user's submissions with activity details
+      prisma.submission.findMany({
+        where: { user_id: userId },
+        include: {
+          activity: true
+        },
+        orderBy: {
+          created_at: 'desc'
+        }
+      }),
+      
+      // Get user's earned badges
+      prisma.earnedBadge.findMany({
+        where: { user_id: userId },
+        include: {
+          badge: true
+        },
+        orderBy: {
+          earned_at: 'desc'
+        }
+      })
+    ])
 
     const totalPoints = pointsResult._sum.delta_points || 0
-
-    // Get user's submissions with activity details
-    const submissions = await prisma.submission.findMany({
-      where: { user_id: userId },
-      include: {
-        activity: true
-      },
-      orderBy: {
-        created_at: 'desc'
-      }
-    })
-
-    // Get user's earned badges
-    const earnedBadges = await prisma.earnedBadge.findMany({
-      where: { user_id: userId },
-      include: {
-        badge: true
-      },
-      orderBy: {
-        earned_at: 'desc'
-      }
-    })
 
     // Group submissions by activity
     const submissionsByActivity = submissions.reduce<Record<string, typeof submissions>>((acc, submission) => {
@@ -110,45 +118,35 @@ export async function GET(request: NextRequest) {
       updatedAt: submission.updated_at
     }))
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        user: {
-          id: user.id,
-          name: user.name,
-          handle: user.handle,
-          school: user.school,
-          cohort: user.cohort
-        },
-        points: {
-          total: totalPoints,
-          breakdown: progress.reduce<Record<string, number>>((acc, p) => {
-            acc[p.activityCode] = p.pointsEarned
-            return acc
-          }, {})
-        },
-        progress,
-        badges: earnedBadges.map(eb => ({
-          code: eb.badge_code,
-          name: eb.badge.name,
-          description: eb.badge.description,
-          iconUrl: eb.badge.icon_url,
-          earnedAt: eb.earned_at
-        })),
-        recentActivity,
-        stats: {
-          totalSubmissions: submissions.length,
-          approvedSubmissions: submissions.filter(s => s.status === 'APPROVED').length,
-          pendingSubmissions: submissions.filter(s => s.status === 'PENDING').length,
-          completedStages: progress.filter(p => p.hasCompleted).length
-        }
-      }
-    })
-
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch dashboard data' },
-      { status: 500 }
-    )
-  }
-}
+  return createSuccessResponse({
+    user: {
+      id: user.id,
+      name: user.name,
+      handle: user.handle,
+      school: user.school,
+      cohort: user.cohort
+    },
+    points: {
+      total: totalPoints,
+      breakdown: progress.reduce<Record<string, number>>((acc, p) => {
+        acc[p.activityCode] = p.pointsEarned
+        return acc
+      }, {})
+    },
+    progress,
+    badges: earnedBadges.map(eb => ({
+      code: eb.badge_code,
+      name: eb.badge.name,
+      description: eb.badge.description,
+      iconUrl: eb.badge.icon_url,
+      earnedAt: eb.earned_at
+    })),
+    recentActivity,
+    stats: {
+      totalSubmissions: submissions.length,
+      approvedSubmissions: submissions.filter(s => s.status === 'APPROVED').length,
+      pendingSubmissions: submissions.filter(s => s.status === 'PENDING').length,
+      completedStages: progress.filter(p => p.hasCompleted).length
+    }
+  })
+})

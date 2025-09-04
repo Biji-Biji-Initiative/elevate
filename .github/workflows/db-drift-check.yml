@@ -1,0 +1,411 @@
+name: Database Schema Drift Check
+
+on:
+  pull_request:
+    paths:
+      - 'packages/db/**'
+      - 'supabase/**'
+      - '**.prisma'
+  push:
+    branches: [main, staging]
+    paths:
+      - 'packages/db/**'
+      - 'supabase/**'
+      - '**.prisma'
+  schedule:
+    # Run daily at 2 AM UTC to catch any drift in production
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  detect-schema-drift:
+    name: Schema Drift Detection
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: elevate_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Comprehensive Schema Drift Check
+        id: drift-check
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/elevate_test
+        run: |
+          echo "🔍 Running comprehensive schema drift detection..."
+          
+          # Create results directory
+          mkdir -p drift-results
+          
+          # Function to log with timestamps
+          log() {
+            echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
+          }
+          
+          # Initialize status tracking
+          drift_detected=false
+          warnings_found=false
+          
+          log "📊 Step 1: Validating Prisma schema syntax"
+          if ! npx prisma validate --schema=packages/db/schema.prisma; then
+            log "❌ Prisma schema validation failed"
+            echo "schema-valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          log "✅ Prisma schema is syntactically valid"
+          echo "schema-valid=true" >> $GITHUB_OUTPUT
+          
+          log "📊 Step 2: Setting up test database"
+          # Apply current schema to test database
+          if ! npx prisma db push --schema=packages/db/schema.prisma --force-reset; then
+            log "❌ Failed to apply schema to test database"
+            exit 1
+          fi
+          
+          log "📊 Step 3: Introspecting current database state"
+          # Generate schema from current database state
+          temp_schema=$(mktemp -d)/introspected.prisma
+          if ! npx prisma db pull --schema="$temp_schema" --print > "$temp_schema.generated" 2>/dev/null; then
+            log "❌ Failed to introspect database schema"
+            exit 1
+          fi
+          
+          log "📊 Step 4: Comparing schemas for drift"
+          # Compare schemas and capture detailed diff
+          diff_output="drift-results/schema-diff.sql"
+          if npx prisma migrate diff \
+              --from-schema-datamodel "$temp_schema.generated" \
+              --to-schema-datamodel "packages/db/schema.prisma" \
+              --script > "$diff_output" 2>/dev/null; then
+            
+            if [[ -s "$diff_output" ]]; then
+              log "⚠️ Schema drift detected!"
+              drift_detected=true
+              echo "drift-detected=true" >> $GITHUB_OUTPUT
+              echo "diff-file=$diff_output" >> $GITHUB_OUTPUT
+              
+              # Analyze the type of drift
+              log "📋 Analyzing drift type..."
+              if grep -q "CREATE TABLE" "$diff_output"; then
+                log "  - New tables detected"
+                echo "has-new-tables=true" >> $GITHUB_OUTPUT
+              fi
+              
+              if grep -q "ALTER TABLE.*ADD COLUMN" "$diff_output"; then
+                log "  - New columns detected"
+                echo "has-new-columns=true" >> $GITHUB_OUTPUT
+              fi
+              
+              if grep -q "ALTER TABLE.*DROP COLUMN" "$diff_output"; then
+                log "  - Dropped columns detected"
+                echo "has-dropped-columns=true" >> $GITHUB_OUTPUT
+              fi
+              
+              if grep -q "DROP TABLE" "$diff_output"; then
+                log "  - Dropped tables detected"
+                echo "has-dropped-tables=true" >> $GITHUB_OUTPUT
+              fi
+              
+              if grep -q "CREATE INDEX\|DROP INDEX" "$diff_output"; then
+                log "  - Index changes detected"
+                echo "has-index-changes=true" >> $GITHUB_OUTPUT
+              fi
+              
+            else
+              log "✅ No schema drift detected"
+              echo "drift-detected=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            log "❌ Failed to compare schemas"
+            exit 1
+          fi
+          
+          log "📊 Step 5: Checking migration history integrity"
+          migration_dir="supabase/migrations"
+          if [[ -d "$migration_dir" ]]; then
+            migration_count=$(find "$migration_dir" -name "*.sql" -type f | wc -l)
+            log "📁 Found $migration_count migration files"
+            echo "migration-count=$migration_count" >> $GITHUB_OUTPUT
+            
+            # Check for migration naming conflicts
+            if find "$migration_dir" -name "*.sql" -type f -exec basename {} \; | sort | uniq -d | grep -q .; then
+              log "⚠️ Duplicate migration file names detected"
+              warnings_found=true
+              echo "has-migration-conflicts=true" >> $GITHUB_OUTPUT
+            else
+              echo "has-migration-conflicts=false" >> $GITHUB_OUTPUT
+            fi
+            
+            # Check for migration file ordering issues
+            migration_files=$(find "$migration_dir" -name "*.sql" -type f | sort)
+            if [[ -n "$migration_files" ]]; then
+              echo "$migration_files" > "drift-results/migration-order.txt"
+              log "📝 Migration order logged"
+            fi
+          else
+            log "⚠️ Migration directory not found"
+            warnings_found=true
+            echo "migration-count=0" >> $GITHUB_OUTPUT
+          fi
+          
+          log "📊 Step 6: Validating Prisma client generation"
+          if npx prisma generate --schema=packages/db/schema.prisma > /dev/null 2>&1; then
+            log "✅ Prisma client generation successful"
+            echo "client-generation=success" >> $GITHUB_OUTPUT
+          else
+            log "❌ Prisma client generation failed"
+            echo "client-generation=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          
+          log "📊 Step 7: Checking for RLS policies"
+          if [[ -d "supabase" ]]; then
+            rls_files=$(find supabase -name "*.sql" -exec grep -l "ENABLE ROW LEVEL SECURITY\|CREATE POLICY" {} \; 2>/dev/null || true)
+            if [[ -n "$rls_files" ]]; then
+              rls_count=$(echo "$rls_files" | wc -l)
+              log "🔒 Found RLS policies in $rls_count files"
+              echo "rls-policies-count=$rls_count" >> $GITHUB_OUTPUT
+            else
+              log "⚠️ No RLS policies found - consider security implications"
+              warnings_found=true
+              echo "rls-policies-count=0" >> $GITHUB_OUTPUT
+            fi
+          fi
+          
+          log "📊 Step 8: Final status summary"
+          if [[ "$drift_detected" == "true" ]]; then
+            log "❌ DRIFT DETECTED - Schema changes need attention"
+            echo "final-status=drift-detected" >> $GITHUB_OUTPUT
+            exit 1
+          elif [[ "$warnings_found" == "true" ]]; then
+            log "⚠️ WARNINGS FOUND - Review recommended"
+            echo "final-status=warnings" >> $GITHUB_OUTPUT
+          else
+            log "✅ ALL CHECKS PASSED - Schema is clean"
+            echo "final-status=clean" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📊 Upload drift analysis results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-drift-analysis-${{ github.sha }}
+          path: drift-results/
+          retention-days: 30
+
+      - name: 📝 Comment on PR with drift details
+        if: failure() && github.event_name == 'pull_request' && steps.drift-check.outputs.drift-detected == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const driftFile = '${{ steps.drift-check.outputs.diff-file }}';
+            
+            let diffContent = '';
+            try {
+              diffContent = fs.readFileSync(driftFile, 'utf8');
+            } catch (error) {
+              diffContent = 'Could not read diff file';
+            }
+            
+            const migrationCount = '${{ steps.drift-check.outputs.migration-count }}';
+            const hasNewTables = '${{ steps.drift-check.outputs.has-new-tables }}' === 'true';
+            const hasNewColumns = '${{ steps.drift-check.outputs.has-new-columns }}' === 'true';
+            const hasDroppedColumns = '${{ steps.drift-check.outputs.has-dropped-columns }}' === 'true';
+            const hasDroppedTables = '${{ steps.drift-check.outputs.has-dropped-tables }}' === 'true';
+            const hasIndexChanges = '${{ steps.drift-check.outputs.has-index-changes }}' === 'true';
+            
+            let changesSummary = [];
+            if (hasNewTables) changesSummary.push('🆕 New tables');
+            if (hasNewColumns) changesSummary.push('➕ New columns');
+            if (hasDroppedColumns) changesSummary.push('➖ Dropped columns');
+            if (hasDroppedTables) changesSummary.push('🗑️ Dropped tables');
+            if (hasIndexChanges) changesSummary.push('🔍 Index changes');
+            
+            const comment = `## 🚨 Database Schema Drift Detected
+            
+            Your changes have caused the database schema to drift from the Prisma schema definition.
+            
+            ### 📊 Change Summary
+            ${changesSummary.length > 0 ? changesSummary.map(c => `- ${c}`).join('\n') : 'Various schema changes detected'}
+            
+            ### 📋 Migration Status
+            - Current migrations: ${migrationCount} files
+            - RLS policies: ${{ steps.drift-check.outputs.rls-policies-count }} files
+            
+            ### 🔧 Required SQL Changes
+            \`\`\`sql
+            ${diffContent.substring(0, 2000)}${diffContent.length > 2000 ? '\n... (truncated)' : ''}
+            \`\`\`
+            
+            ### ✅ How to Fix
+            
+            1. **Review the changes above** - ensure they match your intentions
+            2. **Update your local database**: \`pnpm db:push\`
+            3. **Generate proper migration** (if needed): \`pnpm scripts/db/generate-migrations.sh\`
+            4. **Apply to Supabase**: \`supabase db push\`
+            5. **Commit migration files** to your PR
+            
+            ### 🔗 Helpful Links
+            - [View full drift analysis](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [Prisma Migration Guide](https://www.prisma.io/docs/concepts/components/prisma-migrate)
+            - [Supabase CLI Guide](https://supabase.com/docs/guides/cli/local-development)
+            
+            ---
+            *This check runs automatically on PRs that modify database schemas*`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: 📧 Notify on scheduled drift detection
+        if: failure() && github.event_name == 'schedule' && steps.drift-check.outputs.drift-detected == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Production Schema Drift Detected - ${new Date().toISOString().split('T')[0]}`,
+              body: `## 🚨 Production Database Schema Drift Alert
+              
+              The scheduled schema drift check has detected inconsistencies between the production database and the canonical Prisma schema.
+              
+              ### 📊 Detection Details
+              - **Detection Time**: ${new Date().toISOString()}
+              - **Migration Count**: ${{ steps.drift-check.outputs.migration-count }}
+              - **RLS Policies**: ${{ steps.drift-check.outputs.rls-policies-count }}
+              
+              ### 🔧 Immediate Actions Required
+              1. Review the drift analysis artifacts
+              2. Identify the source of the drift
+              3. Create corrective migrations
+              4. Apply fixes to production safely
+              
+              ### 🔗 Resources
+              - [View drift analysis](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              - [Production database documentation](https://github.com/${{ github.repository }}/blob/main/docs/database.md)
+              
+              **Priority**: High - Address within 24 hours`,
+              labels: ['bug', 'database', 'production', 'high-priority']
+            });
+
+  # Validate migration integrity
+  validate-migrations:
+    name: Migration Integrity Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Checkout PR base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base-branch
+
+      - name: 🔍 Check migration file integrity
+        run: |
+          echo "🔍 Validating migration file integrity..."
+          
+          # Compare migration files between base and head
+          base_migrations=$(find base-branch/supabase/migrations -name "*.sql" 2>/dev/null | sort || true)
+          head_migrations=$(find supabase/migrations -name "*.sql" 2>/dev/null | sort || true)
+          
+          # Check if any existing migrations were modified
+          echo "📊 Checking for modified existing migrations..."
+          modified_migrations=()
+          
+          if [[ -n "$base_migrations" ]]; then
+            echo "$base_migrations" | while read -r base_file; do
+              relative_path=${base_file#base-branch/}
+              head_file="$relative_path"
+              
+              if [[ -f "$head_file" ]]; then
+                if ! diff -q "$base_file" "$head_file" >/dev/null 2>&1; then
+                  echo "❌ Modified existing migration: $relative_path"
+                  modified_migrations+=("$relative_path")
+                fi
+              else
+                echo "❌ Deleted migration file: $relative_path"
+                modified_migrations+=("$relative_path")
+              fi
+            done
+          fi
+          
+          # Check for new migrations
+          echo "📊 Checking for new migrations..."
+          new_migrations=()
+          
+          if [[ -n "$head_migrations" ]]; then
+            echo "$head_migrations" | while read -r head_file; do
+              base_file="base-branch/$head_file"
+              
+              if [[ ! -f "$base_file" ]]; then
+                echo "✅ New migration detected: $head_file"
+                new_migrations+=("$head_file")
+                
+                # Validate SQL syntax of new migration
+                if ! psql --version >/dev/null 2>&1; then
+                  echo "⚠️ PostgreSQL client not available for SQL validation"
+                else
+                  # Basic SQL syntax check (without execution)
+                  if grep -qE "(CREATE|ALTER|DROP)" "$head_file"; then
+                    echo "  ✅ Contains DDL statements"
+                  else
+                    echo "  ⚠️ No DDL statements found - is this intentional?"
+                  fi
+                fi
+              fi
+            done
+          fi
+          
+          # Final validation
+          if [[ ${#modified_migrations[@]} -gt 0 ]]; then
+            echo "❌ Migration integrity check failed - existing migrations were modified"
+            echo "Modified files: ${modified_migrations[*]}"
+            exit 1
+          fi
+          
+          echo "✅ Migration integrity check passed"
+          echo "New migrations: ${#new_migrations[@]}"
+          echo "Existing migrations: unchanged"

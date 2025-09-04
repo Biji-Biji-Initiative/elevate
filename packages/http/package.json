@@ -1,0 +1,77 @@
+{
+  "name": "@elevate/http",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.11"
+  },
+  "files": [
+    "dist/js",
+    "dist/types",
+    "README.md",
+    "LICENSE",
+    "dist/js/**/*.map"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/js/index.js"
+    },
+    "./error-utils": {
+      "types": "./dist/types/error-utils.d.ts",
+      "default": "./dist/js/error-utils.js"
+    },
+    "./middleware": {
+      "types": "./dist/types/middleware.d.ts",
+      "default": "./dist/js/middleware.js"
+    },
+    "./test-utils": {
+      "types": "./dist/types/test-utils.d.ts",
+      "default": "./dist/js/test-utils.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/js/index.js",
+  "types": "./dist/types/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/types/*"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "pnpm run build:types && tsup --config tsup.config.ts",
+    "build:types": "tsc -b --force tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --max-warnings 0",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --fix",
+    "type-check": "tsc --noEmit",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "api:extract": "../../node_modules/.bin/api-extractor run --local",
+    "api:check": "../../node_modules/.bin/api-extractor run"
+  },
+  "dependencies": {
+    "@elevate/types": "workspace:*",
+    "next": "^15.0.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^19.1.12",
+    "tsup": "^8.3.7",
+    "typescript": "^5.9.2"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/elevate.git",
+    "directory": "packages/http"
+  }
+}

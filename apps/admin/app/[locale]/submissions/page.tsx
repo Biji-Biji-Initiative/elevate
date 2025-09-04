@@ -5,57 +5,32 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { withRoleGuard } from '@elevate/auth/context'
-import { adminClient, type SubmissionsQuery } from '@/lib/admin-client'
-import type { TableFilters, PaginationConfig } from '@elevate/types'
+import { adminClient, AdminClientError, type SubmissionsQuery, type AdminSubmission, type Pagination } from '@/lib/admin-client'
 import { Button , Input, DataTable, StatusBadge, Modal, ConfirmModal, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, createColumns, Alert } from '@elevate/ui'
-import type { Column } from '@elevate/ui'
 
-// Define Submission type based on what adminClient actually returns
-type Submission = {
-  id: string
-  created_at: string
-  updated_at?: string | undefined
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-  visibility: 'PUBLIC' | 'PRIVATE'
-  review_note?: string | null | undefined
-  attachments?: unknown[] | undefined
-  user: {
-    id: string
-    name: string
-    handle: string
-    email?: string | undefined
-    school?: string | null | undefined
-    cohort?: string | null | undefined
-  }
-  activity: {
-    code: string
-    name: string
-    default_points?: number | undefined
-  }
-}
-
-// Using TableFilters from @elevate/types with proper typing
-interface Filters extends TableFilters {
-  status: string
-  activity: string
+// Define proper filter types for submissions
+interface Filters {
+  status: 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
+  activity: 'ALL' | 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
   search: string
   cohort: string
-  sortBy: string
+  sortBy: 'created_at' | 'updated_at' | 'status'
   sortOrder: 'asc' | 'desc'
 }
 
 function SubmissionsPage() {
   const router = useRouter()
-  const [submissions, setSubmissions] = useState<Submission[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
-  const [cohorts, setCohorts] = useState<string[]>([])
-  const [pagination, setPagination] = useState({
+  const [submissions, setSubmissions] = useState<AdminSubmission[]>([])
+  const [pagination, setPagination] = useState<Pagination>({
     page: 1,
     limit: 50,
     total: 0,
     pages: 0
   })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [cohorts, setCohorts] = useState<string[]>([])
   
   const [filters, setFilters] = useState<Filters>({
     status: 'PENDING',
@@ -69,13 +44,11 @@ function SubmissionsPage() {
   useEffect(() => {
     const fetchCohorts = async () => {
       try {
-        const result = await adminClient.getCohorts()
-        setCohorts(result)
+        const cohortData = await adminClient.getCohorts()
+        setCohorts(cohortData)
       } catch (error) {
         // Cohorts are optional for UI, don't break on fetch failure
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Failed to fetch cohorts:', error);
-        }
+        console.warn('Failed to fetch cohorts:', error instanceof AdminClientError ? error.message : 'Unknown error')
       }
     }
     void fetchCohorts()
@@ -84,7 +57,7 @@ function SubmissionsPage() {
   // Modal states
   const [reviewModal, setReviewModal] = useState<{
     isOpen: boolean
-    submission?: Submission
+    submission?: AdminSubmission
     action: 'approve' | 'reject'
   }>({
     isOpen: false,
@@ -151,16 +124,9 @@ function SubmissionsPage() {
     {
       key: 'attachments',
       header: 'Files',
-      render: (row) => {
-        const attachmentCount = typeof row.attachmentCount === 'number'
-          ? row.attachmentCount
-          : (Array.isArray(row.attachments) ? row.attachments.length : 0)
-        return (
-          <span className="text-sm text-gray-600">
-            {attachmentCount} files
-          </span>
-        )
-      },
+      render: (row) => (
+        <span className="text-sm text-gray-600">{row.attachmentCount ?? 0} files</span>
+      ),
       width: '80px',
       sortable: false
     },
@@ -225,23 +191,27 @@ function SubmissionsPage() {
   const fetchSubmissions = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        status: filters.status,
+      const params: SubmissionsQuery = {
+        page: pagination.page,
+        limit: pagination.limit,
+        status: filters.status !== 'ALL' ? filters.status : undefined,
+        activity: filters.activity !== 'ALL' ? filters.activity : undefined,
         sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder
-      })
+        sortOrder: filters.sortOrder,
+        search: filters.search || undefined,
+        cohort: filters.cohort !== 'ALL' ? filters.cohort : undefined
+      }
 
-      if (filters.activity !== 'ALL') params.set('activity', filters.activity)
-      if (filters.search) params.set('search', filters.search)
-      if (filters.cohort !== 'ALL') params.set('cohort', filters.cohort)
-
-      const { submissions, pagination: pageInfo } = await adminClient.getSubmissions(Object.fromEntries(params) as SubmissionsQuery)
-      setSubmissions(submissions)
-      setPagination(prev => ({ ...prev, total: pageInfo.total, pages: pageInfo.pages }))
+      const result = await adminClient.getSubmissions(params)
+      
+      setSubmissions(result.submissions)
+      setPagination(result.pagination)
     } catch (error) {
-      setError('Failed to fetch submissions')
+      if (error instanceof AdminClientError) {
+        setError(error.message)
+      } else {
+        setError('Failed to fetch submissions')
+      }
     } finally {
       setLoading(false)
     }
@@ -256,7 +226,7 @@ function SubmissionsPage() {
     setPagination(prev => ({ ...prev, page: 1 }))
   }
 
-  const openReviewModal = (submission: Submission, action: 'approve' | 'reject') => {
+  const openReviewModal = (submission: AdminSubmission, action: 'approve' | 'reject') => {
     setReviewModal({
       isOpen: true,
       submission,

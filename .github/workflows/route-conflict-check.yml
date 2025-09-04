@@ -1,0 +1,537 @@
+name: Route Conflict Detection
+
+on:
+  pull_request:
+    paths:
+      - 'apps/*/app/**'
+      - 'apps/*/pages/**'
+      - 'apps/*/src/app/**'
+      - 'apps/*/src/pages/**'
+      - '**/route.ts'
+      - '**/route.tsx'
+      - '**/page.ts'
+      - '**/page.tsx'
+      - '**/layout.ts'
+      - '**/layout.tsx'
+      - '**/sitemap.*'
+      - '**/robots.*'
+  push:
+    branches: [main, staging]
+    paths:
+      - 'apps/*/app/**'
+      - 'apps/*/pages/**'
+      - '**/route.ts'
+      - '**/page.tsx'
+      - '**/sitemap.*'
+
+jobs:
+  detect-route-conflicts:
+    name: Route Conflict Detection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: '9'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔍 Comprehensive Route Conflict Detection
+        id: route-check
+        run: |
+          echo "🔍 Starting comprehensive route conflict detection..."
+          
+          # Create results directory
+          mkdir -p route-analysis
+          
+          # Initialize tracking arrays
+          conflicts_found=false
+          warnings_found=false
+          sitemap_conflicts=()
+          route_conflicts=()
+          duplicate_routes=()
+          
+          # Function to log with emojis and colors
+          log() {
+            echo "[$(date +'%H:%M:%S')] $1"
+          }
+          
+          log "📊 Step 1: Mapping all route files..."
+          
+          # Find all route-related files
+          route_files=$(find apps -type f \( -name "route.ts" -o -name "route.tsx" -o -name "page.tsx" -o -name "page.ts" -o -name "layout.tsx" -o -name "layout.ts" \) 2>/dev/null || true)
+          sitemap_files=$(find apps -type f -name "sitemap*" 2>/dev/null || true)
+          robots_files=$(find apps -type f -name "robots*" 2>/dev/null || true)
+          
+          # Log findings
+          if [[ -n "$route_files" ]]; then
+            echo "$route_files" > route-analysis/route-files.txt
+            route_count=$(echo "$route_files" | wc -l)
+            log "📁 Found $route_count route files"
+          else
+            log "⚠️ No route files found"
+            route_count=0
+          fi
+          
+          if [[ -n "$sitemap_files" ]]; then
+            echo "$sitemap_files" > route-analysis/sitemap-files.txt
+            sitemap_count=$(echo "$sitemap_files" | wc -l)
+            log "🗺️ Found $sitemap_count sitemap files"
+          else
+            sitemap_count=0
+          fi
+          
+          if [[ -n "$robots_files" ]]; then
+            echo "$robots_files" > route-analysis/robots-files.txt
+            robots_count=$(echo "$robots_files" | wc -l)
+            log "🤖 Found $robots_count robots files"
+          else
+            robots_count=0
+          fi
+          
+          log "📊 Step 2: Checking for sitemap conflicts..."
+          
+          # Check each app for sitemap conflicts
+          for app in apps/web apps/admin; do
+            if [[ -d "$app" ]]; then
+              app_name=$(basename "$app")
+              log "🔍 Checking $app_name for sitemap conflicts..."
+              
+              # Find all sitemap files in this app
+              app_sitemaps=$(find "$app" -name "sitemap*" -type f 2>/dev/null || true)
+              
+              if [[ -n "$app_sitemaps" ]]; then
+                sitemap_types=()
+                
+                # Check different types of sitemap files
+                while IFS= read -r sitemap_file; do
+                  basename_file=$(basename "$sitemap_file")
+                  dirname_file=$(dirname "$sitemap_file")
+                  
+                  log "  📄 Found: $sitemap_file"
+                  
+                  # Check for multiple sitemap.xml/ts/js files
+                  if [[ "$basename_file" =~ ^sitemap\.(xml|ts|tsx|js|jsx)$ ]]; then
+                    sitemap_types+=("$basename_file")
+                  fi
+                  
+                  # Check for route.ts in same directory as sitemap
+                  route_in_same_dir="$dirname_file/route.ts"
+                  if [[ -f "$route_in_same_dir" ]]; then
+                    log "  ⚠️ WARNING: Both sitemap and route.ts exist in $dirname_file"
+                    warnings_found=true
+                    sitemap_conflicts+=("$app_name: $dirname_file has both sitemap and route.ts")
+                  fi
+                  
+                done <<< "$app_sitemaps"
+                
+                # Check for multiple sitemap files of same type
+                if [[ ${#sitemap_types[@]} -gt 1 ]]; then
+                  unique_types=$(printf '%s\n' "${sitemap_types[@]}" | sort -u | wc -l)
+                  total_types=${#sitemap_types[@]}
+                  
+                  if [[ $total_types -gt $unique_types ]]; then
+                    log "  ❌ ERROR: Multiple sitemap files of same type in $app_name"
+                    conflicts_found=true
+                    sitemap_conflicts+=("$app_name: Multiple sitemap files of same type")
+                  fi
+                fi
+              fi
+            fi
+          done
+          
+          log "📊 Step 3: Checking for route/page conflicts..."
+          
+          # Check for route.ts and page.tsx in same directory
+          if [[ -n "$route_files" ]]; then
+            while IFS= read -r route_file; do
+              dir_path=$(dirname "$route_file")
+              file_name=$(basename "$route_file")
+              
+              if [[ "$file_name" == "route.ts" ]]; then
+                # Check for page.tsx in same directory
+                page_file="$dir_path/page.tsx"
+                if [[ -f "$page_file" ]]; then
+                  log "❌ CONFLICT: Both route.ts and page.tsx in $dir_path"
+                  conflicts_found=true
+                  route_conflicts+=("$dir_path: Both route.ts and page.tsx exist")
+                fi
+              fi
+            done <<< "$route_files"
+          fi
+          
+          log "📊 Step 4: Checking for duplicate route paths..."
+          
+          # Extract route paths and check for duplicates
+          declare -A route_paths
+          
+          if [[ -n "$route_files" ]]; then
+            while IFS= read -r route_file; do
+              # Extract route path from file structure
+              app_path=$(echo "$route_file" | sed 's|apps/[^/]*/app||' | sed 's|/[^/]*$||')
+              
+              # Normalize path (remove leading/trailing slashes, handle special cases)
+              normalized_path=$(echo "$app_path" | sed 's|^/||' | sed 's|/$||')
+              
+              # Handle root path
+              if [[ -z "$normalized_path" ]]; then
+                normalized_path="/"
+              fi
+              
+              # Check if this path already exists
+              if [[ -n "${route_paths[$normalized_path]:-}" ]]; then
+                log "❌ DUPLICATE: Route path '$normalized_path' exists in multiple places"
+                log "  - ${route_paths[$normalized_path]}"
+                log "  - $route_file"
+                conflicts_found=true
+                duplicate_routes+=("$normalized_path: ${route_paths[$normalized_path]} and $route_file")
+              else
+                route_paths[$normalized_path]=$route_file
+              fi
+            done <<< "$route_files"
+          fi
+          
+          log "📊 Step 5: Checking for special route conflicts..."
+          
+          # Check for conflicts with Next.js special routes
+          special_routes=("api" "_next" "favicon.ico" "robots.txt" "sitemap.xml")
+          
+          for special in "${special_routes[@]}"; do
+            if [[ -n "${route_paths[$special]:-}" ]]; then
+              log "⚠️ WARNING: Route conflicts with Next.js special route: /$special"
+              warnings_found=true
+              route_conflicts+=("Special route conflict: /$special")
+            fi
+          done
+          
+          log "📊 Step 6: Analyzing route structure..."
+          
+          # Create route map for analysis
+          {
+            echo "# Route Analysis Report"
+            echo "Generated: $(date)"
+            echo ""
+            echo "## Route Files by App"
+            
+            for app in apps/web apps/admin; do
+              if [[ -d "$app" ]]; then
+                app_name=$(basename "$app")
+                echo ""
+                echo "### $app_name"
+                
+                app_routes=$(echo "$route_files" | grep "^$app/" || true)
+                if [[ -n "$app_routes" ]]; then
+                  echo "$app_routes" | while IFS= read -r route_file; do
+                    route_path=$(echo "$route_file" | sed "s|$app/app||" | sed 's|/[^/]*$||')
+                    route_type=$(basename "$route_file" | sed 's/\..*//')
+                    echo "- \`$route_path\` ($route_type)"
+                  done
+                else
+                  echo "- No routes found"
+                fi
+              fi
+            done
+            
+            echo ""
+            echo "## Special Files"
+            echo "- Sitemap files: $sitemap_count"
+            echo "- Robots files: $robots_count"
+            echo "- Total route files: $route_count"
+            
+          } > route-analysis/route-map.md
+          
+          log "📊 Step 7: Final validation and results..."
+          
+          # Generate summary
+          {
+            echo "# Route Conflict Detection Summary"
+            echo ""
+            echo "## Statistics"
+            echo "- Route files: $route_count"
+            echo "- Sitemap files: $sitemap_count" 
+            echo "- Robots files: $robots_count"
+            echo "- Conflicts found: $(if [[ "$conflicts_found" == "true" ]]; then echo "YES"; else echo "NO"; fi)"
+            echo "- Warnings found: $(if [[ "$warnings_found" == "true" ]]; then echo "YES"; else echo "NO"; fi)"
+            echo ""
+            
+            if [[ ${#sitemap_conflicts[@]} -gt 0 ]]; then
+              echo "## Sitemap Conflicts"
+              printf '%s\n' "${sitemap_conflicts[@]}"
+              echo ""
+            fi
+            
+            if [[ ${#route_conflicts[@]} -gt 0 ]]; then
+              echo "## Route Conflicts"
+              printf '%s\n' "${route_conflicts[@]}"
+              echo ""
+            fi
+            
+            if [[ ${#duplicate_routes[@]} -gt 0 ]]; then
+              echo "## Duplicate Routes"
+              printf '%s\n' "${duplicate_routes[@]}"
+              echo ""
+            fi
+            
+          } > route-analysis/summary.md
+          
+          # Set outputs
+          echo "conflicts-found=$conflicts_found" >> $GITHUB_OUTPUT
+          echo "warnings-found=$warnings_found" >> $GITHUB_OUTPUT
+          echo "route-count=$route_count" >> $GITHUB_OUTPUT
+          echo "sitemap-count=$sitemap_count" >> $GITHUB_OUTPUT
+          echo "sitemap-conflicts=${#sitemap_conflicts[@]}" >> $GITHUB_OUTPUT
+          echo "route-conflicts=${#route_conflicts[@]}" >> $GITHUB_OUTPUT
+          echo "duplicate-routes=${#duplicate_routes[@]}" >> $GITHUB_OUTPUT
+          
+          # Final status
+          if [[ "$conflicts_found" == "true" ]]; then
+            log "❌ ROUTE CONFLICTS DETECTED - Build should fail"
+            echo "final-status=conflicts" >> $GITHUB_OUTPUT
+            exit 1
+          elif [[ "$warnings_found" == "true" ]]; then
+            log "⚠️ WARNINGS FOUND - Review recommended" 
+            echo "final-status=warnings" >> $GITHUB_OUTPUT
+          else
+            log "✅ NO CONFLICTS FOUND - All routes are valid"
+            echo "final-status=clean" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📊 Upload route analysis results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: route-conflict-analysis-${{ github.sha }}
+          path: route-analysis/
+          retention-days: 30
+
+      - name: 📝 Comment on PR with conflict details
+        if: failure() && github.event_name == 'pull_request' && steps.route-check.outputs.conflicts-found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let summary = '';
+            try {
+              summary = fs.readFileSync('route-analysis/summary.md', 'utf8');
+            } catch (error) {
+              summary = 'Could not read summary file';
+            }
+            
+            const routeCount = '${{ steps.route-check.outputs.route-count }}';
+            const sitemapCount = '${{ steps.route-check.outputs.sitemap-count }}';
+            const sitemapConflicts = '${{ steps.route-check.outputs.sitemap-conflicts }}';
+            const routeConflicts = '${{ steps.route-check.outputs.route-conflicts }}';
+            const duplicateRoutes = '${{ steps.route-check.outputs.duplicate-routes }}';
+            
+            const comment = `## 🚨 Route Conflicts Detected
+            
+            Your changes have introduced routing conflicts that need to be resolved before merging.
+            
+            ### 📊 Detection Summary
+            - **Route files**: ${routeCount}
+            - **Sitemap files**: ${sitemapCount}
+            - **Sitemap conflicts**: ${sitemapConflicts}
+            - **Route conflicts**: ${routeConflicts}
+            - **Duplicate routes**: ${duplicateRoutes}
+            
+            ### 🔍 Analysis Details
+            ${summary}
+            
+            ### 🛠️ How to Fix Route Conflicts
+            
+            #### For Sitemap Conflicts:
+            1. **Multiple sitemaps**: Remove duplicate sitemap files, keep only one per app
+            2. **Sitemap + route.ts**: Choose either dynamic sitemap (route.ts) or static sitemap file
+            3. **Wrong location**: Move sitemap files to appropriate app root or route directory
+            
+            #### For Route/Page Conflicts:
+            1. **route.ts + page.tsx**: Choose one - route.ts for API endpoints, page.tsx for pages
+            2. **Duplicate routes**: Ensure each route path is unique across your app
+            3. **Special routes**: Avoid conflicting with Next.js reserved routes (/api, /_next, etc.)
+            
+            #### Common Solutions:
+            \`\`\`bash
+            # Check current route structure
+            find apps -name "route.ts" -o -name "page.tsx" -o -name "sitemap*" | sort
+            
+            # Remove conflicting files
+            rm path/to/conflicting/file
+            
+            # Rename conflicting routes
+            mv apps/web/app/conflicting apps/web/app/new-name
+            \`\`\`
+            
+            ### 📚 Documentation
+            - [Next.js App Router](https://nextjs.org/docs/app/building-your-application/routing)
+            - [Sitemap Generation](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap)
+            - [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)
+            
+            ### 🔗 View Full Analysis
+            [Download route analysis artifacts](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ---
+            *This check prevents routing conflicts that could break your application*`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: ⚠️ Comment on warnings
+        if: success() && github.event_name == 'pull_request' && steps.route-check.outputs.warnings-found == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const routeCount = '${{ steps.route-check.outputs.route-count }}';
+            const sitemapCount = '${{ steps.route-check.outputs.sitemap-count }}';
+            
+            const comment = `## ⚠️ Route Analysis Warnings
+            
+            No critical conflicts detected, but there are some warnings to consider:
+            
+            ### 📊 Summary
+            - **Route files**: ${routeCount}
+            - **Sitemap files**: ${sitemapCount}
+            - **Status**: Warnings only (build will succeed)
+            
+            ### 💡 Recommendations
+            - Review the route analysis artifacts for potential improvements
+            - Consider consolidating similar routes
+            - Ensure consistent naming conventions
+            
+            ### 🔗 Full Analysis
+            [View route analysis](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            *This is informational only - your build will proceed normally.*`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Generate route documentation
+  route-documentation:
+    name: Generate Route Documentation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📚 Generate route documentation
+        run: |
+          echo "📚 Generating comprehensive route documentation..."
+          
+          # Create docs directory
+          mkdir -p docs/generated
+          
+          {
+            echo "# Route Documentation"
+            echo "Generated: $(date)"
+            echo ""
+            echo "This document provides a comprehensive overview of all routes in the MS Elevate LEAPS Tracker applications."
+            echo ""
+            
+            echo "## Web Application Routes"
+            echo ""
+            
+            if [[ -d "apps/web/app" ]]; then
+              echo "### Page Routes"
+              find apps/web/app -name "page.tsx" -o -name "page.ts" | sort | while IFS= read -r file; do
+                route_path=$(echo "$file" | sed 's|apps/web/app||' | sed 's|/page\.(tsx\|ts)$||' | sed 's|^$|/|')
+                echo "- \`$route_path\` - $file"
+              done
+              echo ""
+              
+              echo "### API Routes"
+              find apps/web/app -name "route.ts" | sort | while IFS= read -r file; do
+                route_path=$(echo "$file" | sed 's|apps/web/app||' | sed 's|/route\.ts$||' | sed 's|^$|/api|')
+                echo "- \`$route_path\` - $file"
+              done
+              echo ""
+              
+              echo "### Special Files"
+              find apps/web/app -name "sitemap*" -o -name "robots*" -o -name "layout.*" | sort | while IFS= read -r file; do
+                file_type=$(basename "$file" | cut -d. -f1)
+                echo "- $file_type - $file"
+              done
+            else
+              echo "No web app routes found."
+            fi
+            
+            echo ""
+            echo "## Admin Application Routes"
+            echo ""
+            
+            if [[ -d "apps/admin/app" ]]; then
+              echo "### Page Routes"
+              find apps/admin/app -name "page.tsx" -o -name "page.ts" | sort | while IFS= read -r file; do
+                route_path=$(echo "$file" | sed 's|apps/admin/app||' | sed 's|/page\.(tsx\|ts)$||' | sed 's|^$|/|')
+                echo "- \`$route_path\` - $file"
+              done
+              echo ""
+              
+              echo "### API Routes"
+              find apps/admin/app -name "route.ts" | sort | while IFS= read -r file; do
+                route_path=$(echo "$file" | sed 's|apps/admin/app||' | sed 's|/route\.ts$||' | sed 's|^$|/api|')
+                echo "- \`$route_path\` - $file"
+              done
+            else
+              echo "No admin app routes found."
+            fi
+            
+            echo ""
+            echo "## Route Analysis"
+            echo ""
+            
+            total_routes=$(find apps -name "page.tsx" -o -name "page.ts" -o -name "route.ts" | wc -l)
+            total_sitemaps=$(find apps -name "sitemap*" | wc -l)
+            
+            echo "- **Total Routes**: $total_routes"
+            echo "- **Sitemap Files**: $total_sitemaps"
+            echo "- **Last Updated**: $(date)"
+            echo ""
+            echo "---"
+            echo "*This documentation is automatically generated by the Route Conflict Detection workflow.*"
+            
+          } > docs/generated/routes.md
+          
+          echo "✅ Route documentation generated: docs/generated/routes.md"
+
+      - name: 📤 Commit route documentation
+        if: success()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add docs/generated/routes.md
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: update route documentation [skip ci]"
+            git push
+          fi

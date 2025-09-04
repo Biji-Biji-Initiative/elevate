@@ -1,15 +1,13 @@
 import { NextResponse, NextRequest } from 'next/server'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
-// TODO: Re-enable when @elevate/security package is available
-// import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
-  // TODO: Re-enable rate limiting when @elevate/security package is available
   // Wrap in rate limiter as a light GET endpoint
-  // return withRateLimit(request, adminRateLimiter, async () => {
+  return withRateLimit(request, adminRateLimiter, async () => {
   try {
     await requireRole('admin')
 
@@ -29,6 +27,5 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return createErrorResponse(error, 500)
   }
-  // TODO: Re-enable rate limiting when @elevate/security package is available
-  // })
+  })
 }

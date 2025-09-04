@@ -4,7 +4,33 @@ import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 
 import { prisma } from '@elevate/db/client'
-import { parseActivityCode, parseSubmissionStatus, parseAmplifyPayload, parseSubmissionPayload, toJsonValue, toPrismaJson, type SubmissionWhereClause } from '@elevate/types'
+import { 
+  parseActivityCode, 
+  parseSubmissionStatus, 
+  parseAmplifyPayload, 
+  parseSubmissionPayload, 
+  SubmissionPayloadSchema,
+  toJsonValue, 
+  toPrismaJson, 
+  type SubmissionWhereClause,
+  AuthenticationError,
+  NotFoundError,
+  ValidationError,
+  SubmissionLimitError,
+} from '@elevate/types'
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  withApiErrorHandling,
+  unauthorized,
+  notFound,
+  badRequest,
+  validationError,
+  generateTraceId
+} from '@elevate/http'
+import { withCSRFProtection } from '@elevate/security/csrf'
+import { submissionRateLimiter, withRateLimit } from '@elevate/security/rate-limiter'
+import { sanitizeSubmissionPayload } from '@elevate/security/sanitizer'
 
 // Local wrapper to ensure type safety for object inputs to Prisma JSON fields
 function toPrismaJsonObject(obj: any): Exclude<ReturnType<typeof toPrismaJson>, null> {
@@ -26,65 +52,87 @@ export const runtime = 'nodejs';
 // Submission request schema
 const SubmissionRequestSchema = z.object({
   activityCode: z.enum(['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']),
-  payload: z.record(z.unknown()),
+  payload: SubmissionPayloadSchema.transform(p => p.data),
   attachments: z.array(z.string()).optional(),
   visibility: z.enum(['PUBLIC', 'PRIVATE']).optional()
 })
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withCSRFProtection(withApiErrorHandling(async (request: NextRequest, context) => {
+  // Apply rate limiting for submissions
+  return withRateLimit(request, submissionRateLimiter, async () => {
     const { userId } = await auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  
+  if (!userId) {
+    throw new AuthenticationError()
+  }
+
+  // Verify user exists in database
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  })
+
+  if (!user) {
+    throw new NotFoundError('User', userId, context.traceId)
+  }
+
+  const body: unknown = await request.json()
+  let validatedData: z.infer<typeof SubmissionRequestSchema>
+  
+  try {
+    validatedData = SubmissionRequestSchema.parse(body)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new ValidationError(error, 'Invalid submission data', context.traceId)
     }
+    throw error
+  }
 
-    // Verify user exists in database
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    })
+  // Sanitize and validate payload structure
+  const sanitizedPayload = sanitizeSubmissionPayload(validatedData.activityCode, validatedData.payload)
+  
+  const payloadValidation = parseSubmissionPayload({
+    activityCode: validatedData.activityCode,
+    data: sanitizedPayload,
+  })
+  if (!payloadValidation) {
+    throw new ValidationError(
+      new z.ZodError([{ code: 'custom', message: 'Invalid payload structure', path: ['payload'] }]),
+      'Invalid payload for selected activity',
+      context.traceId
+    )
+  }
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
+  // Verify activity exists
+  const activity = await prisma.activity.findUnique({
+    where: { code: validatedData.activityCode }
+  })
 
-    const body: unknown = await request.json()
-    const validatedData = SubmissionRequestSchema.parse(body)
+  if (!activity) {
+    throw new NotFoundError('Activity', validatedData.activityCode, context.traceId)
+  }
 
-    // Validate payload structure against activity-specific schema
-    const payloadValidation = parseSubmissionPayload({
-      activityCode: validatedData.activityCode,
-      data: validatedData.payload,
-    })
-    if (!payloadValidation) {
-      return NextResponse.json({ error: 'Invalid payload for selected activity' }, { status: 400 })
-    }
-
-    // Verify activity exists
-    const activity = await prisma.activity.findUnique({
-      where: { code: validatedData.activityCode }
-    })
-
-    if (!activity) {
-      return NextResponse.json({ error: 'Invalid activity code' }, { status: 400 })
-    }
-
-    // Check for existing pending/approved submissions for certain activities
-    if (['LEARN'].includes(validatedData.activityCode)) {
-      const existingSubmission = await prisma.submission.findFirst({
-        where: {
-          user_id: userId,
-          activity_code: validatedData.activityCode,
-          status: { in: ['PENDING', 'APPROVED'] }
-        }
-      })
-
-      if (existingSubmission) {
-        return NextResponse.json({ 
-          error: `You already have a ${existingSubmission.status.toLowerCase()} ${validatedData.activityCode} submission` 
-        }, { status: 400 })
+  // Check for existing pending/approved submissions for certain activities
+  if (['LEARN'].includes(validatedData.activityCode)) {
+    const existingSubmission = await prisma.submission.findFirst({
+      where: {
+        user_id: userId,
+        activity_code: validatedData.activityCode,
+        status: { in: ['PENDING', 'APPROVED'] }
       }
+    })
+
+    if (existingSubmission) {
+      throw new ValidationError(
+        new z.ZodError([{ 
+          code: 'custom', 
+          message: `You already have a ${existingSubmission.status.toLowerCase()} ${validatedData.activityCode} submission`,
+          path: ['activityCode'] 
+        }]),
+        'Duplicate submission not allowed',
+        context.traceId
+      )
     }
+  }
 
     // For Amplify submissions, check 7-day rolling limits
     if (validatedData.activityCode === 'AMPLIFY') {
@@ -112,37 +160,44 @@ export async function POST(request: NextRequest) {
         return sum + (parsedPayload?.data.studentsTrained || 0)
       }, 0)
 
-      // Parse the new submission payload
-      const newPayload = parseAmplifyPayload({ activityCode: 'AMPLIFY', data: validatedData.payload })
-      if (!newPayload) {
-        return NextResponse.json({ 
-          error: 'Invalid AMPLIFY payload format' 
-        }, { status: 400 })
-      }
-      
-      const newPeers = newPayload.data.peersTrained || 0
-      const newStudents = newPayload.data.studentsTrained || 0
-
-      if (totalPeers + newPeers > 50) {
-        return NextResponse.json({ 
-          error: `Peer training limit exceeded. You've trained ${totalPeers} peers in the last 7 days. Maximum allowed: 50.` 
-        }, { status: 400 })
-      }
-
-      if (totalStudents + newStudents > 200) {
-        return NextResponse.json({ 
-          error: `Student training limit exceeded. You've trained ${totalStudents} students in the last 7 days. Maximum allowed: 200.` 
-        }, { status: 400 })
-      }
+    // Parse the new submission payload
+    const newPayload = parseAmplifyPayload({ activityCode: 'AMPLIFY', data: validatedData.payload })
+    if (!newPayload) {
+      throw new ValidationError(
+        new z.ZodError([{ code: 'custom', message: 'Invalid AMPLIFY payload format', path: ['payload'] }]),
+        'Invalid AMPLIFY payload format',
+        context.traceId
+      )
     }
+    
+    const newPeers = newPayload.data.peersTrained || 0
+    const newStudents = newPayload.data.studentsTrained || 0
+
+    if (totalPeers + newPeers > 50) {
+      throw new SubmissionLimitError(
+        'Peer training',
+        totalPeers + newPeers,
+        50,
+        context.traceId
+      )
+    }
+
+    if (totalStudents + newStudents > 200) {
+      throw new SubmissionLimitError(
+        'Student training',
+        totalStudents + newStudents,
+        200,
+        context.traceId
+      )
+    }
+  }
 
     // Create submission
     const submission = await prisma.submission.create({
       data: {
         user_id: userId,
         activity_code: validatedData.activityCode,
-        payload: toPrismaJsonObject(validatedData.payload),
-        attachments: toPrismaJsonObject(validatedData.attachments || []),
+        payload: toPrismaJsonObject(sanitizedPayload),
         visibility: validatedData.visibility || 'PRIVATE'
       },
       include: {
@@ -167,45 +222,29 @@ export async function POST(request: NextRequest) {
     }
 
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: submission.id,
-        activityCode: submission.activity_code,
-        status: submission.status,
-        visibility: submission.visibility,
-        createdAt: submission.created_at,
-        potentialPoints: activity.default_points
-      }
-    })
+  return createSuccessResponse({
+    id: submission.id,
+    activityCode: submission.activity_code,
+    status: submission.status,
+    visibility: submission.visibility,
+    createdAt: submission.created_at,
+    potentialPoints: activity.default_points
+  }, 201)
+  })
+}))
 
-  } catch (error) {
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid submission data', details: error.errors },
-        { status: 400 }
-      )
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to create submission' },
-      { status: 500 }
-    )
+export const GET = withApiErrorHandling(async (request: NextRequest, context) => {
+  const { userId } = await auth()
+  
+  if (!userId) {
+    throw new AuthenticationError()
   }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const { userId } = await auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
 
     const url = new URL(request.url)
     const activityCode = url.searchParams.get('activity')
     const status = url.searchParams.get('status')
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100)
+    const offset = Math.max(parseInt(url.searchParams.get('offset') || '0'), 0)
 
     const whereClause: SubmissionWhereClause = {
       user_id: userId
@@ -225,36 +264,41 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const submissions = await prisma.submission.findMany({
-      where: whereClause,
-      include: {
-        activity: true,
-        attachments_rel: true
-      },
-      orderBy: {
-        created_at: 'desc'
-      }
-    })
+    const [submissions, totalCount] = await Promise.all([
+      prisma.submission.findMany({
+        where: whereClause,
+        include: {
+          activity: true,
+          attachments_rel: true
+        },
+        orderBy: {
+          created_at: 'desc'
+        },
+        take: limit,
+        skip: offset
+      }),
+      prisma.submission.count({
+        where: whereClause
+      })
+    ])
 
-    return NextResponse.json({
-      success: true,
-      data: submissions.map((submission: SubmissionWithActivity) => ({
-        id: submission.id,
-        activityCode: submission.activity_code,
-        activityName: submission.activity.name,
-        status: submission.status,
-        visibility: submission.visibility,
-        createdAt: submission.created_at,
-        updatedAt: submission.updated_at,
-        reviewNote: submission.review_note,
-        attachmentCount: submission.attachments_rel ? submission.attachments_rel.length : (Array.isArray(submission.attachments) ? submission.attachments.length : 0)
-      }))
-    })
-
-  } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch submissions' },
-      { status: 500 }
-    )
-  }
-}
+  return createSuccessResponse({
+    data: submissions.map((submission: SubmissionWithActivity) => ({
+      id: submission.id,
+      activityCode: submission.activity_code,
+      activityName: submission.activity.name,
+      status: submission.status,
+      visibility: submission.visibility,
+      createdAt: submission.created_at,
+      updatedAt: submission.updated_at,
+      reviewNote: submission.review_note,
+      attachmentCount: submission.attachments_rel.length
+    })),
+    pagination: {
+      total: totalCount,
+      limit,
+      offset,
+      hasMore: offset + limit < totalCount
+    }
+  })
+})

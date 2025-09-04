@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const { userId } = await auth();
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const body: unknown = await request.json();
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid request body', details: parsed.error.issues },
+        { success: false, error: 'Invalid request body', details: parsed.error.issues },
         { status: 400 }
       );
     }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to send email' },
+      { success: false, error: 'Failed to send email' },
       { status: 500 }
     );
   }

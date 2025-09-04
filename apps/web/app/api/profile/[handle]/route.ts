@@ -74,7 +74,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Check if user has any public submissions
     if (user.submissions.length === 0) {
       return NextResponse.json(
-        { error: 'Profile not found or not public' },
+        apiError('Profile not found or not public'),
         { status: 404 }
       )
     }

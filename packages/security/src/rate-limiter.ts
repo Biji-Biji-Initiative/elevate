@@ -46,18 +46,114 @@ interface RequestRecord {
 // In-memory store for rate limiting (fallback when Redis not configured)
 const store = new Map<string, RequestRecord>();
 
-// Cleanup old records every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, record] of store.entries()) {
-    if (record.resetTime <= now) {
-      store.delete(key);
-    }
-  }
-}, 5 * 60 * 1000);
-
 type RateLimitCounter = { allowed: number; blocked: number; lastReset: number };
 const rateLimitStats = new Map<string, RateLimitCounter>();
+
+// Cleanup manager for proper lifecycle management
+class CleanupManager {
+  private cleanupInterval: NodeJS.Timeout | null = null;
+  private isDestroyed = false;
+  private lastCleanup = Date.now();
+  
+  constructor() {
+    this.startCleanup();
+  }
+  
+  private startCleanup(): void {
+    if (this.cleanupInterval || this.isDestroyed) return;
+    
+    // In serverless environments, cleanup more frequently since processes are short-lived
+    // In traditional server environments, use standard 5-minute intervals
+    const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.FUNCTIONS_RUNTIME;
+    const cleanupIntervalMs = isServerless ? 30 * 1000 : 5 * 60 * 1000; // 30s for serverless, 5min for servers
+    
+    this.cleanupInterval = setInterval(() => {
+      this.performCleanup();
+    }, cleanupIntervalMs);
+    
+    // Ensure cleanup runs on process exit
+    if (typeof process !== 'undefined') {
+      process.on('beforeExit', () => this.destroy());
+      process.on('SIGTERM', () => this.destroy());
+      process.on('SIGINT', () => this.destroy());
+    }
+  }
+  
+  private performCleanup(): void {
+    if (this.isDestroyed) return;
+    
+    const now = Date.now();
+    let cleanedCount = 0;
+    
+    // Clean expired entries from the main store
+    const keysToDelete: string[] = [];
+    store.forEach((record, key) => {
+      if (record.resetTime <= now) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => {
+      store.delete(key);
+      cleanedCount++;
+    });
+    
+    // Clean old stats (reset counters older than 1 hour)
+    const oneHourAgo = now - (60 * 60 * 1000);
+    const statsToDelete: string[] = [];
+    rateLimitStats.forEach((counter, name) => {
+      if (counter.lastReset < oneHourAgo) {
+        statsToDelete.push(name);
+      }
+    });
+    statsToDelete.forEach(name => {
+      rateLimitStats.delete(name);
+    });
+    
+    this.lastCleanup = now;
+    
+    // In development, log cleanup activity
+    if (process.env.NODE_ENV === 'development' && cleanedCount > 0) {
+      console.log(`[RateLimit] Cleaned ${cleanedCount} expired entries, store size: ${store.size}`);
+    }
+  }
+  
+  public forceCleanup(): void {
+    this.performCleanup();
+  }
+  
+  public destroy(): void {
+    if (this.isDestroyed) return;
+    
+    this.isDestroyed = true;
+    
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+    
+    // Final cleanup
+    this.performCleanup();
+  }
+  
+  public getStats() {
+    return {
+      storeSize: store.size,
+      statsSize: rateLimitStats.size,
+      lastCleanup: this.lastCleanup,
+      isDestroyed: this.isDestroyed
+    };
+  }
+}
+
+// Global cleanup manager instance
+const cleanupManager = new CleanupManager();
+
+// Export cleanup utilities for testing and manual management
+export const cleanupUtils = {
+  forceCleanup: () => cleanupManager.forceCleanup(),
+  destroy: () => cleanupManager.destroy(),
+  getStats: () => cleanupManager.getStats(),
+};
 
 function getCounter(name: string): RateLimitCounter {
   const now = Date.now();
@@ -66,6 +162,8 @@ function getCounter(name: string): RateLimitCounter {
     c = { allowed: 0, blocked: 0, lastReset: now };
     rateLimitStats.set(name, c);
   }
+  // Update lastReset to current time to keep it active
+  c.lastReset = now;
   return c;
 }
 
@@ -80,10 +178,17 @@ export function resetRateLimitStats(): void {
 export class RateLimiter {
   private config: RateLimiterConfig;
   private name: string;
+  private lastUsed: number;
 
   constructor(config: RateLimiterConfig) {
     this.config = config;
     this.name = config.name || 'unnamed';
+    this.lastUsed = Date.now();
+    
+    // Note: In serverless environments (Vercel, AWS Lambda), the in-memory store
+    // is largely ineffective due to cold starts and instance isolation.
+    // The store is primarily useful for traditional server deployments.
+    // For serverless at scale, configure Redis via UPSTASH_REDIS_REST_URL.
   }
 
   private getKey(request: NextRequest): string {
@@ -121,9 +226,16 @@ export class RateLimiter {
     resetTime: number;
     totalRequests: number;
   }> {
+    this.lastUsed = Date.now();
     const key = this.getKey(request);
     const now = Date.now();
     const windowEnd = now + this.config.windowMs;
+    
+    // Trigger cleanup more frequently if store is getting large
+    // This helps prevent memory leaks in high-traffic scenarios
+    if (store.size > 1000 && now - cleanupManager.getStats().lastCleanup > 60000) {
+      cleanupManager.forceCleanup();
+    }
 
     const client = await getRedis();
     if (client) {
@@ -187,10 +299,7 @@ export class RateLimiter {
       
       if (!result.allowed) {
         return NextResponse.json(
-          { 
-            error: 'Rate limit exceeded',
-            retryAfter: Math.ceil((result.resetTime - Date.now()) / 1000)
-          },
+          { success: false, error: 'Rate limit exceeded', retryAfter: Math.ceil((result.resetTime - Date.now()) / 1000) },
           { 
             status: 429,
             headers: {
@@ -213,6 +322,32 @@ export class RateLimiter {
       
       return null; // Continue to next handler
     };
+  }
+  
+  // Get memory usage and performance stats for this limiter
+  public getMemoryStats() {
+    return {
+      name: this.name,
+      lastUsed: this.lastUsed,
+      storeSize: store.size,
+      config: {
+        windowMs: this.config.windowMs,
+        maxRequests: this.config.maxRequests
+      }
+    };
+  }
+  
+  // Clear entries related to this limiter (useful for testing)
+  public clearCache(): void {
+    const prefix = `${this.name}:`;
+    const keysToDelete: string[] = [];
+    store.forEach((_, key) => {
+      if (key.startsWith(prefix)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => store.delete(key));
+    rateLimitStats.delete(this.name);
   }
 }
 
@@ -248,6 +383,34 @@ export const adminRateLimiter = new RateLimiter({
   maxRequests: parseInt(process.env.ADMIN_RATE_LIMIT_RPM || '40'),
 });
 
+// File upload rate limiter (stricter)
+export const fileUploadRateLimiter = new RateLimiter({
+  name: 'file_upload',
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: parseInt(process.env.FILE_UPLOAD_RATE_LIMIT_RPM || '10'),
+});
+
+// Submission rate limiter (moderate)
+export const submissionRateLimiter = new RateLimiter({
+  name: 'submission',
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: parseInt(process.env.SUBMISSION_RATE_LIMIT_RPM || '20'),
+});
+
+// Auth-related endpoints (stricter)
+export const authRateLimiter = new RateLimiter({
+  name: 'auth',
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: parseInt(process.env.AUTH_RATE_LIMIT_PER_15MIN || '10'),
+});
+
+// Public API endpoints (moderate)
+export const publicApiRateLimiter = new RateLimiter({
+  name: 'public_api',
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: parseInt(process.env.PUBLIC_API_RATE_LIMIT_RPM || '100'),
+});
+
 // Helper function to apply rate limiting
 export async function withRateLimit(
   request: NextRequest,
@@ -258,10 +421,7 @@ export async function withRateLimit(
   
   if (!limitResult.allowed) {
     return NextResponse.json(
-      { 
-        error: 'Rate limit exceeded',
-        retryAfter: Math.ceil((limitResult.resetTime - Date.now()) / 1000)
-      },
+      { success: false, error: 'Rate limit exceeded', retryAfter: Math.ceil((limitResult.resetTime - Date.now()) / 1000) },
       { 
         status: 429,
         headers: {
@@ -282,4 +442,71 @@ export async function withRateLimit(
   response.headers.set('X-RateLimit-Reset', Math.ceil(limitResult.resetTime / 1000).toString());
   
   return response;
+}
+
+// Additional memory management utilities
+export const memoryUtils = {
+  // Get comprehensive memory usage stats
+  getMemoryUsage(): {
+    storeSize: number;
+    statsSize: number;
+    cleanupStats: ReturnType<typeof cleanupManager.getStats>;
+    estimatedMemoryKB: number;
+  } {
+    const storeSize = store.size;
+    const statsSize = rateLimitStats.size;
+    
+    // Rough estimate: each store entry ~100 bytes, each stat entry ~50 bytes
+    const estimatedMemoryKB = Math.round((storeSize * 100 + statsSize * 50) / 1024);
+    
+    return {
+      storeSize,
+      statsSize,
+      cleanupStats: cleanupManager.getStats(),
+      estimatedMemoryKB
+    };
+  },
+  
+  // Force immediate cleanup of all expired entries
+  forceCleanup: () => cleanupManager.forceCleanup(),
+  
+  // Clear all rate limit data (useful for tests or emergency cleanup)
+  clearAll(): void {
+    store.clear();
+    rateLimitStats.clear();
+  },
+  
+  // Get entries that are about to expire (within next 5 minutes)
+  getExpiringEntries(withinMs = 5 * 60 * 1000): Array<{ key: string; expiresIn: number }> {
+    const now = Date.now();
+    const threshold = now + withinMs;
+    const expiring: Array<{ key: string; expiresIn: number }> = [];
+    
+    store.forEach((record, key) => {
+      if (record.resetTime <= threshold && record.resetTime > now) {
+        expiring.push({
+          key,
+          expiresIn: record.resetTime - now
+        });
+      }
+    });
+    
+    return expiring.sort((a, b) => a.expiresIn - b.expiresIn);
+  }
+};
+
+// Warning: Monitor memory usage in production
+if (typeof process !== 'undefined') {
+  // Log memory warnings in production if store grows too large
+  const memoryWarningInterval = setInterval(() => {
+    const usage = memoryUtils.getMemoryUsage();
+    
+    // Warn if store has more than 5000 entries (indicates potential memory leak)
+    if (usage.storeSize > 5000) {
+      console.warn(`[RateLimit] WARNING: Large in-memory store detected. Size: ${usage.storeSize} entries, ~${usage.estimatedMemoryKB}KB. Consider using Redis for production.`);
+    }
+  }, 10 * 60 * 1000); // Check every 10 minutes
+  
+  // Clear the warning interval on process exit
+  process.on('beforeExit', () => clearInterval(memoryWarningInterval));
 }

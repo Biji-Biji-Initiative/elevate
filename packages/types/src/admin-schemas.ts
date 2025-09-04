@@ -1,6 +1,16 @@
 import { z } from 'zod'
+import { 
+  UserRoleSchema,
+  HandleSchema,
+  EmailSchema,
+  DateTimeWithOffsetSchema,
+  ActivityFilterSchema,
+  StatusFilterSchema,
+  // Legacy aliases for backward compatibility
+  RoleEnum
+} from './domain-constants.js'
 
-export const RoleEnum = z.enum(['PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN'])
+// RoleEnum is now imported from domain constants
 
 export const ReviewSubmissionSchema = z.object({
   submissionId: z.string().min(1),
@@ -17,16 +27,16 @@ export const BulkReviewSubmissionsSchema = z.object({
 
 export const UpdateUserSchema = z.object({
   userId: z.string().min(1),
-  role: RoleEnum.optional(),
+  role: UserRoleSchema.optional(),
   school: z.string().max(200).optional(),
   cohort: z.string().max(200).optional(),
   name: z.string().max(200).optional(),
-  handle: z.string().regex(/^[a-z0-9_]{3,30}$/i).optional(),
+  handle: HandleSchema.optional(),
 })
 
 export const BulkUpdateUsersSchema = z.object({
   userIds: z.array(z.string().min(1)).min(1).max(100),
-  role: RoleEnum,
+  role: UserRoleSchema,
 })
 
 export const AssignBadgeSchema = z.object({
@@ -38,18 +48,18 @@ export const AssignBadgeSchema = z.object({
 export const RemoveBadgeSchema = AssignBadgeSchema
 
 export const AnalyticsQuerySchema = z.object({
-  startDate: z.string().datetime({ offset: true }).optional(),
-  endDate: z.string().datetime({ offset: true }).optional(),
+  startDate: DateTimeWithOffsetSchema.optional(),
+  endDate: DateTimeWithOffsetSchema.optional(),
   cohort: z.string().max(200).optional(),
 })
 
 export const ExportsQuerySchema = z.object({
   type: z.enum(['submissions', 'users', 'leaderboard', 'points']),
   format: z.literal('csv'),
-  startDate: z.string().datetime({ offset: true }).optional(),
-  endDate: z.string().datetime({ offset: true }).optional(),
-  activity: z.enum(['ALL', 'LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']).optional(),
-  status: z.enum(['ALL', 'PENDING', 'APPROVED', 'REJECTED']).optional(),
+  startDate: DateTimeWithOffsetSchema.optional(),
+  endDate: DateTimeWithOffsetSchema.optional(),
+  activity: ActivityFilterSchema.optional(),
+  status: StatusFilterSchema.optional(),
   cohort: z.string().max(200).optional(),
 })
 
@@ -58,13 +68,13 @@ export const KajabiReprocessSchema = z.object({
 })
 
 export const KajabiTestSchema = z.object({
-  user_email: z.string().email(),
+  user_email: EmailSchema,
   course_name: z.string().min(1).max(200),
 })
 
 // Email notification schemas
 export const ApprovalEmailSchema = z.object({
-  email: z.string().email(),
+  email: EmailSchema,
   name: z.string().min(1).max(200),
   activityName: z.string().min(1).max(100),
   pointsAwarded: z.number().int().min(0),
@@ -76,7 +86,7 @@ export const ApprovalEmailSchema = z.object({
 })
 
 export const RejectionEmailSchema = z.object({
-  email: z.string().email(),
+  email: EmailSchema,
   name: z.string().min(1).max(200),
   activityName: z.string().min(1).max(100),
   reviewerNote: z.string().min(1),
@@ -85,7 +95,7 @@ export const RejectionEmailSchema = z.object({
 })
 
 export const SubmissionConfirmationEmailSchema = z.object({
-  email: z.string().email(),
+  email: EmailSchema,
   name: z.string().min(1).max(200),
   activityName: z.string().min(1).max(100),
   submissionDate: z.string().min(1),
@@ -93,7 +103,7 @@ export const SubmissionConfirmationEmailSchema = z.object({
 })
 
 export const WelcomeEmailSchema = z.object({
-  email: z.string().email(),
+  email: EmailSchema,
   name: z.string().min(1).max(200),
   dashboardUrl: z.string().url(),
 })

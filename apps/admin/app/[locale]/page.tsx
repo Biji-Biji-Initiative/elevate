@@ -5,89 +5,15 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 import { withRoleGuard } from '@elevate/auth/context'
-import { adminClient } from '@/lib/admin-client'
+import { adminClient, AdminClientError, type OverviewStats, type Distributions, type Trends, type RecentActivity, type Performance } from '@/lib/admin-client'
 import { Button , StatusBadge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 
 interface AnalyticsData {
-  overview: {
-    submissions: {
-      total: number
-      pending: number
-      approved: number
-      rejected: number
-      approvalRate: number
-    }
-    users: {
-      total: number
-      active: number
-      withSubmissions: number
-      withBadges: number
-      activationRate: number
-    }
-    points: {
-      totalAwarded: number
-      totalEntries: number
-      avgPerEntry: number
-    }
-    badges: {
-      totalBadges: number
-      totalEarned: number
-      uniqueEarners: number
-    }
-    reviews: {
-      pendingReviews: number
-      avgReviewTimeHours: number
-    }
-  }
-  distributions: {
-    submissionsByStatus: Array<{ status: string; count: number }>
-    submissionsByActivity: Array<{ 
-      activity: string
-      activityName?: string | undefined
-      count: number 
-    }>
-    usersByRole: Array<{ role: string; count: number }>
-    pointsByActivity: Array<{
-      activity: string
-      activityName?: string | undefined
-      totalPoints: number
-      entries: number
-    }>
-  }
-  recentActivity: {
-    submissions: Array<{
-      id: string
-      user: { name: string; handle: string }
-      activity: { name: string }
-      status: string
-      created_at: string
-    }>
-    approvals: Array<{
-      id: string
-      user: { name: string; handle: string }
-      activity: { name: string }
-      updated_at: string
-    }>
-    users: Array<{
-      id: string
-      name: string
-      handle: string
-      email: string
-      role: string
-      created_at: string
-    }>
-  }
-  performance: {
-    reviewers: Array<{
-      id: string
-      name: string
-      handle: string
-      role: string
-      approved: number
-      rejected: number
-      total: number
-    }>
-  }
+  overview: OverviewStats
+  distributions: Distributions
+  trends: Trends
+  recentActivity: RecentActivity
+  performance: Performance
 }
 
 function AdminDashboard() {
@@ -107,12 +33,11 @@ function AdminDashboard() {
   useEffect(() => {
     const fetchCohorts = async () => {
       try {
-        setCohorts(await adminClient.getCohorts())
+        const cohortData = await adminClient.getCohorts()
+        setCohorts(cohortData)
       } catch (error) {
         // Cohorts are optional for UI, don't break on fetch failure
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Failed to fetch cohorts:', error);
-        }
+        console.warn('Failed to fetch cohorts:', error instanceof AdminClientError ? error.message : 'Unknown error')
       }
     }
     void fetchCohorts()
@@ -121,14 +46,16 @@ function AdminDashboard() {
   const fetchAnalytics = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams()
-      if (dateRange.startDate) params.set('startDate', dateRange.startDate)
-      if (dateRange.endDate) params.set('endDate', dateRange.endDate)
-      if (dateRange.cohort !== 'ALL') params.set('cohort', dateRange.cohort)
+      const params: { startDate?: string; endDate?: string; cohort?: string } = {}
+      if (dateRange.startDate) params.startDate = dateRange.startDate
+      if (dateRange.endDate) params.endDate = dateRange.endDate
+      if (dateRange.cohort !== 'ALL') params.cohort = dateRange.cohort
 
-      const result = await adminClient.getAnalytics(Object.fromEntries(params) as { startDate?: string; endDate?: string; cohort?: string })
+      const result = await adminClient.getAnalytics(params)
       setAnalytics(result)
     } catch (error) {
+      console.error('Failed to fetch analytics:', error instanceof AdminClientError ? error.message : 'Unknown error')
+      setAnalytics(null)
     } finally {
       setLoading(false)
     }

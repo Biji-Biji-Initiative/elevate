@@ -1,0 +1,781 @@
+name: Git Repository Hygiene Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, staging]
+  schedule:
+    # Weekly repository hygiene audit
+    - cron: '0 5 * * 0'
+  workflow_dispatch:
+    inputs:
+      deep_scan:
+        description: 'Perform deep repository scan'
+        required: false
+        default: 'false'
+        type: boolean
+      fix_issues:
+        description: 'Auto-fix minor issues'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  git-hygiene-check:
+    name: Git Repository Hygiene
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for comprehensive analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🧹 Comprehensive Git Hygiene Analysis
+        id: hygiene-check
+        run: |
+          echo "🧹 Starting comprehensive Git repository hygiene check..."
+          
+          # Create results directory
+          mkdir -p git-hygiene-results
+          
+          hygiene_violations=false
+          hygiene_warnings=false
+          auto_fixes_applied=false
+          
+          log() {
+            echo "[$(date +'%H:%M:%S')] $1"
+          }
+          
+          log "📊 Step 1: Repository structure analysis"
+          
+          # Analyze repository structure
+          {
+            echo "# Repository Structure Analysis"
+            echo "Generated: $(date)"
+            echo ""
+            
+            echo "## Basic Repository Info"
+            echo "- **Total commits**: $(git rev-list --all --count)"
+            echo "- **Branches**: $(git branch -r | wc -l) remote, $(git branch | wc -l) local"
+            echo "- **Repository size**: $(du -sh .git | cut -f1)"
+            echo "- **Total files**: $(find . -type f | grep -v '\.git/' | wc -l)"
+            echo ""
+            
+            # Check repository age and activity
+            first_commit=$(git log --reverse --format="%ad" --date=short | head -1)
+            last_commit=$(git log -1 --format="%ad" --date=short)
+            echo "- **First commit**: $first_commit"
+            echo "- **Last commit**: $last_commit"
+            echo ""
+            
+            echo "## Directory Structure"
+            tree -L 2 -I 'node_modules|.git' . 2>/dev/null || {
+              find . -type d -not -path '*/node_modules/*' -not -path '*/.git/*' | head -20 | sort
+            }
+            
+          } > git-hygiene-results/structure-analysis.md
+          
+          log "📊 Step 2: File tracking hygiene"
+          
+          # Check file tracking issues
+          {
+            echo "# File Tracking Hygiene"
+            echo ""
+            
+            tracking_issues=0
+            
+            echo "## Inappropriate File Tracking"
+            
+            # Check for large files
+            echo "### Large Files (>10MB)"
+            large_files=$(find . -type f -size +10M | grep -v '\.git/' || true)
+            if [[ -n "$large_files" ]]; then
+              echo "❌ Found large files that should not be tracked:"
+              echo "$large_files" | while read -r file; do
+                size=$(ls -lh "$file" | awk '{print $5}')
+                echo "  - $file ($size)"
+              done
+              tracking_issues=$((tracking_issues + 1))
+              hygiene_violations=true
+            else
+              echo "✅ No large files found"
+            fi
+            
+            # Check for binary files in git history
+            echo ""
+            echo "### Binary Files in History"
+            if [[ "${{ github.event.inputs.deep_scan }}" == "true" || "${{ github.event_name }}" == "schedule" ]]; then
+              binary_files=$(git rev-list --all --objects | grep -E '\.(jpg|jpeg|png|gif|pdf|zip|tar|gz|exe|dmg|iso)$' | head -10 || true)
+              if [[ -n "$binary_files" ]]; then
+                echo "⚠️ Found binary files in git history:"
+                echo "$binary_files" | while read -r obj_file; do
+                  echo "  - $obj_file"
+                done
+                hygiene_warnings=true
+              else
+                echo "✅ No binary files found in recent history"
+              fi
+            else
+              echo "ℹ️ Deep scan disabled - enable for full binary file check"
+            fi
+            
+            # Check for tracked build artifacts
+            echo ""
+            echo "### Build Artifacts"
+            build_artifacts=$(git ls-files | grep -E '\.(log|tmp|cache|tsbuildinfo)$|/dist/|/build/|\.next/' || true)
+            if [[ -n "$build_artifacts" ]]; then
+              echo "❌ Found tracked build artifacts:"
+              echo "$build_artifacts" | while read -r file; do
+                echo "  - $file"
+              done
+              tracking_issues=$((tracking_issues + 1))
+              hygiene_violations=true
+            else
+              echo "✅ No tracked build artifacts"
+            fi
+            
+            # Check for sensitive files
+            echo ""
+            echo "### Potentially Sensitive Files"
+            sensitive_patterns=(
+              "\.env$"
+              "\.env\."
+              "\.key$"
+              "\.pem$" 
+              "\.p12$"
+              "\.pfx$"
+              "id_rsa"
+              "\.secret"
+              "password"
+              "credentials"
+            )
+            
+            sensitive_found=false
+            for pattern in "${sensitive_patterns[@]}"; do
+              sensitive_files=$(git ls-files | grep -i "$pattern" || true)
+              if [[ -n "$sensitive_files" ]]; then
+                if [[ "$sensitive_found" == "false" ]]; then
+                  echo "⚠️ Found potentially sensitive files:"
+                  sensitive_found=true
+                fi
+                echo "$sensitive_files" | while read -r file; do
+                  echo "  - $file (pattern: $pattern)"
+                done
+                hygiene_warnings=true
+              fi
+            done
+            
+            if [[ "$sensitive_found" == "false" ]]; then
+              echo "✅ No obviously sensitive files found"
+            fi
+            
+            echo ""
+            echo "**Summary**: $tracking_issues critical tracking issues found"
+            
+          } > git-hygiene-results/tracking-hygiene.md
+          
+          log "📊 Step 3: Commit message analysis"
+          
+          # Analyze commit quality
+          {
+            echo "# Commit Message Analysis"
+            echo ""
+            
+            # Get recent commits for analysis
+            if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+              # Analyze PR commits
+              base_sha="${{ github.event.pull_request.base.sha }}"
+              head_sha="${{ github.event.pull_request.head.sha }}"
+              commit_range="$base_sha..$head_sha"
+              echo "## PR Commits Analysis"
+              echo "Range: $commit_range"
+            else
+              # Analyze recent commits
+              commit_range="HEAD~10..HEAD"
+              echo "## Recent Commits Analysis"
+              echo "Range: Last 10 commits"
+            fi
+            echo ""
+            
+            # Extract commit messages
+            commits=$(git log --format="%h|%s|%an|%ad" --date=short $commit_range 2>/dev/null || true)
+            
+            if [[ -n "$commits" ]]; then
+              commit_issues=0
+              
+              echo "### Commit Message Quality"
+              
+              # Check for conventional commit format
+              conventional_count=0
+              total_count=0
+              
+              while IFS='|' read -r hash subject author date; do
+                if [[ -n "$hash" ]]; then
+                  total_count=$((total_count + 1))
+                  echo ""
+                  echo "**$hash** ($date) - $author"
+                  echo "Message: *$subject*"
+                  
+                  # Check conventional commit format
+                  if echo "$subject" | grep -qE '^(feat|fix|docs|style|refactor|test|chore|ci|build|perf)(\(.+\))?!?:'; then
+                    echo "✅ Follows conventional commit format"
+                    conventional_count=$((conventional_count + 1))
+                  else
+                    echo "⚠️ Does not follow conventional commit format"
+                  fi
+                  
+                  # Check message length
+                  subject_length=${#subject}
+                  if [[ $subject_length -gt 50 ]]; then
+                    echo "⚠️ Subject line too long ($subject_length > 50 chars)"
+                    hygiene_warnings=true
+                  elif [[ $subject_length -lt 10 ]]; then
+                    echo "⚠️ Subject line too short ($subject_length < 10 chars)"
+                    hygiene_warnings=true
+                  else
+                    echo "✅ Good subject line length ($subject_length chars)"
+                  fi
+                  
+                  # Check for common bad patterns
+                  if echo "$subject" | grep -qiE '^(wip|temp|test|fix|update)$'; then
+                    echo "⚠️ Generic/temporary commit message"
+                    commit_issues=$((commit_issues + 1))
+                    hygiene_warnings=true
+                  fi
+                  
+                  if echo "$subject" | grep -q "<<<<<<< HEAD\|>>>>>>> \|======="; then
+                    echo "❌ Contains merge conflict markers"
+                    commit_issues=$((commit_issues + 1))
+                    hygiene_violations=true
+                  fi
+                fi
+              done <<< "$commits"
+              
+              echo ""
+              echo "### Summary"
+              if [[ $total_count -gt 0 ]]; then
+                conventional_percentage=$((conventional_count * 100 / total_count))
+                echo "- **Total commits analyzed**: $total_count"
+                echo "- **Conventional commits**: $conventional_count ($conventional_percentage%)"
+                echo "- **Commit issues**: $commit_issues"
+                
+                if [[ $conventional_percentage -lt 50 ]]; then
+                  echo "⚠️ Less than 50% of commits follow conventional format"
+                  hygiene_warnings=true
+                fi
+              else
+                echo "- No commits to analyze"
+              fi
+              
+            else
+              echo "No commits found in range $commit_range"
+            fi
+            
+          } > git-hygiene-results/commit-analysis.md
+          
+          log "📊 Step 4: Branch and merge analysis"
+          
+          # Analyze branching hygiene
+          {
+            echo "# Branch and Merge Analysis"
+            echo ""
+            
+            echo "## Branch Structure"
+            
+            # List all branches
+            remote_branches=$(git branch -r --no-merged main 2>/dev/null | grep -v HEAD | wc -l || echo "0")
+            local_branches=$(git branch --no-merged main 2>/dev/null | wc -l || echo "0")
+            
+            echo "- **Unmerged remote branches**: $remote_branches"
+            echo "- **Unmerged local branches**: $local_branches"
+            
+            if [[ $remote_branches -gt 20 ]]; then
+              echo "⚠️ High number of unmerged remote branches - consider cleanup"
+              hygiene_warnings=true
+            fi
+            
+            echo ""
+            echo "## Stale Branches"
+            
+            # Find stale branches (older than 30 days)
+            if [[ "${{ github.event.inputs.deep_scan }}" == "true" || "${{ github.event_name }}" == "schedule" ]]; then
+              stale_branches=$(git for-each-ref --format='%(refname:short) %(committerdate)' refs/remotes | \
+                awk '$2 < "'$(date -d '30 days ago' '+%Y-%m-%d')'"' | head -10 || true)
+              
+              if [[ -n "$stale_branches" ]]; then
+                echo "⚠️ Found stale branches (>30 days):"
+                echo "$stale_branches" | while read -r branch date; do
+                  echo "  - $branch (last commit: $date)"
+                done
+                hygiene_warnings=true
+              else
+                echo "✅ No stale branches found"
+              fi
+            else
+              echo "ℹ️ Deep scan disabled - enable for stale branch detection"
+            fi
+            
+            echo ""
+            echo "## Merge History"
+            
+            # Check for merge commits vs squash commits
+            merge_commits=$(git log --merges --oneline HEAD~20..HEAD 2>/dev/null | wc -l || echo "0")
+            total_commits=$(git log --oneline HEAD~20..HEAD 2>/dev/null | wc -l || echo "1")
+            
+            if [[ $total_commits -gt 0 ]]; then
+              merge_percentage=$((merge_commits * 100 / total_commits))
+              echo "- **Merge commits in last 20**: $merge_commits ($merge_percentage%)"
+              
+              if [[ $merge_percentage -gt 50 ]]; then
+                echo "⚠️ High merge commit ratio - consider squash merging"
+                hygiene_warnings=true
+              fi
+            fi
+            
+          } > git-hygiene-results/branch-analysis.md
+          
+          log "📊 Step 5: .gitignore completeness check"
+          
+          # Check .gitignore completeness
+          {
+            echo "# .gitignore Completeness Check"
+            echo ""
+            
+            if [[ ! -f ".gitignore" ]]; then
+              echo "❌ .gitignore file is missing!"
+              hygiene_violations=true
+            else
+              echo "✅ .gitignore file exists"
+              
+              # Essential patterns for this project
+              essential_patterns=(
+                "node_modules/"
+                "dist/"
+                "*.tsbuildinfo"
+                ".next/"
+                ".turbo/"
+                ".env.local"
+                ".env.*.local"
+                "*.log"
+                ".DS_Store"
+                "Thumbs.db"
+              )
+              
+              echo ""
+              echo "## Essential Pattern Check"
+              
+              missing_patterns=()
+              for pattern in "${essential_patterns[@]}"; do
+                if grep -q "^$pattern" .gitignore; then
+                  echo "✅ $pattern"
+                else
+                  echo "❌ $pattern (missing)"
+                  missing_patterns+=("$pattern")
+                  hygiene_violations=true
+                fi
+              done
+              
+              if [[ ${#missing_patterns[@]} -gt 0 ]]; then
+                echo ""
+                echo "### Auto-fix Available"
+                if [[ "${{ github.event.inputs.fix_issues }}" == "true" ]]; then
+                  echo "Adding missing patterns to .gitignore..."
+                  for pattern in "${missing_patterns[@]}"; do
+                    echo "$pattern" >> .gitignore
+                    echo "Added: $pattern"
+                  done
+                  auto_fixes_applied=true
+                  echo "✅ Auto-fix applied - missing patterns added"
+                else
+                  echo "ℹ️ Run with fix_issues=true to auto-add missing patterns"
+                fi
+              fi
+              
+              echo ""
+              echo "## Redundant Patterns Check"
+              
+              # Check for overly broad patterns
+              broad_patterns=$(grep -E '^\*$|^\*\*$|^/$' .gitignore || true)
+              if [[ -n "$broad_patterns" ]]; then
+                echo "⚠️ Found overly broad patterns:"
+                echo "$broad_patterns" | while read -r pattern; do
+                  echo "  - '$pattern'"
+                done
+                hygiene_warnings=true
+              else
+                echo "✅ No overly broad patterns found"
+              fi
+            fi
+            
+          } > git-hygiene-results/gitignore-check.md
+          
+          log "📊 Step 6: Repository security analysis"
+          
+          # Security-related checks
+          {
+            echo "# Repository Security Analysis"
+            echo ""
+            
+            security_issues=0
+            
+            echo "## File Permission Analysis"
+            
+            # Check for files with suspicious permissions
+            executable_files=$(find . -type f -perm -111 -not -path '*/node_modules/*' -not -path '*/.git/*' | head -20 || true)
+            if [[ -n "$executable_files" ]]; then
+              echo "ℹ️ Found executable files:"
+              echo "$executable_files" | while read -r file; do
+                echo "  - $file"
+                
+                # Check if it should be executable
+                if [[ "$file" =~ \.(sh|py|pl)$ ]] || [[ "$(basename "$file")" =~ ^(setup|install|deploy)$ ]]; then
+                  echo "    ✅ Appropriately executable"
+                else
+                  echo "    ⚠️ May not need execute permission"
+                  hygiene_warnings=true
+                fi
+              done
+            else
+              echo "✅ No unexpected executable files"
+            fi
+            
+            echo ""
+            echo "## Symlink Analysis"
+            
+            # Check for symbolic links
+            symlinks=$(find . -type l -not -path '*/node_modules/*' -not -path '*/.git/*' || true)
+            if [[ -n "$symlinks" ]]; then
+              echo "⚠️ Found symbolic links:"
+              echo "$symlinks" | while read -r link; do
+                target=$(readlink "$link")
+                echo "  - $link → $target"
+                
+                # Check if target exists
+                if [[ ! -e "$link" ]]; then
+                  echo "    ❌ Broken symlink"
+                  security_issues=$((security_issues + 1))
+                  hygiene_violations=true
+                fi
+              done
+              hygiene_warnings=true
+            else
+              echo "✅ No symbolic links found"
+            fi
+            
+            echo ""
+            echo "## Hidden File Analysis"
+            
+            # Check for hidden files (excluding standard ones)
+            hidden_files=$(find . -name ".*" -type f -not -path '*/.git/*' -not -name '.gitignore' -not -name '.gitattributes' | head -10 || true)
+            if [[ -n "$hidden_files" ]]; then
+              echo "ℹ️ Found hidden files:"
+              echo "$hidden_files" | while read -r file; do
+                basename_file=$(basename "$file")
+                echo "  - $file"
+                
+                # Check for suspicious hidden files
+                if [[ "$basename_file" =~ ^\.(ssh|aws|docker)$ ]] || [[ "$file" =~ \.(key|pem)$ ]]; then
+                  echo "    ⚠️ Potentially sensitive hidden file"
+                  security_issues=$((security_issues + 1))
+                  hygiene_warnings=true
+                fi
+              done
+            else
+              echo "✅ No unexpected hidden files"
+            fi
+            
+            echo ""
+            echo "**Summary**: $security_issues security issues found"
+            
+          } > git-hygiene-results/security-analysis.md
+          
+          log "📊 Step 7: Performance and optimization analysis"
+          
+          # Repository performance analysis
+          {
+            echo "# Repository Performance Analysis"
+            echo ""
+            
+            echo "## Repository Size Analysis"
+            
+            # Analyze repository size breakdown
+            git_size=$(du -sh .git | cut -f1)
+            repo_size=$(du -sh . | cut -f1)
+            
+            echo "- **Total repository size**: $repo_size"
+            echo "- **Git database size**: $git_size"
+            
+            # Calculate working tree size
+            working_tree_size=$(du -sh --exclude=.git . | cut -f1)
+            echo "- **Working tree size**: $working_tree_size"
+            
+            echo ""
+            echo "## Large Object Detection"
+            
+            if [[ "${{ github.event.inputs.deep_scan }}" == "true" || "${{ github.event_name }}" == "schedule" ]]; then
+              # Find largest objects in git history
+              large_objects=$(git rev-list --all --objects | \
+                git cat-file --batch-check='%(objectname) %(objecttype) %(objectsize) %(rest)' | \
+                awk '$3 > 1048576 {print $3, $4}' | sort -rn | head -5 || true)
+              
+              if [[ -n "$large_objects" ]]; then
+                echo "⚠️ Found large objects in git history:"
+                echo "$large_objects" | while read -r size file; do
+                  size_mb=$((size / 1048576))
+                  echo "  - $file (${size_mb}MB)"
+                done
+                hygiene_warnings=true
+              else
+                echo "✅ No large objects found in git history"
+              fi
+            else
+              echo "ℹ️ Deep scan disabled - enable for large object detection"
+            fi
+            
+            echo ""
+            echo "## Optimization Recommendations"
+            
+            # Provide optimization suggestions
+            recommendations=()
+            
+            if [[ ${git_size%?} -gt 100 ]]; then  # If git size > 100MB
+              recommendations+=("Consider git gc --aggressive for size optimization")
+            fi
+            
+            if [[ "$hygiene_warnings" == "true" ]]; then
+              recommendations+=("Address hygiene warnings to improve repository quality")
+            fi
+            
+            if [[ ${#recommendations[@]} -gt 0 ]]; then
+              for rec in "${recommendations[@]}"; do
+                echo "💡 $rec"
+              done
+            else
+              echo "✅ Repository is well-optimized"
+            fi
+            
+          } > git-hygiene-results/performance-analysis.md
+          
+          log "📊 Step 8: Final hygiene assessment"
+          
+          # Generate final assessment
+          {
+            echo "# Git Repository Hygiene Assessment"
+            echo "Generated: $(date)"
+            echo ""
+            echo "## Overall Status"
+            echo "- **Hygiene Violations**: $(if [[ "$hygiene_violations" == "true" ]]; then echo "YES ❌"; else echo "NO ✅"; fi)"
+            echo "- **Hygiene Warnings**: $(if [[ "$hygiene_warnings" == "true" ]]; then echo "YES ⚠️"; else echo "NO ✅"; fi)"
+            echo "- **Auto-fixes Applied**: $(if [[ "$auto_fixes_applied" == "true" ]]; then echo "YES 🔧"; else echo "NO"; fi)"
+            echo ""
+            echo "## Checks Performed"
+            echo "- ✅ Repository structure analysis"
+            echo "- ✅ File tracking hygiene"
+            echo "- ✅ Commit message quality"
+            echo "- ✅ Branch and merge analysis"
+            echo "- ✅ .gitignore completeness"
+            echo "- ✅ Security analysis"
+            echo "- ✅ Performance analysis"
+            echo ""
+            
+            if [[ "$hygiene_violations" == "true" ]]; then
+              echo "## ❌ Critical Issues"
+              echo "These must be fixed immediately:"
+              echo "- Check tracking-hygiene.md for inappropriate files"
+              echo "- Review commit-analysis.md for commit problems"
+              echo "- Examine gitignore-check.md for missing patterns"
+              echo ""
+            fi
+            
+            if [[ "$hygiene_warnings" == "true" ]]; then
+              echo "## ⚠️ Recommendations"
+              echo "Consider addressing these improvements:"
+              echo "- Review branch-analysis.md for cleanup opportunities"
+              echo "- Check security-analysis.md for best practices"
+              echo "- See performance-analysis.md for optimization tips"
+              echo ""
+            fi
+            
+            if [[ "$hygiene_violations" != "true" && "$hygiene_warnings" != "true" ]]; then
+              echo "## 🎉 Excellent Repository Hygiene"
+              echo "Your repository follows all best practices!"
+              echo "- Clean file tracking"
+              echo "- Quality commit messages"
+              echo "- Proper .gitignore configuration"
+              echo "- Good security posture"
+              echo "- Optimized performance"
+            fi
+            
+            if [[ "$auto_fixes_applied" == "true" ]]; then
+              echo ""
+              echo "## 🔧 Auto-fixes Applied"
+              echo "The following issues were automatically resolved:"
+              echo "- Added missing .gitignore patterns"
+              echo ""
+              echo "⚠️ Please commit these changes to your branch."
+            fi
+            
+          } > git-hygiene-results/final-assessment.md
+          
+          # Set outputs
+          echo "hygiene-violations=$hygiene_violations" >> $GITHUB_OUTPUT
+          echo "hygiene-warnings=$hygiene_warnings" >> $GITHUB_OUTPUT
+          echo "auto-fixes-applied=$auto_fixes_applied" >> $GITHUB_OUTPUT
+          
+          if [[ "$hygiene_violations" == "true" ]]; then
+            log "❌ GIT HYGIENE VIOLATIONS DETECTED"
+            echo "final-status=violations" >> $GITHUB_OUTPUT
+            exit 1
+          elif [[ "$hygiene_warnings" == "true" ]]; then
+            log "⚠️ GIT HYGIENE WARNINGS FOUND"
+            echo "final-status=warnings" >> $GITHUB_OUTPUT
+          else
+            log "✅ REPOSITORY HYGIENE EXCELLENT"
+            echo "final-status=excellent" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔧 Commit auto-fixes
+        if: steps.hygiene-check.outputs.auto-fixes-applied == 'true' && github.event.inputs.fix_issues == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          git add .gitignore
+          git commit -m "fix: auto-fix git hygiene issues [skip ci]
+          
+          - Added missing .gitignore patterns
+          - Applied by Git Hygiene Check workflow
+          
+          Co-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          
+          echo "✅ Auto-fixes committed"
+
+      - name: 📊 Upload hygiene analysis results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: git-hygiene-results-${{ github.sha }}
+          path: git-hygiene-results/
+          retention-days: 30
+
+      - name: 📝 Comment on PR with hygiene issues
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let assessment = '';
+            try {
+              assessment = fs.readFileSync('git-hygiene-results/final-assessment.md', 'utf8');
+            } catch (error) {
+              assessment = 'Could not read assessment file';
+            }
+            
+            const hasViolations = '${{ steps.hygiene-check.outputs.hygiene-violations }}' === 'true';
+            const hasWarnings = '${{ steps.hygiene-check.outputs.hygiene-warnings }}' === 'true';
+            const autoFixesApplied = '${{ steps.hygiene-check.outputs.auto-fixes-applied }}' === 'true';
+            
+            const comment = `## 🧹 Git Repository Hygiene Check ${hasViolations ? '❌' : '⚠️'}
+            
+            ${hasViolations ? 'Your changes have introduced git hygiene violations that must be fixed.' : 'Git hygiene warnings detected - please review.'}
+            
+            ### 📊 Hygiene Assessment
+            ${assessment}
+            
+            ### 🛠️ How to Fix Hygiene Issues
+            
+            #### For Tracking Issues:
+            \`\`\`bash
+            # Remove inappropriately tracked files
+            git rm --cached path/to/large/file
+            git rm -r --cached packages/*/dist/
+            
+            # Add to .gitignore
+            echo "dist/" >> .gitignore
+            echo "*.log" >> .gitignore
+            echo "node_modules/" >> .gitignore
+            \`\`\`
+            
+            #### For Commit Message Issues:
+            \`\`\`bash
+            # Use conventional commit format
+            git commit -m "feat: add new feature"
+            git commit -m "fix: resolve routing issue"
+            git commit -m "docs: update README"
+            
+            # Interactive rebase to fix recent commits
+            git rebase -i HEAD~3
+            \`\`\`
+            
+            #### For .gitignore Issues:
+            \`\`\`bash
+            # The workflow can auto-fix missing patterns
+            # Re-run with fix_issues=true to apply automatically
+            
+            # Or manually add missing patterns:
+            echo "dist/" >> .gitignore
+            echo "*.tsbuildinfo" >> .gitignore
+            echo ".next/" >> .gitignore
+            echo ".turbo/" >> .gitignore
+            \`\`\`
+            
+            ${autoFixesApplied ? `
+            ### 🔧 Auto-fixes Applied
+            Some issues were automatically fixed! Make sure to pull the latest changes:
+            \`\`\`bash
+            git pull origin ${{ github.head_ref }}
+            \`\`\`
+            ` : ''}
+            
+            ### 🧪 Local Testing
+            \`\`\`bash
+            # Run hygiene check locally
+            git status --porcelain  # Should be clean
+            git log --oneline -5    # Check commit messages
+            
+            # Check for large files
+            find . -size +10M -type f
+            
+            # Validate .gitignore
+            git check-ignore -v suspicious-file
+            \`\`\`
+            
+            ### 📚 Best Practices
+            - Use conventional commit messages (feat:, fix:, docs:, etc.)
+            - Keep commits focused and atomic
+            - Don't track build artifacts or large files
+            - Maintain a comprehensive .gitignore
+            - Regular cleanup of stale branches
+            
+            ### 🔗 View Full Analysis
+            [Download hygiene analysis results](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ---
+            *This check ensures repository cleanliness and follows Git best practices.*`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: 🎉 Hygiene check success
+        if: success() && steps.hygiene-check.outputs.final-status == 'excellent'
+        run: |
+          echo "🎉 Git Repository Hygiene Check Successful!"
+          echo ""
+          echo "✅ Repository structure is clean"
+          echo "🗂️ File tracking follows best practices"
+          echo "💬 Commit messages are high quality"
+          echo "🌿 Branch hygiene is excellent"
+          echo "🔒 Security posture is good"
+          echo "⚡ Performance is optimized"

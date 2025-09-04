@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
 import { prisma, type Prisma } from '@elevate/db';
+import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import { toPrismaJson, parseKajabiWebhook, KajabiReprocessSchema, type KajabiTagEvent, buildAuditMeta } from '@elevate/types';
 
 export const runtime = 'nodejs';
@@ -11,6 +12,7 @@ interface ReprocessRequest {
 }
 
 export async function POST(request: NextRequest) {
+  return withRateLimit(request, adminRateLimiter, async () => {
   try {
     // Check admin role
     await requireRole('admin');
@@ -18,15 +20,12 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json();
     const parsed = KajabiReprocessSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
     }
     const { event_id } = parsed.data;
 
     if (!event_id) {
-      return NextResponse.json(
-        { error: 'event_id is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'event_id is required' }, { status: 400 });
     }
 
     // Find the Kajabi event
@@ -35,35 +34,23 @@ export async function POST(request: NextRequest) {
     });
 
     if (!kajabiEvent) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });
     }
 
     if (kajabiEvent.processed_at) {
-      return NextResponse.json(
-        { error: 'Event already processed' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Event already processed' }, { status: 400 });
     }
 
     // Parse and validate the event payload
     const eventData = parseKajabiWebhook(kajabiEvent.payload);
     
     if (!eventData) {
-      return NextResponse.json(
-        { error: 'Invalid event payload format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Invalid event payload format' }, { status: 400 });
     }
 
     // Process tag-based events only (same logic as webhook)
     if (eventData.event_type !== 'contact.tagged') {
-      return NextResponse.json(
-        { error: 'Only contact.tagged events can be reprocessed' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Only contact.tagged events can be reprocessed' }, { status: 400 });
     }
 
     const { contact, tag } = eventData;
@@ -74,18 +61,12 @@ export async function POST(request: NextRequest) {
     const tagName = tag.name;
 
     if (!email || !tagName) {
-      return NextResponse.json(
-        { error: 'Required fields missing: email and tag name' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Required fields missing: email and tag name' }, { status: 400 });
     }
 
     // Only process LEARN_COMPLETED tags
     if (tagName !== 'LEARN_COMPLETED') {
-      return NextResponse.json(
-        { error: 'Only LEARN_COMPLETED tags can be reprocessed' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Only LEARN_COMPLETED tags can be reprocessed' }, { status: 400 });
     }
 
     // Find user by email
@@ -94,10 +75,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found for email: ' + email },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'User not found for email: ' + email }, { status: 404 });
     }
 
     // Update user with Kajabi contact ID if not already set
@@ -175,7 +153,6 @@ export async function POST(request: NextRequest) {
             auto_approved: true,
             source: 'reprocess_admin'
           }) as Prisma.InputJsonValue,
-          attachments: toPrismaJson([]) as Prisma.InputJsonValue
         }
       });
 
@@ -221,4 +198,5 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return createErrorResponse(error, 500);
   }
+  })
 }

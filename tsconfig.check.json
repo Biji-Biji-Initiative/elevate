@@ -1,0 +1,18 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/db" },
+    { "path": "./packages/types" },
+    { "path": "./packages/config" },
+    { "path": "./packages/storage" },
+    { "path": "./packages/security" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/auth" },
+    { "path": "./packages/emails" },
+    { "path": "./packages/integrations" },
+    { "path": "./packages/logic" },
+    { "path": "./packages/openapi" },
+    { "path": "./apps/web" },
+    { "path": "./apps/admin" }
+  ]
+}

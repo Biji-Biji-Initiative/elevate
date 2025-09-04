@@ -3,14 +3,14 @@
 import React, { useEffect, useState } from 'react'
 
 import { withRoleGuard } from '@elevate/auth/context'
-import { adminClient } from '@/lib/admin-client'
+import { adminClient, AdminClientError } from '@/lib/admin-client'
 import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Alert } from '@elevate/ui'
 
 interface ExportFilters {
   startDate: string
   endDate: string
-  activity: string
-  status: string
+  activity: 'ALL' | 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
+  status: 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
   cohort: string
 }
 
@@ -30,12 +30,11 @@ function ExportsPage() {
   useEffect(() => {
     const fetchCohorts = async () => {
       try {
-        setCohorts(await adminClient.getCohorts())
+        const cohortData = await adminClient.getCohorts()
+        setCohorts(cohortData)
       } catch (error) {
         // Cohorts are optional for UI, don't break on fetch failure
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Failed to fetch cohorts:', error);
-        }
+        console.warn('Failed to fetch cohorts:', error instanceof AdminClientError ? error.message : 'Unknown error')
       }
     }
     void fetchCohorts()
@@ -43,6 +42,7 @@ function ExportsPage() {
 
   const handleExport = async (type: string) => {
     setLoading(prev => ({ ...prev, [type]: true }))
+    setError(null)
     
     try {
       const params = new URLSearchParams({
@@ -72,11 +72,19 @@ function ExportsPage() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
-        const data = await response.json()
-        setError(`Export failed: ${String(data.error)}`)
+        try {
+          const data = await response.json() as { error?: string; message?: string }
+          setError(`Export failed: ${data.error || data.message || 'Unknown error'}`)
+        } catch {
+          setError(`Export failed: HTTP ${response.status} ${response.statusText}`)
+        }
       }
     } catch (error) {
-      setError('Failed to export data')
+      if (error instanceof Error) {
+        setError(`Failed to export data: ${error.message}`)
+      } else {
+        setError('Failed to export data: Unknown error')
+      }
     } finally {
       setLoading(prev => ({ ...prev, [type]: false }))
     }
@@ -131,8 +139,9 @@ function ExportsPage() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
             <Input
+              id="start-date"
               type="date"
               value={filters.startDate}
               onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
@@ -140,8 +149,9 @@ function ExportsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <label htmlFor="end-date" className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
             <Input
+              id="end-date"
               type="date"
               value={filters.endDate}
               onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
@@ -149,9 +159,9 @@ function ExportsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Activity</label>
+            <label htmlFor="activity-select" className="block text-sm font-medium text-gray-700 mb-1">Activity</label>
             <Select value={filters.activity} onValueChange={(value) => setFilters(prev => ({ ...prev, activity: value }))}>
-              <SelectTrigger>
+              <SelectTrigger id="activity-select">
                 <SelectValue placeholder="Select activity" />
               </SelectTrigger>
               <SelectContent>
@@ -166,9 +176,9 @@ function ExportsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label htmlFor="status-select" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
-              <SelectTrigger>
+              <SelectTrigger id="status-select">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -181,9 +191,9 @@ function ExportsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
+            <label htmlFor="cohort-select" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
             <Select value={filters.cohort} onValueChange={(value) => setFilters(prev => ({ ...prev, cohort: value }))}>
-              <SelectTrigger>
+              <SelectTrigger id="cohort-select">
                 <SelectValue placeholder="Select cohort" />
               </SelectTrigger>
               <SelectContent>

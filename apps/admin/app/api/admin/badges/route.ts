@@ -3,14 +3,13 @@ import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { BadgeSchema, toPrismaJson, parseBadgeAuditMeta, buildAuditMeta } from '@elevate/types'
 import { z } from 'zod'
-// TODO: Re-enable when @elevate/security package is available
-// import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { createSuccessResponse } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
-  // TODO: Re-enable rate limiting when @elevate/security is available
-  // return withRateLimit(request, adminRateLimiter, async () => {
+  return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const user = await requireRole('admin')
     const { searchParams } = new URL(request.url)
@@ -48,11 +47,11 @@ export async function GET(request: NextRequest) {
           }
         })
     
-    return NextResponse.json({ success: true, data: { badges } })
+    return createSuccessResponse({ badges })
   } catch (error) {
     return createErrorResponse(error, 500)
   }
-  // })
+  })
 }
 
 export async function POST(request: NextRequest) {
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest) {
     const validation = BadgeSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.issues },
+        { success: false, error: 'Validation failed', details: validation.error.issues },
         { status: 400 }
       )
     }
@@ -77,7 +76,7 @@ export async function POST(request: NextRequest) {
     
     if (existing) {
       return NextResponse.json(
-        { error: 'Badge code already exists' },
+        { success: false, error: 'Badge code already exists' },
         { status: 400 }
       )
     }
@@ -105,11 +104,7 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    return NextResponse.json({
-      success: true,
-      badge,
-      message: 'Badge created successfully'
-    })
+    return createSuccessResponse({ message: 'Badge created successfully' })
     
   } catch (error) {
     return createErrorResponse(error, 500)
@@ -124,7 +119,7 @@ export async function PATCH(request: NextRequest) {
     // Type-safe extraction of code and updates
     if (!body || typeof body !== 'object') {
       return NextResponse.json(
-        { error: 'Invalid request body' },
+        { success: false, error: 'Invalid request body' },
         { status: 400 }
       )
     }
@@ -134,7 +129,7 @@ export async function PATCH(request: NextRequest) {
     
     if (!code || typeof code !== 'string') {
       return NextResponse.json(
-        { error: 'Badge code is required and must be a string' },
+        { success: false, error: 'Badge code is required and must be a string' },
         { status: 400 }
       )
     }
@@ -145,7 +140,7 @@ export async function PATCH(request: NextRequest) {
     
     if (!existing) {
       return NextResponse.json(
-        { error: 'Badge not found' },
+        { success: false, error: 'Badge not found' },
         { status: 404 }
       )
     }
@@ -156,7 +151,7 @@ export async function PATCH(request: NextRequest) {
     
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.issues },
+        { success: false, error: 'Validation failed', details: validation.error.issues },
         { status: 400 }
       )
     }
@@ -188,11 +183,7 @@ export async function PATCH(request: NextRequest) {
       }
     })
     
-    return NextResponse.json({
-      success: true,
-      badge,
-      message: 'Badge updated successfully'
-    })
+    return createSuccessResponse({ message: 'Badge updated successfully' })
     
   } catch (error) {
     return createErrorResponse(error, 500)
@@ -224,14 +215,14 @@ export async function DELETE(request: NextRequest) {
     
     if (!existing) {
       return NextResponse.json(
-        { error: 'Badge not found' },
+        { success: false, error: 'Badge not found' },
         { status: 404 }
       )
     }
     
     if (existing._count.earned_badges > 0) {
       return NextResponse.json(
-        { error: 'Cannot delete badge that has been earned by users' },
+        { success: false, error: 'Cannot delete badge that has been earned by users' },
         { status: 400 }
       )
     }
@@ -253,10 +244,7 @@ export async function DELETE(request: NextRequest) {
       }
     })
     
-    return NextResponse.json({
-      success: true,
-      message: 'Badge deleted successfully'
-    })
+    return createSuccessResponse({ message: 'Badge deleted successfully' })
     
   } catch (error) {
     return createErrorResponse(error, 500)

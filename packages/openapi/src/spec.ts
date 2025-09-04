@@ -1,5 +1,6 @@
 import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
+import { BadgeCriteriaSchema } from '@elevate/types/common';
 import {
   ActivityCodeSchema,
   SubmissionStatusSchema,
@@ -312,6 +313,48 @@ registry.registerPath({
     },
     400: {
       description: 'Invalid query parameters',
+      content: {
+        'application/json': {
+          schema: ErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+// Badges endpoint
+registry.registerPath({
+  method: 'get',
+  path: '/api/badges',
+  description: 'Get current user\'s earned badges',
+  summary: 'Get User Badges',
+  tags: ['Badges'],
+  security: [{ ClerkAuth: [] }],
+  responses: {
+    200: {
+      description: 'User badges retrieved successfully',
+      content: {
+        'application/json': {
+          schema: z.object({
+            success: z.boolean().openapi({ example: true }),
+            data: z.object({
+              badges: z.array(z.object({
+                code: z.string().openapi({ example: 'EARLY_ADOPTER' }),
+                name: z.string().openapi({ example: 'Early Adopter' }),
+                description: z.string().openapi({ example: 'One of the first educators to join the program' }),
+                iconUrl: z.string().url().nullable().openapi({ example: 'https://example.com/badge.png' }),
+                criteria: BadgeCriteriaSchema.openapi({ 
+                  example: { type: 'submissions', threshold: 1 }
+                }),
+                earnedAt: z.string().datetime().openapi({ example: '2024-01-15T10:00:00Z' }),
+              })),
+            }),
+          }).openapi({ title: 'User Badges Response' }),
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
       content: {
         'application/json': {
           schema: ErrorResponseSchema,
@@ -895,6 +938,10 @@ For API support, contact the development team or refer to the project documentat
     {
       name: 'Dashboard',
       description: 'User dashboard and progress tracking',
+    },
+    {
+      name: 'Badges',
+      description: 'User badge management and achievement tracking',
     },
     {
       name: 'Admin',

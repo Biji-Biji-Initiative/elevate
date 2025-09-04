@@ -28,29 +28,32 @@ export async function GET() {
     
     if (missingEnvVars.length > 0) {
       return NextResponse.json({
-        status: 'error',
-        message: 'Missing required environment variables',
+        success: false,
+        error: 'Missing required environment variables',
         details: { missingEnvVars }
       }, { status: 500 });
     }
     
     return NextResponse.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: process.env.VERCEL_GIT_COMMIT_SHA || 'unknown',
-      environment: process.env.VERCEL_ENV || 'development',
-      checks: {
-        database: 'connected',
-        environment: 'configured'
+      success: true,
+      data: {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        version: process.env.VERCEL_GIT_COMMIT_SHA || 'unknown',
+        environment: process.env.VERCEL_ENV || 'development',
+        checks: {
+          database: 'connected',
+          environment: 'configured'
+        }
       }
     });
     
   } catch (error) {
     
     return NextResponse.json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error'
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      details: { timestamp: new Date().toISOString() }
     }, { status: 503 });
   }
 }

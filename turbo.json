@@ -5,7 +5,7 @@
   },
   "tasks": {
     "typecheck": {
-      "outputs": ["packages/*/tsconfig.tsbuildinfo", "**/*.tsbuildinfo"],
+      "outputs": ["**/*.tsbuildinfo"],
       "cache": true
     },
     "build:types": {

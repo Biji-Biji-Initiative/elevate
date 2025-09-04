@@ -14,23 +14,27 @@ export async function GET() {
     await prisma.$disconnect();
     
     return NextResponse.json({
-      status: 'success',
-      hasDbUrl: !!dbUrl,
-      dbUrlLength: dbUrl?.length || 0,
-      dbUrlStart: dbUrl?.substring(0, 30) || 'undefined',
-      nodeEnv: process.env.NODE_ENV,
-      allEnvKeys: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('SUPABASE')),
-      userCount
+      success: true,
+      data: {
+        hasDbUrl: !!dbUrl,
+        dbUrlLength: dbUrl?.length || 0,
+        dbUrlStart: dbUrl?.substring(0, 30) || 'undefined',
+        nodeEnv: process.env.NODE_ENV,
+        allEnvKeys: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('SUPABASE')),
+        userCount
+      }
     });
   } catch (error) {
     return NextResponse.json({
-      status: 'error',
-      hasDbUrl: !!dbUrl,
-      dbUrlLength: dbUrl?.length || 0,
-      dbUrlStart: dbUrl?.substring(0, 30) || 'undefined',
-      nodeEnv: process.env.NODE_ENV,
-      allEnvKeys: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('SUPABASE')),
-      error: error instanceof Error ? error.message : 'Unknown error'
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      details: {
+        hasDbUrl: !!dbUrl,
+        dbUrlLength: dbUrl?.length || 0,
+        dbUrlStart: dbUrl?.substring(0, 30) || 'undefined',
+        nodeEnv: process.env.NODE_ENV,
+        allEnvKeys: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('SUPABASE'))
+      }
     }, { status: 500 });
   }
 }

@@ -26,15 +26,14 @@ INSERT INTO users (id, handle, name, email, role, school, cohort) VALUES
 ('demo-reviewer-1', 'reviewer_budi', 'Budi Santoso', 'budi.santoso@reviewer.com', 'REVIEWER', NULL, NULL);
 
 -- Insert demo submissions (for development)
-INSERT INTO submissions (id, user_id, activity_code, status, visibility, payload, attachments) VALUES
+INSERT INTO submissions (id, user_id, activity_code, status, visibility, payload) VALUES
 (
     'demo-sub-1',
     'demo-user-1',
     'LEARN',
     'APPROVED',
     'PUBLIC',
-    '{"certificate_name": "AI Foundations for Educators", "issued_date": "2024-08-15", "provider": "Microsoft Learn"}',
-    '["demo-user-1/certificates/ai-foundations-cert.pdf"]'
+    '{"certificate_name": "AI Foundations for Educators", "issued_date": "2024-08-15", "provider": "Microsoft Learn"}'
 ),
 (
     'demo-sub-2',
@@ -42,9 +41,15 @@ INSERT INTO submissions (id, user_id, activity_code, status, visibility, payload
     'EXPLORE',
     'PENDING',
     'PRIVATE',
-    '{"reflection": "I implemented AI-powered quiz generation in my English class. Students were engaged and participation increased by 40%.", "ai_tool": "ChatGPT", "subject": "English Language", "student_count": 25}',
-    '["demo-user-1/evidence/classroom-implementation.pdf", "demo-user-1/evidence/student-feedback.jpg"]'
+    '{"reflection": "I implemented AI-powered quiz generation in my English class. Students were engaged and participation increased by 40%.", "ai_tool": "ChatGPT", "subject": "English Language", "student_count": 25}'
 );
+
+-- Seed relational attachments for demo submissions
+INSERT INTO submission_attachments (id, submission_id, path)
+VALUES
+  ('demo-att-1', 'demo-sub-1', 'demo-user-1/certificates/ai-foundations-cert.pdf'),
+  ('demo-att-2', 'demo-sub-2', 'demo-user-1/evidence/classroom-implementation.pdf'),
+  ('demo-att-3', 'demo-sub-2', 'demo-user-1/evidence/student-feedback.jpg');
 
 -- Insert demo points ledger entries
 INSERT INTO points_ledger (user_id, activity_code, source, delta_points, external_event_id) VALUES

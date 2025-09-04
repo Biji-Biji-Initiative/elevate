@@ -1,11 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 
-import { withRoleGuard } from '@elevate/auth/context'
 import { adminClient, type UsersQuery } from '@/lib/admin-client'
+import { withRoleGuard } from '@elevate/auth/context'
 import { Button , Input, DataTable, StatusBadge, Modal, ConfirmModal, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, createColumns, Alert } from '@elevate/ui'
-import type { Column } from '@elevate/ui'
 
 type User = {
   readonly id: string
@@ -174,25 +173,7 @@ function UsersPage() {
     }
   ])
 
-  useEffect(() => {
-    void fetchUsers()
-  }, [pagination.page, pagination.limit, filters])
-
-  useEffect(() => {
-    const fetchCohorts = async () => {
-      try {
-        setCohorts(await adminClient.getCohorts())
-      } catch (error) {
-        // Cohorts are optional for UI, don't break on fetch failure
-        if (process.env.NODE_ENV === 'development') {
-          console.error('Failed to fetch cohorts:', error);
-        }
-      }
-    }
-    void fetchCohorts()
-  }, [])
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -206,15 +187,49 @@ function UsersPage() {
       if (filters.search) params.set('search', filters.search)
       if (filters.cohort !== 'ALL') params.set('cohort', filters.cohort)
 
-      const { users, pagination: pageInfo } = await adminClient.getUsers(Object.fromEntries(params) as UsersQuery)
-      setUsers(users)
-      setPagination(prev => ({ ...prev, total: pageInfo.total, pages: pageInfo.pages }))
-    } catch (error) {
+      const result = await adminClient.getUsers(Object.fromEntries(params) as UsersQuery)
+      
+      // Type guard for result structure
+      if (result && typeof result === 'object') {
+        const users = Array.isArray((result as { users?: User[] }).users) 
+          ? (result as { users: User[] }).users 
+          : []
+        setUsers(users)
+        
+        const pagination = (result as { pagination?: { total: number; pages: number } }).pagination
+        if (pagination && typeof pagination === 'object') {
+          setPagination(prev => ({ 
+            ...prev, 
+            total: typeof pagination.total === 'number' ? pagination.total : 0,
+            pages: typeof pagination.pages === 'number' ? pagination.pages : 0
+          }))
+        }
+      }
+    } catch (_error) {
       setError('Failed to fetch users')
     } finally {
       setLoading(false)
     }
-  }
+  }, [pagination.page, pagination.limit, filters])
+
+  useEffect(() => {
+    void fetchUsers()
+  }, [fetchUsers])
+
+  useEffect(() => {
+    const fetchCohorts = async () => {
+      try {
+        const cohortData = await adminClient.getCohorts()
+        setCohorts(Array.isArray(cohortData) ? cohortData : [])
+      } catch (_error) {
+        // Cohorts are optional for UI, don't break on fetch failure
+        // Silently fail in production
+      }
+    }
+    void fetchCohorts()
+  }, [])
+
+  // fetchUsers is now defined as useCallback above
 
   const handlePageChange = (page: number) => {
     setPagination(prev => ({ ...prev, page }))
@@ -308,9 +323,9 @@ function UsersPage() {
           </div>
 
           <div>
-            <label id="users-filter-role-label" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <label htmlFor="users-filter-role" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
             <Select value={filters.role} onValueChange={(value) => setFilters(prev => ({ ...prev, role: value }))}>
-              <SelectTrigger aria-labelledby="users-filter-role-label">
+              <SelectTrigger id="users-filter-role">
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
@@ -324,9 +339,9 @@ function UsersPage() {
           </div>
 
           <div>
-            <label id="users-filter-cohort-label" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
+            <label htmlFor="users-filter-cohort" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
             <Select value={filters.cohort} onValueChange={(value) => setFilters(prev => ({ ...prev, cohort: value }))}>
-              <SelectTrigger aria-labelledby="users-filter-cohort-label">
+              <SelectTrigger id="users-filter-cohort">
                 <SelectValue placeholder="Select cohort" />
               </SelectTrigger>
               <SelectContent>
@@ -459,9 +474,9 @@ function UsersPage() {
           </div>
 
           <div>
-            <label id="edit-user-cohort-label" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
+            <label htmlFor="edit-user-cohort" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
             <Select value={editForm.cohort} onValueChange={(value) => setEditForm(prev => ({ ...prev, cohort: value }))}>
-              <SelectTrigger aria-labelledby="edit-user-cohort-label">
+              <SelectTrigger id="edit-user-cohort">
                 <SelectValue placeholder="Select cohort" />
               </SelectTrigger>
               <SelectContent>
@@ -474,9 +489,9 @@ function UsersPage() {
           </div>
 
           <div>
-            <label id="edit-user-role-label" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <label htmlFor="edit-user-role" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
             <Select value={editForm.role} onValueChange={(value) => setEditForm(prev => ({ ...prev, role: value }))}>
-              <SelectTrigger aria-labelledby="edit-user-role-label">
+              <SelectTrigger id="edit-user-role">
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>

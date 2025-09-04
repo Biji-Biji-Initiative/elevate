@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json();
     const parsed = KajabiTestSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
     }
     const { user_email, course_name = 'Test Course - Admin Console' } = parsed.data;
 
@@ -114,8 +114,7 @@ export async function POST(request: NextRequest) {
             auto_approved: true,
             source: 'test_admin',
             test_mode: true
-          },
-          attachments: []
+          }
         }
       });
 

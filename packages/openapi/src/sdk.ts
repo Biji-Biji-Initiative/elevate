@@ -2644,35 +2644,14 @@ export type operations = Record<string, never>;
 
 import { mergeHeaders, addAuthHeader } from '@elevate/types';
 
-// Helper type for simplifying complex OpenAPI request body types
-type SubmissionRequest = {
-  activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
-  payload: Record<string, any>;
-  attachments?: string[];
-  visibility?: "PUBLIC" | "PRIVATE";
-};
-
-type ReviewRequest = {
-  submissionId: string;
-  action: "approve" | "reject";
-  reviewNote?: string;
-  pointAdjustment?: number;
-};
-
-type BulkReviewRequest = {
-  submissionIds: string[];
-  action: "approve" | "reject";
-  reviewNote?: string;
-};
-
 // API Client SDK
 export class ElevateAPIClient {
   private baseUrl: string;
-  private token: string | undefined;
+  private token?: string;
 
   constructor(config: { baseUrl?: string; token?: string } = {}) {
-    this.baseUrl = config.baseUrl ?? 'https://leaps.mereka.org';
-    this.token = config.token;
+    this.baseUrl = config.baseUrl || 'https://leaps.mereka.org';
+    this.token = config.token ?? undefined;
   }
 
   private async request<T>(
@@ -2700,18 +2679,14 @@ export class ElevateAPIClient {
       const error = await response.json().catch(() => ({ 
         error: 'Request failed' 
       }));
-      
-      // Type-safe access to optional details property
-      const details = error && typeof error === 'object' && 'details' in error ? error.details : undefined;
-      
-      throw new APIError(error.error || 'Request failed', response.status, details);
+      throw new APIError(error.error || 'Request failed', response.status, error.details);
     }
 
     return response.json();
   }
 
   // Submissions API
-  async createSubmission(data: SubmissionRequest) {
+  async createSubmission(data: NonNullable<paths['/api/submissions']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/submissions']['post']['responses']['201']['content']['application/json']>(
       '/api/submissions',
       {
@@ -2771,31 +2746,6 @@ export class ElevateAPIClient {
     return this.request<paths['/api/dashboard']['get']['responses']['200']['content']['application/json']>('/api/dashboard');
   }
 
-  // Note: The following endpoints are not defined in the OpenAPI specification
-  // Uncomment and update types when these endpoints are added to the API spec:
-  
-  /*
-  // Public Stats API
-  async getStats() {
-    return this.request('/api/stats');
-  }
-
-  // Public Metrics API  
-  async getMetrics(params: Record<string, string | number | boolean>) {
-    const searchParams = new URLSearchParams();
-    Object.entries(params || {}).forEach(([key, value]) => {
-      if (value !== undefined) searchParams.append(key, String(value));
-    });
-    const endpoint = `/api/metrics${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
-    return this.request(endpoint);
-  }
-
-  // Public Profile API
-  async getProfile(handle: string) {
-    return this.request(`/api/profile/${encodeURIComponent(handle)}`);
-  }
-  */
-
   // Health Check API
   async healthCheck() {
     return this.request<paths['/api/health']['get']['responses']['200']['content']['application/json']>('/api/health');
@@ -2821,14 +2771,14 @@ export class ElevateAPIClient {
     return this.request<paths['/api/admin/submissions/{id}']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
-  async reviewSubmission(body: ReviewRequest) {
+  async reviewSubmission(body: NonNullable<paths['/api/admin/submissions']['patch']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/submissions']['patch']['responses']['200']['content']['application/json']>(
       '/api/admin/submissions',
       { method: 'PATCH', body: JSON.stringify(body) }
     );
   }
 
-  async bulkReview(body: BulkReviewRequest) {
+  async bulkReview(body: NonNullable<paths['/api/admin/submissions']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/submissions']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/submissions',
       { method: 'POST', body: JSON.stringify(body) }
@@ -2848,14 +2798,14 @@ export class ElevateAPIClient {
     return this.request<paths['/api/admin/users']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
-  async updateAdminUser(body: any) {
+  async updateAdminUser(body: NonNullable<paths['/api/admin/users']['patch']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/users']['patch']['responses']['200']['content']['application/json']>(
       '/api/admin/users',
       { method: 'PATCH', body: JSON.stringify(body) }
     );
   }
 
-  async bulkUpdateAdminUsers(body: any) {
+  async bulkUpdateAdminUsers(body: NonNullable<paths['/api/admin/users']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/users']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/users',
       { method: 'POST', body: JSON.stringify(body) }
@@ -2873,14 +2823,14 @@ export class ElevateAPIClient {
     return this.request<paths['/api/admin/badges']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
-  async createAdminBadge(body: any) {
+  async createAdminBadge(body: NonNullable<paths['/api/admin/badges']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/badges']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/badges',
       { method: 'POST', body: JSON.stringify(body) }
     );
   }
 
-  async updateAdminBadge(body: any) {
+  async updateAdminBadge(body: NonNullable<paths['/api/admin/badges']['patch']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/badges']['patch']['responses']['200']['content']['application/json']>(
       '/api/admin/badges',
       { method: 'PATCH', body: JSON.stringify(body) }
@@ -2892,14 +2842,14 @@ export class ElevateAPIClient {
     return this.request<paths['/api/admin/badges']['delete']['responses']['200']['content']['application/json']>(url, { method: 'DELETE' });
   }
 
-  async assignAdminBadge(body: any) {
+  async assignAdminBadge(body: NonNullable<paths['/api/admin/badges/assign']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/badges/assign']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/badges/assign',
       { method: 'POST', body: JSON.stringify(body) }
     );
   }
 
-  async removeAdminBadge(body: any) {
+  async removeAdminBadge(body: NonNullable<paths['/api/admin/badges/assign']['delete']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/badges/assign']['delete']['responses']['200']['content']['application/json']>(
       '/api/admin/badges/assign',
       { method: 'DELETE', body: JSON.stringify(body) }
@@ -2929,14 +2879,14 @@ export class ElevateAPIClient {
     );
   }
 
-  async testAdminKajabi(body: any) {
+  async testAdminKajabi(body: NonNullable<paths['/api/admin/kajabi/test']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/kajabi/test']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/kajabi/test',
       { method: 'POST', body: JSON.stringify(body) }
     );
   }
 
-  async reprocessAdminKajabi(body: any) {
+  async reprocessAdminKajabi(body: NonNullable<paths['/api/admin/kajabi/reprocess']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/kajabi/reprocess']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/kajabi/reprocess',
       { method: 'POST', body: JSON.stringify(body) }
@@ -2949,7 +2899,7 @@ export class ElevateAPIClient {
   }
 
   clearToken() {
-    this.token = undefined;
+    this.token = undefined as string | undefined;
   }
 
   setBaseUrl(baseUrl: string) {
@@ -2970,7 +2920,7 @@ export class APIError extends Error {
 }
 
 export class ValidationError extends APIError {
-  constructor(message: string, details?: unknown[]) {
+  constructor(message: string, details?: unknown[], traceId?: string) {
     super(message, 400, details);
     this.name = 'ValidationError';
   }

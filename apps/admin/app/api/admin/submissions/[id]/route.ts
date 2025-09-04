@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import { createSuccessResponse } from '@elevate/types'
 import { prisma } from '@elevate/db'
 
 export const runtime = 'nodejs';
@@ -35,10 +36,9 @@ export async function GET(
       return createErrorResponse(new Error('Submission not found'), 404)
     }
     
-    const attachmentCount = Array.isArray(submission.attachments_rel) && submission.attachments_rel.length > 0
-      ? submission.attachments_rel.length
-      : (Array.isArray(submission.attachments) ? (submission.attachments as unknown[]).length : 0)
-    return NextResponse.json({ success: true, data: { submission: { ...submission, attachmentCount } } })
+    // Derive solely from relational attachments (JSON attachments deprecated)
+    const attachmentCount = submission.attachments_rel.length
+    return createSuccessResponse({ submission: { ...submission, attachmentCount } })
   } catch (error) {
     return createErrorResponse(error, 500)
   }

@@ -12,6 +12,26 @@
       "types": "./dist/types/rate-limiter.d.ts",
       "default": "./dist/js/rate-limiter.js"
     },
+    "./csp": {
+      "types": "./dist/types/csp.d.ts",
+      "default": "./dist/js/csp.js"
+    },
+    "./security-middleware": {
+      "types": "./dist/types/security-middleware.d.ts",
+      "default": "./dist/js/security-middleware.js"
+    },
+    "./csp-hooks": {
+      "types": "./dist/types/csp-hooks.d.ts",
+      "default": "./dist/js/csp-hooks.js"
+    },
+    "./sanitizer": {
+      "types": "./dist/types/sanitizer.d.ts",
+      "default": "./dist/js/sanitizer.js"
+    },
+    "./csrf": {
+      "types": "./dist/types/csrf.d.ts",
+      "default": "./dist/js/csrf.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/js/index.js",
@@ -21,13 +41,17 @@
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
     "build:types": "tsc -b --force tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --max-warnings 0",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --fix",
     "api:extract": "../../node_modules/.bin/api-extractor run --local",
     "api:check": "../../node_modules/.bin/api-extractor run"
   },
   "peerDependencies": {
-    "next": "^15.0.0"
+    "next": "^15.0.0",
+    "react": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.11",

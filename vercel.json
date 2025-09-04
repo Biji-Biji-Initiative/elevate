@@ -7,8 +7,20 @@
   "functions": {
     "apps/web/app/api/**/*.ts": {
       "maxDuration": 30
+    },
+    "apps/web/app/api/cron/**/*.ts": {
+      "maxDuration": 60
+    },
+    "apps/web/app/api/admin/**/*.ts": {
+      "maxDuration": 60
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/refresh-leaderboards",
+      "schedule": "*/15 * * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",

@@ -3,14 +3,12 @@ import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import type { SubmissionStatus } from '@elevate/db'
 import { prisma, type Prisma } from '@elevate/db'
 import { parseActivityCode, parseSubmissionStatus, toPrismaJson, buildAuditMeta, ExportsQuerySchema, type UserWhereClause, type SubmissionWhereClause, type PointsLedgerWhereClause, type ActivityCode } from '@elevate/types'
-// TODO: Re-enable when @elevate/security package is available
-// import { withRateLimit, apiRateLimiter } from '@elevate/security'
+import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
-  // TODO: Re-enable rate limiting when @elevate/security is available
-  // return withRateLimit(request, apiRateLimiter, async () => {
+  return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const user = await requireRole('admin')
     const { searchParams } = new URL(request.url)
@@ -92,7 +90,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return createErrorResponse(error, 500)
   }
-  // })
+  })
 }
 
 async function generateSubmissionsCSV(filters: {

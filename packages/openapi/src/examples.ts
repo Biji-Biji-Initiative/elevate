@@ -3,8 +3,7 @@
 import ElevateAPIClient, { 
   APIError, 
   ValidationError,
-  AuthenticationError,
-  ForbiddenError
+  AuthenticationError 
 } from './sdk.js';
 
 // Initialize the client
@@ -28,14 +27,13 @@ async function createLearnSubmission() {
     });
     
     console.log('Submission created:', submission.data);
-    return submission.data;
   } catch (error) {
     if (error instanceof ValidationError) {
       console.error('Validation errors:', error.details);
     } else if (error instanceof AuthenticationError) {
       console.error('Authentication required');
     } else {
-      console.error('Submission failed:', error instanceof Error ? error.message : String(error));
+      console.error('Submission failed:', error.message);
     }
   }
 }
@@ -45,11 +43,6 @@ async function uploadEvidence(file: File) {
   try {
     const upload = await api.uploadFile(file, 'EXPLORE');
     console.log('File uploaded:', upload.data);
-    
-    if (!upload.data?.path) {
-      throw new Error('Upload response missing required path property');
-    }
-    
     return upload.data.path;
   } catch (error) {
     console.error('Upload failed:', error);
@@ -61,47 +54,26 @@ async function uploadEvidence(file: File) {
 async function getUserDashboard() {
   try {
     const dashboard = await api.getDashboard();
-    
-    if (!dashboard.data) {
-      throw new Error('Dashboard response missing data');
-    }
-    
     console.log('User progress:', dashboard.data.progress);
     console.log('Recent submissions:', dashboard.data.recentSubmissions);
-    
-    return dashboard.data;
   } catch (error) {
     console.error('Dashboard fetch failed:', error);
-    throw error;
   }
 }
 
 // Example 4: Get leaderboard with search
 async function getTopEducators(searchTerm?: string) {
   try {
-    const params: { period: '30d'; limit: number; search?: string } = {
+    const leaderboard = await api.getLeaderboard({
       period: '30d',
       limit: 10,
-    };
-    
-    // Only add search if it has a value
-    if (searchTerm && searchTerm.trim()) {
-      params.search = searchTerm;
-    }
-    
-    const leaderboard = await api.getLeaderboard(params);
-    
-    if (!leaderboard.data) {
-      throw new Error('Leaderboard response missing data');
-    }
+      search: searchTerm
+    });
     
     console.log('Top educators:', leaderboard.data);
     console.log(`Total participants: ${leaderboard.total}`);
-    
-    return { data: leaderboard.data, total: leaderboard.total };
   } catch (error) {
     console.error('Leaderboard fetch failed:', error);
-    throw error;
   }
 }
 
@@ -113,19 +85,14 @@ async function reviewSubmissions() {
       limit: 50
     });
     
-    if (!submissions.data?.submissions) {
-      throw new Error('Admin submissions response missing data or submissions array');
-    }
-    
-    console.log(`${submissions.data.submissions.length} submissions need review`);
-    return submissions.data.submissions;
+    console.log(`${submissions.data.length} submissions need review`);
+    return submissions.data;
   } catch (error) {
     if (error instanceof ForbiddenError) {
       console.error('Admin access required');
     } else {
       console.error('Failed to fetch submissions:', error);
     }
-    throw error;
   }
 }
 
@@ -135,28 +102,10 @@ async function completeExploreSubmission(
   evidenceFiles: File[]
 ) {
   try {
-    // Validate input parameters
-    if (!reflectionText || reflectionText.trim().length === 0) {
-      throw new Error('Reflection text is required');
-    }
-    
-    if (!evidenceFiles || evidenceFiles.length === 0) {
-      throw new Error('At least one evidence file is required');
-    }
-    
     // 1. Upload evidence files
     const uploadedFiles = await Promise.all(
       evidenceFiles.map(file => uploadEvidence(file))
     );
-    
-    // Filter out any undefined paths
-    const validUploadedFiles = uploadedFiles.filter((path): path is string => 
-      typeof path === 'string' && path.length > 0
-    );
-    
-    if (validUploadedFiles.length !== evidenceFiles.length) {
-      throw new Error('Some file uploads failed');
-    }
     
     // 2. Create submission
     const submission = await api.createSubmission({
@@ -165,14 +114,10 @@ async function completeExploreSubmission(
         reflection: reflectionText,
         classDate: new Date().toISOString().split('T')[0],
         school: 'SDN 123 Jakarta',
-        evidenceFiles: validUploadedFiles
+        evidenceFiles: uploadedFiles
       },
       visibility: 'PUBLIC'
     });
-    
-    if (!submission.data) {
-      throw new Error('Submission response missing data');
-    }
     
     console.log('Explore submission completed:', submission.data);
     return submission.data;
@@ -198,8 +143,7 @@ async function handleAPIErrors() {
       switch (error.status) {
         case 400:
           console.error('Bad Request:', error.message);
-          // Safe access to optional details property
-          if (error.details && Array.isArray(error.details) && error.details.length > 0) {
+          if (error.details) {
             console.error('Validation details:', error.details);
           }
           break;
@@ -226,47 +170,22 @@ async function handleAPIErrors() {
 /*
 import { useState, useEffect } from 'react';
 
-type LeaderboardData = Awaited<ReturnType<typeof api.getLeaderboard>> | null;
-type LoadingState = boolean;
-type ErrorState = Error | null;
-
 function useLeaderboard(period: '30d' | 'all' = 'all') {
-  const [data, setData] = useState<LeaderboardData>(null);
-  const [loading, setLoading] = useState<LoadingState>(true);
-  const [error, setError] = useState<ErrorState>(null);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    let isCanceled = false;
-    
     api.getLeaderboard({ period })
       .then(response => {
-        if (!isCanceled) {
-          // Type guard for response validation
-          if (response && typeof response === 'object' && 'data' in response) {
-            setData(response);
-            setError(null);
-          } else {
-            setError(new Error('Invalid leaderboard response format'));
-            setData(null);
-          }
-        }
+        setData(response);
+        setError(null);
       })
       .catch(err => {
-        if (!isCanceled) {
-          setError(err instanceof Error ? err : new Error('Unknown error occurred'));
-          setData(null);
-        }
+        setError(err);
+        setData(null);
       })
-      .finally(() => {
-        if (!isCanceled) {
-          setLoading(false);
-        }
-      });
-      
-    // Cleanup function to prevent state updates after unmount
-    return () => {
-      isCanceled = true;
-    };
+      .finally(() => setLoading(false));
   }, [period]);
 
   return { data, loading, error };
@@ -274,7 +193,7 @@ function useLeaderboard(period: '30d' | 'all' = 'all') {
 */
 
 // Example 9: Configuration for different environments
-export const createApiClient = (environment: 'development' | 'staging' | 'production', token?: string) => {
+export const createApiClient = (environment: 'development' | 'staging' | 'production') => {
   const configs = {
     development: {
       baseUrl: 'http://localhost:3000',
@@ -285,16 +204,7 @@ export const createApiClient = (environment: 'development' | 'staging' | 'produc
     production: {
       baseUrl: 'https://leaps.mereka.org',
     }
-  } as const;
+  };
 
-  // Type-safe environment config access
-  const config = configs[environment];
-  if (!config) {
-    throw new Error(`Invalid environment: ${environment}. Must be one of: ${Object.keys(configs).join(', ')}`);
-  }
-
-  return new ElevateAPIClient({
-    ...config,
-    ...(token && { token })
-  });
+  return new ElevateAPIClient(configs[environment]);
 };

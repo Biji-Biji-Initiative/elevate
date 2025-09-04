@@ -1,4 +1,10 @@
 import { z } from 'zod'
+import { 
+  HandleSchema,
+  ActivityFilterSchema,
+  StatusFilterSchema,
+  RoleFilterSchema
+} from './domain-constants.js'
 
 export const LeaderboardQuerySchema = z.object({
   period: z.enum(['all', '30d']).default('all'),
@@ -15,18 +21,15 @@ export type LeaderboardQuery = z.infer<typeof LeaderboardQuerySchema>
 export type MetricsQuery = z.infer<typeof MetricsQuerySchema>
 
 export const HandleParamSchema = z.object({
-  handle: z
-    .string()
-    .trim()
-    .regex(/^[a-z0-9_]{3,30}$/i, 'Invalid handle format')
+  handle: HandleSchema
 })
 
 export type HandleParam = z.infer<typeof HandleParamSchema>
 
 // Admin: Submissions list query
 export const AdminSubmissionsQuerySchema = z.object({
-  status: z.enum(['ALL', 'PENDING', 'APPROVED', 'REJECTED']).default('PENDING'),
-  activity: z.enum(['ALL', 'LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']).default('ALL'),
+  status: StatusFilterSchema.default('PENDING'),
+  activity: ActivityFilterSchema.default('ALL'),
   userId: z.string().trim().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
@@ -39,7 +42,7 @@ export type AdminSubmissionsQuery = z.infer<typeof AdminSubmissionsQuerySchema>
 // Admin: Users list query
 export const AdminUsersQuerySchema = z.object({
   search: z.string().max(200).trim().optional().default(''),
-  role: z.enum(['ALL', 'PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN']).default('ALL'),
+  role: RoleFilterSchema.default('ALL'),
   cohort: z.string().max(100).trim().optional().default('ALL'),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),

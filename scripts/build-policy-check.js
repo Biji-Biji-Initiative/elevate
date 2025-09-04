@@ -1,23 +1,18 @@
 #!/usr/bin/env node
 
-/**
- * Build Artifact Policy Enforcement Script
- * 
- * This script ensures that:
- * 1. No stale build artifacts exist in packages/*/dist/
- * 2. All TypeScript compilation is successful before JS artifacts are generated
- * 3. Build artifacts are properly cleaned between builds
- * 4. Hash verification ensures source and compiled artifacts match
- */
+// Build Artifact Policy Enforcement Script
+// This script ensures that:
+// 1. No stale build artifacts exist in packages/*/dist/
+// 2. All TypeScript compilation is successful before JS artifacts are generated  
+// 3. Build artifacts are properly cleaned between builds
+// 4. Hash verification ensures source and compiled artifacts match
 
-import { execSync } from 'child_process'
-import { existsSync, rmSync, readFileSync, writeFileSync } from 'fs'
-import { join, dirname } from 'path'
-import { createHash } from 'crypto'
-import { glob } from 'glob'
-import { fileURLToPath } from 'url'
+const { execSync } = require('child_process')
+const { existsSync, rmSync, readFileSync, writeFileSync } = require('fs')
+const { join, dirname } = require('path')
+const { createHash } = require('crypto')
+const { glob } = require('glob')
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = join(__dirname, '..')
 
 class BuildArtifactPolicyEnforcer {
@@ -44,9 +39,7 @@ class BuildArtifactPolicyEnforcer {
     this.warnings.push(message)
   }
 
-  /**
-   * Calculate hash of source files in a package
-   */
+  // Calculate hash of source files in a package
   calculateSourceHash(packagePath) {
     try {
       const srcPattern = join(packagePath, 'src/**/*.{ts,tsx,js,jsx}')
@@ -71,15 +64,12 @@ class BuildArtifactPolicyEnforcer {
     }
   }
 
-  /**
-   * Remove all build artifacts from packages
-   */
+  // Remove all build artifacts from packages
   cleanAllArtifacts() {
     this.log('Cleaning all build artifacts...')
     
     for (const packagePath of this.packagePaths) {
       const distPath = join(packagePath, 'dist')
-      const tsBuildInfoPath = join(packagePath, 'dist/.tsbuildinfo')
       
       if (existsSync(distPath)) {
         rmSync(distPath, { recursive: true, force: true })
@@ -88,9 +78,7 @@ class BuildArtifactPolicyEnforcer {
     }
   }
 
-  /**
-   * Check if dist directories are properly ignored by git
-   */
+  // Check if dist directories are properly ignored by git
   checkGitIgnore() {
     this.log('Checking git ignore patterns...')
     
@@ -125,9 +113,7 @@ class BuildArtifactPolicyEnforcer {
     }
   }
 
-  /**
-   * Verify that all tsup configs have clean: true
-   */
+  // Verify that all tsup configs have clean: true
   checkTsupConfigs() {
     this.log('Checking tsup configurations...')
 
@@ -144,9 +130,7 @@ class BuildArtifactPolicyEnforcer {
     }
   }
 
-  /**
-   * Run TypeScript compilation check across all packages
-   */
+  // Run TypeScript compilation check across all packages
   checkTypeScript() {
     this.log('Running TypeScript compilation check...')
     
@@ -162,16 +146,15 @@ class BuildArtifactPolicyEnforcer {
     }
   }
 
-  /**
-   * Save build hashes for verification
-   */
+  // Save build hashes for verification
   saveBuildHashes() {
     this.log('Saving build hashes...')
     
     const hashes = {}
     
     for (const packagePath of this.packagePaths) {
-      const packageName = JSON.parse(readFileSync(join(packagePath, 'package.json'))).name
+      const packageJson = JSON.parse(readFileSync(join(packagePath, 'package.json')))
+      const packageName = packageJson.name
       const sourceHash = this.calculateSourceHash(packagePath)
       
       if (sourceHash) {
@@ -188,9 +171,7 @@ class BuildArtifactPolicyEnforcer {
     )
   }
 
-  /**
-   * Verify build hashes match source
-   */
+  // Verify build hashes match source
   verifyBuildHashes() {
     this.log('Verifying build hashes...')
     
@@ -203,7 +184,8 @@ class BuildArtifactPolicyEnforcer {
     const savedHashes = JSON.parse(readFileSync(hashFile, 'utf-8'))
     
     for (const packagePath of this.packagePaths) {
-      const packageName = JSON.parse(readFileSync(join(packagePath, 'package.json'))).name
+      const packageJson = JSON.parse(readFileSync(join(packagePath, 'package.json')))
+      const packageName = packageJson.name
       const currentSourceHash = this.calculateSourceHash(packagePath)
       
       if (currentSourceHash && savedHashes[packageName]) {
@@ -214,9 +196,7 @@ class BuildArtifactPolicyEnforcer {
     }
   }
 
-  /**
-   * Run complete policy enforcement
-   */
+  // Run complete policy enforcement
   async enforce(options = {}) {
     this.log('🚀 Starting build artifact policy enforcement')
     
@@ -304,4 +284,7 @@ Examples:
 
 // Run the policy enforcer
 const enforcer = new BuildArtifactPolicyEnforcer()
-await enforcer.enforce(options)
+enforcer.enforce(options).catch(err => {
+  console.error('Policy enforcement failed:', err)
+  process.exit(1)
+})

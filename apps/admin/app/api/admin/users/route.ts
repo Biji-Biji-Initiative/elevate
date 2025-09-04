@@ -122,13 +122,13 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const parsed = UpdateUserSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
     }
     const { userId, role, school, cohort, name, handle } = parsed.data
     
     if (!userId) {
       return NextResponse.json(
-        { error: 'userId is required' },
+        { success: false, error: 'userId is required' },
         { status: 400 }
       )
     }
@@ -139,7 +139,7 @@ export async function PATCH(request: NextRequest) {
     
     if (!targetUser) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { success: false, error: 'User not found' },
         { status: 404 }
       )
     }
@@ -151,7 +151,7 @@ export async function PATCH(request: NextRequest) {
         const restrictedRoles = ['ADMIN', 'SUPERADMIN']
         if (restrictedRoles.includes(role) || restrictedRoles.includes(targetUser.role)) {
           return NextResponse.json(
-            { error: 'Insufficient permissions to modify admin roles' },
+            { success: false, error: 'Insufficient permissions to modify admin roles' },
             { status: 403 }
           )
         }
@@ -161,7 +161,7 @@ export async function PATCH(request: NextRequest) {
       const parsedNewRole = parseRole(role)
       if (currentUser.userId === userId && parsedNewRole && !hasRole(currentUser.role, roleToRoleName(parsedNewRole))) {
         return NextResponse.json(
-          { error: 'Cannot demote your own role' },
+          { success: false, error: 'Cannot demote your own role' },
           { status: 403 }
         )
       }
@@ -183,7 +183,7 @@ export async function PATCH(request: NextRequest) {
       
       if (existingHandle && existingHandle.id !== userId) {
         return NextResponse.json(
-          { error: 'Handle is already taken' },
+          { success: false, error: 'Handle is already taken' },
           { status: 400 }
         )
       }
@@ -221,11 +221,7 @@ export async function PATCH(request: NextRequest) {
       }
     })
     
-    return NextResponse.json({
-      success: true,
-      user: updatedUser,
-      message: 'User updated successfully'
-    })
+    return createSuccessResponse({ message: 'User updated successfully', user: updatedUser })
     
   } catch (error) {
     return createErrorResponse(error, 500)
@@ -241,20 +237,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const parsed = BulkUpdateUsersSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
     }
     const { userIds, role } = parsed.data
     
     if (!Array.isArray(userIds) || userIds.length === 0) {
       return NextResponse.json(
-        { error: 'userIds array is required' },
+        { success: false, error: 'userIds array is required' },
         { status: 400 }
       )
     }
     
     if (!role) {
       return NextResponse.json(
-        { error: 'role is required' },
+        { success: false, error: 'role is required' },
         { status: 400 }
       )
     }
@@ -262,7 +258,7 @@ export async function POST(request: NextRequest) {
     // Limit bulk operations
     if (userIds.length > 100) {
       return NextResponse.json(
-        { error: 'Maximum 100 users per bulk operation' },
+        { success: false, error: 'Maximum 100 users per bulk operation' },
         { status: 400 }
       )
     }
@@ -272,7 +268,7 @@ export async function POST(request: NextRequest) {
       const restrictedRoles = ['ADMIN', 'SUPERADMIN']
       if (restrictedRoles.includes(role)) {
         return NextResponse.json(
-          { error: 'Insufficient permissions to assign admin roles' },
+          { success: false, error: 'Insufficient permissions to assign admin roles' },
           { status: 403 }
         )
       }
@@ -282,7 +278,7 @@ export async function POST(request: NextRequest) {
     const parsedBulkRole = parseRole(role)
     if (userIds.includes(currentUser.userId) && parsedBulkRole && !hasRole(currentUser.role, roleToRoleName(parsedBulkRole))) {
       return NextResponse.json(
-        { error: 'Cannot demote your own role in bulk operation' },
+        { success: false, error: 'Cannot demote your own role in bulk operation' },
         { status: 403 }
       )
     }
@@ -299,7 +295,7 @@ export async function POST(request: NextRequest) {
     
     if (users.length === 0) {
       return NextResponse.json(
-        { error: 'No users found' },
+        { success: false, error: 'No users found' },
         { status: 404 }
       )
     }
@@ -312,7 +308,7 @@ export async function POST(request: NextRequest) {
       
       if (hasRestrictedUsers) {
         return NextResponse.json(
-          { error: 'Cannot modify admin users without superadmin role' },
+          { success: false, error: 'Cannot modify admin users without superadmin role' },
           { status: 403 }
         )
       }
@@ -356,12 +352,7 @@ export async function POST(request: NextRequest) {
       return updates
     })
     
-    return NextResponse.json({
-      success: true,
-      updated: results.length,
-      users: results,
-      message: `${results.length} users updated to ${role} role`
-    })
+    return createSuccessResponse({ processed: results.length, failed: 0, errors: [] })
     
   } catch (error) {
     return createErrorResponse(error, 500)

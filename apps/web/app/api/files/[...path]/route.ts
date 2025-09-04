@@ -56,7 +56,7 @@ export async function GET(
       const { userId } = await auth()
       
       if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
 
       const { path: pathSegments } = await params
@@ -74,13 +74,13 @@ export async function GET(
       
       // Additional length check
       if (filePath.length > 1000) {
-        return NextResponse.json({ error: 'Path too long' }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'Path too long' }, { status: 400 });
       }
       
       // Parse the storage path to get user ID and activity code
       const pathInfo = parseStoragePath(filePath)
       if (!pathInfo) {
-        return NextResponse.json({ error: 'Invalid file path structure' }, { status: 400 })
+        return NextResponse.json({ success: false, error: 'Invalid file path structure' }, { status: 400 })
       }
 
     // Check if the current user has access to this file
@@ -91,14 +91,14 @@ export async function GET(
     })
 
     if (!currentUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
     }
 
     const isOwner = pathInfo.userId === userId
     const isReviewer = ['REVIEWER', 'ADMIN', 'SUPERADMIN'].includes(currentUser.role)
 
     if (!isOwner && !isReviewer) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+      return NextResponse.json({ success: false, error: 'Access denied' }, { status: 403 })
     }
 
     // Additional check: ensure the file is associated with an existing submission
@@ -111,7 +111,7 @@ export async function GET(
     })
 
     if (!submission) {
-      return NextResponse.json({ error: 'File not found in submissions' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'File not found in submissions' }, { status: 404 })
     }
 
       // Generate signed URL (1 hour expiry)
@@ -142,7 +142,7 @@ export async function GET(
       }
       
       return NextResponse.json(
-        { error: 'Failed to access file' },
+        { success: false, error: 'Failed to access file' },
         { status: 500 }
       )
     }
@@ -158,7 +158,7 @@ export async function DELETE(
       const { userId } = await auth()
       
       if (!userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
       }
 
       const { path: pathSegments } = await params
@@ -176,18 +176,18 @@ export async function DELETE(
       
       // Additional length check
       if (filePath.length > 1000) {
-        return NextResponse.json({ error: 'Path too long' }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'Path too long' }, { status: 400 });
       }
       
       // Parse the storage path to get user ID and activity code
       const pathInfo = parseStoragePath(filePath)
       if (!pathInfo) {
-        return NextResponse.json({ error: 'Invalid file path structure' }, { status: 400 })
+        return NextResponse.json({ success: false, error: 'Invalid file path structure' }, { status: 400 })
       }
 
     // Check if the current user owns this file
     if (pathInfo.userId !== userId) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+      return NextResponse.json({ success: false, error: 'Access denied' }, { status: 403 })
     }
 
     // Only allow deletion if the associated submission is still pending
@@ -199,11 +199,12 @@ export async function DELETE(
     })
 
     if (!submission) {
-      return NextResponse.json({ error: 'File not found in submissions' }, { status: 404 })
+      return NextResponse.json({ success: false, error: 'File not found in submissions' }, { status: 404 })
     }
 
     if (submission.status !== 'PENDING') {
       return NextResponse.json({ 
+        success: false,
         error: 'Cannot delete files from approved or rejected submissions' 
       }, { status: 400 })
     }
@@ -212,7 +213,7 @@ export async function DELETE(
       try {
         await deleteEvidenceFile(filePath)
       } catch (e) {
-        return NextResponse.json({ error: 'Storage deletion failed' }, { status: 502 })
+        return NextResponse.json({ success: false, error: 'Storage deletion failed' }, { status: 502 })
       }
 
       return NextResponse.json({ success: true, message: 'File deleted' })
@@ -224,7 +225,7 @@ export async function DELETE(
       }
       
       return NextResponse.json(
-        { error: 'Failed to delete file' },
+        { success: false, error: 'Failed to delete file' },
         { status: 500 }
       )
     }

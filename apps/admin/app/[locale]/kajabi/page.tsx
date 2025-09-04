@@ -3,45 +3,36 @@
 import { useState, useEffect } from 'react';
 
 import { withRoleGuard } from '@elevate/auth/context';
-import { adminClient } from '@/lib/admin-client'
+import { adminClient, AdminClientError, type KajabiEvent, type KajabiStats } from '@/lib/admin-client'
 import { Button, LoadingSpinner, Card, CardContent, Input, Alert } from '@elevate/ui';
-
-interface KajabiEvent {
-  readonly id: string;
-  readonly received_at: string;
-  readonly processed_at: string | null;
-  readonly user_match: string | null;
-  readonly payload: Record<string, unknown>; // Keep as Record for webhook payload flexibility
-}
-
-interface Stats {
-  total_events: number;
-  processed_events: number;
-  matched_users: number;
-  unmatched_events: number;
-  points_awarded: number;
-}
 
 function KajabiPage() {
   const [events, setEvents] = useState<KajabiEvent[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useState<KajabiStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState('');
   const [testLoading, setTestLoading] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message?: string | undefined; test_mode?: boolean | undefined } | null>(null);
+  const [testResult, setTestResult] = useState<{ success: boolean; message?: string; test_mode?: boolean; data?: Record<string, unknown> } | null>(null);
 
   useEffect(() => {
     void fetchKajabiData();
   }, []);
 
   const fetchKajabiData = async () => {
+    setError(null)
     try {
       const data = await adminClient.getKajabi()
-      setEvents(data.events || []);
-      setStats(data.stats || null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setEvents(data.events);
+      setStats(data.stats);
+    } catch (error) {
+      if (error instanceof AdminClientError) {
+        setError(error.message);
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -61,8 +52,14 @@ function KajabiPage() {
       const res = await adminClient.testKajabi({ user_email: testEmail, course_name: 'Test Course - Admin Console' })
       setTestResult(res)
       await fetchKajabiData()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Test failed');
+    } catch (error) {
+      if (error instanceof AdminClientError) {
+        setError(error.message);
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Test failed: Unknown error');
+      }
     } finally {
       setTestLoading(false);
     }
@@ -72,8 +69,14 @@ function KajabiPage() {
     try {
       await adminClient.reprocessKajabi({ event_id: eventId })
       await fetchKajabiData()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Reprocess failed');
+    } catch (error) {
+      if (error instanceof AdminClientError) {
+        setError(error.message);
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Reprocess failed: Unknown error');
+      }
     }
   };
 

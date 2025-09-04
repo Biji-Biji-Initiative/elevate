@@ -4,7 +4,6 @@
     "jsx": "preserve",
     "allowJs": true,
     "noEmit": true,
-    "composite": true,
     "incremental": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -33,15 +32,15 @@
     "*.md"
   ],
   "references": [
-    { "path": "../../packages/types" },
-    { "path": "../../packages/ui" },
-    { "path": "../../packages/auth" },
-    { "path": "../../packages/db" },
-    { "path": "../../packages/openapi" },
-    { "path": "../../packages/integrations" },
-    { "path": "../../packages/security" },
-    { "path": "../../packages/storage" },
-    { "path": "../../packages/config" },
-    { "path": "../../packages/logic" }
+    { "path": "../../packages/types/tsconfig.build.json" },
+    { "path": "../../packages/ui/tsconfig.build.json" },
+    { "path": "../../packages/auth/tsconfig.build.json" },
+    { "path": "../../packages/db/tsconfig.build.json" },
+    { "path": "../../packages/openapi/tsconfig.build.json" },
+    { "path": "../../packages/integrations/tsconfig.build.json" },
+    { "path": "../../packages/security/tsconfig.build.json" },
+    { "path": "../../packages/storage/tsconfig.build.json" },
+    { "path": "../../packages/config/tsconfig.build.json" },
+    { "path": "../../packages/logic/tsconfig.build.json" }
   ]
 }

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { prisma } from '@elevate/db/client'
-import { parseAmplifyPayload, parseActivityCode, type ActivityCode } from '@elevate/types'
+import { parseAmplifyPayload, parseActivityCode, type ActivityCode, createSuccessResponse, createErrorResponse } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
@@ -245,13 +245,11 @@ export async function GET(_request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, data: stats }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=1800' // Cache for 30 minutes
-      }
-    })
+    const res = createSuccessResponse(stats)
+    res.headers.set('Cache-Control', 'public, s-maxage=1800')
+    return res
 
   } catch (_error) {
-    return NextResponse.json({ success: false, error: 'Failed to fetch statistics' }, { status: 500 })
+    return createErrorResponse(new Error('Failed to fetch statistics'), 500)
   }
 }

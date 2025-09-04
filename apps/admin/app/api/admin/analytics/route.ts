@@ -2,8 +2,8 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
-import { parseActivityCode, AnalyticsQuerySchema } from '@elevate/types'
-// import { withRateLimit, adminRateLimiter } from '@elevate/security' // TODO: Add security package
+import { parseActivityCode, AnalyticsQuerySchema, createSuccessResponse } from '@elevate/types'
+import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import type {
   AnalyticsDateFilter,
   AnalyticsCohortFilter,
@@ -33,8 +33,7 @@ import type {
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
-  // TODO: Add rate limiting when security package is available
-  // return withRateLimit(request, adminRateLimiter, async () => {
+  return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const user = await requireRole('reviewer')
     const { searchParams } = new URL(request.url)
@@ -128,43 +127,40 @@ export async function GET(request: NextRequest) {
       getReviewerPerformance()
     ])
     
-    return NextResponse.json({
-      success: true,
-      data: {
-        overview: {
-          submissions: submissionStats,
-          users: userStats,
-          points: pointsStats,
-          badges: badgeStats,
-          reviews: reviewStats
-        },
-        distributions: {
-          submissionsByStatus,
-          submissionsByActivity,
-          usersByRole,
-          usersByCohort,
-          pointsByActivity,
-          pointsDistribution
-        },
-        trends: {
-          submissionsByDate,
-          userRegistrationsByDate
-        },
-        recentActivity: {
-          submissions: recentSubmissions,
-          approvals: recentApprovals,
-          users: recentUsers
-        },
-        performance: {
-          reviewers: reviewerPerformance,
-          topBadges
-        }
+    return createSuccessResponse({
+      overview: {
+        submissions: submissionStats,
+        users: userStats,
+        points: pointsStats,
+        badges: badgeStats,
+        reviews: reviewStats
+      },
+      distributions: {
+        submissionsByStatus,
+        submissionsByActivity,
+        usersByRole,
+        usersByCohort,
+        pointsByActivity,
+        pointsDistribution
+      },
+      trends: {
+        submissionsByDate,
+        userRegistrationsByDate
+      },
+      recentActivity: {
+        submissions: recentSubmissions,
+        approvals: recentApprovals,
+        users: recentUsers
+      },
+      performance: {
+        reviewers: reviewerPerformance,
+        topBadges
       }
     })
   } catch (error) {
     return createErrorResponse(error, 500)
   }
-  // })
+  })
 }
 
 async function getSubmissionStats(filter: AnalyticsSubmissionFilter): Promise<SubmissionStats> {

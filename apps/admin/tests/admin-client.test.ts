@@ -9,7 +9,7 @@ function mockFetchOnce(status: number, json: unknown) {
     headers: new Headers({ 'content-type': 'application/json' }),
     json: async () => json,
     text: async () => JSON.stringify(json),
-  } as any)
+  } as Response)
 }
 
 describe('adminClient', () => {
