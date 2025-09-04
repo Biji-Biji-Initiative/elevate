@@ -1,7 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server'
+
 import { auth } from '@clerk/nextjs/server'
-import { prisma, Prisma } from '@elevate/db/client'
+
 import { withRole } from '@elevate/auth'
+import { prisma, Prisma } from '@elevate/db/client'
+import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { getServerLogger, trackApiRequest, trackDatabaseOperation } from '@elevate/logging'
 
 export const runtime = 'nodejs'
@@ -29,6 +32,9 @@ type PerformanceComparison = {
 }
 
 export async function GET(request: NextRequest) {
+  if (process.env.ENABLE_INTERNAL_ENDPOINTS !== '1') {
+    return new Response(null, { status: 404 })
+  }
   const startTime = Date.now()
   const logger = getServerLogger().forRequestWithHeaders(request)
   
@@ -44,7 +50,7 @@ export async function GET(request: NextRequest) {
         ip: request.headers.get('x-forwarded-for') || 'unknown',
       })
       
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse(new Error('Unauthorized'), 401)
     }
 
     const hasPermission = await withRole(['ADMIN', 'REVIEWER'])(userId)
@@ -57,7 +63,7 @@ export async function GET(request: NextRequest) {
         userId,
       })
       
-      return NextResponse.json({ success: false, error: 'Insufficient permissions' }, { status: 403 })
+      return createErrorResponse(new Error('Insufficient permissions'), 403)
     }
 
     const { searchParams } = new URL(request.url)
@@ -124,21 +130,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(response, {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'X-Performance-Benchmark': 'true',
-        'X-Benchmark-Count': benchmarks.length.toString()
-      }
-    })
+    const res = createSuccessResponse(response)
+    res.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    res.headers.set('X-Performance-Benchmark', 'true')
+    res.headers.set('X-Benchmark-Count', benchmarks.length.toString())
+    return res
 
   } catch (error) {
-    console.error('Performance benchmark failed:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to run performance benchmarks',
-      timestamp: new Date().toISOString()
-    }, { status: 500 })
+    const logger = getServerLogger().forRequestWithHeaders(request)
+    logger.error('Performance benchmark failed', error as Error, {
+      operation: 'performance_benchmark',
+    })
+    return createErrorResponse(new Error('Failed to run performance benchmarks'), 500)
   }
 }
 
@@ -393,7 +396,8 @@ async function runPerformanceComparisons(): Promise<PerformanceComparison[]> {
   const comparisons: PerformanceComparison[] = []
 
   // Compare materialized view vs direct aggregation for leaderboard
-  console.log('Running performance comparisons...')
+  const logger = getServerLogger()
+  logger.info('Running performance comparisons...', { operation: 'performance_benchmark_comparisons' })
 
   // 1. Leaderboard comparison
   const mvStart = Date.now()

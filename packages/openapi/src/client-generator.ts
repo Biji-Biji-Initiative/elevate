@@ -1,23 +1,42 @@
 #!/usr/bin/env node
-import { writeFileSync, mkdirSync, readFileSync } from 'fs';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
+/**
+ * TypeScript SDK generator for MS Elevate LEAPS Tracker API
+ *
+ * Generates type-safe API client and usage examples from OpenAPI spec
+ */
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { writeFileSync, mkdirSync, readFileSync } from 'fs'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 // Ensure src directory exists for SDK and client types
-const srcDir = resolve(__dirname, '../src');
-mkdirSync(srcDir, { recursive: true });
+const srcDir = resolve(__dirname, '../src')
+mkdirSync(srcDir, { recursive: true })
 
 // Read the generated TypeScript types (from src)
-const clientTypesPath = resolve(srcDir, 'client.ts');
-const clientTypes = readFileSync(clientTypesPath, 'utf-8');
+const clientTypesPath = resolve(srcDir, 'client.ts')
+const clientTypes = readFileSync(clientTypesPath, 'utf-8')
 
 // Generate a comprehensive TypeScript client SDK
-const clientSdk = clientTypes + `
+const clientSdk =
+  clientTypes +
+  `
 
-import { mergeHeaders, addAuthHeader } from '@elevate/types';
+import { mergeHeaders, addAuthHeader, type ApiSuccess } from '@elevate/types';
+import { APIError } from '@elevate/types/errors';
+// Import DTO types for request/response convenience
+import type {
+  LearnApiInput,
+  ExploreApiInput,
+  AmplifyApiInput,
+  PresentApiInput,
+  ShineApiInput,
+} from '@elevate/types/submission-payloads.api';
+import { StatsResponseDTOSchema, StageMetricsDTOSchema, AdminAnalyticsDTOSchema, type StatsResponseDTO, type StageMetricsDTO, type AdminAnalyticsDTO } from '@elevate/types/dto-mappers';
+import { SafeDashboardDataSchema, type SafeDashboardData } from '@elevate/types/ui-types';
 
 // API Client SDK
 export class ElevateAPIClient {
@@ -25,15 +44,19 @@ export class ElevateAPIClient {
   private token?: string;
 
   constructor(config: { baseUrl?: string; token?: string } = {}) {
-    this.baseUrl = config.baseUrl || 'https://leaps.mereka.org';
-    this.token = config.token;
+    this.baseUrl = config.baseUrl ?? 'https://leaps.mereka.org';
+    if (config.token) {
+      this.token = config.token;
+    }
   }
 
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = ` + '`${this.baseUrl}${endpoint}`' + `;
+    const url = ` +
+  '`${this.baseUrl}${endpoint}`' +
+  `;
     
     // Type-safe header merging
     let headers = mergeHeaders(
@@ -51,17 +74,27 @@ export class ElevateAPIClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ 
-        error: 'Request failed' 
-      }));
-      throw new APIError(error.error || 'Request failed', response.status, error.details);
+      const fallback = { error: 'Request failed' } as const;
+      const parsed = await response
+        .json()
+        .catch(() => fallback) as { error?: string; details?: unknown };
+      throw new APIError(parsed.error ?? 'Request failed', response.status, parsed.details !== undefined ? (Array.isArray(parsed.details) ? parsed.details : [parsed.details]) : undefined);
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   // Submissions API
-  async createSubmission(data: paths['/api/submissions']['post']['requestBody']['content']['application/json']) {
+  // DTO-friendly body type for submission creation
+  // Matches API shape: { activityCode, payload, attachments?, visibility? }
+  async createSubmission(
+    data: {
+      activityCode: ActivityCode;
+      payload: LearnApiInput | ExploreApiInput | AmplifyApiInput | PresentApiInput | ShineApiInput;
+      attachments?: string[];
+      visibility?: 'PUBLIC' | 'PRIVATE';
+    }
+  ) {
     return this.request<paths['/api/submissions']['post']['responses']['201']['content']['application/json']>(
       '/api/submissions',
       {
@@ -81,9 +114,22 @@ export class ElevateAPIClient {
       });
     }
     
-    const endpoint = ` + '`/api/submissions${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
+    const queryString = searchParams.toString();
+    const endpoint = '/api/submissions' + (queryString ? '?' + queryString : '');
     return this.request<paths['/api/submissions']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
+
+  // Submissions summary convenience method (since current /api/submissions doesn't match full DTO shape)
+  async getSubmissionsSummary(
+    params?: paths['/api/submissions']['get']['parameters']['query']
+  ): Promise<paths['/api/submissions']['get']['responses']['200']['content']['application/json']> {
+    // Call the regular method to get submissions summary
+    return this.getSubmissions(params);
+  }
+
+  // Convenience typed return for submissions list (DTO mapping)
+  // Consumers can import SubmissionDTO for stronger typing on mapped results
+  // Note: The API response envelope still follows OpenAPI types.
 
   // File Upload API
   async uploadFile(file: File, activityCode: string) {
@@ -112,7 +158,9 @@ export class ElevateAPIClient {
       });
     }
     
-    const endpoint = ` + '`/api/leaderboard${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
+    const endpoint = ` +
+  "`/api/leaderboard${searchParams.toString() ? '?' + searchParams.toString() : ''}`" +
+  `;
     return this.request<paths['/api/leaderboard']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
@@ -120,10 +168,38 @@ export class ElevateAPIClient {
   async getDashboard() {
     return this.request<paths['/api/dashboard']['get']['responses']['200']['content']['application/json']>('/api/dashboard');
   }
+  // Typed DTO convenience for dashboard
+  async getDashboardDTO(): Promise<ApiSuccess<SafeDashboardData>> {
+    const res = await this.request<ApiSuccess<unknown>>('/api/dashboard');
+    const parsed = SafeDashboardDataSchema.safeParse(res.data);
+    if (!parsed.success) {
+      throw new APIError('Invalid dashboard response shape', 500, parsed.error.issues);
+    }
+    return {
+      success: res.success,
+      data: parsed.data as SafeDashboardData
+    };
+  }
 
   // Public Stats API
   async getStats() {
     return this.request<paths['/api/stats']['get']['responses']['200']['content']['application/json']>('/api/stats');
+  }
+
+  // Typed DTO convenience for public stats
+  async getStatsDTO(): Promise<ApiSuccess<StatsResponseDTO>> {
+    // Call the regular method to get the legacy snake_case response
+    const res = await this.getStats();
+    
+    // Validate and transform the response to DTO format
+    const parsed = StatsResponseDTOSchema.safeParse(res.data);
+    if (!parsed.success) {
+      throw new APIError('Invalid stats response shape', 500, parsed.error.issues);
+    }
+    
+    // Return only the typed success envelope with validated DTO data
+    const out: ApiSuccess<StatsResponseDTO> = { success: true, data: parsed.data };
+    return out;
   }
 
   // Public Metrics API
@@ -132,14 +208,35 @@ export class ElevateAPIClient {
     Object.entries(params || {}).forEach(([key, value]) => {
       if (value !== undefined) searchParams.append(key, String(value));
     });
-    const endpoint = ` + '`/api/metrics${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
+    const endpoint = ` +
+  "`/api/metrics${searchParams.toString() ? '?' + searchParams.toString() : ''}`" +
+  `;
     return this.request<paths['/api/metrics']['get']['responses']['200']['content']['application/json']>(endpoint);
+  }
+  // Typed DTO convenience for metrics (stage view)
+  async getMetricsDTO(
+    params: paths['/api/metrics']['get']['parameters']['query']
+  ): Promise<ApiSuccess<StageMetricsDTO>> {
+    // Call the regular method to get the legacy snake_case response
+    const res = await this.getMetrics(params);
+    
+    // Validate and transform the response to DTO format
+    const parsed = StageMetricsDTOSchema.safeParse(res.data);
+    if (!parsed.success) {
+      throw new APIError('Invalid metrics response shape', 500, parsed.error.issues);
+    }
+    
+    // Return only the typed success envelope with validated DTO data
+    const out: ApiSuccess<StageMetricsDTO> = { success: true, data: parsed.data };
+    return out;
   }
 
   // Public Profile API
   async getProfile(handle: string) {
     return this.request<paths['/api/profile/{handle}']['get']['responses']['200']['content']['application/json']>(
-      ` + '`/api/profile/${encodeURIComponent(handle)}`' + `
+      ` +
+  '`/api/profile/${encodeURIComponent(handle)}`' +
+  `
     );
   }
 
@@ -159,23 +256,27 @@ export class ElevateAPIClient {
       });
     }
     
-    const endpoint = ` + '`/api/admin/submissions${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
+    const endpoint = ` +
+  "`/api/admin/submissions${searchParams.toString() ? '?' + searchParams.toString() : ''}`" +
+  `;
     return this.request<paths['/api/admin/submissions']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
   async getAdminSubmissionById(id: string) {
-    const endpoint = ` + '`/api/admin/submissions/${encodeURIComponent(id)}`' + `;
+    const endpoint = ` +
+  '`/api/admin/submissions/${encodeURIComponent(id)}`' +
+  `;
     return this.request<paths['/api/admin/submissions/{id}']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
-  async reviewSubmission(body: paths['/api/admin/submissions']['patch']['requestBody']['content']['application/json']) {
+  async reviewSubmission(body: NonNullable<paths['/api/admin/submissions']['patch']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/submissions']['patch']['responses']['200']['content']['application/json']>(
       '/api/admin/submissions',
       { method: 'PATCH', body: JSON.stringify(body) }
     );
   }
 
-  async bulkReview(body: paths['/api/admin/submissions']['post']['requestBody']['content']['application/json']) {
+  async bulkReview(body: NonNullable<paths['/api/admin/submissions']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/submissions']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/submissions',
       { method: 'POST', body: JSON.stringify(body) }
@@ -191,18 +292,20 @@ export class ElevateAPIClient {
         }
       });
     }
-    const endpoint = ` + '`/api/admin/users${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
+    const endpoint = ` +
+  "`/api/admin/users${searchParams.toString() ? '?' + searchParams.toString() : ''}`" +
+  `;
     return this.request<paths['/api/admin/users']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
-  async updateAdminUser(body: paths['/api/admin/users']['patch']['requestBody']['content']['application/json']) {
+  async updateAdminUser(body: NonNullable<paths['/api/admin/users']['patch']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/users']['patch']['responses']['200']['content']['application/json']>(
       '/api/admin/users',
       { method: 'PATCH', body: JSON.stringify(body) }
     );
   }
 
-  async bulkUpdateAdminUsers(body: paths['/api/admin/users']['post']['requestBody']['content']['application/json']) {
+  async bulkUpdateAdminUsers(body: NonNullable<paths['/api/admin/users']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/users']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/users',
       { method: 'POST', body: JSON.stringify(body) }
@@ -216,18 +319,20 @@ export class ElevateAPIClient {
         if (value !== undefined) searchParams.append(key, String(value));
       });
     }
-    const endpoint = ` + '`/api/admin/badges${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
+    const endpoint = ` +
+  "`/api/admin/badges${searchParams.toString() ? '?' + searchParams.toString() : ''}`" +
+  `;
     return this.request<paths['/api/admin/badges']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
-  async createAdminBadge(body: paths['/api/admin/badges']['post']['requestBody']['content']['application/json']) {
+  async createAdminBadge(body: NonNullable<paths['/api/admin/badges']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/badges']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/badges',
       { method: 'POST', body: JSON.stringify(body) }
     );
   }
 
-  async updateAdminBadge(body: paths['/api/admin/badges']['patch']['requestBody']['content']['application/json']) {
+  async updateAdminBadge(body: NonNullable<paths['/api/admin/badges']['patch']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/badges']['patch']['responses']['200']['content']['application/json']>(
       '/api/admin/badges',
       { method: 'PATCH', body: JSON.stringify(body) }
@@ -235,18 +340,20 @@ export class ElevateAPIClient {
   }
 
   async deleteAdminBadge(code: string) {
-    const url = ` + '`/api/admin/badges?code=${encodeURIComponent(code)}`' + `;
+    const url = ` +
+  '`/api/admin/badges?code=${encodeURIComponent(code)}`' +
+  `;
     return this.request<paths['/api/admin/badges']['delete']['responses']['200']['content']['application/json']>(url, { method: 'DELETE' });
   }
 
-  async assignAdminBadge(body: paths['/api/admin/badges/assign']['post']['requestBody']['content']['application/json']) {
+  async assignAdminBadge(body: NonNullable<paths['/api/admin/badges/assign']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/badges/assign']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/badges/assign',
       { method: 'POST', body: JSON.stringify(body) }
     );
   }
 
-  async removeAdminBadge(body: paths['/api/admin/badges/assign']['delete']['requestBody']['content']['application/json']) {
+  async removeAdminBadge(body: NonNullable<paths['/api/admin/badges/assign']['delete']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/badges/assign']['delete']['responses']['200']['content']['application/json']>(
       '/api/admin/badges/assign',
       { method: 'DELETE', body: JSON.stringify(body) }
@@ -260,8 +367,33 @@ export class ElevateAPIClient {
         if (value !== undefined) searchParams.append(key, String(value));
       });
     }
-    const endpoint = ` + '`/api/admin/analytics${searchParams.toString() ? \'?\' + searchParams.toString() : \'\'}`' + `;
+    const endpoint = ` +
+  "`/api/admin/analytics${searchParams.toString() ? '?' + searchParams.toString() : ''}`" +
+  `;
     return this.request<paths['/api/admin/analytics']['get']['responses']['200']['content']['application/json']>(endpoint);
+  }
+  // Typed DTO convenience for admin analytics
+  async getAdminAnalyticsDTO(
+    params?: paths['/api/admin/analytics']['get']['parameters']['query']
+  ): Promise<ApiSuccess<AdminAnalyticsDTO>> {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) searchParams.append(key, String(value));
+      });
+    }
+    const endpoint = ` +
+  "`/api/admin/analytics${searchParams.toString() ? '?' + searchParams.toString() : ''}`" +
+  `;
+    const res = await this.request<ApiSuccess<unknown>>(endpoint);
+    const parsed = AdminAnalyticsDTOSchema.safeParse(res.data);
+    if (!parsed.success) {
+      throw new APIError('Invalid admin analytics response shape', 500, parsed.error.issues);
+    }
+    return {
+      success: res.success,
+      data: parsed.data
+    };
   }
 
   async getAdminCohorts() {
@@ -276,14 +408,14 @@ export class ElevateAPIClient {
     );
   }
 
-  async testAdminKajabi(body: paths['/api/admin/kajabi/test']['post']['requestBody']['content']['application/json']) {
+  async testAdminKajabi(body: NonNullable<paths['/api/admin/kajabi/test']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/kajabi/test']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/kajabi/test',
       { method: 'POST', body: JSON.stringify(body) }
     );
   }
 
-  async reprocessAdminKajabi(body: paths['/api/admin/kajabi/reprocess']['post']['requestBody']['content']['application/json']) {
+  async reprocessAdminKajabi(body: NonNullable<paths['/api/admin/kajabi/reprocess']['post']['requestBody']>['content']['application/json']) {
     return this.request<paths['/api/admin/kajabi/reprocess']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/kajabi/reprocess',
       { method: 'POST', body: JSON.stringify(body) }
@@ -296,7 +428,7 @@ export class ElevateAPIClient {
   }
 
   clearToken() {
-    this.token = undefined;
+    delete this.token;
   }
 
   setBaseUrl(baseUrl: string) {
@@ -304,45 +436,15 @@ export class ElevateAPIClient {
   }
 }
 
-// Error classes
-export class APIError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public details?: unknown[]
-  ) {
-    super(message);
-    this.name = 'APIError';
-  }
-}
-
-export class ValidationError extends APIError {
-  constructor(message: string, details?: unknown[]) {
-    super(message, 400, details);
-    this.name = 'ValidationError';
-  }
-}
-
-export class AuthenticationError extends APIError {
-  constructor(message = 'Unauthorized') {
-    super(message, 401);
-    this.name = 'AuthenticationError';
-  }
-}
-
-export class ForbiddenError extends APIError {
-  constructor(message = 'Forbidden') {
-    super(message, 403);
-    this.name = 'ForbiddenError';
-  }
-}
-
-export class RateLimitError extends APIError {
-  constructor(message = 'Rate limit exceeded') {
-    super(message, 429);
-    this.name = 'RateLimitError';
-  }
-}
+// Error classes are imported from @elevate/types/errors - no local definitions needed
+// Export them for backwards compatibility
+export {
+  APIError,
+  ValidationError,
+  AuthenticationError,
+  ForbiddenError,
+  RateLimitError
+} from '@elevate/types/errors';
 
 // Type helpers
 export type SubmissionPayload = 
@@ -358,29 +460,34 @@ export type Visibility = components['schemas']['Visibility'];
 
 // Default export
 export default ElevateAPIClient;
-`;
+// Re-export common DTOs for convenience
+// Types re-export intentionally omitted in generated SDK
+`
 
 // Write the SDK to file
-const sdkPath = resolve(srcDir, 'sdk.ts');
-writeFileSync(sdkPath, clientSdk, 'utf-8');
+const sdkPath = resolve(srcDir, 'sdk.ts')
+writeFileSync(sdkPath, clientSdk, 'utf-8')
 
-console.log(`✅ TypeScript SDK generated: ${sdkPath}`);
-console.log('📚 SDK includes:');
-console.log('   - Type-safe API client class');
-console.log('   - Error handling with custom error classes');
-console.log('   - Complete method coverage for all endpoints');
-console.log('   - TypeScript intellisense support');
-console.log('   - Automatic request/response typing');
+console.log(`✅ TypeScript SDK generated: ${sdkPath}`)
+console.log('📚 SDK includes:')
+console.log('   - Type-safe API client class')
+console.log('   - Error handling with custom error classes')
+console.log('   - Complete method coverage for all endpoints')
+console.log('   - TypeScript intellisense support')
+console.log('   - Automatic request/response typing')
 
 // Generate usage examples
-const examplesPath = resolve(srcDir, 'examples.ts');
-const examples = `// MS Elevate LEAPS API - Usage Examples
+const examplesPath = resolve(srcDir, 'examples.ts')
+const examples =
+  `// MS Elevate LEAPS API - Usage Examples
 
-import ElevateAPIClient, { 
+import ElevateAPIClient from './sdk';
+import { 
   APIError, 
   ValidationError,
-  AuthenticationError 
-} from './sdk.js';
+  AuthenticationError,
+  ForbiddenError
+} from '@elevate/types/errors';
 
 // Initialize the client
 const api = new ElevateAPIClient({
@@ -389,37 +496,39 @@ const api = new ElevateAPIClient({
 });
 
 // Example 1: Create a Learn submission
-async function createLearnSubmission() {
+async function _createLearnSubmission() {
   try {
     const submission = await api.createSubmission({
       activityCode: 'LEARN',
       payload: {
         provider: 'SPL',
-        course: 'AI for Educators',
+        courseName: 'AI for Educators',
         completedAt: new Date().toISOString(),
-        certificateFile: 'evidence/learn/user123/certificate.pdf'
+        certificateUrl: 'https://example.com/certificate.pdf'
       },
       visibility: 'PRIVATE'
     });
     
     console.log('Submission created:', submission.data);
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof ValidationError) {
       console.error('Validation errors:', error.details);
     } else if (error instanceof AuthenticationError) {
       console.error('Authentication required');
-    } else {
+    } else if (error instanceof Error) {
       console.error('Submission failed:', error.message);
+    } else {
+      console.error('Unknown error occurred:', error);
     }
   }
 }
 
-// Example 2: Upload evidence file
-async function uploadEvidence(file: File) {
+// Example 2: Upload evidence file  
+async function _uploadEvidence(file: File): Promise<string> {
   try {
     const upload = await api.uploadFile(file, 'EXPLORE');
     console.log('File uploaded:', upload.data);
-    return upload.data.path;
+    return upload.data.path || 'unknown-path';
   } catch (error) {
     console.error('Upload failed:', error);
     throw error;
@@ -427,7 +536,7 @@ async function uploadEvidence(file: File) {
 }
 
 // Example 3: Get user's dashboard data
-async function getUserDashboard() {
+async function _getUserDashboard() {
   try {
     const dashboard = await api.getDashboard();
     console.log('User progress:', dashboard.data.progress);
@@ -438,49 +547,55 @@ async function getUserDashboard() {
 }
 
 // Example 4: Get leaderboard with search
-async function getTopEducators(searchTerm?: string) {
+async function _getTopEducators(searchTerm?: string) {
   try {
     const leaderboard = await api.getLeaderboard({
       period: '30d',
       limit: 10,
-      search: searchTerm
+      ...(searchTerm && { search: searchTerm })
     });
     
     console.log('Top educators:', leaderboard.data);
-    console.log(` + '`Total participants: ${leaderboard.total}`' + `);
+    console.log(` +
+  '`Total participants: ${leaderboard.total}`' +
+  `);
   } catch (error) {
     console.error('Leaderboard fetch failed:', error);
   }
 }
 
 // Example 5: Admin - Review submissions
-async function reviewSubmissions() {
+async function _reviewSubmissions() {
   try {
     const submissions = await api.getAdminSubmissions({
       status: 'PENDING',
       limit: 50
     });
     
-    console.log(` + '`${submissions.data.length} submissions need review`' + `);
+    console.log(` +
+  '`${submissions.data.submissions.length} submissions need review`' +
+  `);
     return submissions.data;
   } catch (error) {
     if (error instanceof ForbiddenError) {
       console.error('Admin access required');
+      return [];
     } else {
       console.error('Failed to fetch submissions:', error);
+      return [];
     }
   }
 }
 
 // Example 6: Complete submission workflow
-async function completeExploreSubmission(
+async function _completeExploreSubmission(
   reflectionText: string, 
   evidenceFiles: File[]
 ) {
   try {
     // 1. Upload evidence files
     const uploadedFiles = await Promise.all(
-      evidenceFiles.map(file => uploadEvidence(file))
+      evidenceFiles.map(file => _uploadEvidence(file))
     );
     
     // 2. Create submission
@@ -488,7 +603,7 @@ async function completeExploreSubmission(
       activityCode: 'EXPLORE',
       payload: {
         reflection: reflectionText,
-        classDate: new Date().toISOString().split('T')[0],
+        classDate: new Date().toISOString().split('T')[0] as string,
         school: 'SDN 123 Jakarta',
         evidenceFiles: uploadedFiles
       },
@@ -504,13 +619,13 @@ async function completeExploreSubmission(
 }
 
 // Example 7: Error handling patterns
-async function handleAPIErrors() {
+async function _handleAPIErrors() {
   try {
     await api.createSubmission({
       activityCode: 'LEARN',
       payload: {
         provider: 'SPL',
-        course: '', // This will cause validation error
+        courseName: '', // This will cause validation error
         completedAt: new Date().toISOString()
       }
     });
@@ -584,12 +699,14 @@ export const createApiClient = (environment: 'development' | 'staging' | 'produc
 
   return new ElevateAPIClient(configs[environment]);
 };
-`;
+`
 
-writeFileSync(examplesPath, examples, 'utf-8');
+writeFileSync(examplesPath, examples, 'utf-8')
 
-console.log(`✅ Usage examples generated: ${examplesPath}`);
-console.log('\n🎯 TypeScript client SDK is ready!');
-console.log('   Import: import ElevateAPIClient from "@elevate/openapi/dist/sdk"');
-console.log('   Types: All endpoints have full TypeScript support');
-console.log('   Examples: See dist/examples.ts for usage patterns');
+console.log(`✅ Usage examples generated: ${examplesPath}`)
+console.log('\n🎯 TypeScript client SDK is ready!')
+console.log(
+  '   Import: import ElevateAPIClient from "@elevate/openapi/dist/sdk"',
+)
+console.log('   Types: All endpoints have full TypeScript support')
+console.log('   Examples: See dist/examples.ts for usage patterns')

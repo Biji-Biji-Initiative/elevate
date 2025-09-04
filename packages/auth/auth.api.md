@@ -4,6 +4,7 @@
 
 ```ts
 
+import type { LogContext } from '@elevate/logging';
 import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { Role } from '@elevate/types';
@@ -21,13 +22,13 @@ export interface AuthUser {
 }
 
 // @public
-export function createErrorResponse(error: unknown, fallbackStatus?: number): NextResponse;
+export function createErrorResponse(error: unknown, fallbackStatus?: number, context?: LogContext): NextResponse;
 
 // @public
 export function createProtectedAction<TInput, TOutput>(minRole: RoleName, action: (user: AuthUser, input: TInput) => Promise<TOutput>): (input: TInput) => Promise<TOutput>;
 
 // @public
-export function createProtectedApiHandler(minRole: RoleName, handler: (user: AuthUser, req: NextRequest) => Promise<NextResponse>): (req: NextRequest) => Promise<NextResponse>;
+export function createProtectedApiHandler(minRole: RoleName, handler: (user: AuthUser, req: NextRequest, context?: LogContext) => Promise<NextResponse>, context?: LogContext): (req: NextRequest) => Promise<NextResponse>;
 
 // @public
 export function getCurrentUser(): Promise<AuthUser | null>;

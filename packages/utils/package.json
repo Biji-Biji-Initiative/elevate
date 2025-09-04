@@ -1,0 +1,52 @@
+{
+  "name": "@elevate/utils",
+  "version": "0.1.0",
+  "private": true,
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.11"
+  },
+  "type": "module",
+  "main": "./dist/js/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/js/index.js"
+    },
+    "./errors": {
+      "types": "./dist/types/errors.d.ts",
+      "import": "./dist/js/errors.js"
+    },
+    "./env": {
+      "types": "./dist/types/env.d.ts",
+      "import": "./dist/js/env.js"
+    }
+  },
+  "files": [
+    "dist/js",
+    "dist/types",
+    "README.md",
+    "LICENSE",
+    "dist/js/**/*.map"
+  ],
+  "typesVersions": {
+    "*": {
+      "*": ["dist/types/*"]
+    }
+  },
+  "scripts": {
+    "build": "pnpm run build:types && tsup",
+    "build:types": "tsc -b tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@elevate/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsup": "^8.3.7",
+    "typescript": "^5.9.2"
+  }
+}

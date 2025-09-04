@@ -1,21 +1,28 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { prisma } from '@elevate/db/client'
-import { parseAmplifyPayload, parseActivityCode, type ActivityCode, createSuccessResponse, createErrorResponse } from '@elevate/types'
 
-export const runtime = 'nodejs';
+import { prisma } from '@elevate/db/client'
+import {
+  parseAmplifyPayload,
+  parseActivityCode,
+  type ActivityCode,
+  createSuccessResponse,
+  createErrorResponse,
+} from '@elevate/types'
+
+export const runtime = 'nodejs'
 
 // Type definitions
 type CohortWithAvgPoints = {
-  name: string;
-  count: number;
-  avgPoints: number;
-};
+  name: string
+  count: number
+  avgPoints: number
+}
 
 type MonthlyGrowthData = {
-  month: string;
-  educators: number;
-  submissions: number;
-};
+  month: string
+  educators: number
+  submissions: number
+}
 
 export async function GET(_request: NextRequest) {
   try {
@@ -27,93 +34,96 @@ export async function GET(_request: NextRequest) {
       stageStats,
       topCohorts,
       badgeStats,
-      monthlyGrowth
+      monthlyGrowth,
     ] = await Promise.all([
       // Total educators
       prisma.user.count(),
-      
+
       // Total submissions
       prisma.submission.count(),
-      
+
       // Total points awarded
       prisma.pointsLedger.aggregate({
-        _sum: { delta_points: true }
+        _sum: { delta_points: true },
       }),
-      
+
       // Stage-wise submission statistics
       prisma.submission.groupBy({
         by: ['activity_code', 'status'],
-        _count: { id: true }
+        _count: { id: true },
       }),
-      
+
       // Top cohorts by user count
       prisma.user.groupBy({
         by: ['cohort'],
         where: { cohort: { not: null } },
         _count: { id: true },
         orderBy: { _count: { id: 'desc' } },
-        take: 5
+        take: 5,
       }),
-      
+
       // Badge statistics
       prisma.earnedBadge.groupBy({
         by: ['badge_code'],
         _count: { id: true },
         orderBy: { _count: { id: 'desc' } },
-        take: 5
+        take: 5,
       }),
 
       // Monthly growth (last 6 months)
-      getMonthlyGrowthData()
+      getMonthlyGrowthData(),
     ])
 
     // Calculate students impacted (approximation from AMPLIFY submissions)
     const amplifySubmissions = await prisma.submission.findMany({
-      where: { 
+      where: {
         activity_code: 'AMPLIFY',
-        status: 'APPROVED' 
+        status: 'APPROVED',
       },
-      select: { payload: true }
+      select: { payload: true },
     })
 
     let studentsImpacted = 0
-    amplifySubmissions.forEach(submission => {
+    amplifySubmissions.forEach((submission) => {
       if (submission.payload) {
-        const parsedPayload = parseAmplifyPayload({ activityCode: 'AMPLIFY', data: submission.payload })
+        const parsedPayload = parseAmplifyPayload({
+          activityCode: 'AMPLIFY',
+          data: submission.payload,
+        })
         if (parsedPayload) {
-          studentsImpacted += (parsedPayload.data.studentsTrained || 0)
+          studentsImpacted += parsedPayload.data.studentsTrained || 0
         }
       }
     })
 
-    // Process stage statistics  
+    // Process stage statistics
     type StageStats = {
-      total: number;
-      approved: number;
-      pending: number;
-      rejected: number;
+      total: number
+      approved: number
+      pending: number
+      rejected: number
     }
     const byStage: Partial<Record<ActivityCode, StageStats>> = {}
     const stages = ['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']
-    
-    stages.forEach(stageStr => {
+
+    stages.forEach((stageStr) => {
       const stage = parseActivityCode(stageStr)
       if (stage) {
         byStage[stage] = {
           total: 0,
           approved: 0,
           pending: 0,
-          rejected: 0
+          rejected: 0,
         }
       }
     })
 
-    stageStats.forEach(stat => {
+    stageStats.forEach((stat) => {
       const stage = parseActivityCode(stat.activity_code)
       if (stage && byStage[stage]) {
         const statusLower = stat.status.toLowerCase()
         const stageData = byStage[stage]
-        
+
         switch (statusLower) {
           case 'approved':
             stageData.approved = stat._count.id
@@ -125,7 +135,7 @@ export async function GET(_request: NextRequest) {
             stageData.rejected = stat._count.id
             break
         }
-        
+
         stageData.total += stat._count.id
       }
     })
@@ -136,79 +146,81 @@ export async function GET(_request: NextRequest) {
         // Get all users in this cohort
         const cohortUsers = await prisma.user.findMany({
           where: { cohort: cohort.cohort },
-          select: { id: true }
+          select: { id: true },
         })
-        
-        const userIds = cohortUsers.map(u => u.id)
-        
+
+        const userIds = cohortUsers.map((u) => u.id)
+
         if (userIds.length === 0) {
           return {
             name: cohort.cohort || 'Unknown',
             count: cohort._count.id,
-            avgPoints: 0
+            avgPoints: 0,
           }
         }
-        
+
         // Get points for all users in this cohort
         const userPointsData = await prisma.pointsLedger.groupBy({
           by: ['user_id'],
           where: {
-            user_id: { in: userIds }
+            user_id: { in: userIds },
           },
           _sum: {
-            delta_points: true
-          }
+            delta_points: true,
+          },
         })
-        
+
         // Calculate average
-        const totalPoints = userPointsData.reduce((sum, user) => 
-          sum + (user._sum.delta_points || 0), 0
+        const totalPoints = userPointsData.reduce(
+          (sum, user) => sum + (user._sum.delta_points || 0),
+          0,
         )
-        const avgPoints = userPointsData.length > 0 ? totalPoints / userPointsData.length : 0
-        
+        const avgPoints =
+          userPointsData.length > 0 ? totalPoints / userPointsData.length : 0
+
         return {
           name: cohort.cohort || 'Unknown',
           count: cohort._count.id,
-          avgPoints
+          avgPoints,
         }
-      })
+      }),
     )
 
     // Helper function to get monthly growth data
     async function getMonthlyGrowthData(): Promise<MonthlyGrowthData[]> {
       const sixMonthsAgo = new Date()
       sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-      
+
       const submissions = await prisma.submission.findMany({
         where: {
-          created_at: { gte: sixMonthsAgo }
+          created_at: { gte: sixMonthsAgo },
         },
         select: {
           created_at: true,
-          user_id: true
-        }
+          user_id: true,
+        },
       })
-      
+
       // Group by month
       const monthlyData = submissions.reduce((acc, submission) => {
         const monthKey = submission.created_at.toISOString().slice(0, 7) // YYYY-MM format
         if (!acc[monthKey]) {
           acc[monthKey] = {
             educators: new Set<string>(),
-            submissions: 0
+            submissions: 0,
           }
         }
         acc[monthKey].educators.add(submission.user_id)
         acc[monthKey].submissions++
         return acc
       }, {} as Record<string, { educators: Set<string>; submissions: number }>)
-      
+
       // Convert to array and format
       return Object.entries(monthlyData)
         .map(([month, data]) => ({
           month,
           educators: data.educators.size,
-          submissions: data.submissions
+          submissions: data.submissions,
         }))
         .sort((a, b) => a.month.localeCompare(b.month))
     }
@@ -216,19 +228,38 @@ export async function GET(_request: NextRequest) {
     // Get badge details for most popular badges
     const badgeDetails = await prisma.badge.findMany({
       where: {
-        code: { in: badgeStats.map(b => b.badge_code) }
+        code: { in: badgeStats.map((b) => b.badge_code) },
       },
-      select: { code: true, name: true }
+      select: { code: true, name: true },
     })
 
-    const mostPopularBadges = badgeStats.map(stat => {
-      const badge = badgeDetails.find(b => b.code === stat.badge_code)
+    const mostPopularBadges = badgeStats.map((stat) => {
+      const badge = badgeDetails.find((b) => b.code === stat.badge_code)
       return {
         code: stat.badge_code,
         name: badge?.name || stat.badge_code,
-        count: stat._count.id
+        count: stat._count.id,
       }
     })
+
+    // Calculate homepage counters
+    const approvedLearnCount = byStage.LEARN?.approved || 0
+    const approvedPresentCount = byStage.PRESENT?.approved || 0
+
+    // Calculate peers & students reached from AMPLIFY submissions
+    let peersReached = 0
+    amplifySubmissions.forEach((submission) => {
+      if (submission.payload) {
+        const parsedPayload = parseAmplifyPayload({
+          activityCode: 'AMPLIFY',
+          data: submission.payload,
+        })
+        if (parsedPayload) {
+          peersReached += parsedPayload.data.peersTrained || 0
+        }
+      }
+    })
+    const peersStudentsReached = peersReached + studentsImpacted
 
     const stats = {
       totalEducators,
@@ -241,14 +272,21 @@ export async function GET(_request: NextRequest) {
       badges: {
         totalAwarded: badgeStats.reduce((sum, stat) => sum + stat._count.id, 0),
         uniqueBadges: badgeStats.length,
-        mostPopular: mostPopularBadges
-      }
+        mostPopular: mostPopularBadges,
+      },
+      // Homepage counters (5 from spec)
+      counters: {
+        educators_learning: approvedLearnCount,
+        peers_students_reached: peersStudentsReached,
+        stories_shared: approvedPresentCount,
+        micro_credentials: approvedLearnCount, // Assuming Learn completion = micro-credential
+        mce_certified: 0, // Placeholder - would need MCE tracking
+      },
     }
 
     const res = createSuccessResponse(stats)
     res.headers.set('Cache-Control', 'public, s-maxage=1800')
     return res
-
   } catch (_error) {
     return createErrorResponse(new Error('Failed to fetch statistics'), 500)
   }

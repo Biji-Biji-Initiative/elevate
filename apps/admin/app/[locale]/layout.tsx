@@ -10,9 +10,9 @@ export const dynamic = 'force-dynamic'
 
 type Props = {
   children: React.ReactNode;
-  params: Promise<{
+  params: {
     locale: string;
-  }>;
+  };
 };
 
 // Remove generateStaticParams to prevent static generation
@@ -23,9 +23,9 @@ type Props = {
 export async function generateMetadata({ 
   params 
 }: { 
-  params: Promise<{ locale: string }> 
+  params: { locale: string } 
 }): Promise<Metadata> {
-  const { locale } = await params;
+  const { locale } = params;
   const t = await getTranslations({ locale, namespace: 'dashboard' });
   
   return {
@@ -45,7 +45,7 @@ export default async function LocaleLayout({
   children,
   params
 }: Props) {
-  const { locale } = await params;
+  const { locale } = params;
   const messages = await getMessages();
   
   return (

@@ -1,15 +1,28 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 
+import { useFormSubmission, useFileUpload } from '@elevate/forms'
+import { VISIBILITY_OPTIONS, LEARN } from '@elevate/types'
 import { LearnSchema, type LearnInput } from '@elevate/types/schemas'
-import { Button, Input, Card, FormField, LoadingSpinner, Alert, AlertTitle, AlertDescription, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, FileUpload, FileList, type UploadedFile } from '@elevate/ui'
-
+import {
+  Button,
+  Input,
+  Card,
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@elevate/ui'
+import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
 
 import { getApiClient } from '../../../../lib/api-client'
 
@@ -20,134 +33,102 @@ const providerOptions = [
 
 export default function LearnFormPage() {
   const { userId } = useAuth()
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  
+  const { isSubmitting, submitStatus, handleSubmit: handleFormSubmit } = useFormSubmission({
+    successMessage: 'Certificate submitted successfully! Your submission is now under review.'
+  })
+  
+  const { uploadedFiles, handleFileSelect: handleFileUpload, removeFile } = useFileUpload({
+    maxFiles: 1,
+    onUpload: async (files) => {
+      if (files.length === 0 || !files[0]) return []
+      const file = files[0]
+      const api = getApiClient()
+      const result = await api.uploadFile(file, LEARN)
+
+      return [{
+        file,
+        path: result.data.path,
+        hash: result.data.hash,
+      }]
+    }
+  })
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors }
+    formState: { errors },
   } = useForm<LearnInput>({
-    resolver: zodResolver(LearnSchema)
+    resolver: zodResolver(LearnSchema),
   })
 
-  const watchedProvider = watch('provider')
+  // Accessing provider ensures validation feedback; value not used elsewhere
+  watch('provider')
 
   const handleFileSelect = async (files: File[]) => {
-    const file = files[0] // Only allow one certificate file
-    if (!file) {
-      return // Early exit if no file selected
-    }
-    
-    const newUploadedFile: UploadedFile = {
-      file,
-      uploading: true
-    }
-
-    setUploadedFiles([newUploadedFile])
-
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('activityCode', 'LEARN')
-
-      const api = getApiClient()
-      const result = await api.uploadFile(file, 'LEARN')
-
-      // Update the file with upload results
-      setUploadedFiles([{
-        file,
-        path: result.data.path,
-        hash: result.data.hash,
-        uploading: false
-      }])
-
-      // Update form value
-      setValue('certificateFile', result.data.path)
-
-    } catch (error) {
-      setUploadedFiles([{
-        file,
-        uploading: false,
-        error: error instanceof Error ? error.message : 'Upload failed'
-      }])
+    const results = await handleFileUpload(files)
+    if (results.length > 0) {
+      setValue('certificate_url', results[0].path)
     }
   }
 
   const handleFileRemove = (index: number) => {
-    setUploadedFiles([])
-    setValue('certificateFile', undefined)
+    removeFile(index)
+    setValue('certificate_url', undefined)
   }
 
   const onSubmit = async (data: LearnInput) => {
-    if (!userId) {
-      setSubmitStatus({ type: 'error', message: 'You must be logged in to submit' })
-      return
-    }
-
-    const firstFile = uploadedFiles[0]
-    if (uploadedFiles.length === 0 || !firstFile || !firstFile.path) {
-      setSubmitStatus({ type: 'error', message: 'Please upload a certificate file' })
-      return
-    }
-
-    setIsSubmitting(true)
-    setSubmitStatus(null)
-
-    try {
-      const payload = {
-        provider: data.provider,
-        course: data.course,
-        completedAt: data.completedAt,
-        certificateFile: firstFile.path,
-        certificateHash: firstFile.hash
+    await handleFormSubmit(async () => {
+      if (!userId) {
+        throw new Error('You must be logged in to submit')
       }
 
-      const api2 = getApiClient()
-      await api2.createSubmission({
-        activityCode: 'LEARN',
+      const firstFile = uploadedFiles[0]
+      if (uploadedFiles.length === 0 || !firstFile || !firstFile.path) {
+        throw new Error('Please upload a certificate file')
+      }
+
+      const payload = {
+        provider: data.provider,
+        course_name: data.course_name,
+        completed_at: data.completed_at,
+        certificate_url: firstFile.path,
+        certificate_hash: firstFile.hash,
+      }
+
+      const api = getApiClient()
+      await api.createSubmission({
+        activityCode: LEARN,
         payload,
         attachments: [firstFile.path],
-        visibility: 'PRIVATE'
+        visibility: VISIBILITY_OPTIONS[0], // PRIVATE
       })
-
-      setSubmitStatus({ 
-        type: 'success', 
-        message: 'Certificate submitted successfully! Your submission is now under review.' 
-      })
-
-      // Reset form
-      setUploadedFiles([])
-      
-    } catch (error) {
-      setSubmitStatus({ 
-        type: 'error', 
-        message: error instanceof Error ? error.message : 'Failed to submit certificate'
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
+    })
   }
 
   return (
     <main style={{ padding: 24, fontFamily: 'system-ui' }}>
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Learn — Submit Certificate</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Learn — Submit Certificate
+          </h1>
           <p className="text-gray-600">
-            Upload your completion certificate to earn 20 points. Certificates are verified for authenticity.
+            Upload your completion certificate to earn 20 points. Certificates
+            are verified for authenticity.
           </p>
         </div>
 
         {submitStatus && (
-          <Alert 
-            variant={submitStatus.type === 'error' ? 'destructive' : 'default'} 
+          <Alert
+            variant={submitStatus.type === 'error' ? 'destructive' : 'default'}
             className="mb-6"
           >
-            <AlertTitle>{submitStatus.type === 'success' ? 'Success!' : 'Error'}</AlertTitle>
+            <AlertTitle>
+              {submitStatus.type === 'success' ? 'Success!' : 'Error'}
+            </AlertTitle>
             <AlertDescription>{submitStatus.message}</AlertDescription>
           </Alert>
         )}
@@ -159,11 +140,14 @@ export default function LearnFormPage() {
               required
               error={errors.provider?.message}
             >
-              <Select value={watchedProvider || ''} onValueChange={(value) => {
-                if (value === 'SPL' || value === 'ILS') {
-                  setValue('provider', value)
-                }
-              }}>
+              <Select
+                value={watchedProvider || ''}
+                onValueChange={(value) => {
+                  if (value === 'SPL' || value === 'ILS') {
+                    setValue('provider', value)
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select your training provider" />
                 </SelectTrigger>
@@ -180,11 +164,11 @@ export default function LearnFormPage() {
             <FormField
               label="Course Name"
               required
-              error={errors.course?.message}
+              error={errors.course_name?.message}
               description="Enter the full name of the course you completed"
             >
               <Input
-                {...register('course')}
+                {...register('course_name')}
                 placeholder="e.g. AI in Education Fundamentals"
               />
             </FormField>
@@ -192,12 +176,9 @@ export default function LearnFormPage() {
             <FormField
               label="Completion Date"
               required
-              error={errors.completedAt?.message}
+              error={errors.completed_at?.message}
             >
-              <Input
-                {...register('completedAt')}
-                type="date"
-              />
+              <Input {...register('completed_at')} type="date" />
             </FormField>
 
             <FormField
@@ -212,16 +193,17 @@ export default function LearnFormPage() {
                 maxFiles={1}
                 disabled={isSubmitting}
               />
-              <FileList 
-                files={uploadedFiles} 
-                onRemove={handleFileRemove}
-              />
+              <FileList files={uploadedFiles} onRemove={handleFileRemove} />
             </FormField>
 
             <div className="pt-4 border-t border-gray-200">
-              <Button 
-                type="submit" 
-                disabled={isSubmitting || uploadedFiles.length === 0 || !!uploadedFiles[0]?.error}
+              <Button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  uploadedFiles.length === 0 ||
+                  !!uploadedFiles[0]?.error
+                }
                 className="w-full"
               >
                 {isSubmitting ? (
@@ -238,9 +220,14 @@ export default function LearnFormPage() {
         </Card>
 
         <div className="mt-6 text-sm text-gray-500">
-          <h3 className="font-medium text-gray-700 mb-2">Submission Guidelines:</h3>
+          <h3 className="font-medium text-gray-700 mb-2">
+            Submission Guidelines:
+          </h3>
           <ul className="space-y-1">
-            <li>• Certificates must be from approved training providers (SPL or ILS)</li>
+            <li>
+              • Certificates must be from approved training providers (SPL or
+              ILS)
+            </li>
             <li>• Files should be clear and readable</li>
             <li>• Duplicate certificates will be automatically detected</li>
             <li>• Review process typically takes 24-48 hours</li>

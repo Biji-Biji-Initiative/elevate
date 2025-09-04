@@ -17,7 +17,9 @@ export async function typedFetch<T>(
   let json: unknown
   try {
     json = await res.json()
-  } catch (_error) {
+  } catch (error) {
+    // Failed to parse JSON response, likely empty or non-JSON content
+    console.warn('Failed to parse JSON response:', error instanceof Error ? error.message : 'Unknown error')
     json = {}
   }
 

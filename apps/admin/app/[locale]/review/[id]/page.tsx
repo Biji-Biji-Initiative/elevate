@@ -4,14 +4,15 @@ import React, { useState, useEffect, useCallback } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { withRoleGuard } from '@elevate/auth/context'
 import { adminClient, AdminClientError, type AdminSubmission } from '@/lib/admin-client'
-import { Button , Textarea, Input, StatusBadge, ConfirmModal, Alert } from '@elevate/ui'
+import { withRoleGuard } from '@elevate/auth/context'
+import { Button , Textarea, Input, Alert } from '@elevate/ui'
+import { StatusBadge, ConfirmModal } from '@elevate/ui/blocks'
 
 function ReviewSubmissionPage({
-  params
+  params,
 }: {
-  params: Promise<{ id: string }>
+  params: { id: string }
 }) {
   const router = useRouter()
   const [submission, setSubmission] = useState<AdminSubmission | null>(null)
@@ -29,15 +30,7 @@ function ReviewSubmissionPage({
     action: 'approve'
   })
 
-  const [submissionId, setSubmissionId] = useState<string | null>(null)
-
-  useEffect(() => {
-    const getParams = async () => {
-      const { id } = await params
-      setSubmissionId(id)
-    }
-    void getParams()
-  }, [params])
+  const submissionId = params.id
 
   const fetchSubmission = useCallback(async () => {
     if (!submissionId) return
@@ -70,9 +63,15 @@ function ReviewSubmissionPage({
     if (!submission) return 0
     
     if (submission.activity.code === 'AMPLIFY') {
-      const peers = Number(submission.payload?.peersTrained || 0)
-      const students = Number(submission.payload?.studentsTrained || 0)
-      return Math.min(peers, 50) * 2 + Math.min(students, 200) * 1
+      // Type guard for AMPLIFY payload
+      const isAmplifyPayload = (payload: unknown): payload is { peers_trained: number; students_trained: number } => {
+        if (typeof payload !== 'object' || payload === null) return false
+        const obj = payload as { peers_trained?: unknown; students_trained?: unknown }
+        return typeof obj.peers_trained === 'number' && typeof obj.students_trained === 'number'
+      }
+      
+      const amplifyPayload = isAmplifyPayload(submission.payload) ? submission.payload : { peers_trained: 0, students_trained: 0 }
+      return Math.min(amplifyPayload.peers_trained, 50) * 2 + Math.min(amplifyPayload.students_trained, 200) * 1
     }
 
     return submission.activity.default_points || 0

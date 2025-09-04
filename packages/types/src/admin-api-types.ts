@@ -1,13 +1,11 @@
 import { z } from 'zod'
-import { BadgeCriteriaSchema } from './common.js'
-import { SubmissionPayloadSchema } from './submission-payloads.js'
-import { KajabiTagEventSchema } from './webhooks.js'
+
+import { BadgeCriteriaSchema } from './common'
 import { 
   ActivityCodeSchema,
   SubmissionStatusSchema,
   VisibilitySchema,
   UserRoleSchema,
-  PaginationParamsSchema,
   ActivityFilterSchema,
   StatusFilterSchema,
   RoleFilterSchema,
@@ -17,7 +15,9 @@ import {
   VisibilityEnum,
   RoleEnum,
   PaginationSchema
-} from './domain-constants.js'
+} from './domain-constants'
+import { SubmissionPayloadSchema } from './submission-payloads'
+import { KajabiTagEventSchema } from './webhooks'
 
 // All enums are now imported from domain constants
 // Re-export for backward compatibility

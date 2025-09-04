@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
-import { prisma } from '@elevate/db'
-import { parseActivityCode, AnalyticsQuerySchema, createSuccessResponse } from '@elevate/types'
+// Use database service layer instead of direct Prisma client import
+import { prisma } from '@elevate/db' // Still used by analytics helper functions
+import { computeApprovalRate, computeActivationRate, buildActivityNameMap, mapActivityDistribution, computeDailySubmissionStats, mapPointsByActivityDistribution, mapPointsDistributionFromUserTotals, mapTopBadges, mapReviewerPerformance } from '@elevate/logic'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { parseActivityCode, AnalyticsQuerySchema, createSuccessResponse } from '@elevate/types'
 import type {
   AnalyticsDateFilter,
   AnalyticsCohortFilter,
@@ -171,7 +173,7 @@ async function getSubmissionStats(filter: AnalyticsSubmissionFilter): Promise<Su
     prisma.submission.count({ where: { ...filter, status: 'REJECTED' } })
   ])
   
-  const approvalRate = total > 0 ? ((approved / (approved + rejected)) * 100) : 0
+  const approvalRate = computeApprovalRate(approved, rejected)
   
   return {
     total,
@@ -214,19 +216,8 @@ async function getSubmissionsByActivity(filter: AnalyticsSubmissionFilter): Prom
     }
   })
   
-  const activityMap = activities.reduce((acc, activity) => {
-    acc[activity.code] = activity.name
-    return acc
-  }, {} as Record<string, string>)
-  
-  return result.map(item => {
-    const activityCode = parseActivityCode(item.activity_code)
-    return {
-      activity: activityCode || item.activity_code as ActivityCode,
-      activityName: activityMap[item.activity_code] || 'Unknown',
-      count: item._count
-    }
-  })
+  const activityMap = buildActivityNameMap(activities)
+  return mapActivityDistribution(result, activityMap)
 }
 
 async function getSubmissionsByDate(filter: AnalyticsSubmissionFilter): Promise<DailySubmissionStats[]> {
@@ -250,25 +241,7 @@ async function getSubmissionsByDate(filter: AnalyticsSubmissionFilter): Promise<
     }
   })
   
-  // Group by date
-  const dailyStats = submissions.reduce((acc, sub) => {
-    const date = sub.created_at.toISOString().split('T')[0]
-    if (!date) return acc // Safety check for noUncheckedIndexedAccess
-    if (!acc[date]) {
-      acc[date] = { total: 0, approved: 0, rejected: 0, pending: 0 }
-    }
-    acc[date].total++
-    const status = sub.status.toLowerCase()
-    if (status === 'approved' || status === 'rejected' || status === 'pending') {
-      acc[date][status]++
-    }
-    return acc
-  }, {} as Record<string, { total: number; approved: number; rejected: number; pending: number }>)
-  
-  return Object.entries(dailyStats).map(([date, stats]) => ({
-    date,
-    ...stats
-  })).sort((a, b) => a.date.localeCompare(b.date))
+  return computeDailySubmissionStats(submissions)
 }
 
 async function getUserStats(filter: AnalyticsUserFilter): Promise<UserAnalyticsStats> {
@@ -302,7 +275,7 @@ async function getUserStats(filter: AnalyticsUserFilter): Promise<UserAnalyticsS
     })
   ])
   
-  const activationRate = total > 0 ? ((active / total) * 100) : 0
+  const activationRate = computeActivationRate(active, total)
   
   return {
     total,
@@ -419,20 +392,8 @@ async function getPointsByActivity(filter: AnalyticsSubmissionFilter): Promise<P
     }
   })
   
-  const activityMap = activities.reduce((acc, activity) => {
-    acc[activity.code] = activity.name
-    return acc
-  }, {} as Record<string, string>)
-  
-  return result.map(item => {
-    const activityCode = parseActivityCode(item.activity_code)
-    return {
-      activity: activityCode || item.activity_code as ActivityCode,
-      activityName: activityMap[item.activity_code] || 'Unknown',
-      totalPoints: item._sum.delta_points || 0,
-      entries: item._count
-    }
-  })
+  const activityMap = buildActivityNameMap(activities)
+  return mapPointsByActivityDistribution(result, activityMap)
 }
 
 async function getPointsDistribution(filter: AnalyticsSubmissionFilter): Promise<PointsDistributionStats> {
@@ -445,24 +406,8 @@ async function getPointsDistribution(filter: AnalyticsSubmissionFilter): Promise
     }
   })
   
-  const totals = userPoints.map(up => up._sum.delta_points || 0).sort((a, b) => b - a)
-  
-  // Calculate distribution percentiles
-  const percentiles = [10, 25, 50, 75, 90, 95, 99].map(p => {
-    const index = Math.floor((p / 100) * (totals.length - 1))
-    return {
-      percentile: p,
-      value: totals[index] || 0
-    }
-  })
-  
-  return {
-    totalUsers: totals.length,
-    max: totals[0] || 0,
-    min: totals[totals.length - 1] || 0,
-    avg: totals.length > 0 ? Math.round((totals.reduce((sum, val) => sum + val, 0) / totals.length) * 100) / 100 : 0,
-    percentiles
-  }
+  const totals = userPoints.map(up => up._sum.delta_points || 0)
+  return mapPointsDistributionFromUserTotals(totals)
 }
 
 async function getRecentSubmissions(limit: number): Promise<RecentSubmission[]> {
@@ -563,7 +508,7 @@ async function getBadgeStats(): Promise<BadgeStats> {
 }
 
 async function getTopBadges(limit: number): Promise<TopBadge[]> {
-  const result = await prisma.earnedBadge.groupBy({
+  const result: Array<{ badge_code: string; _count: number }> = await prisma.earnedBadge.groupBy({
     by: ['badge_code'],
     _count: true,
     orderBy: {
@@ -574,31 +519,13 @@ async function getTopBadges(limit: number): Promise<TopBadge[]> {
     take: limit
   })
   
-  const badges = await prisma.badge.findMany({
+  const badges: Array<{ code: string; name: string; description: string; criteria: unknown; icon_url: string | null }> = await prisma.badge.findMany({
     where: {
       code: { in: result.map(r => r.badge_code) }
     }
   })
   
-  const badgeMap = badges.reduce((acc, badge) => {
-    acc[badge.code] = badge
-    return acc
-  }, {} as Record<string, typeof badges[0]>)
-  
-  return result.map(item => {
-    const badge = badgeMap[item.badge_code]
-    if (!badge) return null // Skip if badge not found
-    return {
-      badge: {
-        code: badge.code || item.badge_code,
-        name: badge.name || 'Unknown',
-        description: badge.description || '',
-        criteria: badge.criteria || {},
-        icon_url: badge.icon_url || ''
-      },
-      earnedCount: item._count
-    }
-  }).filter((item): item is NonNullable<typeof item> => item !== null)
+  return mapTopBadges(result, badges)
 }
 
 async function getReviewStats(filter: AnalyticsSubmissionFilter): Promise<ReviewStats> {
@@ -665,31 +592,8 @@ async function getReviewerPerformance(): Promise<ReviewerPerformance[]> {
     },
     _count: true
   })
-  
-  const reviewerMap = reviewers.reduce((acc, reviewer) => {
-    acc[reviewer.id] = {
-      ...reviewer,
-      approved: 0,
-      rejected: 0,
-      total: 0
-    }
-    return acc
-  }, {} as Record<string, ReviewerPerformance>)
-  
-  performance.forEach(p => {
-    if (p.reviewer_id) {
-      const reviewer = reviewerMap[p.reviewer_id]
-      if (reviewer) {
-        const status = p.status.toLowerCase()
-        if (status === 'approved' || status === 'rejected') {
-          reviewer[status] = p._count
-          reviewer.total += p._count
-        }
-      }
-    }
-  })
-  
-  return Object.values(reviewerMap)
-    .filter((r: ReviewerPerformance) => r.total > 0)
-    .sort((a: ReviewerPerformance, b: ReviewerPerformance) => b.total - a.total)
+
+  const typedReviewers: Array<{ id: string; name: string; handle: string; role: string }> = reviewers
+  const typedPerf: Array<{ reviewer_id: string | null; status: string; _count: number }> = performance
+  return mapReviewerPerformance(typedReviewers, typedPerf)
 }

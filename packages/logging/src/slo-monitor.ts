@@ -1,6 +1,7 @@
-import type { LogContext } from './types.js'
-import { metrics } from './metrics.js'
-import { captureException, captureMessage } from './sentry.js'
+import { metrics } from './metrics'
+import { captureException as _captureException, captureMessage } from './sentry'
+
+import type { LogContext } from './types'
 
 /**
  * SLO (Service Level Objective) monitoring and alerting system
@@ -28,6 +29,24 @@ interface SLOStatus {
   breaching: boolean
   lastBreach?: number
   metrics: SLOMetric[]
+}
+
+interface SLOSummaryEntry {
+  current: number
+  target: number
+  threshold: number
+  trend: 'improving' | 'stable' | 'degrading'
+  breaching: boolean
+  description: string
+  metrics_count: number
+}
+
+interface SLOSummary {
+  timestamp: string
+  total_slos: number
+  breaching_slos: number
+  healthy_slos: number
+  slos: Record<string, SLOSummaryEntry>
 }
 
 export class SLOMonitor {
@@ -125,7 +144,9 @@ export class SLOMonitor {
     sloMetrics.push(metric)
 
     // Keep metrics within the window + 1 hour buffer
-    const slo = this.slos.get(sloName)!
+    const slo = this.slos.get(sloName)
+    if (!slo) return
+    
     const cutoff = Date.now() - slo.window - (60 * 60 * 1000)
     this.sloMetrics.set(
       sloName,
@@ -329,14 +350,15 @@ export class SLOMonitor {
   /**
    * Get SLO summary for monitoring dashboards
    */
-  getSLOSummary() {
+  getSLOSummary(): SLOSummary {
     const statuses = this.getAllSLOStatuses()
-    const summary = {
+    const slos: Record<string, SLOSummaryEntry> = {}
+    const summary: SLOSummary = {
       timestamp: new Date().toISOString(),
       total_slos: this.slos.size,
       breaching_slos: 0,
       healthy_slos: 0,
-      slos: {} as Record<string, any>,
+      slos,
     }
 
     for (const [name, status] of Object.entries(statuses)) {

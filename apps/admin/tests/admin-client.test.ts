@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+
 import { adminClient } from '../lib/admin-client'
 
 function mockFetchOnce(status: number, json: unknown) {

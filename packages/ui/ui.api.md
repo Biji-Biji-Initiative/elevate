@@ -17,14 +17,11 @@ import * as LabelPrimitive from '@radix-ui/react-label';
 import type { LeaderboardEntry } from '@elevate/types';
 import * as React_2 from 'react';
 import { default as React_3 } from 'react';
+import type { SafeSelectProps } from '@elevate/types';
+import type { SelectOption } from '@elevate/types';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { SlotProps } from '@radix-ui/react-slot';
 import { VariantProps } from 'class-variance-authority';
-
-// Warning: (ae-forgotten-export) The symbol "AdminLayoutProps" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function AdminLayout({ children, user, userRole, navItems, signOutButton, title, subtitle, onSignOut, isLoaded }: AdminLayoutProps): React_3.JSX.Element;
 
 // @public (undocumented)
 export const Alert: React_2.ForwardRefExoticComponent<React_2.HTMLAttributes<HTMLDivElement> & VariantProps<(props?: ({
@@ -35,27 +32,45 @@ export const Alert: React_2.ForwardRefExoticComponent<React_2.HTMLAttributes<HTM
 export const AlertDescription: React_2.ForwardRefExoticComponent<React_2.HTMLAttributes<HTMLParagraphElement> & React_2.RefAttributes<HTMLParagraphElement>>;
 
 // @public (undocumented)
+export interface AlertProps {
+    // (undocumented)
+    children: React_3.ReactNode;
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    title?: string;
+    // (undocumented)
+    type?: 'success' | 'error' | 'warning' | 'info';
+}
+
+// @public (undocumented)
 export const AlertTitle: React_2.ForwardRefExoticComponent<React_2.HTMLAttributes<HTMLHeadingElement> & React_2.RefAttributes<HTMLParagraphElement>>;
 
-// Warning: (ae-forgotten-export) The symbol "BadgeProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export function Badge({ className, variant, ...props }: BadgeProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface BadgeProps extends React_2.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {
+}
 
 // @public (undocumented)
 export const badgeVariants: (props?: ({
     variant?: "default" | "destructive" | "outline" | "secondary" | null | undefined;
 } & ClassProp) | undefined) => string;
 
-// Warning: (ae-forgotten-export) The symbol "ButtonProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export const Button: React_2.ForwardRefExoticComponent<ButtonProps & React_2.RefAttributes<HTMLButtonElement>>;
 
 // @public (undocumented)
+export interface ButtonProps extends React_2.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+    // (undocumented)
+    asChild?: boolean;
+}
+
+// @public (undocumented)
 export const buttonVariants: (props?: ({
-    variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
-    size?: "sm" | "lg" | "default" | "icon" | null | undefined;
+    variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
+    size?: "default" | "sm" | "lg" | "icon" | null | undefined;
 } & ClassProp) | undefined) => string;
 
 // @public (undocumented)
@@ -76,11 +91,6 @@ export const CardHeader: React_2.ForwardRefExoticComponent<React_2.HTMLAttribute
 // @public (undocumented)
 export const CardTitle: React_2.ForwardRefExoticComponent<React_2.HTMLAttributes<HTMLHeadingElement> & React_2.RefAttributes<HTMLParagraphElement>>;
 
-// Warning: (ae-forgotten-export) The symbol "ClientHeaderProps" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function ClientHeader(props: ClientHeaderProps): React_2.JSX.Element;
-
 // @public (undocumented)
 export function cn(...inputs: ClassValue[]): string;
 
@@ -97,19 +107,83 @@ export interface Column<T> {
     // (undocumented)
     sortable?: boolean;
     // (undocumented)
+    sortAccessor?: (row: T) => string | number | Date;
+    // (undocumented)
+    sortComparator?: (a: unknown, b: unknown) => number;
+    // (undocumented)
     width?: string;
 }
 
 // @public (undocumented)
 export type ColumnOf<T> = Column<T>;
 
-// Warning: (ae-forgotten-export) The symbol "ConfirmModalProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confirmText, cancelText, confirmVariant, isLoading }: ConfirmModalProps): React_3.JSX.Element;
 
 // @public (undocumented)
+export interface ConfirmModalProps {
+    // (undocumented)
+    cancelText?: string;
+    // (undocumented)
+    confirmText?: string;
+    // (undocumented)
+    confirmVariant?: 'default' | 'ghost';
+    // (undocumented)
+    isLoading?: boolean;
+    // (undocumented)
+    isOpen: boolean;
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    onClose: () => void;
+    // (undocumented)
+    onConfirm: () => void;
+    // (undocumented)
+    title: string;
+}
+
+// @public (undocumented)
+export function ConveningTeaser({ title, description, ctaLabel, onCTAClick, className, }: ConveningTeaserProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface ConveningTeaserProps {
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    ctaLabel: string;
+    // (undocumented)
+    description: string;
+    // (undocumented)
+    onCTAClick: () => void;
+    // (undocumented)
+    title: string;
+}
+
+// @public (undocumented)
 export const createColumns: <T>() => <C extends Column<T>[]>(cols: C) => C;
+
+// @public
+export function CSRFProtectedForm({ action, method, onSuccess, onError, children, className, submitButtonText, showSecurityIndicator, }: CSRFProtectedFormProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface CSRFProtectedFormProps {
+    // (undocumented)
+    action: string;
+    // (undocumented)
+    children: React_3.ReactNode;
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    method?: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    // (undocumented)
+    onError?: (error: Error) => void;
+    // (undocumented)
+    onSuccess?: (data: unknown) => void;
+    // (undocumented)
+    showSecurityIndicator?: boolean;
+    // (undocumented)
+    submitButtonText?: string;
+}
 
 // @public (undocumented)
 export function DataTable<T extends Record<string, unknown> = Record<string, unknown>>({ data, columns, loading, pagination, selection, sorting, onRowClick, emptyMessage, className }: DataTableProps<T>): React_3.JSX.Element;
@@ -185,15 +259,65 @@ export const DialogTitle: React_2.ForwardRefExoticComponent<Omit<DialogPrimitive
 // @public (undocumented)
 export const DialogTrigger: React_2.ForwardRefExoticComponent<DialogPrimitive.DialogTriggerProps & React_2.RefAttributes<HTMLButtonElement>>;
 
-// Warning: (ae-forgotten-export) The symbol "FileListProps" needs to be exported by the entry point index.d.ts
-//
+// @public (undocumented)
+export function DualPaths({ educatorPath, trainerPath, className, }: DualPathsProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface DualPathsProps {
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    educatorPath: PathConfig;
+    // (undocumented)
+    trainerPath: PathConfig;
+}
+
+// @public (undocumented)
+export interface FAQItem {
+    // (undocumented)
+    answer: string;
+    // (undocumented)
+    date?: string;
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    owner?: string;
+    // (undocumented)
+    question: string;
+    // (undocumented)
+    status: 'confirmed' | 'pending';
+}
+
+// @public (undocumented)
+export function FAQList({ items, footerNote, className }: FAQListProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface FAQListProps {
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    footerNote?: string;
+    // (undocumented)
+    items: FAQItem[];
+}
+
 // @public (undocumented)
 function FileList_2({ files, onRemove, className }: FileListProps): React_3.JSX.Element | null;
 export { FileList_2 as FileList }
 
 // @public (undocumented)
+export interface FileListProps {
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    files: UploadedFile[];
+    // (undocumented)
+    onRemove?: (index: number) => void;
+}
+
+// @public (undocumented)
 export function FileUpload({ onFileSelect, accept, multiple, maxFiles, maxSizeBytes, // 10MB
-    className, children, disabled }: FileUploadProps): React_3.JSX.Element;
+    className, children, disabled, onValidationError }: FileUploadProps): React_3.JSX.Element;
 
 // @public (undocumented)
 export interface FileUploadProps {
@@ -213,12 +337,9 @@ export interface FileUploadProps {
     multiple?: boolean;
     // (undocumented)
     onFileSelect: (files: File[]) => void;
+    // (undocumented)
+    onValidationError?: (errors: string[]) => void;
 }
-
-// Warning: (ae-forgotten-export) The symbol "FooterProps" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function Footer({ title, description, sections, bottomLinks, copyrightText, year }: FooterProps): React_2.JSX.Element;
 
 // @public (undocumented)
 export const Form: <TFieldValues extends FieldValues, TContext = any, TTransformedValues = TFieldValues>(props: FormProviderProps<TFieldValues, TContext, TTransformedValues>) => React_2.JSX.Element;
@@ -229,10 +350,25 @@ export const FormControl: React_2.ForwardRefExoticComponent<Omit<SlotProps & Rea
 // @public (undocumented)
 export const FormDescription: React_2.ForwardRefExoticComponent<React_2.HTMLAttributes<HTMLParagraphElement> & React_2.RefAttributes<HTMLParagraphElement>>;
 
-// Warning: (ae-forgotten-export) The symbol "FormFieldProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export function FormField({ label, children, error, required, description, className }: FormFieldProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export function FormFieldLoadingSpinner({ size, className }: FormFieldLoadingSpinnerProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface FormFieldLoadingSpinnerProps {
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    size?: 'sm' | 'md' | 'lg';
+}
+
+// @public (undocumented)
+export interface FormFieldProps extends Omit<FormFieldProps_2, 'children'> {
+    // (undocumented)
+    children: React_3.ReactNode;
+}
 
 // @public (undocumented)
 export const FormItem: React_2.ForwardRefExoticComponent<React_2.HTMLAttributes<HTMLDivElement> & React_2.RefAttributes<HTMLDivElement>>;
@@ -251,66 +387,295 @@ export function hasUploadPath<T extends {
     path: string;
 };
 
-// Warning: (ae-forgotten-export) The symbol "HeaderProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export function Header({ isSignedIn, userButton, signInButton, navigation, title, subtitle, logo, languageSwitcher }: HeaderProps): React_2.JSX.Element;
+export interface HeroCounters {
+    // (undocumented)
+    educators_learning: number;
+    // (undocumented)
+    mce_certified: number;
+    // (undocumented)
+    micro_credentials: number;
+    // (undocumented)
+    peers_students_reached: number;
+    // (undocumented)
+    stories_shared: number;
+}
 
-// Warning: (ae-forgotten-export) The symbol "InputProps" needs to be exported by the entry point index.d.ts
-//
+// @public (undocumented)
+export function HeroSection({ title, subtitle, description, primaryCTA, secondaryCTA, counters, countersLabels, countersLoading, partnersLogos, children, className, }: HeroSectionProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface HeroSectionProps {
+    // (undocumented)
+    children?: React_3.ReactNode;
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    counters?: HeroCounters | null;
+    // Warning: (ae-forgotten-export) The symbol "HeroCountersLabels" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    countersLabels?: HeroCountersLabels;
+    // (undocumented)
+    countersLoading?: boolean;
+    // (undocumented)
+    description: string;
+    // (undocumented)
+    partnersLogos?: React_3.ReactNode;
+    // (undocumented)
+    primaryCTA: {
+        label: string;
+        onClick: () => void;
+    };
+    // (undocumented)
+    secondaryCTA: {
+        label: string;
+        onClick: () => void;
+    };
+    // (undocumented)
+    subtitle: string;
+    // (undocumented)
+    title: string;
+}
+
+// @public (undocumented)
+export function ImpactRipple({ title, description, className, }: ImpactRippleProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface ImpactRippleProps {
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    description: string;
+    // (undocumented)
+    title: string;
+}
+
 // @public (undocumented)
 export const Input: React_2.ForwardRefExoticComponent<InputProps & React_2.RefAttributes<HTMLInputElement>>;
 
 // @public (undocumented)
+export interface InputProps extends React_2.InputHTMLAttributes<HTMLInputElement> {
+}
+
+// @public (undocumented)
 export const Label: React_2.ForwardRefExoticComponent<Omit<LabelPrimitive.LabelProps & React_2.RefAttributes<HTMLLabelElement>, "ref"> & VariantProps<(props?: ClassProp | undefined) => string> & React_2.RefAttributes<HTMLLabelElement>>;
 
-// Warning: (ae-forgotten-export) The symbol "LanguageSwitcherProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export function LanguageSwitcher({ locale, languages, onLanguageChange, className, variant }: LanguageSwitcherProps): React_3.JSX.Element;
 
-// Warning: (ae-forgotten-export) The symbol "LeaderboardTableProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export function LeaderboardTable({ data, period, loading, onPeriodChange, showSearch, showPagination, getProfilePath }: LeaderboardTableProps): React_3.JSX.Element;
-
-// @public (undocumented)
-export function LoadingContainer({ children, loading, text, size, className }: {
-    children: React_3.ReactNode;
-    loading: boolean;
-    text?: string;
-    size?: LoadingSpinnerProps['size'];
+export interface LanguageSwitcherProps {
+    // (undocumented)
     className?: string;
-}): React_3.JSX.Element;
+    // Warning: (ae-forgotten-export) The symbol "Language" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    languages?: Language[];
+    // (undocumented)
+    locale?: string;
+    // (undocumented)
+    onLanguageChange?: (locale: string) => void;
+    // (undocumented)
+    variant?: 'select' | 'buttons' | 'dropdown';
+}
 
 // @public (undocumented)
-export function LoadingOverlay({ loading, text, size, children }: {
-    loading: boolean;
-    text?: string;
-    size?: LoadingSpinnerProps['size'];
-    children: React_3.ReactNode;
-}): React_3.JSX.Element;
+export function LeaderboardPreview({ entries, loading, emptyMessage, className, }: LeaderboardPreviewProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface LeaderboardPreviewEntry {
+    // (undocumented)
+    badges?: Array<{
+        code: string;
+        name: string;
+    }>;
+    // (undocumented)
+    points: number;
+    // (undocumented)
+    rank: number;
+    // (undocumented)
+    user: {
+        name: string;
+        handle: string;
+        school?: string | null;
+        avatar_url?: string | null;
+    };
+}
+
+// @public (undocumented)
+export interface LeaderboardPreviewProps {
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    emptyMessage?: string;
+    // (undocumented)
+    entries: LeaderboardPreviewEntry[];
+    // (undocumented)
+    loading?: boolean;
+}
+
+// @public (undocumented)
+export function LeaderboardTable({ data, period, loading, onPeriodChange, showSearch, showPagination, getProfilePath, }: LeaderboardTableProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface LeaderboardTableProps {
+    // (undocumented)
+    data: readonly LeaderboardEntry[];
+    // (undocumented)
+    getProfilePath?: (handle: string) => string;
+    // (undocumented)
+    loading?: boolean;
+    // (undocumented)
+    onPeriodChange: (period: 'all' | '30d') => void;
+    // (undocumented)
+    period: 'all' | '30d';
+    // (undocumented)
+    showPagination?: boolean;
+    // (undocumented)
+    showSearch?: boolean;
+}
 
 // @public (undocumented)
 export function LoadingSpinner({ size, variant, className, text, fullScreen }: LoadingSpinnerProps): React_3.JSX.Element;
 
-// Warning: (ae-forgotten-export) The symbol "MetricsChartProps" needs to be exported by the entry point index.d.ts
-//
+// @public (undocumented)
+export interface LoadingSpinnerProps {
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    fullScreen?: boolean;
+    // (undocumented)
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+    // (undocumented)
+    text?: string;
+    // (undocumented)
+    variant?: 'primary' | 'secondary' | 'white' | 'current';
+}
+
 // @public (undocumented)
 export function MetricsChart({ title, data, type, height }: MetricsChartProps): React_3.JSX.Element;
 
-// Warning: (ae-forgotten-export) The symbol "ModalProps" needs to be exported by the entry point index.d.ts
-//
+// @public (undocumented)
+export interface MetricsChartProps {
+    // (undocumented)
+    data: Array<{
+        label: string;
+        value: number;
+        color?: string;
+    }>;
+    // (undocumented)
+    height?: number;
+    // (undocumented)
+    title: string;
+    // (undocumented)
+    type?: 'bar' | 'pie' | 'donut' | 'line';
+}
+
 // @public (undocumented)
 export function Modal({ isOpen, onClose, title, children, size, actions, preventCloseOnOverlay }: ModalProps): React_3.JSX.Element | null;
 
 // @public (undocumented)
+export interface ModalProps {
+    // (undocumented)
+    actions?: React_3.ReactNode;
+    // (undocumented)
+    children: React_3.ReactNode;
+    // (undocumented)
+    isOpen: boolean;
+    // (undocumented)
+    onClose: () => void;
+    // (undocumented)
+    preventCloseOnOverlay?: boolean;
+    // (undocumented)
+    size?: 'sm' | 'md' | 'lg' | 'xl';
+    // (undocumented)
+    title: string;
+}
+
+// @public (undocumented)
 export function PageLoading(): React_3.JSX.Element;
 
-// Warning: (ae-forgotten-export) The symbol "ProfileCardProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export function ProfileCard({ user, rank, showRank, compact, getProfilePath }: ProfileCardProps): React_3.JSX.Element;
+export function PartnersContact({ partners, contacts, className, }: PartnersContactProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface PartnersContactProps {
+    // (undocumented)
+    className?: string;
+    // Warning: (ae-forgotten-export) The symbol "ContactInfo" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    contacts: ContactInfo[];
+    // (undocumented)
+    partners: string[];
+}
+
+// @public (undocumented)
+export interface PathConfig {
+    // (undocumented)
+    ctaLabel: string;
+    // (undocumented)
+    description: string;
+    // (undocumented)
+    onCTAClick: () => void;
+    // (undocumented)
+    title: string;
+}
+
+// @public (undocumented)
+export function ProfileCard({ user, rank, showRank, compact, getProfilePath, Link }: ProfileCardProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface ProfileCardProps {
+    // (undocumented)
+    compact?: boolean;
+    // (undocumented)
+    getProfilePath?: (handle: string) => string;
+    // (undocumented)
+    Link?: React_3.ComponentType<{
+        href: string;
+        className?: string;
+        children: React_3.ReactNode;
+    }>;
+    // (undocumented)
+    rank?: number;
+    // (undocumented)
+    showRank?: boolean;
+    // (undocumented)
+    user: {
+        id: string;
+        handle: string;
+        name: string;
+        email?: string;
+        school?: string | null;
+        cohort?: string | null;
+        avatar_url?: string | null;
+        earned_badges?: Array<{
+            badge: {
+                code: string;
+                name: string;
+                icon_url?: string | null;
+            };
+        }>;
+        _sum?: {
+            points: number | null;
+        };
+    };
+}
+
+// @public (undocumented)
+export function ProgramFlow({ title, bullets, className, }: ProgramFlowProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface ProgramFlowProps {
+    // (undocumented)
+    bullets: string[];
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    title: string;
+}
 
 // @public (undocumented)
 export const Select: React_2.FC<SelectPrimitive.SelectProps>;
@@ -326,6 +691,16 @@ export const SelectItem: React_2.ForwardRefExoticComponent<Omit<SelectPrimitive.
 
 // @public (undocumented)
 export const SelectLabel: React_2.ForwardRefExoticComponent<Omit<SelectPrimitive.SelectLabelProps & React_2.RefAttributes<HTMLDivElement>, "ref"> & React_2.RefAttributes<HTMLDivElement>>;
+
+// @public (undocumented)
+export interface SelectProps extends Omit<React_3.SelectHTMLAttributes<HTMLSelectElement>, 'onChange' | 'options' | 'value' | 'className' | 'disabled'>, Omit<SafeSelectProps, 'options'> {
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    disabled?: boolean;
+    // (undocumented)
+    options: SelectOption[];
+}
 
 // @public (undocumented)
 export const SelectScrollDownButton: React_2.ForwardRefExoticComponent<Omit<SelectPrimitive.SelectScrollDownButtonProps & React_2.RefAttributes<HTMLDivElement>, "ref"> & React_2.RefAttributes<HTMLDivElement>>;
@@ -345,10 +720,20 @@ export const SelectValue: React_2.ForwardRefExoticComponent<SelectPrimitive.Sele
 // @public (undocumented)
 export const ShadcnFormField: <TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>({ ...props }: ControllerProps<TFieldValues, TName>) => React_2.JSX.Element;
 
-// Warning: (ae-forgotten-export) The symbol "ShareButtonProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export function ShareButton({ url, title, text, size }: ShareButtonProps): React_3.JSX.Element;
+export function ShareButton({ url, title, text, size: _size }: ShareButtonProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface ShareButtonProps {
+    // (undocumented)
+    size?: 'sm' | 'md' | 'lg';
+    // (undocumented)
+    text?: string;
+    // (undocumented)
+    title: string;
+    // (undocumented)
+    url: string;
+}
 
 // @public (undocumented)
 export function SocialShareButtons({ url, title, text }: {
@@ -358,11 +743,42 @@ export function SocialShareButtons({ url, title, text }: {
 }): React_3.JSX.Element;
 
 // @public (undocumented)
-export function StageCard({ stage, completedCount, isClickable }: {
+export function StageCard({ stage, completedCount, isClickable, Link }: {
     stage: keyof typeof stageInfo;
     completedCount?: number;
     isClickable?: boolean;
+    Link?: React_3.ComponentType<{
+        href: string;
+        className?: string;
+        children: React_3.ReactNode;
+    }>;
 }): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface StageCardProps {
+    // (undocumented)
+    color: string;
+    // (undocumented)
+    completedCount?: number;
+    // (undocumented)
+    description: string;
+    // (undocumented)
+    icon: string;
+    // (undocumented)
+    isClickable?: boolean;
+    // (undocumented)
+    Link?: React_3.ComponentType<{
+        href: string;
+        className?: string;
+        children: React_3.ReactNode;
+    }>;
+    // (undocumented)
+    points: string;
+    // (undocumented)
+    stage: 'learn' | 'explore' | 'amplify' | 'present' | 'shine';
+    // (undocumented)
+    title: string;
+}
 
 // @public (undocumented)
 export function StatsGrid({ stats }: {
@@ -375,10 +791,67 @@ export function StatsGrid({ stats }: {
     }>;
 }): React_3.JSX.Element;
 
-// Warning: (ae-forgotten-export) The symbol "StatusBadgeProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export function StatusBadge({ status, variant, size }: StatusBadgeProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface StatusBadgeProps {
+    // (undocumented)
+    size?: 'sm' | 'md' | 'lg';
+    // (undocumented)
+    status: 'PENDING' | 'APPROVED' | 'REJECTED' | string;
+    // (undocumented)
+    variant?: 'default' | 'dot';
+}
+
+// @public (undocumented)
+export function StoriesGrid({ title, subtitle, stories, loading, emptyStateMessage, ctaLabel, onCTAClick, onStoryClick, onStoryView, className, }: StoriesGridProps): React_3.JSX.Element;
+
+// @public (undocumented)
+export interface StoriesGridProps {
+    // (undocumented)
+    className?: string;
+    // (undocumented)
+    ctaLabel: string;
+    // (undocumented)
+    emptyStateMessage?: string;
+    // (undocumented)
+    loading?: boolean;
+    // (undocumented)
+    onCTAClick: () => void;
+    // (undocumented)
+    onStoryClick?: (story: StoryEntry) => void;
+    // (undocumented)
+    onStoryView?: (story: StoryEntry) => void;
+    // (undocumented)
+    stories: StoryEntry[];
+    // (undocumented)
+    subtitle: string;
+    // (undocumented)
+    title: string;
+}
+
+// @public (undocumented)
+export interface StoryEntry {
+    // (undocumented)
+    aiTool: string;
+    // (undocumented)
+    badgeCode?: string;
+    // (undocumented)
+    badgeName?: string;
+    // (undocumented)
+    challenge: string;
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    imageUrl?: string;
+    // (undocumented)
+    linkedinUrl: string;
+    // (undocumented)
+    resultMetric: string;
+    // (undocumented)
+    schoolRegion: string;
+}
 
 // @public (undocumented)
 export const Table: React_2.ForwardRefExoticComponent<React_2.HTMLAttributes<HTMLTableElement> & React_2.RefAttributes<HTMLTableElement>>;
@@ -404,10 +877,14 @@ export const TableHeader: React_2.ForwardRefExoticComponent<React_2.HTMLAttribut
 // @public (undocumented)
 export const TableRow: React_2.ForwardRefExoticComponent<React_2.HTMLAttributes<HTMLTableRowElement> & React_2.RefAttributes<HTMLTableRowElement>>;
 
-// Warning: (ae-forgotten-export) The symbol "TextareaProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export function Textarea({ error, className, ...props }: TextareaProps): React_2.JSX.Element;
+
+// @public (undocumented)
+export interface TextareaProps extends React_2.TextareaHTMLAttributes<HTMLTextAreaElement> {
+    // (undocumented)
+    error?: boolean;
+}
 
 // @public (undocumented)
 export interface UploadedFile {
@@ -441,8 +918,7 @@ export const useFormField: () => {
 
 // Warnings were encountered during analysis:
 //
-// src/components/LoadingSpinner.tsx:111:3 - (ae-forgotten-export) The symbol "LoadingSpinnerProps" needs to be exported by the entry point index.d.ts
-// src/components/StageCard.tsx:61:3 - (ae-forgotten-export) The symbol "stageInfo" needs to be exported by the entry point index.d.ts
+// src/blocks/StageCard.tsx:61:3 - (ae-forgotten-export) The symbol "stageInfo" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

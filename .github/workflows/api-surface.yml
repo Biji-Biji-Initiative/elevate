@@ -1,0 +1,72 @@
+name: API Surface Check
+
+on:
+  pull_request:
+    paths:
+      - 'packages/*/src/**'
+      - 'packages/*/api-extractor.json'
+      - 'packages/*/tsconfig.build.json'
+      - 'packages/*/package.json'
+      - '.github/workflows/api-surface.yml'
+
+jobs:
+  api-check:
+    name: Validate API Surface
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build types
+        run: pnpm run typecheck:build
+
+      - name: Check API reports
+        run: pnpm run api:check
+
+      - name: Upload API report diff on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-report-diff
+          path: packages/*/api-reports/*.api.md
+
+      - name: Comment on PR with API changes
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `
+            ⚠️ **API Surface Changes Detected**
+
+            The API surface of one or more packages has changed. Please:
+            1. Review the changes to ensure they are intentional
+            2. Run \`pnpm run api:extract\` locally to update the API reports
+            3. Commit the updated \`.api.md\` files
+            4. If this is a breaking change, add a changeset with \`pnpm changeset\`
+
+            See the workflow artifacts for the API report diff.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

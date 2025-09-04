@@ -1,6 +1,8 @@
 import { z } from 'zod'
-import type { Role, SubmissionStatus, Visibility } from './common.js'
-import type { SubmissionPayload } from './submission-payloads.js'
+
+import { SubmissionPayloadSchema, type SubmissionPayload } from './submission-payloads'
+
+import type { Role, SubmissionStatus, Visibility } from './common'
 
 // UI-specific type guards
 export function isString(value: unknown): value is string {
@@ -41,6 +43,17 @@ export interface SafeUser {
   role?: Role
 }
 
+export const SafeUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  handle: z.string(),
+  email: z.string().email().optional(),
+  school: z.string().nullable().optional(),
+  cohort: z.string().nullable().optional(),
+  avatar_url: z.string().nullable().optional(),
+  role: z.enum(['SUPERADMIN','ADMIN','REVIEWER','PARTICIPANT']).optional(),
+})
+
 // Submission types with proper typing
 export interface SafeSubmission {
   id: string
@@ -67,6 +80,14 @@ export interface SafeBadge {
   icon_url?: string | null
   earned_at?: string
 }
+
+export const SafeBadgeSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  icon_url: z.string().nullable().optional(),
+  earned_at: z.string().optional(),
+})
 
 // Leaderboard entry types
 
@@ -116,6 +137,13 @@ export interface DashboardStats {
   completedStages: number
 }
 
+export const DashboardStatsSchema = z.object({
+  totalSubmissions: z.number(),
+  approvedSubmissions: z.number(),
+  pendingSubmissions: z.number(),
+  completedStages: z.number(),
+})
+
 export interface ProgressStage {
   activityCode: string
   activityName: string
@@ -130,6 +158,21 @@ export interface ProgressStage {
   latestSubmission: SubmissionPayload | null
   hasCompleted: boolean
 }
+
+export const ProgressStageSchema = z.object({
+  activityCode: z.string(),
+  activityName: z.string(),
+  defaultPoints: z.number(),
+  pointsEarned: z.number(),
+  submissionCounts: z.object({
+    total: z.number(),
+    approved: z.number(),
+    pending: z.number(),
+    rejected: z.number(),
+  }),
+  latestSubmission: SubmissionPayloadSchema.nullable(),
+  hasCompleted: z.boolean(),
+})
 
 export interface SafeDashboardData {
   user: SafeUser
@@ -149,6 +192,27 @@ export interface SafeDashboardData {
   }[]
   stats: DashboardStats
 }
+
+export const SafeDashboardDataSchema = z.object({
+  user: SafeUserSchema,
+  points: z.object({
+    total: z.number(),
+    breakdown: z.record(z.number()),
+  }),
+  progress: z.array(ProgressStageSchema),
+  badges: z.array(SafeBadgeSchema),
+  recentActivity: z.array(
+    z.object({
+      id: z.string(),
+      activityCode: z.string(),
+      activityName: z.string(),
+      status: z.string(),
+      created_at: z.string(),
+      updated_at: z.string(),
+    })
+  ),
+  stats: DashboardStatsSchema,
+})
 
 // Pagination types
 export interface PaginationConfig {

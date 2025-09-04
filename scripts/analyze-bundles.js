@@ -1,20 +1,22 @@
 #!/usr/bin/env node
 
 /**
- * Bundle Analysis Script for i18n Optimization
+ * Comprehensive Bundle Analysis Script for MS Elevate Monorepo
  * 
- * This script analyzes the webpack bundle to verify that:
- * 1. Each locale is in its own chunk
- * 2. No locale is included in multiple chunks
- * 3. Common i18n code is properly shared
+ * This script analyzes webpack bundles and provides insights on:
+ * 1. Bundle sizes and composition
+ * 2. Tree-shaking effectiveness
+ * 3. i18n locale chunking optimization
+ * 4. Duplicate code detection
+ * 5. Performance impact assessment
  * 
  * Usage:
- * npm run analyze:bundles
+ * npm run analyze:bundles [--skip-build] [--skip-size] [--visual]
  */
 
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 const APPS = ['web', 'admin'];
 const LOCALES = ['en', 'id'];
@@ -150,36 +152,219 @@ function analyzeApp(appName) {
   return sizeStats;
 }
 
-function main() {
-  console.log('🚀 Starting i18n Bundle Analysis\n');
-  console.log('This script will analyze bundle splitting for internationalization');
-  console.log('to ensure each locale is properly separated into its own chunks.\n');
-
-  const results = {};
+async function analyzePackageSizes() {
+  console.log('\n📊 Running size-limit analysis...');
   
-  APPS.forEach(appName => {
-    results[appName] = analyzeApp(appName);
-  });
+  try {
+    const output = execSync('npx size-limit --json', { 
+      encoding: 'utf8',
+      stdio: 'pipe'
+    });
+    
+    const results = JSON.parse(output);
+    console.log('\n📦 Package Size Report:');
+    console.log('=====================');
+    
+    results.forEach(result => {
+      const status = result.size <= result.limit ? '✅' : '❌';
+      const sizeKB = Math.round(result.size / 1024);
+      const limitKB = Math.round(result.limit / 1024);
+      const percentage = Math.round((result.size / result.limit) * 100);
+      
+      console.log(`${status} ${result.name}: ${sizeKB}KB / ${limitKB}KB (${percentage}%)`);
+    });
+    
+    return results;
+  } catch (error) {
+    console.error('⚠️ Size-limit analysis failed:', error.message);
+    return null;
+  }
+}
 
-  console.log('\n📋 Summary Report:');
-  console.log('================');
+async function runVisualAnalysis() {
+  console.log('\n🎨 Running visual bundle analysis...');
   
-  Object.entries(results).forEach(([appName, stats]) => {
-    console.log(`\n${appName.toUpperCase()} App:`);
-    if (stats && Object.keys(stats).length > 0) {
-      Object.entries(stats).forEach(([key, size]) => {
-        console.log(`  ${key}: ${size}KB`);
+  for (const appName of APPS) {
+    console.log(`\n🔍 Analyzing ${appName} app with webpack-bundle-analyzer...`);
+    
+    try {
+      const appPath = path.join(__dirname, '..', 'apps', appName);
+      const env = { ...process.env, ANALYZE: 'true' };
+      
+      execSync('pnpm build', {
+        cwd: appPath,
+        env,
+        stdio: 'inherit'
       });
-    } else {
-      console.log('  ❌ No locale chunks found or build failed');
+      
+      console.log(`✅ ${appName} visual analysis complete - check browser`);
+    } catch (error) {
+      console.error(`❌ ${appName} visual analysis failed:`, error.message);
     }
-  });
+  }
+}
 
-  console.log('\n✅ Analysis complete!');
-  console.log('\nTo generate visual bundle analysis:');
-  APPS.forEach(app => {
-    console.log(`  cd apps/${app} && ANALYZE=true pnpm build`);
-  });
+async function detectDuplicates() {
+  console.log('\n🔍 Detecting duplicate dependencies...');
+  
+  const duplicates = new Map();
+  
+  for (const appName of APPS) {
+    const appPath = path.join(__dirname, '..', 'apps', appName);
+    const buildManifestPath = path.join(appPath, '.next', 'build-manifest.json');
+    
+    if (fs.existsSync(buildManifestPath)) {
+      try {
+        const manifest = JSON.parse(fs.readFileSync(buildManifestPath, 'utf8'));
+        const allChunks = Object.values(manifest.pages).flat();
+        
+        allChunks.forEach(chunk => {
+          if (duplicates.has(chunk)) {
+            duplicates.get(chunk).push(appName);
+          } else {
+            duplicates.set(chunk, [appName]);
+          }
+        });
+      } catch (error) {
+        console.warn(`⚠️ Could not analyze ${appName} for duplicates:`, error.message);
+      }
+    }
+  }
+  
+  const sharedChunks = Array.from(duplicates.entries())
+    .filter(([_, apps]) => apps.length > 1);
+  
+  if (sharedChunks.length > 0) {
+    console.log('\n🔄 Shared chunks detected:');
+    sharedChunks.forEach(([chunk, apps]) => {
+      console.log(`  📦 ${chunk} -> ${apps.join(', ')}`);
+    });
+  } else {
+    console.log('✅ No duplicate chunks detected between apps');
+  }
+  
+  return sharedChunks;
+}
+
+async function generateComprehensiveReport(i18nResults, sizeResults, duplicates) {
+  console.log('\n📄 Generating comprehensive report...');
+  
+  const reportData = {
+    timestamp: new Date().toISOString(),
+    analysis: {
+      i18n: i18nResults,
+      sizes: sizeResults,
+      duplicates: duplicates ? duplicates.length : 0,
+      recommendations: []
+    }
+  };
+  
+  // Generate recommendations
+  if (sizeResults) {
+    const oversized = sizeResults.filter(r => r.size > r.limit);
+    if (oversized.length > 0) {
+      reportData.analysis.recommendations.push({
+        type: 'size',
+        message: `${oversized.length} packages exceed size limits`,
+        packages: oversized.map(r => r.name)
+      });
+    }
+  }
+  
+  if (duplicates && duplicates.length > 0) {
+    reportData.analysis.recommendations.push({
+      type: 'duplicates',
+      message: 'Shared chunks detected - consider code splitting optimization',
+      count: duplicates.length
+    });
+  }
+  
+  // Save report
+  const reportPath = path.join(__dirname, '..', 'bundle-analysis-report.json');
+  fs.writeFileSync(reportPath, JSON.stringify(reportData, null, 2));
+  console.log(`📄 Report saved to: ${reportPath}`);
+  
+  return reportData;
+}
+
+async function main() {
+  console.log('🚀 Starting Comprehensive Bundle Analysis\n');
+  
+  const args = process.argv.slice(2);
+  const skipBuild = args.includes('--skip-build');
+  const skipSize = args.includes('--skip-size');
+  const visual = args.includes('--visual');
+  
+  try {
+    // 1. i18n Bundle Analysis
+    console.log('📍 Step 1: i18n Bundle Analysis');
+    const i18nResults = {};
+    APPS.forEach(appName => {
+      i18nResults[appName] = analyzeApp(appName);
+    });
+
+    // 2. Package Size Analysis
+    let sizeResults = null;
+    if (!skipSize) {
+      console.log('\n📍 Step 2: Package Size Analysis');
+      sizeResults = await analyzePackageSizes();
+    }
+
+    // 3. Visual Analysis (optional)
+    if (visual && !skipBuild) {
+      console.log('\n📍 Step 3: Visual Bundle Analysis');
+      await runVisualAnalysis();
+    }
+
+    // 4. Duplicate Detection
+    console.log('\n📍 Step 4: Duplicate Detection');
+    const duplicates = await detectDuplicates();
+
+    // 5. Generate Report
+    console.log('\n📍 Step 5: Report Generation');
+    const report = await generateComprehensiveReport(i18nResults, sizeResults, duplicates);
+    
+    // Summary
+    console.log('\n📋 Analysis Summary:');
+    console.log('===================');
+    
+    Object.entries(i18nResults).forEach(([appName, stats]) => {
+      console.log(`\n${appName.toUpperCase()} App (i18n):`);
+      if (stats && Object.keys(stats).length > 0) {
+        Object.entries(stats).forEach(([key, size]) => {
+          console.log(`  ${key}: ${size}KB`);
+        });
+      } else {
+        console.log('  ❌ No locale chunks found or build failed');
+      }
+    });
+
+    if (sizeResults) {
+      const oversized = sizeResults.filter(r => r.size > r.limit);
+      if (oversized.length > 0) {
+        console.log(`\n⚠️ ${oversized.length} packages exceed size limits`);
+      } else {
+        console.log('\n✅ All packages within size limits');
+      }
+    }
+
+    if (duplicates.length > 0) {
+      console.log(`\n🔄 ${duplicates.length} shared chunks detected`);
+    } else {
+      console.log('\n✅ No duplicate chunks between apps');
+    }
+
+    console.log('\n🎉 Analysis complete!');
+    console.log('\nNext steps:');
+    console.log('- Review bundle-analysis-report.json for detailed metrics');
+    console.log('- Run with --visual for interactive webpack analysis');
+    console.log('- Address any size limit violations');
+    console.log('- Optimize duplicate chunks if necessary');
+    
+  } catch (error) {
+    console.error('\n❌ Analysis failed:', error.message);
+    process.exit(1);
+  }
 }
 
 if (require.main === module) {

@@ -1,4 +1,4 @@
-import type { LoggerConfig, LogLevel } from './types.js'
+import type { LoggerConfig, LogLevel } from './types'
 
 export const DEFAULT_REDACT_FIELDS = [
   'password',

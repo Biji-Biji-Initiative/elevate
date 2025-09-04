@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "dist/types",
+    "rootDir": "src",
+    "stripInternal": true,
+    "inlineSources": true
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../openapi/tsconfig.build.json" },
+    { "path": "../types/tsconfig.build.json" },
+    { "path": "../http/tsconfig.build.json" }
+  ]
+}
+

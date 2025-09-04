@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+
 const glob = require('glob');
 
 // Find all package tsconfig.json files

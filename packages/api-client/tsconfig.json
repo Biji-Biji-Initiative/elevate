@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": true,
+    "rootDir": "."
+  },
+  "include": ["src/**/*", "tsup.config.ts"],
+  "references": [
+    { "path": "../openapi" },
+    { "path": "../types" },
+    { "path": "../http" }
+  ]
+}

@@ -36,15 +36,13 @@ describe('Admin submissions PATCH - point adjustment bounds', () => {
       id: 'sub_1', user_id: 'user_1', activity_code: 'LEARN', status: 'PENDING', payload: { provider: 'SPL', course: 'X', completedAt: new Date().toISOString() }
     })
 
-    const req = {
-      json: async () => ({ submissionId: 'sub_1', action: 'approve', pointAdjustment: 1000 }),
-    } as any
+    const body = JSON.stringify({ submissionId: 'sub_1', action: 'approve', pointAdjustment: 1000 })
+    const req = new Request('http://localhost/api/admin/submissions', { method: 'PATCH', body, headers: { 'content-type': 'application/json' } })
 
-    const res = await PATCH(req as any)
+    const res = await PATCH(req)
     expect(res.status).toBe(400)
     const json = await res.json()
     expect(json.success).toBe(false)
     expect(String(json.error)).toContain('Point adjustment')
   })
 })
-

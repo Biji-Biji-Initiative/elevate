@@ -20,6 +20,13 @@ export const ACTIVITY_CODES = ['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE'
 export type ActivityCode = typeof ACTIVITY_CODES[number]
 export const ActivityCodeSchema = z.enum(ACTIVITY_CODES)
 
+// Named exports for each activity code to replace hardcoded array indexes
+export const LEARN = ACTIVITY_CODES[0]           // 'LEARN'
+export const EXPLORE = ACTIVITY_CODES[1]         // 'EXPLORE' 
+export const AMPLIFY = ACTIVITY_CODES[2]         // 'AMPLIFY'
+export const PRESENT = ACTIVITY_CODES[3]         // 'PRESENT'
+export const SHINE = ACTIVITY_CODES[4]           // 'SHINE'
+
 /**
  * User roles in the system
  */
@@ -40,6 +47,13 @@ export const SubmissionStatusSchema = z.enum(SUBMISSION_STATUSES)
 export const VISIBILITY_OPTIONS = ['PRIVATE', 'PUBLIC'] as const
 export type Visibility = typeof VISIBILITY_OPTIONS[number]
 export const VisibilitySchema = z.enum(VISIBILITY_OPTIONS)
+
+/**
+ * Sources for points ledger entries
+ */
+export const LEDGER_SOURCES = ['MANUAL', 'WEBHOOK', 'FORM'] as const
+export type LedgerSource = typeof LEDGER_SOURCES[number]
+export const LedgerSourceSchema = z.enum(LEDGER_SOURCES)
 
 // =============================================================================
 // VALIDATION PATTERNS - Canonical regex patterns
@@ -264,6 +278,7 @@ export const DomainSchemas = {
   UserRole: UserRoleSchema,
   SubmissionStatus: SubmissionStatusSchema,
   Visibility: VisibilitySchema,
+  LedgerSource: LedgerSourceSchema,
   
   // Validation patterns
   Handle: HandleSchema,
@@ -300,7 +315,6 @@ export type RoleType = UserRole
 export type SubmissionStatusType = SubmissionStatus
 export type VisibilityType = Visibility
 export type PaginationType = PaginationParams
-export type ApiErrorType = ApiError
 
 // Re-export schemas with legacy names for backward compatibility
 export const RoleSchema = UserRoleSchema
@@ -309,3 +323,72 @@ export const RoleEnum = UserRoleSchema
 export const SubmissionStatusEnum = SubmissionStatusSchema
 export const VisibilityEnum = VisibilitySchema
 export const PaginationSchema = PaginationParamsSchema
+
+// =============================================================================
+// UTILITY VALIDATION FUNCTIONS - Type-safe constant validation
+// =============================================================================
+
+/**
+ * Type-safe validation functions for domain constants
+ * Use these instead of string comparisons for better type safety
+ */
+
+/**
+ * Check if a value is a valid activity code
+ */
+export const isValidActivityCode = (value: string): value is ActivityCode => {
+  return ACTIVITY_CODES.includes(value as ActivityCode)
+}
+
+/**
+ * Check if a value is a valid user role
+ */
+export const isValidUserRole = (value: string): value is UserRole => {
+  return USER_ROLES.includes(value as UserRole)
+}
+
+/**
+ * Check if a value is a valid submission status
+ */
+export const isValidSubmissionStatus = (value: string): value is SubmissionStatus => {
+  return SUBMISSION_STATUSES.includes(value as SubmissionStatus)
+}
+
+/**
+ * Check if a value is a valid visibility option
+ */
+export const isValidVisibility = (value: string): value is Visibility => {
+  return VISIBILITY_OPTIONS.includes(value as Visibility)
+}
+
+/**
+ * Check if a value is a valid ledger source
+ */
+export const isValidLedgerSource = (value: string): value is LedgerSource => {
+  return LEDGER_SOURCES.includes(value as LedgerSource)
+}
+
+/**
+ * Get all activity codes as readonly array
+ */
+export const getAllActivityCodes = (): readonly ActivityCode[] => ACTIVITY_CODES
+
+/**
+ * Get all user roles as readonly array
+ */
+export const getAllUserRoles = (): readonly UserRole[] => USER_ROLES
+
+/**
+ * Get all submission statuses as readonly array
+ */
+export const getAllSubmissionStatuses = (): readonly SubmissionStatus[] => SUBMISSION_STATUSES
+
+/**
+ * Get all visibility options as readonly array
+ */
+export const getAllVisibilityOptions = (): readonly Visibility[] => VISIBILITY_OPTIONS
+
+/**
+ * Get all ledger sources as readonly array
+ */
+export const getAllLedgerSources = (): readonly LedgerSource[] => LEDGER_SOURCES

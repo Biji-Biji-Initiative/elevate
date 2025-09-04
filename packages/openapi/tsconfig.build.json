@@ -14,7 +14,7 @@
     "tsBuildInfoFile": "dist/.tsbuildinfo"
   },
   "include": ["src/**/*"],
-  "exclude": ["src/sdk.ts", "src/examples.ts", "src/client.ts", "src/client-generator.ts"],
+  "exclude": ["src/client-generator.ts"],
   "references": [
     { "path": "../types/tsconfig.build.json" }
   ]

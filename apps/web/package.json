@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --fix",
     "type-check": "tsc --noEmit",
+    "test": "vitest run",
     "analyze:bundle": "node ../../scripts/analyze-bundles.js"
   },
   "dependencies": {
@@ -18,8 +19,12 @@
     "@elevate/auth": "workspace:*",
     "@elevate/db": "workspace:*",
     "@elevate/emails": "workspace:*",
+    "@elevate/forms": "workspace:*",
     "@elevate/integrations": "workspace:*",
+    "@elevate/http": "workspace:*",
+    "@elevate/logging": "workspace:*",
     "@elevate/openapi": "workspace:*",
+    "@elevate/logic": "workspace:*",
     "@elevate/security": "workspace:*",
     "@elevate/storage": "workspace:*",
     "@elevate/types": "workspace:*",

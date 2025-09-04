@@ -136,6 +136,8 @@ export const AdminEnvSchema = EnvSchema.pick({
   DEBUG: true,
   KAJABI_API_KEY: true,
   KAJABI_CLIENT_SECRET: true,
+}).required({
+  NODE_ENV: true,
 })
 
 // Normalize aliases and environment naming drifts without requiring changes downstream
@@ -148,104 +150,68 @@ function withAliases(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 }
 
 // Enhanced parsing with detailed error reporting and fail-fast behavior
-export function parseEnv(env: NodeJS.ProcessEnv, schema: z.ZodSchema = EnvSchema) {
-  const normalized = withAliases(env);
-  const res = schema.safeParse(normalized);
-  if (!res.success) {
-    console.error('❌ Environment validation failed!');
-    
-    // Group errors by severity
-    const criticalErrors: string[] = [];
-    const warnings: string[] = [];
-    
-    res.error.issues.forEach((issue) => {
-      const path = issue.path.join('.');
-      const message = `${path}: ${issue.message}`;
-      
-      // Critical errors that prevent app startup
-      const criticalVars = [
-        'DATABASE_URL', 
-        'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY', 
-        'CLERK_SECRET_KEY'
-      ];
-      
-      if (criticalVars.includes(path)) {
-        criticalErrors.push(message);
-      } else {
-        warnings.push(message);
-      }
-    });
-    
-    // Log critical errors
-    if (criticalErrors.length > 0) {
-      console.error('\n🚨 Critical environment variable errors:');
-      criticalErrors.forEach(error => console.error(`  • ${error}`));
-    }
-    
-    // Log warnings
-    if (warnings.length > 0) {
-      console.warn('\n⚠️  Environment variable warnings:');
-      warnings.forEach(warning => console.warn(`  • ${warning}`));
-    }
-    
-    // Show help message
-    
-    // Fail fast on any error
-    const allErrors = [...criticalErrors, ...warnings];
-    throw new Error(`Environment validation failed (${allErrors.length} issues): ${allErrors.join('; ')}`);
-  }
+export function parseEnv<TOutput>(
+  env: NodeJS.ProcessEnv,
+  schema: z.ZodType<TOutput> = EnvSchema as unknown as z.ZodType<TOutput>,
+): TOutput {
+  const normalized = withAliases(env)
   
-  return res.data;
+  try {
+    const parsed = schema.parse(normalized)
+    return parsed
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      // Group issues but avoid console side-effects in packages
+      const criticalVars = new Set([
+        'DATABASE_URL',
+        'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
+        'CLERK_SECRET_KEY',
+      ])
+      const criticalErrors: string[] = []
+      const warnings: string[] = []
+      for (const issue of error.issues) {
+        const path = issue.path.join('.')
+        const message = `${path}: ${issue.message}`
+        if (criticalVars.has(path)) criticalErrors.push(message)
+        else warnings.push(message)
+      }
+      const allErrors = [...criticalErrors, ...warnings]
+      throw new Error(
+        `Environment validation failed (${allErrors.length} issues). Critical: [${criticalErrors.join(
+          '; ',
+        )}] Warnings: [${warnings.join('; ')}]`,
+      )
+    }
+    throw error
+  }
 }
 
 // Helper functions for specific app types with enhanced error handling
 export function parseWebEnv(env: NodeJS.ProcessEnv = process.env): WebEnv {
-  
-  try {
-    const parsed = parseEnv(withAliases(env), WebEnvSchema);
-    
-    // Additional runtime checks for web app
-    if (parsed.NODE_ENV === 'production') {
-      if (!parsed.KAJABI_WEBHOOK_SECRET) {
-        throw new Error('KAJABI_WEBHOOK_SECRET is required in production');
-      }
-      if (!parsed.CLERK_WEBHOOK_SECRET) {
-        throw new Error('CLERK_WEBHOOK_SECRET is required in production');
-      }
+  const parsed = WebEnvSchema.parse(withAliases(env))
+  if (parsed.NODE_ENV === 'production') {
+    if (!parsed.KAJABI_WEBHOOK_SECRET) {
+      throw new Error('KAJABI_WEBHOOK_SECRET is required in production')
     }
-    
-    return parsed as WebEnv;
-  } catch (error) {
-    console.error('❌ Web app environment validation failed:', error);
-    process.exit(1); // Fail fast
+    if (!parsed.CLERK_WEBHOOK_SECRET) {
+      throw new Error('CLERK_WEBHOOK_SECRET is required in production')
+    }
   }
+  return parsed
 }
 
-export function parseAdminEnv(env: NodeJS.ProcessEnv = process.env) {
-  
-  try {
-    const parsed = parseEnv(env, AdminEnvSchema);
-    return parsed;
-  } catch (error) {
-    console.error('❌ Admin app environment validation failed:', error);
-    process.exit(1); // Fail fast
-  }
+export function parseAdminEnv(env: NodeJS.ProcessEnv = process.env): z.infer<typeof AdminEnvSchema> {
+  return AdminEnvSchema.parse(env)
 }
 
-// Utility function to validate environment at startup
-export function validateEnvOnStartup(appType: 'web' | 'admin' | 'general' = 'general') {
-  try {
-    switch (appType) {
-      case 'web':
-        return parseWebEnv();
-      case 'admin':
-        return parseAdminEnv();
-      default:
-        return parseEnv(process.env);
-    }
-  } catch (error) {
-    console.error(`\n💥 ${appType.toUpperCase()} APP STARTUP FAILED`);
-    console.error('Environment validation error:', error);
-    process.exit(1);
+// Utility function to validate environment at startup  
+export function validateEnvOnStartup(appType: 'web' | 'admin' | 'general' = 'general'): WebEnv | z.infer<typeof AdminEnvSchema> | z.infer<typeof EnvSchema> {
+  switch (appType) {
+    case 'web':
+      return parseWebEnv()
+    case 'admin':
+      return parseAdminEnv()
+    default:
+      return EnvSchema.parse(process.env)
   }
 }

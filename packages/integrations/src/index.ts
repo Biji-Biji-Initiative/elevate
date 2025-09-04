@@ -1,1 +1,1 @@
-export * from './kajabi.js'
+export * from './kajabi'

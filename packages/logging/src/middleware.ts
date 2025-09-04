@@ -1,13 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
-import type { ServerLogger } from './server.js'
-import { createTimer, endTimer, extractRequestInfo } from './utils.js'
-import type { LogContext, ApiLogData, DatabaseLogData, AuthLogData } from './types.js'
+import type { NextRequest, NextResponse } from 'next/server'
+
+import { createTimer, endTimer, extractRequestInfo } from './utils'
+
+import type { ServerLogger } from './server'
+import type { LogContext, ApiLogData, DatabaseLogData, AuthLogData } from './types'
 
 /**
  * Middleware for logging Next.js API requests
  */
 export function withRequestLogging(logger: ServerLogger) {
-  return function requestLoggingMiddleware<T extends any[]>(
+  return function requestLoggingMiddleware<T extends unknown[]>(
     handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
   ) {
     return async function loggedHandler(request: NextRequest, ...args: T): Promise<NextResponse> {
@@ -63,7 +65,7 @@ export function withRequestLogging(logger: ServerLogger) {
  * Higher-order function to add error logging to API handlers
  */
 export function withErrorLogging(logger: ServerLogger, context?: LogContext) {
-  return function errorLoggingWrapper<T extends any[]>(
+  return function errorLoggingWrapper<T extends unknown[]>(
     handler: (...args: T) => Promise<NextResponse>
   ) {
     return async function loggedHandler(...args: T): Promise<NextResponse> {
@@ -100,7 +102,7 @@ export function withDatabaseLogging<T>(
 
       const dbData: DatabaseLogData = {
         operation,
-        duration: timing.duration!,
+        duration: timing.duration,
         ...(table && { table })
       }
       logger.database(dbData, context)
@@ -111,7 +113,7 @@ export function withDatabaseLogging<T>(
 
       const dbErrorData: DatabaseLogData = {
         operation,
-        duration: timing.duration!,
+        duration: timing.duration,
         error: error instanceof Error ? error.message : String(error),
         ...(table && { table })
       }
@@ -185,7 +187,7 @@ export function withWebhookLogging(
         provider,
         eventType,
         success: true,
-        duration: timing.duration!,
+        duration: timing.duration,
       }, context)
 
       return result
@@ -196,7 +198,7 @@ export function withWebhookLogging(
         provider,
         eventType,
         success: false,
-        duration: timing.duration!,
+        duration: timing.duration,
         error: error instanceof Error ? error.message : String(error),
       }, context)
 
@@ -226,7 +228,7 @@ export function withPerformanceLogging(
 
       logger.performance({
         operation,
-        duration: timing.duration!,
+        duration: timing.duration,
         memory: {
           used: endMemory.heapUsed - startMemory.heapUsed,
           free: endMemory.heapTotal - endMemory.heapUsed,
@@ -240,7 +242,7 @@ export function withPerformanceLogging(
 
       logger.performance({
         operation,
-        duration: timing.duration!,
+        duration: timing.duration,
       }, {
         ...context,
         error: error instanceof Error ? error.message : String(error),

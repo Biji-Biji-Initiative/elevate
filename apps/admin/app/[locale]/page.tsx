@@ -4,9 +4,11 @@ import React, { useState, useEffect } from 'react'
 
 import Link from 'next/link'
 
-import { withRoleGuard } from '@elevate/auth/context'
 import { adminClient, AdminClientError, type OverviewStats, type Distributions, type Trends, type RecentActivity, type Performance } from '@/lib/admin-client'
-import { Button , StatusBadge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
+import type { AnalyticsQuery } from '@elevate/types'
+import { withRoleGuard } from '@elevate/auth/context'
+import { Button , Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
+import { StatusBadge } from '@elevate/ui/blocks'
 
 interface AnalyticsData {
   overview: OverviewStats
@@ -46,10 +48,11 @@ function AdminDashboard() {
   const fetchAnalytics = async () => {
     setLoading(true)
     try {
-      const params: { startDate?: string; endDate?: string; cohort?: string } = {}
-      if (dateRange.startDate) params.startDate = dateRange.startDate
-      if (dateRange.endDate) params.endDate = dateRange.endDate
-      if (dateRange.cohort !== 'ALL') params.cohort = dateRange.cohort
+      const params: AnalyticsQuery = {
+        startDate: dateRange.startDate || undefined,
+        endDate: dateRange.endDate || undefined,
+        cohort: dateRange.cohort !== 'ALL' ? dateRange.cohort : undefined,
+      }
 
       const result = await adminClient.getAnalytics(params)
       setAnalytics(result)

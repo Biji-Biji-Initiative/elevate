@@ -15,13 +15,13 @@ import { TestData, createMockFile, createMockRequest, executeApiRoute, mockAuthe
 import crypto from 'crypto'
 
 // Mock file upload handler
-let uploadHandler: any
-let storageModule: any
+let uploadHandler: (req: Request) => Promise<Response>
+let storageModule: { parseStoragePath: (p: string) => { userId: string; activityCode: string } }
 
 describe('Integration: File Upload Security and Validation', () => {
   let testDb: TestDatabase
-  let testUser: any
-  let otherUser: any
+  let testUser: { id: string; email: string; handle: string }
+  let otherUser: { id: string; email: string; handle: string }
 
   beforeEach(async () => {
     // Setup isolated test database

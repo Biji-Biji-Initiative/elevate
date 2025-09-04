@@ -2,8 +2,10 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma, Prisma } from '@elevate/db'
-import { parseActivityCode, AnalyticsQuerySchema, createSuccessResponse } from '@elevate/types'
+import { getServerLogger } from '@elevate/logging/server'
+import { computeApprovalRate, computeActivationRate } from '@elevate/logic'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { parseActivityCode, AnalyticsQuerySchema, createSuccessResponse } from '@elevate/types'
 import type {
   AnalyticsDateFilter,
   AnalyticsCohortFilter,
@@ -33,6 +35,7 @@ import type {
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  const logger = getServerLogger().forRequestWithHeaders(request)
   return withRateLimit(request, adminRateLimiter, async () => {
   try {
     const user = await requireRole('reviewer')
@@ -94,7 +97,9 @@ export async function GET(request: NextRequest) {
     return res
     
   } catch (error) {
-    console.error('Optimized analytics failed:', error)
+    logger.error('Optimized analytics failed', error instanceof Error ? error : new Error(String(error)), {
+      operation: 'admin_analytics_optimized',
+    })
     return createErrorResponse(error, 500)
   }
   })
@@ -195,13 +200,11 @@ async function getOptimizedOverview(
   const totalSubmissions = Number(data.total_submissions)
   const approvedSubmissions = Number(data.approved_submissions)
   const rejectedSubmissions = Number(data.rejected_submissions)
-  const approvalRate = (approvedSubmissions + rejectedSubmissions) > 0 
-    ? (approvedSubmissions / (approvedSubmissions + rejectedSubmissions)) * 100 
-    : 0
+  const approvalRate = computeApprovalRate(approvedSubmissions, rejectedSubmissions)
     
   const totalUsers = Number(data.total_users)
   const activeUsers = Number(data.active_users)
-  const activationRate = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0
+  const activationRate = computeActivationRate(activeUsers, totalUsers)
 
   return {
     submissions: {

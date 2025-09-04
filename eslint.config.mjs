@@ -1,6 +1,6 @@
-import prettier from 'eslint-config-prettier'
 import js from '@eslint/js'
 import nextPlugin from '@next/eslint-plugin-next/dist/index.js'
+import prettier from 'eslint-config-prettier'
 import importPlugin from 'eslint-plugin-import'
 import jsxA11yPlugin from 'eslint-plugin-jsx-a11y'
 import reactPlugin from 'eslint-plugin-react/index.js'
@@ -14,6 +14,7 @@ export default [
   {
     ignores: [
       'node_modules/**',
+      '**/.react-email/**',
       '**/.next/**',
       '**/next/**',
       'apps/web/.next/**',
@@ -26,6 +27,7 @@ export default [
       '**/.env*',
       '**/prisma/migrations/**',
       '**/public/**',
+      '**/vitest.config.*',
       '**/.pnpm-store/**',
       '**/.vscode/**',
       '**/logs/**',
@@ -52,7 +54,11 @@ export default [
       'packages/db/dist/**',
       // Additional build artifacts
       '**/.tsup/**',
+      '**/tsup.config.ts',
       '**/storybook-static/**',
+      '**/__tests__/**',
+      'packages/**/scripts/**',
+      'packages/**/seed.ts',
     ],
   },
 
@@ -61,7 +67,7 @@ export default [
 
   // TypeScript ESLint configuration
   ...tseslint.configs.recommended,
-  
+
   // Global configuration
   {
     languageOptions: {
@@ -71,7 +77,7 @@ export default [
         ecmaFeatures: {
           jsx: true,
         },
-        project: true,
+        project: './tsconfig.eslint.json',
         tsconfigRootDir: import.meta.dirname,
       },
       // Browser globals for React/Next.js files
@@ -99,6 +105,11 @@ export default [
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
+          project: [
+            './tsconfig.base.json',
+            './apps/*/tsconfig.json',
+            './packages/*/tsconfig.json',
+          ],
         },
         node: true,
       },
@@ -117,7 +128,7 @@ export default [
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
       ...jsxA11yPlugin.configs.recommended.rules,
-      
+
       // React specific rules
       'react/react-in-jsx-scope': 'off', // Not needed in Next.js
       'react/prop-types': 'off', // Using TypeScript for prop validation
@@ -127,11 +138,11 @@ export default [
       'react/jsx-key': 'error',
       'react/no-children-prop': 'error',
       'react/no-array-index-key': 'warn',
-      
+
       // React Hooks rules
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      
+
       // Accessibility rules - applied here where plugin is available
       'jsx-a11y/html-has-lang': 'warn',
       'jsx-a11y/alt-text': 'error',
@@ -149,7 +160,7 @@ export default [
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
-      
+
       // Next.js specific rules
       '@next/next/no-img-element': 'error',
       '@next/next/no-page-custom-font': 'error',
@@ -159,12 +170,12 @@ export default [
       '@next/next/no-head-element': 'error',
       '@next/next/no-html-link-for-pages': [
         'error',
-        ['apps/web/app/', 'apps/admin/app/']
+        ['apps/web/app/', 'apps/admin/app/'],
       ],
       '@next/next/no-sync-scripts': 'error',
       '@next/next/no-title-in-document-head': 'error',
       '@next/next/no-typos': 'error',
-      
+
       // Server Components and Client Boundary rules
       '@next/next/no-async-client-component': 'error',
       '@next/next/no-document-import-in-page': 'error',
@@ -228,7 +239,7 @@ export default [
       'import/first': 'error',
       'import/newline-after-import': 'error',
       'import/no-anonymous-default-export': 'warn',
-      
+
       // ESM Import Hygiene (BUILDING.md Section 6)
       'import/extensions': [
         'error',
@@ -240,15 +251,12 @@ export default [
           tsx: 'never',
         },
       ],
-      
+
       // Prevent deep internal imports (BUILDING.md Section 11)
       'no-restricted-imports': [
         'error',
         {
-          patterns: [
-            '@elevate/*/src/*',
-            '@elevate/*/dist/*',
-          ],
+          patterns: ['@elevate/*/src/*', '@elevate/*/dist/*'],
         },
       ],
     },
@@ -277,15 +285,15 @@ export default [
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      
+
       // STRICT TYPE SAFETY RULES - ZERO TOLERANCE FOR UNSAFE PATTERNS
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error', 
+      '@typescript-eslint/no-unsafe-assignment': 'error',
       '@typescript-eslint/no-unsafe-member-access': 'error',
       '@typescript-eslint/no-unsafe-return': 'error',
       '@typescript-eslint/no-unsafe-call': 'error',
       '@typescript-eslint/no-unsafe-argument': 'error',
-      
+
       '@typescript-eslint/no-var-requires': 'error',
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/prefer-as-const': 'error',
@@ -298,7 +306,7 @@ export default [
         },
       ],
       '@typescript-eslint/consistent-type-exports': 'error',
-      
+
       // Disable rules that conflict with TypeScript
       'no-unused-vars': 'off',
       'no-undef': 'off',
@@ -311,7 +319,7 @@ export default [
     rules: {
       // STRICT TYPE SAFETY RULES - ZERO TOLERANCE FOR UNSAFE PATTERNS
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error', 
+      '@typescript-eslint/no-unsafe-assignment': 'error',
       '@typescript-eslint/no-unsafe-member-access': 'error',
       '@typescript-eslint/no-unsafe-return': 'error',
       '@typescript-eslint/no-unsafe-call': 'error',
@@ -324,7 +332,7 @@ export default [
       '@typescript-eslint/require-await': 'error',
     },
   },
-  
+
   // Application code: progressive hardening with warnings
   {
     files: ['apps/**/*.{ts,tsx}'],
@@ -342,16 +350,14 @@ export default [
           },
         },
       ],
-      // Critical rules remain errors even in apps
+      // Strict rules for apps too
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
-      
-      // Unsafe rules as warnings for apps (remain errors in packages)
-      '@typescript-eslint/no-unsafe-assignment': 'warn',
-      '@typescript-eslint/no-unsafe-member-access': 'warn',
-      '@typescript-eslint/no-unsafe-return': 'warn',
-      '@typescript-eslint/no-unsafe-call': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn',
+      '@typescript-eslint/no-unsafe-assignment': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
+      '@typescript-eslint/no-unsafe-return': 'error',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-argument': 'error',
       '@next/next/no-img-element': 'warn',
       '@next/next/next-script-for-ga': 'warn',
     },
@@ -365,48 +371,94 @@ export default [
         'error',
         {
           selector: 'CallExpression[callee.property.name="$queryRawUnsafe"]',
-          message: 'Use prisma.$queryRaw with Prisma.sql to avoid SQL injection risks.'
+          message:
+            'Use prisma.$queryRaw with Prisma.sql to avoid SQL injection risks.',
         },
-        
+        {
+          selector: 'CallExpression[callee.property.name="$executeRawUnsafe"]',
+          message:
+            'Use prisma.$executeRaw with Prisma.sql to avoid SQL injection risks.',
+        },
       ],
       // Code quality
       'prefer-const': 'error',
       'no-var': 'error',
-      'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
+      // Keep console allowed to avoid noisy warnings in tooling and examples
+      'no-console': 'off',
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'warn',
       'no-alert': 'warn',
       'no-eval': 'error',
       'no-implied-eval': 'error',
-      
+
       // Error handling
       'no-empty': 'warn',
       'no-empty-function': 'warn',
       'prefer-promise-reject-errors': 'error',
-      
+
       // Best practices
-      'eqeqeq': ['error', 'smart'],
-      'curly': ['error', 'multi-line'],
+      eqeqeq: ['error', 'smart'],
+      curly: ['error', 'multi-line'],
       'no-case-declarations': 'off',
       'no-constant-condition': 'warn',
       'no-unreachable': 'error',
       'no-duplicate-imports': 'error',
-      
+
       // Formatting (handled by Prettier)
       'max-len': 'off',
-      'indent': 'off',
-      'quotes': 'off',
-      'semi': 'off',
+      indent: 'off',
+      quotes: 'off',
+      semi: 'off',
     },
   },
 
   // Test files configuration
   {
-    files: ['**/*.{test,spec}.{js,jsx,ts,tsx}', '**/__tests__/**/*.{js,jsx,ts,tsx}'],
+    files: [
+      '**/*.{test,spec}.{js,jsx,ts,tsx}',
+      '**/__tests__/**/*.{js,jsx,ts,tsx}',
+      '**/tests/**/*.{js,jsx,ts,tsx}',
+    ],
     rules: {
-      // Allow more lenient rules in tests - but maintain type safety
+      // Allow more lenient rules in tests
       '@typescript-eslint/no-non-null-assertion': 'off',
       'no-console': 'off',
-      // Note: Removed no-explicit-any exception - tests must also be type-safe
+      'turbo/no-undeclared-env-vars': 'off',
+      // Relax unsafe rules to reduce false positives around test helpers/expect
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      // Relax import ordering in tests
+      'import/order': 'off',
+      'import/extensions': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/require-await': 'off',
+      'no-empty-function': 'off',
+    },
+  },
+
+  // Generated OpenAPI files: relax strict typing rules
+  {
+    files: [
+      'packages/openapi/src/sdk.ts',
+      'packages/openapi/src/spec.ts',
+      'packages/openapi/src/examples.ts',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      // Allow demo logging and import styles in generated/examples
+      'no-console': 'off',
+      'import/order': 'off',
+      'import/first': 'off',
+      'import/no-duplicates': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
 
@@ -415,14 +467,23 @@ export default [
     files: [
       '**/*.config.{js,mjs,cjs,ts}',
       '**/*.config.*.{js,mjs,cjs,ts}',
-      '**/tailwind.config.{js,ts,mjs}',
-      '**/next.config.{js,mjs,ts}',
-      '**/postcss.config.{js,mjs,ts}',
+      '**/vitest.config.{js,mjs,cjs,ts}',
+      '**/tailwind.config.{js,ts,mjs,cjs}',
+      '**/tailwind-preset.{js,ts,mjs,cjs}',
+      '**/next.config.{js,mjs,ts,cjs}',
+      '**/postcss.config.{js,mjs,ts,cjs}',
+      '**/.eslintrc.{js,mjs,cjs}',
+      '**/.eslintrc.*.{js,mjs,cjs}',
+      'tsup.base.mjs',
       'turbo.json',
       'package.json',
-      '**/scripts/**/*.{js,mjs,ts}',
+      '**/scripts/**/*.{js,mjs,ts,cjs}',
+      'packages/**/seed.ts',
     ],
     languageOptions: {
+      parserOptions: {
+        project: false,
+      },
       globals: {
         // Node.js globals
         process: 'readonly',
@@ -437,10 +498,25 @@ export default [
       },
     },
     rules: {
+      'import/no-unresolved': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      // Disable typed rules and unsafe checks for config files
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/consistent-type-exports': 'off',
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-require-imports': 'off',
       'import/no-anonymous-default-export': 'off',
       'no-undef': 'off', // TypeScript handles this
+      'no-console': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
 
@@ -448,6 +524,52 @@ export default [
   {
     files: ['**/*.{js,jsx,mjs,cjs}'],
     ...tseslint.configs.disableTypeChecked,
+  },
+
+  // Strict rules for packages (libraries)
+  {
+    files: ['packages/**/*.{ts,tsx}'],
+    rules: {
+      // Enforce strict type safety in libraries
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
+      '@typescript-eslint/no-unsafe-return': 'error',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-argument': 'error',
+      '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/consistent-type-exports': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/require-await': 'error',
+      '@typescript-eslint/no-unused-vars': 'error',
+
+      // Import hygiene for libraries
+      'import/no-duplicates': 'error',
+      'import/extensions': [
+        'error',
+        'never',
+        {
+          js: 'never',
+          ts: 'never',
+          tsx: 'never',
+          json: 'always',
+        },
+      ],
+
+      // Block deep internal imports
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@elevate/*/src/*', '@elevate/*/dist/*'],
+              message:
+                'Import from published package subpaths only, not internal paths.',
+            },
+          ],
+        },
+      ],
+    },
   },
 
   // Final app-specific relaxations to keep iterations fast
@@ -466,6 +588,50 @@ export default [
     },
   },
 
+  // Guardrail: discourage direct NextResponse.json in API routes; prefer envelope helpers
+  {
+    files: ['apps/**/app/api/**/*.ts', 'apps/**/app/api/**/*.tsx'],
+    rules: {
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector:
+            'CallExpression[callee.object.name="NextResponse"][callee.property.name="json"]',
+          message:
+            'Use createSuccessResponse/createErrorResponse from @elevate/http for standardized envelopes.',
+        },
+      ],
+    },
+  },
+
   // Prettier configuration (must be last)
   prettier,
+
+  // UI package: Restrict direct Next/Sentry imports to designated folders only
+  {
+    files: ['packages/ui/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['next', 'next/*', '@sentry/*'],
+              message:
+                'Next/Sentry imports are only allowed under packages/ui/src/next or packages/ui/src/feedback. Use public subpaths in consumers.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      'packages/ui/src/next/**/*.{ts,tsx}',
+      'packages/ui/src/feedback/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
 ]

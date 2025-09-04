@@ -6,7 +6,7 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "default": "./dist/js/index.js"
+      "import": "./dist/js/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -15,7 +15,7 @@
   "scripts": {
     "build": "pnpm run build:types && tsup --config tsup.config.ts",
     "clean": "rm -rf dist",
-    "build:types": "tsc -b --force tsconfig.build.json",
+    "build:types": "tsc -b tsconfig.build.json",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --max-warnings 0",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --fix",
     "type-check": "tsc --noEmit",

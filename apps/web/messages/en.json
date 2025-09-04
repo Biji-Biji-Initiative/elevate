@@ -25,7 +25,7 @@
   },
   "leaps": {
     "learn": "Learn",
-    "explore": "Explore", 
+    "explore": "Explore",
     "amplify": "Amplify",
     "present": "Present",
     "shine": "Shine"
@@ -33,14 +33,113 @@
   "homepage": {
     "title": "MS Elevate LEAPS Tracker",
     "subtitle": "Empower Indonesian educators to adopt AI in classrooms through structured learning journey",
-    "hero_title": "Transform Your Teaching with AI",
-    "hero_subtitle": "Join thousands of Indonesian educators on the LEAPS journey to integrate AI tools in your classroom",
-    "get_started": "Get Started",
-    "learn_more": "Learn More",
-    "stats": {
-      "educators": "Educators",
-      "completed": "Activities Completed",
-      "points": "Total Points Awarded"
+    "hero": {
+      "h1": "Unlock AI. Transform Classrooms. Rise Together.",
+      "subcopy": "A national movement where teachers learn, apply, amplify, present, and shine—with points, badges, and real recognition.",
+      "cta_primary": "Join the LEAPS Journey",
+      "cta_secondary": "See Live Progress",
+      "counters": {
+        "educators_learning": "Educators learning",
+        "peers_students_reached": "Peers & students reached",
+        "stories_shared": "Stories shared",
+        "micro_credentials": "Micro-credentials",
+        "mce_certified": "MCE certified"
+      }
+    },
+    "leaps": {
+      "intro": "Your path to impact—earn points, unlock badges, move up the leaderboard.",
+      "learn": {
+        "title": "Learn (20 pts)",
+        "body": "Take the 1-hour or 4-hour AI for Educators, or \"AI Agent in a Day.\" Upload your certificate. You've started.",
+        "cta": "Start the 1-hour track",
+        "secondary": "I have a certificate → Upload",
+        "success": "Certificate verified. +20 pts. Badge unlocked: Starter."
+      },
+      "explore": {
+        "title": "Explore (50 pts)",
+        "body": "Run an AI-powered lesson in your classroom. Upload photos/docs and a brief reflection.",
+        "cta": "Submit classroom evidence",
+        "success": "Evidence received. +50 pts. Badge: In-Class Innovator."
+      },
+      "amplify": {
+        "title": "Amplify (2 pts/peer, 1 pt/student)",
+        "body": "Train peers/students. Submit attendance. Watch your points climb.",
+        "cta": "Record training session",
+        "success": "Session logged. Points added automatically."
+      },
+      "present": {
+        "title": "Present (20 pts)",
+        "body": "Share your impact story on LinkedIn. Paste the post link to claim points.",
+        "cta": "Submit LinkedIn link",
+        "success": "Story verified. +20 pts. Badge: Community Voice."
+      },
+      "shine": {
+        "title": "Shine (Recognition)",
+        "body": "Contribute your idea for education policy. Top 10–15 educators will be invited to the Jakarta convening.",
+        "cta": "Submit your policy idea",
+        "success": "Idea received. You're eligible for convening review."
+      }
+    },
+    "ripple": {
+      "title": "From one teacher to national impact",
+      "body": "150 Master Trainers → 15,000 Educators → 150,000 peers & students → 25,000 micro-credentials → 5,000 MCE certified."
+    },
+    "flow": {
+      "title": "How Elevate works",
+      "bullets": [
+        "MOE identifies participating schools; database anchors outreach.",
+        "Registration via form routes educators to the LEAPS tracker (Entry & Sign-In → Tracker).",
+        "Train-the-Trainer (online/offline). Master Trainers are paired with schools.",
+        "Each Master Trainer trains ≥100 educators; each educator cascades to peers/students.",
+        "Rural inclusion: offline materials for teachers in rural areas."
+      ]
+    },
+    "stories": {
+      "title": "Real classrooms. Real change.",
+      "subcopy": "See educators applying AI today—and share yours to inspire others.",
+      "cta": "Publish your story",
+      "empty_state": "Be among the first to start the movement."
+    },
+    "paths": {
+      "educator": {
+        "title": "Start in one hour",
+        "body": "Take the 1-hour AI for Educators, upload your certificate, and claim 20 pts.",
+        "cta": "Start now"
+      },
+      "trainer": {
+        "title": "Lead a cohort of 100 educators",
+        "body": "Join the Master Trainer pool (150–200). Get paired with schools and deliver online/offline sessions.",
+        "cta": "Become a Master Trainer"
+      }
+    },
+    "convening": {
+      "title": "Shine in Jakarta",
+      "body": "The top 10–15 educators—based on LEAPS points and policy ideas—will be invited to the Educators Convening in Jakarta for national recognition.",
+      "cta": "See selection criteria"
+    },
+    "faq": {
+      "footer": "We'll update these answers as confirmations are received."
+    },
+    "partners": {
+      "list": ["Microsoft", "MOE", "Biji-biji", "Mata Garuda", "MIEE"]
+    },
+    "contact": {
+      "emails": ["rashvin@biji-biji.com", "fabsya@biji-biji.com"],
+      "phones": ["+60 122 916 662 (Rashvin)", "+62 821 3747 0028 (Fabsya)"]
+    },
+    "footer": {
+      "privacy": "Evidence uploads are used solely for verification and impact reporting.",
+      "credits": "Program mechanics and targets per Microsoft Elevate 2026 documentation."
+    },
+    "validation": {
+      "missing_file": "Please upload the required evidence.",
+      "bad_url": "Enter a valid LinkedIn post URL.",
+      "min_length": "Please add at least {n} characters."
+    },
+    "empty_states": {
+      "no_counters": "Be among the first to start the movement.",
+      "leaderboard_empty": "Your name could be here this week.",
+      "evidence_rejected": "We couldn't verify your evidence. Please check and re-upload."
     }
   },
   "dashboard": {
@@ -62,7 +161,7 @@
       "certificate_required": "Valid certificate from approved provider required"
     },
     "explore": {
-      "title": "Explore - Classroom Implementation", 
+      "title": "Explore - Classroom Implementation",
       "description": "Apply AI tools in your classroom and document the experience",
       "points": "50 points",
       "add_reflection": "Add Reflection",

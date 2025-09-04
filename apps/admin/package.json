@@ -20,6 +20,7 @@
     "@elevate/config": "workspace:*",
     "@elevate/db": "workspace:*",
     "@elevate/integrations": "workspace:*",
+    "@elevate/http": "workspace:*",
     "@elevate/logic": "workspace:*",
     "@elevate/openapi": "workspace:*",
     "@elevate/security": "workspace:*",

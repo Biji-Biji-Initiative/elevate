@@ -6,8 +6,8 @@ import {
   createLoggerConfig,
   getDefaultPinoConfig,
   DEFAULT_REDACT_FIELDS,
-} from '../config.js'
-import type { LoggerConfig } from '../types.js'
+} from '../config'
+import type { LoggerConfig } from '../types'
 
 describe('Config utilities', () => {
   beforeEach(() => {

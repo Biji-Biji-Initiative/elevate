@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 import crypto from 'crypto'
+
+import { cookies } from 'next/headers'
+import { NextResponse, type NextRequest } from 'next/server'
+
 
 export const CSRF_TOKEN_HEADER = 'X-CSRF-Token'
 export const CSRF_COOKIE_NAME = '_csrf'
@@ -20,7 +22,7 @@ export class CSRFError extends Error {
   public readonly name = 'CSRFError'
   public readonly status = 403
 
-  constructor(message: string = 'Invalid or missing CSRF token') {
+  constructor(message = 'Invalid or missing CSRF token') {
     super(message)
   }
 }
@@ -77,7 +79,7 @@ export class CSRFManager {
       const tokenBuffer = Buffer.from(token, 'hex')
 
       return (
-        crypto.timingSafeEqual(secretBuffer, secretBuffer) &&
+        crypto.timingSafeEqual(secretBuffer, tokenBuffer) &&
         token.length === this.config.tokenLength * 2
       )
     } catch {
@@ -95,7 +97,8 @@ export class CSRFManager {
     if (parts.length !== 2) return false
 
     const [secret, token] = parts
-    return this.validateTokenPair(secret!, token!)
+    if (!secret || !token) return false
+    return this.validateTokenPair(secret, token)
   }
 
   /**
@@ -205,10 +208,10 @@ export class CSRFManager {
    * Generates a new CSRF token for forms
    * Can be called from API routes or Server Components
    */
-  async generateTokenForResponse(): Promise<{
+  generateTokenForResponse(): {
     token: string
     response: NextResponse
-  }> {
+  } {
     const { secret, token } = this.generateTokenPair()
 
     const response = NextResponse.json({ token })
@@ -246,7 +249,7 @@ export async function generateCSRFToken(): Promise<string> {
 /**
  * Higher-order function to protect API routes with CSRF validation
  */
-export function withCSRFProtection<T extends any[]>(
+export function withCSRFProtection<T extends unknown[]>(
   handler: (request: NextRequest, ...args: T) => Promise<NextResponse>,
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {

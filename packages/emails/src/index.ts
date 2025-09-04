@@ -1,10 +1,11 @@
-import { Resend } from 'resend';
 import { render } from '@react-email/render';
-import WelcomeEmail from './templates/welcome.js';
-import SubmissionConfirmationEmail from './templates/submission-confirmation.js';
-import ApprovalNotificationEmail from './templates/approval-notification.js';
-import RejectionNotificationEmail from './templates/rejection-notification.js';
-import WeeklyProgressEmail from './templates/weekly-progress.js';
+import { Resend } from 'resend';
+
+import ApprovalNotificationEmail from './templates/approval-notification';
+import RejectionNotificationEmail from './templates/rejection-notification';
+import SubmissionConfirmationEmail from './templates/submission-confirmation';
+import WeeklyProgressEmail from './templates/weekly-progress';
+import WelcomeEmail from './templates/welcome';
 
 // Initialize Resend client
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -15,36 +16,28 @@ const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'support@leaps.mereka.org';
 
 // Base email sending function
 async function sendEmail(to: string, subject: string, html: string, text?: string) {
-  try {
-    const emailOptions: {
-      from: string;
-      to: string;
-      subject: string;
-      html: string;
-      replyTo: string;
-      text?: string;
-    } = {
-      from: FROM_EMAIL,
-      to,
-      subject,
-      html,
-      replyTo: REPLY_TO_EMAIL,
-    };
-    
-    if (text) {
-      emailOptions.text = text;
-    }
-    
-    const result = await resend.emails.send(emailOptions);
+  const emailOptions: {
+    from: string;
+    to: string;
+    subject: string;
+    html: string;
+    replyTo: string;
+    text?: string;
+  } = {
+    from: FROM_EMAIL,
+    to,
+    subject,
+    html,
+    replyTo: REPLY_TO_EMAIL,
+  };
 
-    if (result.error) {
-      throw result.error;
-    }
-
-    return result.data;
-  } catch (error) {
-    throw error;
+  if (text) {
+    emailOptions.text = text;
   }
+
+  const result = await resend.emails.send(emailOptions);
+  if (result.error) throw result.error;
+  return result.data;
 }
 
 // Welcome Email
@@ -176,40 +169,33 @@ export async function sendBatchEmails(emails: Array<{
   html: string;
   text?: string;
 }>) {
-  try {
-    const result = await resend.batch.send(
-      emails.map(email => {
-        const emailOptions: {
-          from: string;
-          to: string;
-          subject: string;
-          html: string;
-          reply_to: string;
-          text?: string;
-        } = {
-          from: FROM_EMAIL,
-          to: email.to,
-          subject: email.subject,
-          html: email.html,
-          reply_to: REPLY_TO_EMAIL,
-        };
-        
-        if (email.text) {
-          emailOptions.text = email.text;
-        }
-        
-        return emailOptions;
-      })
-    );
+  const result = await resend.batch.send(
+    emails.map((email) => {
+      const emailOptions: {
+        from: string;
+        to: string;
+        subject: string;
+        html: string;
+        replyTo: string;
+        text?: string;
+      } = {
+        from: FROM_EMAIL,
+        to: email.to,
+        subject: email.subject,
+        html: email.html,
+        replyTo: REPLY_TO_EMAIL,
+      };
 
-    if (result.error) {
-      throw result.error;
-    }
+      if (email.text) {
+        emailOptions.text = email.text;
+      }
 
-    return result.data;
-  } catch (error) {
-    throw error;
-  }
+      return emailOptions;
+    })
+  );
+
+  if (result.error) throw result.error;
+  return result.data;
 }
 
 // Email validation utility

@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 
 import Link from 'next/link'
 
+import { Button, Alert, AlertTitle, AlertDescription } from '@elevate/ui'
+
 interface ErrorProps {
   error: Error & { digest?: string }
   reset: () => void
@@ -11,62 +13,50 @@ interface ErrorProps {
 
 export default function Error({ error, reset }: ErrorProps) {
   useEffect(() => {
-    // TODO: Log the error to an error reporting service (e.g., Sentry)
-    // In production, replace with proper error tracking
+    // Log the error to console in development
+    // In production, this would be sent to an error tracking service
+    console.error('App Error:', error)
   }, [error])
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full text-center">
-        <div className="mb-8">
-          <div className="mx-auto h-16 w-16 text-red-500 mb-4">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={1}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-              />
-            </svg>
-          </div>
-          
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h1>
-          <p className="text-gray-600 mb-8">
-            We're sorry, but something unexpected happened. Please try again or return to the homepage.
-          </p>
-          
-          {process.env.NODE_ENV === 'development' && (
-            <details className="mb-6 text-left">
-              <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
-                Error Details (Development Only)
-              </summary>
-              <pre className="text-xs text-red-600 bg-red-50 p-3 rounded border overflow-auto">
-                {error.message}
-              </pre>
-            </details>
-          )}
-        </div>
+      <div className="max-w-md w-full">
+        <Alert variant="destructive" className="mb-6">
+          <AlertTitle>Something went wrong</AlertTitle>
+          <AlertDescription className="space-y-4">
+            <p>
+              We're sorry, but something unexpected happened. Please try again or return to the homepage.
+            </p>
+            
+            {process.env.NODE_ENV === 'development' && (
+              <details className="text-left">
+                <summary className="cursor-pointer text-sm font-mono">
+                  Error Details (Development Only)
+                </summary>
+                <pre className="mt-2 text-xs overflow-auto p-2 bg-gray-100 rounded">
+                  {error.message}
+                  {'\n\n'}
+                  {error.stack}
+                </pre>
+              </details>
+            )}
+          </AlertDescription>
+        </Alert>
         
-        <div className="space-y-4">
-          <button 
-            onClick={reset}
-            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors w-full"
-          >
+        <div className="space-y-3">
+          <Button onClick={reset} className="w-full">
             Try Again
-          </button>
+          </Button>
           
-          <Link 
-            href="/"
-            className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors w-full"
-          >
-            Go Home
-          </Link>
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/">Go Home</Link>
+          </Button>
         </div>
         
-        <div className="mt-8">
-          <p className="text-sm text-gray-500">
+        <div className="mt-6">
+          <p className="text-sm text-gray-500 text-center">
             If this problem persists, please{' '}
-            <Link href="/docs" className="text-blue-600 hover:text-blue-500">
+            <Link href="/docs" className="text-blue-600 hover:text-blue-500 underline">
               contact support
             </Link>
           </p>

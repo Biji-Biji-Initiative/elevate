@@ -1,6 +1,8 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+
 import { csrfManager } from '@elevate/security/csrf'
 import { createSecurityMiddleware, getSecurityConfig, withSecurity } from '@elevate/security/security-middleware'
 

@@ -1,10 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import crypto from 'crypto'
+
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock rate limiter to pass-through
 vi.mock('@elevate/security/rate-limiter', async () => ({
   webhookRateLimiter: {},
-  withRateLimit: async (_req: any, _limiter: any, handler: any) => handler(),
+  withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
 }))
 
 // Mock next/headers to provide signature
@@ -64,17 +65,16 @@ describe('Kajabi webhook - idempotency behavior', () => {
     pointsLedgerFindFirstMock.mockResolvedValueOnce(null)
 
     // First call: process normally
-    const req1 = { text: async () => body } as any
-    const res1 = await POST(req1 as any)
+    const req1 = new Request('http://localhost/api/kajabi/webhook', { method: 'POST', body })
+    const res1 = await POST(req1)
     expect(res1.status).toBe(200)
 
     // Second call: simulate existing event
     kajabiEventFindUniqueMock.mockResolvedValueOnce({ id: 'evt_1' })
-    const req2 = { text: async () => body } as any
-    const res2 = await POST(req2 as any)
+    const req2 = new Request('http://localhost/api/kajabi/webhook', { method: 'POST', body })
+    const res2 = await POST(req2)
     const json2 = await res2.json()
     expect(json2.success).toBe(true)
     expect(json2.data.result.reason).toBe('already_processed')
   })
 })
-

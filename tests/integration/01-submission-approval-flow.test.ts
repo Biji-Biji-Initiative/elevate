@@ -12,16 +12,17 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { TestDatabase } from '../../packages/db/tests/helpers'
 import { TestData, executeApiRoute, createMockRequest, mockAuthentication, clearAuthenticationMock } from '../helpers/test-server'
+import { ACTIVITY_CODES, USER_ROLES, SUBMISSION_STATUSES } from '@elevate/types'
 
 // Import the API route handlers we need to test
-let adminSubmissionsHandler: any
-let leaderboardHandler: any
+let adminSubmissionsHandler: (req: Request) => Promise<Response>
+let leaderboardHandler: (req: Request) => Promise<Response>
 
 describe('Integration: Submission Approval Flow', () => {
   let testDb: TestDatabase
-  let testUser: any
-  let testReviewer: any
-  let testSubmission: any
+  let testUser: { id: string; email: string; handle: string }
+  let testReviewer: { id: string; email: string; handle: string }
+  let testSubmission: { id: string }
 
   beforeEach(async () => {
     // Setup isolated test database
@@ -33,22 +34,22 @@ describe('Integration: Submission Approval Flow', () => {
       handle: 'testparticipant',
       name: 'Test Participant',
       email: 'participant@example.com',
-      role: 'PARTICIPANT'
+      role: USER_ROLES[0] // PARTICIPANT
     })
 
     testReviewer = await testDb.fixtures.createTestUser({
       handle: 'testreviewer', 
       name: 'Test Reviewer',
       email: 'reviewer@example.com',
-      role: 'REVIEWER'
+      role: USER_ROLES[1] // REVIEWER
     })
 
     // Create a test submission in PENDING status
     testSubmission = await testDb.fixtures.createTestSubmission({
       user_id: testUser.id,
-      activity_code: 'LEARN',
-      status: 'PENDING',
-      visibility: 'PRIVATE',
+      activity_code: ACTIVITY_CODES[0], // LEARN
+      status: SUBMISSION_STATUSES[0], // PENDING
+      visibility: 'PRIVATE', // Would use VISIBILITY_OPTIONS[0] but this is test data
       payload: {
         certificate_url: '/uploads/test-certificate.pdf',
         course_name: 'AI in Education Fundamentals',
@@ -97,7 +98,7 @@ describe('Integration: Submission Approval Flow', () => {
       },
       user: {
         userId: testReviewer.id,
-        role: 'REVIEWER'
+        role: USER_ROLES[1] // REVIEWER
       }
     })
 
@@ -113,7 +114,7 @@ describe('Integration: Submission Approval Flow', () => {
     const updatedSubmission = await testDb.prisma.submission.findUnique({
       where: { id: testSubmission.id }
     })
-    expect(updatedSubmission?.status).toBe('APPROVED')
+    expect(updatedSubmission?.status).toBe(SUBMISSION_STATUSES[1]) // APPROVED
     expect(updatedSubmission?.reviewer_id).toBe(testReviewer.id)
     expect(updatedSubmission?.review_note).toBe('Great certificate! Well done.')
 
@@ -125,9 +126,9 @@ describe('Integration: Submission Approval Flow', () => {
     
     expect(pointsEntries).toHaveLength(1)
     const pointsEntry = pointsEntries[0]
-    expect(pointsEntry.activity_code).toBe('LEARN')
+    expect(pointsEntry.activity_code).toBe(ACTIVITY_CODES[0]) // LEARN
     expect(pointsEntry.delta_points).toBe(20) // Default points for LEARN
-    expect(pointsEntry.source).toBe('MANUAL')
+    expect(pointsEntry.source).toBe('MANUAL') // Would use LEDGER_SOURCES[0] but this is database-generated
     expect(pointsEntry.external_source).toBe('admin_approval')
     expect(pointsEntry.external_event_id).toBe(`submission_${testSubmission.id}`)
 
@@ -164,7 +165,7 @@ describe('Integration: Submission Approval Flow', () => {
     expect(leaderboardData.success).toBe(true)
     
     // Find our test user in the leaderboard
-    const userEntry = leaderboardData.data.leaderboard.find((entry: any) => 
+    const userEntry = leaderboardData.data.leaderboard.find((entry: { user: { id: string } }) => 
       entry.user.id === testUser.id
     )
     expect(userEntry).toBeDefined()

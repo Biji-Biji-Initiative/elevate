@@ -2,18 +2,17 @@ import { Suspense } from 'react'
 
 import { notFound } from 'next/navigation'
 
-
-import { z } from 'zod'
 import { getProfileUrl, parseSubmissionPayload, parseLearnPayload, parseExplorePayload, parsePresentPayload, type LearnInput, type ExploreInput, type PresentInput, type SubmissionPayload } from '@elevate/types'
-import { ShareButton, SocialShareButtons, StageCard, PageLoading } from '@elevate/ui'
+import { ShareButton, SocialShareButtons, StageCard, PageLoading } from '@elevate/ui/blocks'
+
 import { getApiClient } from '../../../../lib/api-client'
 
 import type { Metadata } from 'next'
 
 interface ProfilePageProps {
-  params: Promise<{
+  params: {
     handle: string
-  }>
+  }
 }
 
 interface UserProfile {
@@ -21,13 +20,14 @@ interface UserProfile {
   handle: string
   name: string
   email: string
-  avatar_url?: string
+  avatarUrl?: string
   school?: string
   cohort?: string
-  created_at: string
+  createdAt: string
+  totalPoints: number
   submissions: Array<{
     id: string
-    activity_code: string
+    activityCode: string
     activity: {
       name: string
       code: string
@@ -35,28 +35,25 @@ interface UserProfile {
     status: 'APPROVED' | 'PENDING' | 'REJECTED'
     visibility: 'PUBLIC' | 'PRIVATE'
     payload: SubmissionPayload
-    created_at: string
-    updated_at: string
+    createdAt: string
+    updatedAt: string
   }>
-  earned_badges: Array<{
+  earnedBadges: Array<{
     badge: {
       code: string
       name: string
       description: string
-      icon_url?: string
+      iconUrl?: string
     }
-    earned_at: string
+    earnedAt: string
   }>
-  _sum: {
-    points: number
-  }
 }
 
 async function fetchUserProfile(handle: string): Promise<UserProfile | null> {
   try {
     const api = getApiClient()
     const res = await api.getProfile(handle)
-    return (res as any).data as UserProfile
+    return res.data as unknown as UserProfile
   } catch (_) {
     return null
   }
@@ -102,10 +99,10 @@ function ActivityTimeline({ submissions }: { submissions: UserProfile['submissio
                 </div>
                 
                 <p className="text-sm text-gray-600 mb-2">
-                  {formatDate(submission.created_at)}
+                  {formatDate(submission.createdAt)}
                 </p>
                 
-                {submission.activity_code === 'LEARN' && (() => {
+                {submission.activityCode === 'LEARN' && (() => {
                   const learnPayload = parseLearnPayload(submission.payload)
                   if (!learnPayload) return null
                   return (
@@ -115,7 +112,7 @@ function ActivityTimeline({ submissions }: { submissions: UserProfile['submissio
                   )
                 })()}
                 
-                {submission.activity_code === 'EXPLORE' && (() => {
+                {submission.activityCode === 'EXPLORE' && (() => {
                   const explorePayload = parseExplorePayload(submission.payload)
                   if (!explorePayload) return null
                   const { classDate, reflection } = explorePayload.data
@@ -132,7 +129,7 @@ function ActivityTimeline({ submissions }: { submissions: UserProfile['submissio
                   )
                 })()}
                 
-                {submission.activity_code === 'PRESENT' && (() => {
+                {submission.activityCode === 'PRESENT' && (() => {
                   const presentPayload = parsePresentPayload(submission.payload)
                   if (!presentPayload) return null
                   return (
@@ -162,7 +159,7 @@ async function ProfileContent({ handle }: { handle: string }) {
   const stageBreakdown = profile.submissions
     .filter(s => s.status === 'APPROVED')
     .reduce<Record<string, number>>((acc, submission) => {
-      acc[submission.activity_code] = (acc[submission.activity_code] || 0) + 1
+      acc[submission.activityCode] = (acc[submission.activityCode] || 0) + 1
       return acc
     }, {})
 
@@ -197,13 +194,13 @@ async function ProfileContent({ handle }: { handle: string }) {
                 )}
                 <div className="flex items-center">
                   <span className="mr-1">📅</span>
-                  Joined {formatDate(profile.created_at)}
+                  Joined {formatDate(profile.createdAt)}
                 </div>
               </div>
               
               <div className="mt-4 flex items-center space-x-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{profile._sum.points}</div>
+                  <div className="text-2xl font-bold text-blue-600">{profile.totalPoints}</div>
                   <div className="text-sm text-gray-600">Total Points</div>
                 </div>
                 <div className="text-center">
@@ -211,7 +208,7 @@ async function ProfileContent({ handle }: { handle: string }) {
                   <div className="text-sm text-gray-600">Achievements</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{profile.earned_badges.length}</div>
+                  <div className="text-2xl font-bold text-purple-600">{profile.earnedBadges.length}</div>
                   <div className="text-sm text-gray-600">Badges</div>
                 </div>
               </div>
@@ -268,11 +265,11 @@ async function ProfileContent({ handle }: { handle: string }) {
             <div className="bg-white rounded-lg border p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Badges Earned</h3>
               
-              {profile.earned_badges.length === 0 ? (
+              {profile.earnedBadges.length === 0 ? (
                 <p className="text-gray-600">No badges earned yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {profile.earned_badges.map((earnedBadge) => (
+                  {profile.earnedBadges.map((earnedBadge) => (
                     <div key={earnedBadge.badge.code} className="flex items-start space-x-3">
                       <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-yellow-600">🏆</span>
@@ -285,7 +282,7 @@ async function ProfileContent({ handle }: { handle: string }) {
                           {earnedBadge.badge.description}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          Earned {formatDate(earnedBadge.earned_at)}
+                          Earned {formatDate(earnedBadge.earnedAt)}
                         </p>
                       </div>
                     </div>
@@ -312,7 +309,7 @@ async function ProfileContent({ handle }: { handle: string }) {
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   // In production, you'd fetch the profile data here for accurate metadata
-  const { handle } = await params
+  const { handle } = params
   const profile = await fetchUserProfile(handle)
   
   if (!profile) {
@@ -326,20 +323,20 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   
   return {
     title: `${profile.name} (@${profile.handle}) - MS Elevate LEAPS Tracker`,
-    description: `Follow ${profile.name}'s journey through the LEAPS framework. ${profile._sum.points} points earned across ${profile.submissions.filter(s => s.status === 'APPROVED').length} achievements.`,
+    description: `Follow ${profile.name}'s journey through the LEAPS framework. ${profile.totalPoints} points earned across ${profile.submissions.filter(s => s.status === 'APPROVED').length} achievements.`,
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
       title: `${profile.name}'s LEAPS Journey`,
-      description: `${profile.name} has earned ${profile._sum.points} points in the MS Elevate LEAPS program!`,
+      description: `${profile.name} has earned ${profile.totalPoints} points in the MS Elevate LEAPS program!`,
       url: canonicalUrl,
       type: 'profile',
     },
     twitter: {
       card: 'summary',
       title: `${profile.name}'s LEAPS Journey`,
-      description: `${profile.name} has earned ${profile._sum.points} points in the MS Elevate LEAPS program!`,
+      description: `${profile.name} has earned ${profile.totalPoints} points in the MS Elevate LEAPS program!`,
     },
     robots: {
       index: true,
@@ -353,7 +350,7 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 }
 
 export default async function PublicProfile({ params }: ProfilePageProps) {
-  const { handle } = await params
+  const { handle } = params
   
   return (
     <Suspense fallback={<PageLoading />}>

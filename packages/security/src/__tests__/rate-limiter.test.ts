@@ -14,7 +14,7 @@ import {
   resetRateLimitStats,
   cleanupUtils,
   memoryUtils
-} from '../rate-limiter.js'
+} from '../rate-limiter'
 
 // Mock Redis for testing
 const mockRedis = {
@@ -228,8 +228,8 @@ describe('Rate Limiter - Memory Leak Prevention Tests', () => {
       expect(expiringEntries.length).toBeGreaterThan(0)
       expect(expiringEntries[0]).toHaveProperty('key')
       expect(expiringEntries[0]).toHaveProperty('expiresIn')
-      expect(expiringEntries[0].expiresIn).toBeGreaterThan(0)
-      expect(expiringEntries[0].expiresIn).toBeLessThan(5 * 60 * 1000)
+      expect(expiringEntries[0]?.expiresIn).toBeGreaterThan(0)
+      expect(expiringEntries[0]?.expiresIn).toBeLessThan(5 * 60 * 1000)
     })
   })
 
@@ -542,9 +542,9 @@ describe('Rate Limiter - Memory Leak Prevention Tests', () => {
 
       const stats = getRateLimitStats()
       expect(stats['stats-test']).toBeDefined()
-      expect(stats['stats-test'].allowed).toBe(2)
-      expect(stats['stats-test'].blocked).toBe(1)
-      expect(stats['stats-test'].lastReset).toBeGreaterThan(0)
+      expect(stats['stats-test']?.allowed).toBe(2)
+      expect(stats['stats-test']?.blocked).toBe(1)
+      expect(stats['stats-test']?.lastReset).toBeGreaterThan(0)
     })
 
     it('should reset stats correctly', () => {

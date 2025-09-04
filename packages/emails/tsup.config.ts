@@ -1,16 +1,6 @@
-import { defineConfig } from 'tsup'
+import baseTsup from '../../tsup.base.mjs'
 
-export default defineConfig({
+export default baseTsup({
   entry: ['src/index.ts'],
-  format: ['esm'],
-  outDir: 'dist/js',
-  dts: false,
-  sourcemap: true,
-  clean: true,
-  external: [
-    'react',
-    '@react-email/components',
-    '@react-email/render',
-    'resend'
-  ],
+  external: ['@react-email/components', '@react-email/render', 'resend'],
 })

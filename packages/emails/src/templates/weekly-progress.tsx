@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 import {
   Body,
   Container,
@@ -10,7 +12,6 @@ import {
   Section,
   Text,
 } from '@react-email/components';
-import * as React from 'react';
 
 interface WeeklyProgressEmailProps {
   name: string;
@@ -79,8 +80,8 @@ export const WeeklyProgressEmail = ({
           <Section style={activitiesContainer}>
             <Text style={sectionHeader}><strong>🎯 Aktivitas Selesai Minggu Ini:</strong></Text>
             {completedActivities.length > 0 ? (
-              completedActivities.map((activity, index) => (
-                <Text key={index} style={activityItem}>✅ {activity}</Text>
+              completedActivities.map((activity) => (
+                <Text key={activity} style={activityItem}>✅ {activity}</Text>
               ))
             ) : (
               <Text style={noActivityText}>Belum ada aktivitas yang diselesaikan minggu ini.</Text>

@@ -1,0 +1,60 @@
+{
+  "name": "@elevate/admin-core",
+  "version": "0.1.0",
+  "private": true,
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.11"
+  },
+  "type": "module",
+  "main": "./dist/js/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/js/index.js"
+    },
+    "./actions": {
+      "types": "./dist/types/actions.d.ts",
+      "import": "./dist/js/actions.js"
+    },
+    "./utils": {
+      "types": "./dist/types/utils.d.ts",
+      "import": "./dist/js/utils.js"
+    }
+  },
+  "files": [
+    "dist/js",
+    "dist/types",
+    "README.md",
+    "LICENSE",
+    "dist/js/**/*.map"
+  ],
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/types/*"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "pnpm run build:types && tsup",
+    "build:types": "tsc -b tsconfig.build.json",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@elevate/types": "workspace:*",
+    "@elevate/utils": "workspace:*",
+    "@elevate/db": "workspace:*",
+    "@elevate/auth": "workspace:*",
+    "@elevate/openapi": "workspace:*",
+    "@clerk/nextjs": "^6.31.8",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsup": "^8.3.7",
+    "typescript": "^5.9.2"
+  }
+}

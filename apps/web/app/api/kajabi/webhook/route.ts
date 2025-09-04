@@ -16,8 +16,11 @@ import {
   type KajabiTagEvent,
   ElevateApiError,
   ValidationError,
-} from '@elevate/types'
-import {
+  ACTIVITY_CODES,
+  SUBMISSION_STATUSES,
+  VISIBILITY_OPTIONS,
+  LEDGER_SOURCES
+,
   createSuccessResponse,
   createErrorResponse,
   withApiErrorHandling,
@@ -38,7 +41,7 @@ function toPrismaJsonObject(
 
 // Local wrapper for audit meta to ensure type safety
 function buildAuditMetaSafe(
-  envelope: { entityType: any; entityId: string },
+  envelope: { entityType: import('@elevate/types').AuditEntityType; entityId: string },
   meta?: Record<string, unknown>,
 ) {
   const result = buildAuditMeta(envelope, meta)
@@ -171,7 +174,7 @@ async function processTagEvent(eventData: KajabiTagEvent, eventId: string) {
 
     // Award points for LEARN activity
     const learnActivity = await prisma.activity.findUnique({
-      where: { code: 'LEARN' },
+      where: { code: ACTIVITY_CODES[0] }, // LEARN
     })
 
     if (!learnActivity) {
@@ -182,8 +185,8 @@ async function processTagEvent(eventData: KajabiTagEvent, eventId: string) {
     await prisma.pointsLedger.create({
       data: {
         user_id: user.id,
-        activity_code: 'LEARN',
-        source: 'WEBHOOK',
+        activity_code: ACTIVITY_CODES[0], // LEARN
+        source: LEDGER_SOURCES[1], // WEBHOOK
         delta_points: learnActivity.default_points,
         external_source: 'kajabi',
         external_event_id: eventId,
@@ -194,9 +197,9 @@ async function processTagEvent(eventData: KajabiTagEvent, eventId: string) {
     await prisma.submission.create({
       data: {
         user_id: user.id,
-        activity_code: 'LEARN',
-        status: 'APPROVED',
-        visibility: 'PRIVATE',
+        activity_code: ACTIVITY_CODES[0], // LEARN
+        status: SUBMISSION_STATUSES[1], // APPROVED
+        visibility: VISIBILITY_OPTIONS[0], // PRIVATE
         payload: {
           tag_name: tagName,
           kajabi_contact_id: contactId,

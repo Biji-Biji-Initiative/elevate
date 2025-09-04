@@ -6,15 +6,15 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "default": "./dist/js/index.js"
+      "import": "./dist/js/index.js"
     },
     "./client": {
       "types": "./dist/types/client.d.ts",
-      "default": "./dist/js/client.js"
+      "import": "./dist/js/client.js"
     },
     "./utils": {
       "types": "./dist/types/utils.d.ts",
-      "default": "./dist/js/utils.js"
+      "import": "./dist/js/utils.js"
     },
     "./package.json": "./package.json"
   },
@@ -26,14 +26,15 @@
     "postinstall": "prisma generate --schema=./schema.prisma",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "build:types": "tsc -b --force tsconfig.build.json",
+    "build:types": "tsc -b tsconfig.build.json",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --max-warnings 0",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --fix",
     "type-check": "tsc --noEmit",
     "api:extract": "../../node_modules/.bin/api-extractor run --local",
     "api:check": "../../node_modules/.bin/api-extractor run",
     "db:generate": "prisma generate --schema=./schema.prisma",
-    "db:migrate": "prisma migrate deploy --schema=./schema.prisma",
+    "db:migrate": "prisma migrate deploy --schema=./schema.prisma && ./scripts/run-post-migrate.sh",
+    "db:post-migrate": "./scripts/run-post-migrate.sh",
     "db:migrate:dev": "prisma migrate dev --schema=./schema.prisma",
     "db:migrate:reset": "prisma migrate reset --schema=./schema.prisma",
     "db:migrate:status": "prisma migrate status --schema=./schema.prisma",
@@ -47,14 +48,18 @@
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",
-    "@elevate/logging": "workspace:*"
+    "@elevate/logging": "workspace:*",
+    "@elevate/types": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
     "typescript": "^5.9.2",
     "prisma": "^6.15.0",
     "tsup": "^8.3.7",
-    "tsx": "^4.7.1"
+    "tsx": "^4.7.1",
+    "vitest": "^3.2.4",
+    "vite-tsconfig-paths": "^5.1.4",
+    "@vitest/coverage-v8": "^3.2.4"
   },
   "sideEffects": false,
   "engines": {

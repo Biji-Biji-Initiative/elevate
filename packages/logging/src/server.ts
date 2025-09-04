@@ -1,13 +1,15 @@
-import { Logger } from './logger.js'
-import type { LoggerConfig, LogContext, LogMethodWithError } from './types.js'
+import { Logger } from './logger'
+import { sentry, SentryIntegration, captureException, addBreadcrumb } from './sentry'
 import {
   generateRequestId,
   generateTraceId,
   extractRequestInfo,
   getMemoryUsage,
   getCpuUsage,
-} from './utils.js'
-import { sentry, SentryIntegration, captureException, addBreadcrumb } from './sentry.js'
+} from './utils'
+
+import type { LoggerConfig, LogContext, LogMethodWithError } from './types'
+
 
 /**
  * Server-side logger with enhanced features for Node.js environments
@@ -173,5 +175,5 @@ export function createServerLogger(config?: Partial<LoggerConfig>, context?: Log
 }
 
 // Re-export for convenience
-export { Logger } from './logger.js'
-export type * from './types.js'
+export { Logger } from './logger'
+export type * from './types'

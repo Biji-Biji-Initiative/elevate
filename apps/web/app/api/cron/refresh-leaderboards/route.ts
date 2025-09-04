@@ -1,7 +1,9 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, type NextResponse } from 'next/server';
+
+import { Prisma } from '@prisma/client';
 
 import { prisma } from '@elevate/db/client';
-import { Prisma } from '@prisma/client';
+import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { getServerLogger } from '@elevate/logging/server';
 
 export const runtime = 'nodejs';
@@ -48,7 +50,7 @@ async function refreshViewWithStats(viewName: string): Promise<RefreshStats> {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   const jobStartTime = Date.now()
   const timestamp = new Date().toISOString()
   
@@ -60,11 +62,7 @@ export async function GET(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
     if (authHeader !== expectedAuth) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Unauthorized',
-        timestamp
-      }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 401)
     }
 
     logger.info('Starting materialized view refresh job', {
@@ -197,12 +195,11 @@ export async function GET(request: NextRequest) {
       has_errors: hasErrors,
     })
 
-    return NextResponse.json(responseData, {
-      status: hasErrors ? 207 : 200, // 207 Multi-Status for partial failures
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    })
+    {
+      const response = createSuccessResponse(responseData, hasErrors ? 207 : 200)
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+      return response
+    }
     
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -214,16 +211,10 @@ export async function GET(request: NextRequest) {
       error_message: errorMessage,
     })
     
-    return NextResponse.json({
-      success: false,
-      error: errorMessage,
-      timestamp,
-      total_duration_ms: totalDuration
-    }, { 
-      status: 500,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    })
+    {
+      const response = createErrorResponse(new Error(errorMessage), 500)
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+      return response
+    }
   }
 }

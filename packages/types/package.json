@@ -17,47 +17,59 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "default": "./dist/js/index.js"
+      "import": "./dist/js/index.js"
+    },
+    "./errors": {
+      "types": "./dist/types/errors.d.ts",
+      "import": "./dist/js/errors.js"
     },
     "./schemas": {
       "types": "./dist/types/schemas.d.ts",
-      "default": "./dist/js/schemas.js"
+      "import": "./dist/js/schemas.js"
     },
     "./query-schemas": {
       "types": "./dist/types/query-schemas.d.ts",
-      "default": "./dist/js/query-schemas.js"
+      "import": "./dist/js/query-schemas.js"
     },
     "./admin-schemas": {
       "types": "./dist/types/admin-schemas.d.ts",
-      "default": "./dist/js/admin-schemas.js"
+      "import": "./dist/js/admin-schemas.js"
     },
     "./api-types": {
       "types": "./dist/types/api-types.d.ts",
-      "default": "./dist/js/api-types.js"
+      "import": "./dist/js/api-types.js"
     },
     "./ui-types": {
       "types": "./dist/types/ui-types.d.ts",
-      "default": "./dist/js/ui-types.js"
+      "import": "./dist/js/ui-types.js"
     },
     "./common": {
       "types": "./dist/types/common.d.ts",
-      "default": "./dist/js/common.js"
+      "import": "./dist/js/common.js"
     },
     "./submission-payloads": {
       "types": "./dist/types/submission-payloads.d.ts",
-      "default": "./dist/js/submission-payloads.js"
+      "import": "./dist/js/submission-payloads.js"
     },
     "./webhooks": {
       "types": "./dist/types/webhooks.d.ts",
-      "default": "./dist/js/webhooks.js"
+      "import": "./dist/js/webhooks.js"
     },
     "./canonical-urls": {
       "types": "./dist/types/canonical-urls.d.ts",
-      "default": "./dist/js/canonical-urls.js"
+      "import": "./dist/js/canonical-urls.js"
     },
     "./http": {
       "types": "./dist/types/http.d.ts",
-      "default": "./dist/js/http.js"
+      "import": "./dist/js/http.js"
+    },
+    "./dto-mappers": {
+      "types": "./dist/types/dto-mappers.d.ts",
+      "import": "./dist/js/dto-mappers.js"
+    },
+    "./admin-api-types": {
+      "types": "./dist/types/admin-api-types.d.ts",
+      "import": "./dist/js/admin-api-types.js"
     },
     "./package.json": "./package.json"
   },
@@ -72,7 +84,7 @@
   },
   "scripts": {
     "build": "pnpm run build:types && tsup --config tsup.config.ts",
-    "build:types": "tsc -b --force tsconfig.build.json",
+    "build:types": "tsc -b tsconfig.build.json",
     "clean": "rm -rf dist",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --max-warnings 0",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --fix",

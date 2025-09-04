@@ -6,9 +6,9 @@
  * without any framework dependencies (Next.js, React, etc.)
  */
 
+import { parseEnv, EnvSchema } from '@elevate/config'
 import { computePoints, badgesToAward } from '@elevate/logic'
 import { validateFile, generateStoragePath, ALLOWED_FILE_TYPES } from '@elevate/storage'
-import { parseEnv, EnvSchema } from '@elevate/config'
 
 // Test values - these are just string literals that match the types
 const testStage = 'LEARN' // ActivityCode

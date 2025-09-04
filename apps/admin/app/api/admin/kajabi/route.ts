@@ -1,9 +1,15 @@
-import { NextResponse, NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
-import { createSuccessResponse } from '@elevate/types'
-import { prisma } from '@elevate/db';
+// Use database service layer instead of direct Prisma
+import { 
+  findKajabiEvents,
+  getKajabiEventStats,
+  getKajabiPointsAwarded
+} from '@elevate/db';
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { createSuccessResponse } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
@@ -13,30 +19,12 @@ export async function GET(request: NextRequest) {
     // Check admin role
     await requireRole('admin');
 
-    // Fetch Kajabi events
-    const events = await prisma.kajabiEvent.findMany({
-      orderBy: { received_at: 'desc' },
-      take: 50,
-    });
-
-    // Calculate statistics
-    const stats = await prisma.kajabiEvent.aggregate({
-      _count: {
-        id: true,
-        processed_at: true,
-        user_match: true,
-      },
-    });
-
-    // Calculate points awarded from LEARN submissions linked to Kajabi
-    const pointsResult = await prisma.pointsLedger.aggregate({
-      where: {
-        external_source: 'kajabi',
-      },
-      _sum: {
-        delta_points: true,
-      },
-    });
+    // Fetch Kajabi events using service layer
+    const [events, stats, pointsAwarded] = await Promise.all([
+      findKajabiEvents(50),
+      getKajabiEventStats(),
+      getKajabiPointsAwarded()
+    ]);
 
     return createSuccessResponse({
       events: events.map(event => ({
@@ -47,11 +35,8 @@ export async function GET(request: NextRequest) {
         payload: event.payload,
       })),
       stats: {
-        total_events: stats._count.id,
-        processed_events: stats._count.processed_at,
-        matched_users: stats._count.user_match,
-        unmatched_events: stats._count.id - stats._count.user_match,
-        points_awarded: pointsResult._sum.delta_points || 0,
+        ...stats,
+        points_awarded: pointsAwarded,
       },
     })
   } catch (error) {

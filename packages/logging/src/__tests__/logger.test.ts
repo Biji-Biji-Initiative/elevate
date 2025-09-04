@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { Logger } from '../logger.js'
-import type { LoggerConfig, LogContext } from '../types.js'
+import { Logger } from '../logger'
+import type { LoggerConfig, LogContext } from '../types'
 
 // Mock pino
 vi.mock('pino', () => {
@@ -101,7 +101,7 @@ describe('Logger', () => {
         const message = `Test ${level} message`
         const context: LogContext = { userId: '123', action: 'test' }
         
-        ;(logger as any)[method](message, context)
+        ;(logger as unknown as Record<string, (msg: string, ctx: LogContext) => void>)[method](message, context)
         
         expect(mockPinoLogger[level]).toHaveBeenCalledWith(context, message)
       })
@@ -112,7 +112,7 @@ describe('Logger', () => {
           const error = new Error('Test error')
           const context: LogContext = { userId: '123', action: 'test' }
           
-          ;(logger as any)[method](message, error, context)
+          ;(logger as unknown as Record<string, (msg: string, err: Error, ctx: LogContext) => void>)[method](message, error, context)
           
           expect(mockPinoLogger[level]).toHaveBeenCalledWith(
             expect.objectContaining({

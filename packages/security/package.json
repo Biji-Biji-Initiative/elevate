@@ -6,31 +6,31 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "default": "./dist/js/index.js"
+      "import": "./dist/js/index.js"
     },
     "./rate-limiter": {
       "types": "./dist/types/rate-limiter.d.ts",
-      "default": "./dist/js/rate-limiter.js"
+      "import": "./dist/js/rate-limiter.js"
     },
     "./csp": {
       "types": "./dist/types/csp.d.ts",
-      "default": "./dist/js/csp.js"
+      "import": "./dist/js/csp.js"
     },
     "./security-middleware": {
       "types": "./dist/types/security-middleware.d.ts",
-      "default": "./dist/js/security-middleware.js"
+      "import": "./dist/js/security-middleware.js"
     },
     "./csp-hooks": {
       "types": "./dist/types/csp-hooks.d.ts",
-      "default": "./dist/js/csp-hooks.js"
+      "import": "./dist/js/csp-hooks.js"
     },
     "./sanitizer": {
       "types": "./dist/types/sanitizer.d.ts",
-      "default": "./dist/js/sanitizer.js"
+      "import": "./dist/js/sanitizer.js"
     },
     "./csrf": {
       "types": "./dist/types/csrf.d.ts",
-      "default": "./dist/js/csrf.js"
+      "import": "./dist/js/csrf.js"
     },
     "./package.json": "./package.json"
   },
@@ -40,7 +40,7 @@
     "build": "pnpm run build:types && tsup --config tsup.config.ts",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
-    "build:types": "tsc -b --force tsconfig.build.json",
+    "build:types": "tsc -b tsconfig.build.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -50,11 +50,13 @@
     "api:check": "../../node_modules/.bin/api-extractor run"
   },
   "peerDependencies": {
-    "next": "^15.0.0",
-    "react": "^19.0.0"
+    "next": "^15.5.2",
+    "react": "^19.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.19.11",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
     "tsup": "^8.3.7",
     "typescript": "^5.9.2"
   },

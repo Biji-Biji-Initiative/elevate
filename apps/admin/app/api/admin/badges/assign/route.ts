@@ -1,8 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server'
+
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
-import { AssignBadgeSchema, RemoveBadgeSchema, buildAuditMeta } from '@elevate/types'
+import { createSuccessResponse, createErrorResponse as createHttpError } from '@elevate/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { AssignBadgeSchema, RemoveBadgeSchema, buildAuditMeta } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
@@ -13,23 +15,17 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json()
     const parsed = AssignBadgeSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
+      return createHttpError(new Error('Invalid request body'), 400)
     }
     const { badgeCode, userIds, reason } = parsed.data
     
     if (!badgeCode || !Array.isArray(userIds) || userIds.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'badgeCode and userIds array are required' },
-        { status: 400 }
-      )
+      return createHttpError(new Error('badgeCode and userIds array are required'), 400)
     }
     
     // Limit bulk operations
     if (userIds.length > 100) {
-      return NextResponse.json(
-        { success: false, error: 'Maximum 100 users per bulk badge assignment' },
-        { status: 400 }
-      )
+      return createHttpError(new Error('Maximum 100 users per bulk badge assignment'), 400)
     }
     
     // Verify badge exists
@@ -38,10 +34,7 @@ export async function POST(request: NextRequest) {
     })
     
     if (!badge) {
-      return NextResponse.json(
-        { success: false, error: 'Badge not found' },
-        { status: 404 }
-      )
+      return createHttpError(new Error('Badge not found'), 404)
     }
     
     // Verify users exist
@@ -57,10 +50,7 @@ export async function POST(request: NextRequest) {
     })
     
     if (users.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'No valid users found' },
-        { status: 404 }
-      )
+      return createHttpError(new Error('No valid users found'), 404)
     }
     
     // Check for existing badge assignments
@@ -75,10 +65,7 @@ export async function POST(request: NextRequest) {
     const newUserIds = userIds.filter(id => !existingUserIds.has(id) && users.some(u => u.id === id))
     
     if (newUserIds.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'All specified users already have this badge' },
-        { status: 400 }
-      )
+      return createHttpError(new Error('All specified users already have this badge'), 400)
     }
     
     const results = await prisma.$transaction(async (tx) => {
@@ -124,7 +111,7 @@ export async function POST(request: NextRequest) {
       return assignments
     })
     
-    return NextResponse.json({ success: true, data: { message: `Badge "${badge.name}" assigned to ${results.length} users`, processed: results.length, failed: userIds.length - results.length } })
+    return createSuccessResponse({ message: `Badge "${badge.name}" assigned to ${results.length} users`, processed: results.length, failed: userIds.length - results.length })
     
   } catch (error) {
     return createErrorResponse(error, 500)
@@ -140,23 +127,17 @@ export async function DELETE(request: NextRequest) {
     const body: unknown = await request.json()
     const parsed = RemoveBadgeSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
+      return createHttpError(new Error('Invalid request body'), 400)
     }
     const { badgeCode, userIds, reason } = parsed.data
     
     if (!badgeCode || !Array.isArray(userIds) || userIds.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'badgeCode and userIds array are required' },
-        { status: 400 }
-      )
+      return createHttpError(new Error('badgeCode and userIds array are required'), 400)
     }
     
     // Limit bulk operations
     if (userIds.length > 100) {
-      return NextResponse.json(
-        { success: false, error: 'Maximum 100 users per bulk badge removal' },
-        { status: 400 }
-      )
+      return createHttpError(new Error('Maximum 100 users per bulk badge removal'), 400)
     }
     
     // Find existing assignments
@@ -178,10 +159,7 @@ export async function DELETE(request: NextRequest) {
     })
     
     if (assignments.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'No badge assignments found for specified users' },
-        { status: 404 }
-      )
+      return createHttpError(new Error('No badge assignments found for specified users'), 404)
     }
     
     await prisma.$transaction(async (tx) => {
@@ -212,7 +190,7 @@ export async function DELETE(request: NextRequest) {
     // We already checked assignments.length === 0 above, but TypeScript needs this check
     const badgeName = assignments[0]?.badge.name ?? 'Unknown Badge'
     
-    return NextResponse.json({ success: true, data: { message: `Badge "${badgeName}" removed from ${assignments.length} users`, processed: assignments.length, failed: 0 } })
+    return createSuccessResponse({ message: `Badge "${badgeName}" removed from ${assignments.length} users`, processed: assignments.length, failed: 0 })
     
   } catch (error) {
     return createErrorResponse(error, 500)

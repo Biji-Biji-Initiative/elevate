@@ -14,18 +14,18 @@ import { TestDatabase } from '../../packages/db/tests/helpers'
 import { TestData, executeApiRoute, createMockRequest, mockAuthentication, clearAuthenticationMock } from '../helpers/test-server'
 
 // Import API handlers we need to test
-let adminSubmissionsHandler: any
-let adminSubmissionDetailHandler: any
-let dashboardHandler: any
-let leaderboardHandler: any
+let adminSubmissionsHandler: (req: Request) => Promise<Response>
+let adminSubmissionDetailHandler: (req: Request, ctx?: { params?: { id?: string } }) => Promise<Response>
+let dashboardHandler: (req: Request) => Promise<Response>
+let leaderboardHandler: (req: Request) => Promise<Response>
 
 describe('Integration: Authentication and Authorization', () => {
   let testDb: TestDatabase
-  let participantUser: any
-  let reviewerUser: any
-  let adminUser: any
-  let participantSubmission: any
-  let otherUserSubmission: any
+  let participantUser: { id: string; email: string; handle: string }
+  let reviewerUser: { id: string; email: string; handle: string }
+  let adminUser: { id: string; email: string; handle: string }
+  let participantSubmission: { id: string }
+  let otherUserSubmission: { id: string }
 
   beforeEach(async () => {
     // Setup isolated test database
@@ -383,7 +383,7 @@ describe('Integration: Authentication and Authorization', () => {
         const request = createMockRequest('/api/admin/submissions', {
           user: {
             userId: `user-${i}`,
-            role: currentRole as any
+            role: currentRole as string
           }
         })
 

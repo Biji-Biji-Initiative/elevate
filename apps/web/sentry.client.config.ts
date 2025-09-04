@@ -4,6 +4,8 @@
 
 import * as Sentry from '@sentry/nextjs'
 
+import { getClerkUserFromWindow } from '@elevate/auth/window-clerk'
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   
@@ -62,8 +64,8 @@ Sentry.init({
     }
 
     // Add user context from Clerk if available
-    if (typeof window !== 'undefined' && window.Clerk?.user) {
-      const user = window.Clerk.user
+    const user = getClerkUserFromWindow()
+    if (user) {
       Sentry.setUser({
         id: user.id,
         email: user.primaryEmailAddress?.emailAddress,

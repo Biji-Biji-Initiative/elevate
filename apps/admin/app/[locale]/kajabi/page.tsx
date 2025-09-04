@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 
-import { withRoleGuard } from '@elevate/auth/context';
 import { adminClient, AdminClientError, type KajabiEvent, type KajabiStats } from '@/lib/admin-client'
-import { Button, LoadingSpinner, Card, CardContent, Input, Alert } from '@elevate/ui';
+import { withRoleGuard } from '@elevate/auth/context';
+import { Button, Card, CardContent, Input, Alert } from '@elevate/ui';
+import { LoadingSpinner } from '@elevate/ui/blocks';
 
 function KajabiPage() {
   const [events, setEvents] = useState<KajabiEvent[]>([]);

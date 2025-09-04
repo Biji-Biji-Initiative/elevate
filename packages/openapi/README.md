@@ -49,51 +49,75 @@ The interactive Swagger UI is available at:
 ### Using the TypeScript SDK
 
 ```typescript
-import ElevateAPIClient from '@elevate/openapi/sdk';
+import { client } from '@elevate/openapi/sdk';
 
-// Initialize the client
-const api = new ElevateAPIClient({
+// Initialize the client with authentication
+const apiClient = client({
   baseUrl: 'https://leaps.mereka.org',
-  token: 'your-clerk-jwt-token'
+  headers: {
+    'Authorization': `Bearer ${clerkToken}`
+  }
 });
 
 // Create a Learn submission
-const submission = await api.createSubmission({
-  activityCode: 'LEARN',
-  payload: {
-    provider: 'SPL',
-    course: 'AI for Educators',
-    completedAt: new Date().toISOString(),
-    certificateFile: 'evidence/learn/user123/certificate.pdf'
-  },
-  visibility: 'PRIVATE'
+const { data } = await apiClient.POST('/api/submissions', {
+  body: {
+    activityCode: 'LEARN',
+    payload: {
+      provider: 'SPL',
+      course: 'AI for Educators',
+      completedAt: new Date().toISOString(),
+      certificateFile: 'evidence/learn/user123/certificate.pdf'
+    },
+    visibility: 'PRIVATE'
+  }
 });
 
 // Get leaderboard
-const leaderboard = await api.getLeaderboard({
-  period: '30d',
-  limit: 10
+const { data: leaderboard } = await apiClient.GET('/api/leaderboard', {
+  params: {
+    query: {
+      period: '30d',
+      limit: 10
+    }
+  }
 });
+```
 
-// Upload files
-const upload = await api.uploadFile(file, 'EXPLORE');
+### Using OpenAPI Types
+
+```typescript
+import type { paths } from '@elevate/openapi/client';
+
+// Use path types for parameters and responses
+type LeaderboardParams = paths['/api/leaderboard']['get']['parameters']['query'];
+type LeaderboardResponse = paths['/api/leaderboard']['get']['responses']['200']['content']['application/json'];
 ```
 
 ### Error Handling
 
 ```typescript
-import { APIError, ValidationError, AuthenticationError } from '@elevate/openapi/sdk';
+// Error handling with openapi-fetch client
+const { data, error } = await apiClient.POST('/api/submissions', {
+  body: submissionData
+});
 
-try {
-  await api.createSubmission(data);
-} catch (error) {
-  if (error instanceof ValidationError) {
-    console.error('Validation errors:', error.details);
-  } else if (error instanceof AuthenticationError) {
-    console.error('Authentication required');
-  } else if (error instanceof APIError) {
-    console.error(`API Error ${error.status}:`, error.message);
+if (error) {
+  switch (error.status) {
+    case 400:
+      console.error('Validation error:', error.error);
+      break;
+    case 401:
+      console.error('Authentication required');
+      break;
+    case 403:
+      console.error('Insufficient permissions');
+      break;
+    default:
+      console.error(`API Error ${error.status}:`, error.error);
   }
+} else {
+  console.log('Success:', data);
 }
 ```
 
@@ -103,30 +127,44 @@ try {
 
 ```bash
 # Generate all OpenAPI artifacts
-pnpm openapi:generate
+pnpm run generate:all
 
 # Or individual components
-pnpm -F @elevate/openapi generate        # OpenAPI spec
-pnpm -F @elevate/openapi generate:sdk    # TypeScript SDK
+pnpm run generate          # OpenAPI spec
+pnpm run generate:client   # TypeScript client types
+pnpm run generate:sdk      # TypeScript SDK
 ```
 
 ### Development Mode
 
 ```bash
 # Watch mode for automatic regeneration
-pnpm openapi:dev
+pnpm run dev
+```
+
+### Build Process
+
+```bash
+# Clean build (recommended)
+pnpm run clean && pnpm run build
+
+# Development build
+pnpm run build
 ```
 
 ### Scripts
 
 | Script | Description |
 |--------|-------------|
-| `generate` | Generate OpenAPI spec and TypeScript types |
-| `generate:sdk` | Generate TypeScript SDK with examples |
-| `generate:all` | Generate everything (spec + SDK) |
+| `generate` | Generate OpenAPI spec from Zod schemas |
+| `generate:client` | Generate TypeScript types from OpenAPI spec |
+| `generate:sdk` | Generate TypeScript SDK with client methods |
+| `generate:all` | Generate everything (spec + client + SDK) |
 | `build` | Build the package for distribution |
+| `build:types` | Generate TypeScript declaration files |
 | `dev` | Watch mode for development |
-| `clean` | Remove generated files |
+| `clean` | Remove all generated files |
+| `api:extract` | Run API Extractor for documentation |
 
 ## File Structure
 
@@ -137,12 +175,13 @@ packages/openapi/
 │   ├── spec.ts            # OpenAPI specification generator
 │   ├── generator.ts       # Main generation script
 │   ├── client-generator.ts # SDK generation script
+│   ├── client.ts          # Generated TypeScript types
+│   ├── sdk.ts             # Generated TypeScript SDK
 │   └── index.ts           # Package exports
 ├── dist/
 │   ├── openapi.json       # Generated OpenAPI spec
-│   ├── client.ts          # Generated TypeScript types
-│   ├── sdk.ts             # Generated TypeScript SDK
-│   └── examples.ts        # Usage examples
+│   ├── js/                # Compiled JavaScript
+│   └── types/             # TypeScript declarations
 ├── package.json
 └── README.md
 ```
@@ -199,20 +238,28 @@ Each LEAPS activity has its own schema definition:
 The SDK supports multiple environments:
 
 ```typescript
-import { createApiClient } from '@elevate/openapi/sdk';
+import { client } from '@elevate/openapi/sdk';
 
-const api = createApiClient('production');  // or 'staging', 'development'
+// Environment-specific base URLs
+const apiClient = client({
+  baseUrl: process.env.NODE_ENV === 'production' 
+    ? 'https://leaps.mereka.org'
+    : 'http://localhost:3000'
+});
 ```
 
-## Error Types
+## Available Exports
 
-| Error Class | Status | Description |
-|-------------|--------|-------------|
-| `ValidationError` | 400 | Invalid request data |
-| `AuthenticationError` | 401 | Missing/invalid token |
-| `ForbiddenError` | 403 | Insufficient permissions |
-| `RateLimitError` | 429 | Rate limit exceeded |
-| `APIError` | Various | Base error class |
+This package provides the following exports:
+
+| Export | Description |
+|--------|-------------|
+| `@elevate/openapi` | Main schemas, types, and spec |
+| `@elevate/openapi/sdk` | TypeScript SDK client |
+| `@elevate/openapi/client` | Generated TypeScript types |
+| `@elevate/openapi/schemas` | Zod schemas with OpenAPI metadata |
+| `@elevate/openapi/spec` | OpenAPI specification object |
+| `@elevate/openapi/spec.json` | Raw OpenAPI JSON file |
 
 ## Integration
 
@@ -229,8 +276,11 @@ function useSubmissions(activityCode?: string) {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    api.getSubmissions({ activity: activityCode })
-      .then(setData)
+    const apiClient = client({ baseUrl: '/api' });
+    apiClient.GET('/api/submissions', {
+      params: { query: { activity: activityCode } }
+    })
+      .then(({ data }) => setData(data))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [activityCode]);
@@ -284,4 +334,4 @@ The generated SDK includes request/response logging and error tracking integrati
 
 ---
 
-For more examples and detailed usage, see `dist/examples.ts` after running the generator.
+For more detailed usage and implementation examples, refer to the source code in the `src/` directory and the comprehensive type definitions in the generated `dist/types/` files.

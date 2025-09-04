@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
-import { ROLE_PERMISSIONS, ROLE_ORDER, parseClerkPublicMetadata, parseClerkEmailAddress, safeParseRole, hasRole, hasAnyRole } from './types.js'
-import type { Permission, RoleName, AuthUser } from './types.js'
+
+import { parseClerkPublicMetadata, parseClerkEmailAddress, safeParseRole, hasRole, type RoleName, type AuthUser } from './types'
 
 /**
  * Get current authenticated user with role information
@@ -61,7 +61,7 @@ export function withRoleProtection<T extends unknown[], R>(
  * Role-based middleware for API routes
  */
 export class RoleError extends Error {
-  constructor(message: string, public statusCode: number = 403) {
+  constructor(message: string, public statusCode = 403) {
     super(message)
     this.name = 'RoleError'
   }

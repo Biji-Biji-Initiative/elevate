@@ -1,9 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server'
+
 import { auth } from '@clerk/nextjs/server'
 import { Prisma } from '@prisma/client'
 
-import { prisma } from '@elevate/db/client'
 import { withRole } from '@elevate/auth'
+import { prisma } from '@elevate/db/client'
+import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { getServerLogger } from '@elevate/logging'
 
 export const runtime = 'nodejs'
 
@@ -213,16 +216,19 @@ async function runPerformanceBenchmarks(): Promise<PerformanceBenchmark[]> {
 }
 
 export async function GET(request: NextRequest) {
+  if (process.env.ENABLE_INTERNAL_ENDPOINTS !== '1') {
+    return new Response(null, { status: 404 })
+  }
   try {
     // Verify admin role
     const { userId } = await auth()
     if (!userId) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse(new Error('Unauthorized'), 401)
     }
 
     const hasPermission = await withRole(['ADMIN', 'REVIEWER'])(userId)
     if (!hasPermission) {
-      return NextResponse.json({ success: false, error: 'Insufficient permissions' }, { status: 403 })
+      return createErrorResponse(new Error('Insufficient permissions'), 403)
     }
 
     const { searchParams } = new URL(request.url)
@@ -261,7 +267,9 @@ export async function GET(request: NextRequest) {
       try {
         benchmarks = await runPerformanceBenchmarks()
       } catch (error) {
-        console.error('Performance benchmarks failed:', error)
+        getServerLogger().error('Performance benchmarks failed', error as Error, {
+          operation: 'admin_performance_materialized_views',
+        })
       }
     }
 
@@ -274,22 +282,15 @@ export async function GET(request: NextRequest) {
       recommendations: generateRecommendations(viewStats)
     }
 
-    return NextResponse.json(response, {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate' // Always fresh data for admin
-      }
-    })
+    const res = createSuccessResponse(response)
+    res.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    return res
 
   } catch (error) {
-    console.error('Materialized views performance monitoring failed:', error)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to retrieve performance data',
-        timestamp: new Date().toISOString()
-      }, 
-      { status: 500 }
-    )
+    getServerLogger().error('Materialized views performance monitoring failed', error as Error, {
+      operation: 'admin_performance_materialized_views',
+    })
+    return createErrorResponse(new Error('Failed to retrieve performance data'), 500)
   }
 }
 

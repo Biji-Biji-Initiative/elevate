@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import { 
   UserRoleSchema,
   HandleSchema,
@@ -7,8 +8,7 @@ import {
   ActivityFilterSchema,
   StatusFilterSchema,
   // Legacy aliases for backward compatibility
-  RoleEnum
-} from './domain-constants.js'
+} from './domain-constants'
 
 // RoleEnum is now imported from domain constants
 
@@ -107,4 +107,3 @@ export const WelcomeEmailSchema = z.object({
   name: z.string().min(1).max(200),
   dashboardUrl: z.string().url(),
 })
-

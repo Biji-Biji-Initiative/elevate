@@ -9,6 +9,7 @@
 
 const fs = require('fs')
 const path = require('path')
+
 const glob = require('glob')
 
 // Patterns to check for unsafe type casting

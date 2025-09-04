@@ -1,0 +1,68 @@
+{
+  "name": "@elevate/api-client",
+  "version": "0.1.0",
+  "description": "Type-safe API client for Elevate Indonesia platform",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.11"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/js/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/js/client.js",
+      "types": "./dist/types/client.d.ts"
+    },
+    "./server": {
+      "import": "./dist/js/server.js",
+      "types": "./dist/types/server.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/js/index.js",
+  "types": "./dist/types/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/types/*"
+      ]
+    }
+  },
+  "files": [
+    "dist/js",
+    "dist/types",
+    "README.md",
+    "LICENSE",
+    "dist/js/**/*.map"
+  ],
+  "scripts": {
+    "build": "pnpm run build:types && pnpm run build:js",
+    "build:types": "tsc -b tsconfig.build.json",
+    "build:js": "tsup",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "api:extract": "api-extractor run --local --verbose",
+    "api:check": "api-extractor run"
+  },
+  "dependencies": {
+    "@elevate/openapi": "workspace:*",
+    "@elevate/types": "workspace:*",
+    "@elevate/http": "workspace:*"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "^7.38.3",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "next": "^15.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
+

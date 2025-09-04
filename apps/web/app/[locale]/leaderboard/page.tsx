@@ -2,33 +2,10 @@
 
 import { useState, useEffect , Suspense } from 'react'
 
-import { z } from 'zod'
 import { getProfilePath, type LeaderboardEntry } from '@elevate/types'
-import { LeaderboardTable, PageLoading } from '@elevate/ui'
+import { LeaderboardTable, PageLoading } from '@elevate/ui/blocks'
+
 import { getApiClient } from '../../../lib/api-client'
-
-// Define Zod schemas to match the shared LeaderboardEntry type
-const LeaderboardUserBadgeZ = z.object({
-  badge: z.object({ 
-    code: z.string(), 
-    name: z.string(), 
-    icon_url: z.string().nullable().optional() 
-  })
-})
-
-const LeaderItemZ = z.object({
-  rank: z.number(),
-  user: z.object({
-    id: z.string(),
-    handle: z.string(),
-    name: z.string(),
-    avatar_url: z.string().nullable().optional(),
-    school: z.string().nullable().optional(),
-    earned_badges: z.array(LeaderboardUserBadgeZ).optional(),
-    _sum: z.object({ points: z.number() }).optional(),
-    points: z.number().optional()
-  })
-})
 
 async function fetchLeaderboard(period: 'all' | '30d', limit = 20, offset = 0, search = '') {
   const api = getApiClient()
@@ -41,8 +18,7 @@ function LeaderboardContent() {
   const [period, setPeriod] = useState<'all' | '30d'>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [total, setTotal] = useState(0)
-  const [hasMore, setHasMore] = useState(false)
+  // Server returns total/hasMore; local table paginates client-side, so omit state
 
   useEffect(() => {
     const loadData = async () => {
@@ -51,8 +27,7 @@ function LeaderboardContent() {
         setError(null)
         const result = await fetchLeaderboard(period, 20, 0, '')
         setData(result.data.data as LeaderboardEntry[])
-        setTotal(result.data.total)
-        setHasMore(result.data.hasMore)
+        // result.data.total and hasMore are available if needed for future server pagination
       } catch (err) {
         setError('Failed to load leaderboard data')
       } finally {

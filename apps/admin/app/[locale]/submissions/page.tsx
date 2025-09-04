@@ -4,14 +4,16 @@ import React, { useState, useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { withRoleGuard } from '@elevate/auth/context'
 import { adminClient, AdminClientError, type SubmissionsQuery, type AdminSubmission, type Pagination } from '@/lib/admin-client'
-import { Button , Input, DataTable, StatusBadge, Modal, ConfirmModal, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, createColumns, Alert } from '@elevate/ui'
+import { withRoleGuard } from '@elevate/auth/context'
+import { ACTIVITY_CODES, SUBMISSION_STATUSES, ACTIVITY_FILTER_OPTIONS, STATUS_FILTER_OPTIONS, AMPLIFY } from '@elevate/types'
+import { Button , Input, Textarea, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
+import { DataTable, StatusBadge, Modal, ConfirmModal, createColumns } from '@elevate/ui/blocks'
 
 // Define proper filter types for submissions
 interface Filters {
-  status: 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
-  activity: 'ALL' | 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
+  status: typeof STATUS_FILTER_OPTIONS[number]
+  activity: typeof ACTIVITY_FILTER_OPTIONS[number]
   search: string
   cohort: string
   sortBy: 'created_at' | 'updated_at' | 'status'
@@ -33,8 +35,8 @@ function SubmissionsPage() {
   const [cohorts, setCohorts] = useState<string[]>([])
   
   const [filters, setFilters] = useState<Filters>({
-    status: 'PENDING',
-    activity: 'ALL',
+    status: STATUS_FILTER_OPTIONS[1], // PENDING
+    activity: ACTIVITY_FILTER_OPTIONS[0], // ALL
     search: '',
     cohort: 'ALL',
     sortBy: 'created_at',
@@ -75,9 +77,8 @@ function SubmissionsPage() {
   const [reviewNote, setReviewNote] = useState('')
   const [pointAdjustment, setPointAdjustment] = useState<number | ''>('')
   const [processing, setProcessing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
-  const columns = createColumns<Submission>()([
+  const columns = createColumns<AdminSubmission>()([
     {
       key: 'created_at',
       header: 'Date',
@@ -145,7 +146,7 @@ function SubmissionsPage() {
           >
             View
           </Button>
-          {row.status === 'PENDING' && (
+          {row.status === SUBMISSION_STATUSES[0] && ( // PENDING
             <>
               <Button
                 variant="default"
@@ -287,19 +288,19 @@ function SubmissionsPage() {
     }
   }
 
-  const getBasePoints = (submission: Submission): number => {
+  const getBasePoints = (submission: AdminSubmission): number => {
     const activityPoints: Readonly<Record<string, number>> = {
-      'LEARN': 20,
-      'EXPLORE': 50,
-      'AMPLIFY': 0, // Calculated based on payload
-      'PRESENT': 20,
-      'SHINE': 0
+      [ACTIVITY_CODES[0]]: 20, // LEARN
+      [ACTIVITY_CODES[1]]: 50, // EXPLORE
+      [ACTIVITY_CODES[2]]: 0, // AMPLIFY - Calculated based on payload
+      [ACTIVITY_CODES[3]]: 20, // PRESENT
+      [ACTIVITY_CODES[4]]: 0 // SHINE
     } as const
 
     // Note: The adminClient doesn't return payload data for submissions
     // This calculation would need the payload to be included in the SubmissionSchema
     // For now, returning default points
-    if (submission.activity.code === 'AMPLIFY') {
+    if (submission.activity.code === AMPLIFY) {
       // TODO: Add payload to SubmissionSchema in adminClient
       return submission.activity.default_points || 0
     }
@@ -329,9 +330,9 @@ function SubmissionsPage() {
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="REJECTED">Rejected</SelectItem>
+                <SelectItem value={SUBMISSION_STATUSES[0]}>Pending</SelectItem>
+                <SelectItem value={SUBMISSION_STATUSES[1]}>Approved</SelectItem>
+                <SelectItem value={SUBMISSION_STATUSES[2]}>Rejected</SelectItem>
                 <SelectItem value="ALL">All Status</SelectItem>
               </SelectContent>
             </Select>
@@ -345,11 +346,11 @@ function SubmissionsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Activities</SelectItem>
-                <SelectItem value="LEARN">Learn</SelectItem>
-                <SelectItem value="EXPLORE">Explore</SelectItem>
-                <SelectItem value="AMPLIFY">Amplify</SelectItem>
-                <SelectItem value="PRESENT">Present</SelectItem>
-                <SelectItem value="SHINE">Shine</SelectItem>
+                <SelectItem value={ACTIVITY_CODES[0]}>Learn</SelectItem>
+                <SelectItem value={ACTIVITY_CODES[1]}>Explore</SelectItem>
+                <SelectItem value={ACTIVITY_CODES[2]}>Amplify</SelectItem>
+                <SelectItem value={ACTIVITY_CODES[3]}>Present</SelectItem>
+                <SelectItem value={ACTIVITY_CODES[4]}>Shine</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -420,7 +421,7 @@ function SubmissionsPage() {
       </div>
 
       {/* Data Table */}
-      <DataTable<Submission>
+      <DataTable<AdminSubmission>
         data={submissions}
         columns={columns}
         loading={loading}

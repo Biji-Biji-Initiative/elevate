@@ -1,13 +1,6 @@
-import { defineConfig } from 'tsup'
+import baseTsup from '../../tsup.base.mjs'
 
-export default defineConfig({
-  entry: ['src/index.ts'],
-  format: ['esm'],
-  outDir: 'dist/js',
-  dts: false,
-  sourcemap: true,
-  clean: true,
-  external: [
-    'axios'
-  ],
+export default baseTsup({
+  entry: ['src/index.ts', 'src/kajabi.ts', 'src/utils.ts'],
+  external: ['axios'],
 })

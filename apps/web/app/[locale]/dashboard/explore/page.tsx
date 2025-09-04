@@ -2,13 +2,30 @@
 
 import React, { useState } from 'react'
 
+
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useTranslations } from 'next-intl'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 
+import { useFormSubmission, useFileUpload } from '@elevate/forms'
+import { EXPLORE } from '@elevate/types'
 import { ExploreSchema, type ExploreInput } from '@elevate/types/schemas'
-import { Button, Input, Textarea, Card, FormField, LoadingSpinner, Alert, AlertTitle, AlertDescription, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, FileUpload, FileList, type UploadedFile } from '@elevate/ui'
+import {
+  Button,
+  Input,
+  Textarea,
+  Card,
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@elevate/ui'
+import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
 
 import { getApiClient } from '../../../../lib/api-client'
 
@@ -21,21 +38,46 @@ const aiToolOptions = [
 ]
 
 export default function ExploreFormPage() {
+  const t = useTranslations('homepage')
   const { userId } = useAuth()
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [selectedAiTool, setSelectedAiTool] = useState<string>('')
   const [characterCount, setCharacterCount] = useState(0)
+
+  const { isSubmitting, submitStatus, handleSubmit: handleFormSubmit } = useFormSubmission({
+    successMessage: 'Exploration submission successful! Your submission is now under review.'
+  })
+  
+  const { uploadedFiles, handleFileSelect: handleFileUpload, removeFile, successfulUploads } = useFileUpload({
+    maxFiles: 5,
+    onUpload: async (files) => {
+      const uploadPromises = files.map(async (file) => {
+        try {
+          const api = getApiClient()
+          const result = await api.uploadFile(file, EXPLORE)
+          return {
+            file,
+            path: result.data.path,
+            hash: result.data.hash,
+          }
+        } catch (error) {
+          return {
+            file,
+            error: error instanceof Error ? error.message : 'Upload failed',
+          }
+        }
+      })
+      return Promise.all(uploadPromises)
+    }
+  })
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors }
+    formState: { errors },
   } = useForm<ExploreInput>({
-    resolver: zodResolver(ExploreSchema)
+    resolver: zodResolver(ExploreSchema),
   })
 
   const watchedReflection = watch('reflection')
@@ -44,139 +86,68 @@ export default function ExploreFormPage() {
     setCharacterCount(watchedReflection?.length || 0)
   }, [watchedReflection])
 
-  // Narrow to successful uploaded files with path
-  const filterSuccessfulUploads = <T extends { path?: string; error?: unknown }>(
-    files: T[]
-  ): Array<T & { path: string }> => {
-    return files.filter((f) => typeof f.path === 'string' && !f.error) as Array<
-      T & { path: string }
-    >
-  }
-
   const handleFileSelect = async (files: File[]) => {
-    const newFiles: UploadedFile[] = files.map(file => ({
-      file,
-      uploading: true
-    }))
-
-    setUploadedFiles(prev => [...prev, ...newFiles])
-
-    // Upload each file
-    const uploadPromises = files.map(async (file, _index) => {
-      try {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('activityCode', 'EXPLORE')
-
-        const api = getApiClient()
-        const result = await api.uploadFile(file, 'EXPLORE')
-
-        return { file, path: result.data.path, hash: result.data.hash, uploading: false }
-
-      } catch (error) {
-        return {
-          file,
-          uploading: false,
-          error: error instanceof Error ? error.message : 'Upload failed'
-        }
-      }
-    })
-
-    const results = await Promise.all(uploadPromises)
-    
-    setUploadedFiles(prev => {
-      const newList = [...prev]
-      // Replace the uploading files with results
-      const startIndex = prev.length - files.length
-      results.forEach((result, index) => {
-        newList[startIndex + index] = result
-      })
-      return newList
-    })
-
-    // Update form value with successful uploads
-    const successfulPaths = filterSuccessfulUploads(results).map(r => r.path)
-    
-    setValue('evidenceFiles', successfulPaths)
+    const results = await handleFileUpload(files)
+    setValue('evidence_files', results.map((r) => r.path))
   }
 
   const handleFileRemove = (index: number) => {
-    const newFiles = uploadedFiles.filter((_, i) => i !== index)
-    setUploadedFiles(newFiles)
-    
-    const successfulPaths = filterSuccessfulUploads(newFiles).map(f => f.path)
-    
-    setValue('evidenceFiles', successfulPaths)
+    removeFile(index)
+    setValue('evidence_files', successfulUploads.map((f) => f.path))
   }
 
   const onSubmit = async (data: ExploreInput) => {
-    if (!userId) {
-      setSubmitStatus({ type: 'error', message: 'You must be logged in to submit' })
-      return
-    }
-
-    const successfulFiles = uploadedFiles.filter(file => file.path && !file.error)
-    
-    if (successfulFiles.length === 0) {
-      setSubmitStatus({ type: 'error', message: 'Please upload at least one evidence file' })
-      return
-    }
-
-    setIsSubmitting(true)
-    setSubmitStatus(null)
-
-    try {
-      const payload = {
-        reflection: data.reflection,
-        classDate: data.classDate,
-        school: data.school || '',
-        aiTool: selectedAiTool,
-        evidenceFiles: filterSuccessfulUploads(successfulFiles).map(f => f.path)
+    await handleFormSubmit(async () => {
+      if (!userId) {
+        throw new Error(t('validation.missing_file'))
       }
 
-      const api2 = getApiClient()
-      await api2.createSubmission({
-        activityCode: 'EXPLORE',
-        payload,
-        attachments: filterSuccessfulUploads(successfulFiles).map(f => f.path),
-        visibility: 'PRIVATE'
-      })
+      if (successfulUploads.length === 0) {
+        throw new Error(t('validation.missing_file'))
+      }
 
-      setSubmitStatus({ 
-        type: 'success', 
-        message: 'Exploration submission successful! Your submission is now under review.' 
+      const payload = {
+        reflection: data.reflection,
+        class_date: data.class_date,
+        school: data.school,
+        ai_tool: selectedAiTool,
+        evidence_files: successfulUploads.map((f) => f.path),
+      }
+
+      const api = getApiClient()
+      await api.createSubmission({
+        activityCode: EXPLORE,
+        payload,
+        attachments: successfulUploads.map((f) => f.path),
+        visibility: 'PRIVATE',
       })
 
       // Reset form
-      setUploadedFiles([])
       setSelectedAiTool('')
-      
-    } catch (error) {
-      setSubmitStatus({ 
-        type: 'error', 
-        message: error instanceof Error ? error.message : 'Failed to submit exploration'
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
+    })
   }
 
   return (
     <main style={{ padding: 24, fontFamily: 'system-ui' }}>
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Explore — AI in the Classroom</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Explore — AI in the Classroom
+          </h1>
           <p className="text-gray-600">
-            Share your experience applying AI tools in your classroom. Earn 50 points for approved submissions.
+            Share your experience applying AI tools in your classroom. Earn 50
+            points for approved submissions.
           </p>
         </div>
 
         {submitStatus && (
-          <Alert 
-            variant={submitStatus.type === 'error' ? 'destructive' : 'default'} 
+          <Alert
+            variant={submitStatus.type === 'error' ? 'destructive' : 'default'}
             className="mb-6"
           >
-            <AlertTitle>{submitStatus.type === 'success' ? 'Success!' : 'Error'}</AlertTitle>
+            <AlertTitle>
+              {submitStatus.type === 'success' ? 'Success!' : 'Error'}
+            </AlertTitle>
             <AlertDescription>{submitStatus.message}</AlertDescription>
           </Alert>
         )}
@@ -205,13 +176,10 @@ export default function ExploreFormPage() {
             <FormField
               label="Class Date"
               required
-              error={errors.classDate?.message}
+              error={errors.class_date?.message}
               description="When did you implement AI in your classroom?"
             >
-              <Input
-                {...register('classDate')}
-                type="date"
-              />
+              <Input {...register('class_date')} type="date" />
             </FormField>
 
             <FormField
@@ -237,14 +205,19 @@ export default function ExploreFormPage() {
                 rows={6}
               />
               <div className="text-right text-sm text-gray-500 mt-1">
-                {characterCount}/150 characters {characterCount >= 150 ? '✓' : '(minimum)'}
+                {characterCount}/150 characters{' '}
+                {characterCount >= 150 ? '✓' : '(minimum)'}
               </div>
             </FormField>
 
             <FormField
               label="Evidence Files"
               required
-              error={uploadedFiles.some(f => f.error) ? 'Some files failed to upload' : undefined}
+              error={
+                uploadedFiles.some((f) => f.error)
+                  ? 'Some files failed to upload'
+                  : undefined
+              }
               description="Upload photos, screenshots, or documents showing your AI implementation (multiple files allowed)"
             >
               <FileUpload
@@ -254,20 +227,17 @@ export default function ExploreFormPage() {
                 maxFiles={5}
                 disabled={isSubmitting}
               />
-              <FileList 
-                files={uploadedFiles} 
-                onRemove={handleFileRemove}
-              />
+              <FileList files={uploadedFiles} onRemove={handleFileRemove} />
             </FormField>
 
             <div className="pt-4 border-t border-gray-200">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={
-                  isSubmitting || 
-                  !selectedAiTool || 
+                  isSubmitting ||
+                  !selectedAiTool ||
                   characterCount < 150 ||
-                  uploadedFiles.filter(f => f.path && !f.error).length === 0
+                  successfulUploads.length === 0
                 }
                 className="w-full"
               >
@@ -289,7 +259,9 @@ export default function ExploreFormPage() {
           <ul className="space-y-1">
             <li>• Include specific examples of how students engaged with AI</li>
             <li>• Upload photos of classroom activities or student work</li>
-            <li>• Share both successes and challenges for authentic reflection</li>
+            <li>
+              • Share both successes and challenges for authentic reflection
+            </li>
             <li>• Screenshots of AI tool interactions are valuable evidence</li>
             <li>• Review process typically takes 24-48 hours</li>
           </ul>

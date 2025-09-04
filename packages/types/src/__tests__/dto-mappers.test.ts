@@ -1,5 +1,14 @@
-import { describe, it, expect } from 'vitest'
+/**
+ * Comprehensive DTO Mapping Tests
+ * 
+ * This file tests two primary aspects of DTO mappings:
+ * 1. Payload transformations between API (camelCase) and DB (snake_case)
+ * 2. ORM leakage prevention (Prisma to clean DTOs)
+ */
+
+import { describe, it, test, expect } from 'vitest'
 import {
+  // DTO mapping functions  
   mapLeaderboardUserBadgeToDTO,
   mapLeaderboardEntryToDTO,
   mapSubmissionToDTO,
@@ -8,6 +17,20 @@ import {
   mapRawLeaderboardEntryToDTO,
   mapRawUserProfileToDTO,
   extractPointsFromAggregation,
+  // Payload transformation functions
+  transformLearnAPIToDB,
+  transformLearnDBToAPI,
+  transformExploreAPIToDB,
+  transformExploreDBToAPI,
+  transformAmplifyAPIToDB,
+  transformAmplifyDBToAPI,
+  transformPresentAPIToDB,
+  transformPresentDBToAPI,
+  transformShineAPIToDB,
+  transformShineDBToAPI,
+  transformPayloadAPIToDB,
+  transformPayloadDBToAPI,
+  // Types
   type User,
   type Submission,
   type Activity,
@@ -18,8 +41,317 @@ import {
   type UserProfileDTO,
   type SubmissionDTO,
   type StageBreakdownDTO,
-  type StatsResponseDTO
-} from '../dto-mappers.js'
+  type StatsResponseDTO,
+  type LearnPayloadAPI,
+  type LearnPayloadDB,
+  type ExplorePayloadAPI,
+  type ExplorePayloadDB,
+  type AmplifyPayloadAPI,
+  type AmplifyPayloadDB,
+  type PresentPayloadAPI,
+  type PresentPayloadDB,
+  type ShinePayloadAPI,
+  type ShinePayloadDB,
+} from '../dto-mappers'
+
+// ======================================
+// PAYLOAD TRANSFORMATION TESTS
+// ======================================
+
+describe('DTO Payload Transformations', () => {
+  describe('LEARN payload transformations', () => {
+    test('transforms API payload to DB payload correctly', () => {
+      const apiPayload: LearnPayloadAPI = {
+        provider: 'SPL',
+        courseName: 'AI Fundamentals',
+        certificateUrl: 'https://example.com/cert.pdf',
+        completedAt: '2024-01-15T10:30:00Z'
+      }
+
+      const dbPayload = transformLearnAPIToDB(apiPayload)
+
+      expect(dbPayload).toEqual({
+        provider: 'SPL',
+        course_name: 'AI Fundamentals',
+        certificate_url: 'https://example.com/cert.pdf',
+        completed_at: '2024-01-15T10:30:00Z'
+      })
+    })
+
+    test('transforms DB payload to API payload correctly', () => {
+      const dbPayload: LearnPayloadDB = {
+        provider: 'ILS',
+        course_name: 'Machine Learning Basics',
+        certificate_url: 'https://example.com/ml-cert.pdf',
+        completed_at: '2024-02-20T14:45:00Z'
+      }
+
+      const apiPayload = transformLearnDBToAPI(dbPayload)
+
+      expect(apiPayload).toEqual({
+        provider: 'ILS',
+        courseName: 'Machine Learning Basics',
+        certificateUrl: 'https://example.com/ml-cert.pdf',
+        completedAt: '2024-02-20T14:45:00Z'
+      })
+    })
+
+    test('handles optional fields correctly', () => {
+      const apiPayload: LearnPayloadAPI = {
+        provider: 'SPL',
+        courseName: 'Basic Course',
+        completedAt: '2024-01-15T10:30:00Z'
+        // certificateUrl is optional and omitted
+      }
+
+      const dbPayload = transformLearnAPIToDB(apiPayload)
+      expect(dbPayload.certificate_url).toBeUndefined()
+
+      const transformedBack = transformLearnDBToAPI(dbPayload)
+      expect(transformedBack.certificateUrl).toBeUndefined()
+    })
+  })
+
+  describe('EXPLORE payload transformations', () => {
+    test('transforms API payload to DB payload correctly', () => {
+      const apiPayload: ExplorePayloadAPI = {
+        reflection: 'Students were very engaged with the AI tools',
+        classDate: '2024-03-10',
+        school: 'Jakarta Elementary',
+        evidenceFiles: ['evidence1.jpg', 'evidence2.pdf']
+      }
+
+      const dbPayload = transformExploreAPIToDB(apiPayload)
+
+      expect(dbPayload).toEqual({
+        reflection: 'Students were very engaged with the AI tools',
+        class_date: '2024-03-10',
+        school: 'Jakarta Elementary',
+        evidence_files: ['evidence1.jpg', 'evidence2.pdf']
+      })
+    })
+
+    test('transforms DB payload to API payload correctly', () => {
+      const dbPayload: ExplorePayloadDB = {
+        reflection: 'Great learning experience',
+        class_date: '2024-04-15',
+        evidence_files: ['photo1.png']
+      }
+
+      const apiPayload = transformExploreDBToAPI(dbPayload)
+
+      expect(apiPayload).toEqual({
+        reflection: 'Great learning experience',
+        classDate: '2024-04-15',
+        evidenceFiles: ['photo1.png']
+      })
+    })
+  })
+
+  describe('AMPLIFY payload transformations', () => {
+    test('transforms API payload to DB payload correctly', () => {
+      const apiPayload: AmplifyPayloadAPI = {
+        peersTrained: 15,
+        studentsTrained: 120,
+        attendanceProofFiles: ['attendance.pdf']
+      }
+
+      const dbPayload = transformAmplifyAPIToDB(apiPayload)
+
+      expect(dbPayload).toEqual({
+        peers_trained: 15,
+        students_trained: 120,
+        attendance_proof_files: ['attendance.pdf']
+      })
+    })
+
+    test('transforms DB payload to API payload correctly', () => {
+      const dbPayload: AmplifyPayloadDB = {
+        peers_trained: 8,
+        students_trained: 65,
+        attendance_proof_files: ['proof1.jpg', 'proof2.jpg']
+      }
+
+      const apiPayload = transformAmplifyDBToAPI(dbPayload)
+
+      expect(apiPayload).toEqual({
+        peersTrained: 8,
+        studentsTrained: 65,
+        attendanceProofFiles: ['proof1.jpg', 'proof2.jpg']
+      })
+    })
+  })
+
+  describe('PRESENT payload transformations', () => {
+    test('transforms API payload to DB payload correctly', () => {
+      const apiPayload: PresentPayloadAPI = {
+        linkedinUrl: 'https://linkedin.com/posts/user123',
+        screenshotUrl: 'https://storage.com/screenshot.png',
+        caption: 'Sharing my AI journey with educators!'
+      }
+
+      const dbPayload = transformPresentAPIToDB(apiPayload)
+
+      expect(dbPayload).toEqual({
+        linkedin_url: 'https://linkedin.com/posts/user123',
+        screenshot_url: 'https://storage.com/screenshot.png',
+        caption: 'Sharing my AI journey with educators!'
+      })
+    })
+
+    test('transforms DB payload to API payload correctly', () => {
+      const dbPayload: PresentPayloadDB = {
+        linkedin_url: 'https://linkedin.com/posts/teacher456',
+        caption: 'AI in education is amazing!'
+      }
+
+      const apiPayload = transformPresentDBToAPI(dbPayload)
+
+      expect(apiPayload).toEqual({
+        linkedinUrl: 'https://linkedin.com/posts/teacher456',
+        caption: 'AI in education is amazing!'
+      })
+    })
+  })
+
+  describe('SHINE payload transformations', () => {
+    test('transforms API payload to DB payload correctly', () => {
+      const apiPayload: ShinePayloadAPI = {
+        ideaTitle: 'AI-Powered Lesson Planner',
+        ideaSummary: 'A tool that helps teachers create personalized lesson plans using AI',
+        attachments: ['mockup.pdf', 'demo.mp4']
+      }
+
+      const dbPayload = transformShineAPIToDB(apiPayload)
+
+      expect(dbPayload).toEqual({
+        idea_title: 'AI-Powered Lesson Planner',
+        idea_summary: 'A tool that helps teachers create personalized lesson plans using AI',
+        attachments: ['mockup.pdf', 'demo.mp4']
+      })
+    })
+
+    test('transforms DB payload to API payload correctly', () => {
+      const dbPayload: ShinePayloadDB = {
+        idea_title: 'Virtual Classroom Assistant',
+        idea_summary: 'An AI assistant that helps with classroom management',
+        attachments: ['presentation.pptx']
+      }
+
+      const apiPayload = transformShineDBToAPI(dbPayload)
+
+      expect(apiPayload).toEqual({
+        ideaTitle: 'Virtual Classroom Assistant',
+        ideaSummary: 'An AI assistant that helps with classroom management',
+        attachments: ['presentation.pptx']
+      })
+    })
+  })
+
+  describe('Generic transformation functions', () => {
+    test('transformPayloadAPIToDB handles all activity types', () => {
+      const learnPayload: LearnPayloadAPI = {
+        provider: 'SPL',
+        courseName: 'Test Course',
+        completedAt: '2024-01-01T00:00:00Z'
+      }
+
+      const dbPayload = transformPayloadAPIToDB('LEARN', learnPayload)
+      
+      expect(dbPayload).toEqual({
+        provider: 'SPL',
+        course_name: 'Test Course',
+        completed_at: '2024-01-01T00:00:00Z'
+      })
+    })
+
+    test('transformPayloadDBToAPI handles all activity types', () => {
+      const explorePayloadDB: ExplorePayloadDB = {
+        reflection: 'Test reflection',
+        class_date: '2024-01-01'
+      }
+
+      const apiPayload = transformPayloadDBToAPI('EXPLORE', explorePayloadDB)
+      
+      expect(apiPayload).toEqual({
+        reflection: 'Test reflection',
+        classDate: '2024-01-01'
+      })
+    })
+
+    test('throws error for unknown activity codes', () => {
+      expect(() => {
+        transformPayloadAPIToDB('INVALID', {})
+      }).toThrow('Unknown activity code: INVALID')
+
+      expect(() => {
+        transformPayloadDBToAPI('UNKNOWN', {})
+      }).toThrow('Unknown activity code: UNKNOWN')
+    })
+  })
+
+  describe('Round-trip transformations', () => {
+    test('API -> DB -> API transformation preserves data integrity', () => {
+      const originalPayload: AmplifyPayloadAPI = {
+        peersTrained: 25,
+        studentsTrained: 200,
+        attendanceProofFiles: ['proof1.pdf', 'proof2.jpg']
+      }
+
+      const dbPayload = transformAmplifyAPIToDB(originalPayload)
+      const roundTripPayload = transformAmplifyDBToAPI(dbPayload)
+
+      expect(roundTripPayload).toEqual(originalPayload)
+    })
+
+    test('DB -> API -> DB transformation preserves data integrity', () => {
+      const originalPayload: PresentPayloadDB = {
+        linkedin_url: 'https://example.com/post',
+        screenshot_url: 'https://example.com/screenshot.png',
+        caption: 'Test caption'
+      }
+
+      const apiPayload = transformPresentDBToAPI(originalPayload)
+      const roundTripPayload = transformPresentAPIToDB(apiPayload)
+
+      expect(roundTripPayload).toEqual(originalPayload)
+    })
+  })
+
+  describe('Edge cases and validation', () => {
+    test('handles empty arrays correctly', () => {
+      const explorePayload: ExplorePayloadAPI = {
+        reflection: 'Test',
+        classDate: '2024-01-01',
+        evidenceFiles: []
+      }
+
+      const dbPayload = transformExploreAPIToDB(explorePayload)
+      expect(dbPayload.evidence_files).toEqual([])
+
+      const roundTrip = transformExploreDBToAPI(dbPayload)
+      expect(roundTrip.evidenceFiles).toEqual([])
+    })
+
+    test('handles undefined optional fields consistently', () => {
+      const shinePayload: ShinePayloadAPI = {
+        ideaTitle: 'Test Idea',
+        ideaSummary: 'Summary'
+        // attachments is undefined
+      }
+
+      const dbPayload = transformShineAPIToDB(shinePayload)
+      expect(dbPayload.attachments).toBeUndefined()
+
+      const roundTrip = transformShineDBToAPI(dbPayload)
+      expect(roundTrip.attachments).toBeUndefined()
+    })
+  })
+})
+
+// ======================================
+// ORM LEAKAGE PREVENTION TESTS
+// ======================================
 
 // Mock data for testing
 const createMockUser = (overrides: Partial<User> = {}): User => ({

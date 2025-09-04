@@ -61,10 +61,10 @@ process.env.NEXT_PUBLIC_SITE_URL = 'http://localhost:3000'
 
 // Global test timeout
 const originalTimeout = setTimeout
-global.setTimeout = ((fn: any, delay: number) => {
+global.setTimeout = ((fn: (...args: unknown[]) => unknown, delay: number) => {
   if (delay > 30000) {
     console.warn(`Long timeout detected: ${delay}ms, reducing to 30s`)
     delay = 30000
   }
   return originalTimeout(fn, delay)
-}) as any
+}) as typeof setTimeout

@@ -2,18 +2,18 @@ import { Suspense } from 'react'
 
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { z } from 'zod'
 
-import { MetricsChart, StatsGrid, StageCard, PageLoading } from '@elevate/ui'
+import { MetricsChart, StatsGrid, PageLoading } from '@elevate/ui/blocks'
+
 import { getApiClient } from '../../../../lib/api-client'
 
 import type { Metadata } from 'next'
 
 
 interface MetricsPageProps {
-  params: Promise<{
+  params: {
     stage: string
-  }>
+  }
 }
 
 interface StageMetrics {
@@ -83,9 +83,10 @@ const stageInfo = {
 
 async function fetchStageMetrics(stage: string): Promise<StageMetrics | null> {
   try {
+    if (!isValidStage(stage)) return null
     const api = getApiClient()
-    const res = await api.getMetrics({ stage: stage as any })
-    return (res as any).data as StageMetrics
+    const res = await api.getMetricsDTO({ stage })
+    return res.data as unknown as StageMetrics
   } catch (_) {
     return null
   }
@@ -208,7 +209,7 @@ async function MetricsContent({ stage }: { stage: string }) {
           <div className="bg-white rounded-lg border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Progress</h3>
             <div className="space-y-4">
-              {metrics.monthlyTrend.map((month, index) => (
+              {metrics.monthlyTrend.map((month) => (
                 <div key={month.month} className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-700">{month.month}</span>
@@ -289,7 +290,7 @@ async function MetricsContent({ stage }: { stage: string }) {
 }
 
 export async function generateMetadata({ params }: MetricsPageProps): Promise<Metadata> {
-  const { stage } = await params
+  const { stage } = params
   const stageKey = stage.toLowerCase()
   
   if (!isValidStage(stageKey)) {
@@ -314,7 +315,7 @@ export async function generateMetadata({ params }: MetricsPageProps): Promise<Me
 }
 
 export default async function MetricsStagePage({ params }: MetricsPageProps) {
-  const { stage } = await params
+  const { stage } = params
   const stageKey = stage.toLowerCase()
   
   return (

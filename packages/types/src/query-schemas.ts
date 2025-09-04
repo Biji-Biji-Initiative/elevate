@@ -1,10 +1,11 @@
 import { z } from 'zod'
+
 import { 
   HandleSchema,
   ActivityFilterSchema,
   StatusFilterSchema,
   RoleFilterSchema
-} from './domain-constants.js'
+} from './domain-constants'
 
 export const LeaderboardQuerySchema = z.object({
   period: z.enum(['all', '30d']).default('all'),

@@ -1,122 +1,131 @@
-'use client';
+'use client'
 
 import { Suspense, useEffect, useState } from 'react'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
 import { useTranslations } from 'next-intl'
 
-import { z } from 'zod'
-import { StageCard, Button, LoadingSpinner } from '@elevate/ui'
+import {
+  StoriesGrid,
+  LeaderboardPreview,
+  StageCard,
+  LoadingSpinner,
+  type StoryEntry,
+  type LeaderboardPreviewEntry,
+} from '@elevate/ui/blocks'
+import {
+  HeroSection,
+  ImpactRipple,
+  ProgramFlow,
+  DualPaths,
+  ConveningTeaser,
+  FAQList,
+  PartnersContact,
+  type HeroCounters,
+  type FAQItem,
+} from '@elevate/ui/blocks/sections'
+
+import { analytics, useScrollDepthTracking } from '../../lib/analytics'
 import { getApiClient } from '../../lib/api-client'
+import type { StatsResponseDTO, LeaderboardEntryDTO } from '@elevate/types'
 
 interface PlatformStats {
   totalEducators: number
   totalSubmissions: number
   totalPoints: number
   studentsImpacted: number
-  byStage: Record<string, {
-    total: number
-    approved: number
-    pending: number
-    rejected: number
-  }>
+  counters?: HeroCounters
+  byStage: Record<
+    string,
+    {
+      total: number
+      approved: number
+      pending: number
+      rejected: number
+    }
+  >
 }
+
+interface StoriesResponse {
+  stories: StoryEntry[]
+  pagination: {
+    total: number
+    hasMore: boolean
+  }
+}
+
 
 async function fetchPlatformStats(): Promise<PlatformStats | null> {
   try {
     const api = getApiClient()
     const res = await api.getStats()
-    return (res as any).data as PlatformStats
+    const stats = res.data as StatsResponseDTO
+
+    const byStage: PlatformStats['byStage'] = Object.fromEntries(
+      Object.entries(stats.byStage).map(([key, value]) => [
+        key,
+        {
+          total: value.total,
+          approved: value.approved,
+          pending: value.pending,
+          rejected: value.rejected,
+        },
+      ])
+    )
+
+    return {
+      totalEducators: stats.totalEducators,
+      totalSubmissions: stats.totalSubmissions,
+      totalPoints: stats.totalPoints,
+      studentsImpacted: stats.studentsImpacted ?? 0,
+      byStage,
+    }
   } catch (_) {
     return null
   }
 }
 
-function StatsSection() {
-  const t = useTranslations('homepage');
-  const [stats, setStats] = useState<PlatformStats | null>(null)
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const data = await fetchPlatformStats()
-        setStats(data)
-      } catch (error) {
-      } finally {
-        setLoading(false)
-      }
-    }
+async function fetchLeaderboardPreview(): Promise<LeaderboardPreviewEntry[]> {
+  try {
+    const api = getApiClient()
+    const res = await api.getLeaderboard({ limit: 3 })
+    const payload = res.data.data as LeaderboardEntryDTO[]
 
-    void loadStats()
-  }, [])
-
-  if (loading) {
-    return (
-      <section className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <LoadingSpinner />
-          </div>
-        </div>
-      </section>
-    )
+    return payload.map((entry) => ({
+      rank: entry.rank,
+      user: {
+        name: entry.user.name,
+        handle: entry.user.handle,
+        school: entry.user.school ?? null,
+        avatar_url: entry.user.avatarUrl ?? null,
+      },
+      points: entry.user.totalPoints,
+      badges:
+        entry.user.earnedBadges?.map((b) => ({ code: b.badge.code, name: b.badge.name })) ?? [],
+    }))
+  } catch (_) {
+    return []
   }
+}
 
-  const displayStats = stats || {
-    totalEducators: 0,
-    totalSubmissions: 0,
-    totalPoints: 0,
-    studentsImpacted: 0
+async function fetchStories(): Promise<StoryEntry[]> {
+  try {
+    const response = await fetch('/api/stories?limit=6')
+    if (!response.ok) return []
+
+    const data: StoriesResponse = await response.json()
+    return data.stories || []
+  } catch (_) {
+    return []
   }
-
-  return (
-    <section className="bg-gray-50 py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Join Indonesia's Leading Educators
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Over {displayStats.totalEducators.toLocaleString()} educators are already transforming their classrooms with AI. 
-            Track your progress through the LEAPS framework and join our vibrant community.
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600">
-              {displayStats.totalEducators.toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-600">{t('stats.educators')}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-green-600">
-              {displayStats.totalSubmissions.toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-600">{t('stats.completed')}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600">
-              {displayStats.totalPoints.toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-600">{t('stats.points')}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-orange-600">
-              {displayStats.studentsImpacted.toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-600">Students Impacted</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
 }
 
 function LeapsSection() {
+  const t = useTranslations('homepage.leaps')
   const [stats, setStats] = useState<PlatformStats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -126,6 +135,7 @@ function LeapsSection() {
         const data = await fetchPlatformStats()
         setStats(data)
       } catch (error) {
+        // Handle error silently
       } finally {
         setLoading(false)
       }
@@ -147,11 +157,10 @@ function LeapsSection() {
             The LEAPS Framework
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            A structured 5-stage journey designed to help educators integrate AI tools 
-            effectively in their classrooms while building a community of practice.
+            {t('intro')}
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {loading ? (
             <div className="col-span-full text-center">
@@ -159,11 +168,26 @@ function LeapsSection() {
             </div>
           ) : (
             <>
-              <StageCard stage="learn" completedCount={getStageCount('learn')} />
-              <StageCard stage="explore" completedCount={getStageCount('explore')} />
-              <StageCard stage="amplify" completedCount={getStageCount('amplify')} />
-              <StageCard stage="present" completedCount={getStageCount('present')} />
-              <StageCard stage="shine" completedCount={getStageCount('shine')} />
+              <StageCard
+                stage="learn"
+                completedCount={getStageCount('learn')}
+              />
+              <StageCard
+                stage="explore"
+                completedCount={getStageCount('explore')}
+              />
+              <StageCard
+                stage="amplify"
+                completedCount={getStageCount('amplify')}
+              />
+              <StageCard
+                stage="present"
+                completedCount={getStageCount('present')}
+              />
+              <StageCard
+                stage="shine"
+                completedCount={getStageCount('shine')}
+              />
             </>
           )}
         </div>
@@ -173,186 +197,260 @@ function LeapsSection() {
 }
 
 export default function Page() {
-  const t = useTranslations('homepage');
-  
+  const t = useTranslations('homepage')
+  const router = useRouter()
+
+  const [stats, setStats] = useState<PlatformStats | null>(null)
+  const [leaderboard, setLeaderboard] = useState<LeaderboardPreviewEntry[]>([])
+  const [stories, setStories] = useState<StoryEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Track page view and scroll depth
+  useScrollDepthTracking()
+  useEffect(() => {
+    analytics.pageView('home')
+  }, [])
+
+  // Load data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [statsData, leaderboardData, storiesData] = await Promise.all([
+          fetchPlatformStats(),
+          fetchLeaderboardPreview(),
+          fetchStories(),
+        ])
+
+        setStats(statsData)
+        setLeaderboard(leaderboardData)
+        setStories(storiesData)
+      } catch (error) {
+        // Handle error silently
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void loadData()
+  }, [])
+
+  // Event handlers
+  const handlePrimaryCTA = () => {
+    analytics.ctaClick({ area: 'hero', label: 'join_leaps' })
+    // Navigate to sign-in or dashboard based on auth state
+    const signInButton = document.querySelector(
+      '[data-clerk-sign-in]',
+    ) as HTMLElement
+    if (signInButton) {
+      signInButton.click()
+    } else {
+      router.push('/dashboard')
+    }
+  }
+
+  const handleSecondaryCTA = () => {
+    analytics.ctaClick({ area: 'hero', label: 'see_live_progress' })
+    router.push('/leaderboard')
+  }
+
+  const handleStoryCTA = () => {
+    analytics.ctaClick({ area: 'stories', label: 'publish_story' })
+    router.push('/dashboard/present')
+  }
+
+  const handleEducatorPath = () => {
+    analytics.ctaClick({ area: 'dual_paths', label: 'start_now' })
+    router.push('/dashboard/learn')
+  }
+
+  const handleTrainerPath = () => {
+    analytics.ctaClick({ area: 'dual_paths', label: 'become_trainer' })
+    // Placeholder - could link to external form or feature-flagged page
+    window.open(
+      'mailto:rashvin@biji-biji.com?subject=Master Trainer Interest',
+      '_blank',
+    )
+  }
+
+  const handleConveningCTA = () => {
+    analytics.ctaClick({ area: 'convening', label: 'see_criteria' })
+    router.push('/dashboard/shine')
+  }
+
+  const handleStoryClick = (story: StoryEntry) => {
+    analytics.ugcClick({ post_id: story.id })
+    if (story.linkedinUrl) {
+      window.open(story.linkedinUrl, '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  const handleStoryView = (story: StoryEntry) => {
+    analytics.ugcView({ post_id: story.id })
+  }
+
+  // FAQ data (from spec)
+  const faqItems: FAQItem[] = [
+    {
+      id: '1',
+      question: 'Is "AI for Educators" available in Bahasa Indonesia?',
+      answer:
+        'We are working with Microsoft to confirm availability in Bahasa Indonesia.',
+      status: 'pending',
+      owner: 'Microsoft',
+    },
+    {
+      id: '2',
+      question: 'Can materials be simplified if learning objectives are met?',
+      answer: 'We are reviewing flexibility options with Microsoft.',
+      status: 'pending',
+      owner: 'Microsoft',
+    },
+    {
+      id: '3',
+      question:
+        'Kemendikdasmen task letter routing (Disdik vs direct to schools)?',
+      answer: 'Clarification needed on the official routing process.',
+      status: 'pending',
+      owner: 'MOE',
+    },
+    {
+      id: '4',
+      question: 'Is Level 2 gated by completing Level 1?',
+      answer: 'Program team is finalizing the progression requirements.',
+      status: 'pending',
+      owner: 'Program Team',
+    },
+    {
+      id: '5',
+      question:
+        '21st Century Learning deliverable: knowledge transfer vs end-to-end to MCE? Duration flexibility?',
+      answer: 'Microsoft is reviewing the scope and duration requirements.',
+      status: 'pending',
+      owner: 'Microsoft',
+    },
+  ]
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              {t('hero_title')}
-            </h1>
-            <p className="text-xl md:text-2xl mb-4 text-blue-100">
-              {t('subtitle')}
-            </p>
-            <p className="text-lg mb-8 text-blue-200 max-w-3xl mx-auto">
-              {t('hero_subtitle')}
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <Button variant="default" className="bg-white text-blue-600 hover:bg-gray-100">
-                    {t('get_started')}
-                  </Button>
-                </SignInButton>
-              </SignedOut>
-              <SignedIn>
-                <Link href="/dashboard">
-                  <Button variant="default" className="bg-white text-blue-600 hover:bg-gray-100">
-                    Go to Dashboard
-                  </Button>
-                </Link>
-              </SignedIn>
-              <Link href="/leaderboard">
-                <Button variant="ghost" className="border-white text-white hover:bg-white hover:text-blue-600">
-                  View Leaderboard
-                </Button>
-              </Link>
-            </div>
+      <HeroSection
+        title={t('hero.h1')}
+        subtitle={t('hero.subcopy')}
+        description={t('hero.subcopy')}
+        primaryCTA={{
+          label: t('hero.cta_primary'),
+          onClick: handlePrimaryCTA,
+        }}
+        secondaryCTA={{
+          label: t('hero.cta_secondary'),
+          onClick: handleSecondaryCTA,
+        }}
+        counters={stats?.counters || null}
+        countersLabels={{
+          educators_learning: t('hero.counters.educators_learning'),
+          peers_students_reached: t('hero.counters.peers_students_reached'),
+          stories_shared: t('hero.counters.stories_shared'),
+          micro_credentials: t('hero.counters.micro_credentials'),
+          mce_certified: t('hero.counters.mce_certified'),
+        }}
+        countersLoading={loading}
+        partnersLogos={
+          <div className="flex flex-wrap justify-center items-center gap-8 text-white/70">
+            {t<string[]>('partners.list', { returnObjects: true }).map(
+              (partner: string, index: number) => (
+                <span key={index} className="text-lg font-medium">
+                  {partner}
+                </span>
+              ),
+            )}
           </div>
+        }
+      >
+        {/* Leaderboard Preview in Hero */}
+        <div onClick={() => router.push('/leaderboard')} role="link">
+          <LeaderboardPreview
+            entries={leaderboard}
+            loading={loading}
+            emptyMessage={t('empty_states.leaderboard_empty')}
+          />
         </div>
-      </section>
+      </HeroSection>
 
       {/* LEAPS Framework Section */}
       <LeapsSection />
 
-      {/* Stats Section */}
-      <StatsSection />
+      {/* Impact Ripple */}
+      <ImpactRipple title={t('ripple.title')} description={t('ripple.body')} />
 
-      {/* Benefits Section */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Why Join MS Elevate?
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="text-4xl mb-4">🎯</div>
-              <h3 className="text-xl font-semibold mb-3">Structured Learning Path</h3>
-              <p className="text-gray-600">
-                Follow a proven framework designed by education experts to gradually 
-                integrate AI tools into your teaching practice.
-              </p>
-            </div>
-            
-            <div className="text-center p-6">
-              <div className="text-4xl mb-4">🏆</div>
-              <h3 className="text-xl font-semibold mb-3">Recognition & Rewards</h3>
-              <p className="text-gray-600">
-                Earn points, badges, and public recognition for your achievements. 
-                Top performers get featured on our leaderboard.
-              </p>
-            </div>
-            
-            <div className="text-center p-6">
-              <div className="text-4xl mb-4">🤝</div>
-              <h3 className="text-xl font-semibold mb-3">Community Support</h3>
-              <p className="text-gray-600">
-                Connect with like-minded educators, share experiences, and learn 
-                from the most innovative teachers across Indonesia.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Program Flow */}
+      <ProgramFlow
+        title={t('flow.title')}
+        bullets={t<string[]>('flow.bullets', { returnObjects: true })}
+      />
 
-      {/* Success Stories Section */}
-      <section className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Success Stories
-            </h2>
-            <p className="text-xl text-gray-600">
-              See how educators are transforming their classrooms with AI
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">S</span>
-                </div>
-                <div className="ml-3">
-                  <h4 className="font-semibold">Siti Nurhaliza</h4>
-                  <p className="text-sm text-gray-600">Jakarta • 185 points</p>
-                </div>
-              </div>
-              <p className="text-gray-700 italic">
-                "The LEAPS framework helped me integrate AI tools seamlessly into my math classes. 
-                My students are more engaged than ever!"
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">B</span>
-                </div>
-                <div className="ml-3">
-                  <h4 className="font-semibold">Budi Santoso</h4>
-                  <p className="text-sm text-gray-600">Surabaya • 167 points</p>
-                </div>
-              </div>
-              <p className="text-gray-700 italic">
-                "From learning to training 50+ peers, the journey has been incredible. 
-                AI is now part of our school culture."
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">R</span>
-                </div>
-                <div className="ml-3">
-                  <h4 className="font-semibold">Ratna Dewi</h4>
-                  <p className="text-sm text-gray-600">Bandung • 142 points</p>
-                </div>
-              </div>
-              <p className="text-gray-700 italic">
-                "The community support is amazing. I've learned so much from other educators 
-                and gained confidence in using AI tools."
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Stories Wall */}
+      <StoriesGrid
+        title={t('stories.title')}
+        subtitle={t('stories.subcopy')}
+        stories={stories}
+        loading={loading}
+        emptyStateMessage={t('stories.empty_state')}
+        ctaLabel={t('stories.cta')}
+        onCTAClick={handleStoryCTA}
+        onStoryClick={handleStoryClick}
+        onStoryView={handleStoryView}
+      />
 
-      {/* Call to Action */}
-      <section className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-16">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Transform Your Teaching?
-          </h2>
-          <p className="text-xl mb-8 text-purple-100">
-            Join thousands of Indonesian educators who are already using AI to enhance their teaching. 
-            Start your LEAPS journey today.
-          </p>
-          
-          <SignedOut>
-            <SignInButton mode="modal">
-              <Button variant="default" className="bg-white text-purple-600 hover:bg-gray-100">
-                Get Started Now
-              </Button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <Link href="/dashboard">
-              <Button variant="default" className="bg-white text-purple-600 hover:bg-gray-100">
-                Continue Your Journey
-              </Button>
-            </Link>
-          </SignedIn>
-        </div>
-      </section>
+      {/* Dual Paths */}
+      <DualPaths
+        educatorPath={{
+          title: t('paths.educator.title'),
+          description: t('paths.educator.body'),
+          ctaLabel: t('paths.educator.cta'),
+          onCTAClick: handleEducatorPath,
+        }}
+        trainerPath={{
+          title: t('paths.trainer.title'),
+          description: t('paths.trainer.body'),
+          ctaLabel: t('paths.trainer.cta'),
+          onCTAClick: handleTrainerPath,
+        }}
+      />
+
+      {/* Convening Teaser */}
+      <ConveningTeaser
+        title={t('convening.title')}
+        description={t('convening.body')}
+        ctaLabel={t('convening.cta')}
+        onCTAClick={handleConveningCTA}
+      />
+
+      {/* FAQ */}
+      <FAQList items={faqItems} footerNote={t('faq.footer')} />
+
+      {/* Partners & Contact */}
+      <PartnersContact
+        partners={t<string[]>('partners.list', { returnObjects: true })}
+        contacts={[
+          {
+            email: 'rashvin@biji-biji.com',
+            phone: '+60 122 916 662',
+            name: 'Rashvin',
+          },
+          {
+            email: 'fabsya@biji-biji.com',
+            phone: '+62 821 3747 0028',
+            name: 'Fabsya',
+          },
+        ]}
+      />
+
+      {/* Hidden sign-in trigger for analytics */}
+      <SignedOut>
+        <SignInButton mode="modal">
+          <button data-clerk-sign-in className="hidden" />
+        </SignInButton>
+      </SignedOut>
     </div>
   )
 }

@@ -53,7 +53,7 @@ import {
   type Visibility,
   type PaginationParams,
   type PaginatedResponse
-} from '../domain-constants.js'
+} from '../domain-constants'
 
 describe('Domain Constants - Core Enums', () => {
   describe('ACTIVITY_CODES', () => {

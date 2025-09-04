@@ -48,7 +48,7 @@ describe('Admin submissions API - GET', () => {
     ])
     countMock.mockResolvedValueOnce(1)
 
-    const req = { url: 'http://localhost/api/admin/submissions?status=ALL&page=1&limit=50' } as any
+    const req = new Request('http://localhost/api/admin/submissions?status=ALL&page=1&limit=50')
     const res = await GET(req)
     expect(res.status).toBe(200)
     const json = await res.json()
@@ -56,4 +56,3 @@ describe('Admin submissions API - GET', () => {
     expect(json.data.submissions[0].attachmentCount).toBe(1)
   })
 })
-

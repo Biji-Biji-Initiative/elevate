@@ -67,7 +67,7 @@ export class ContentValidationError extends Error {
  * Escape HTML entities to prevent XSS attacks
  */
 export function escapeHtml(input: string): string {
-  return input.replace(/[&<>"'`=\/]/g, (char) => HTML_ENTITIES[char] || char);
+  return input.replace(/[&<>"'`=/]/g, (char) => HTML_ENTITIES[char] || char)
 }
 
 /**
@@ -217,7 +217,7 @@ export function sanitizeEmail(email: string): string | null {
   }
 
   // Remove any HTML entities that might have been encoded
-  email = email.replace(/[&<>"'`=\/]/g, '');
+  email = email.replace(/[&<>"'`=/]/g, '')
 
   return email;
 }
@@ -375,7 +375,7 @@ export function sanitizeSubmissionPayload(
  */
 export function createSanitizedStringSchema(
   maxLength: number = CONTENT_LIMITS.MEDIUM_TEXT,
-  allowEmpty: boolean = false
+  allowEmpty = false
 ) {
   let schema = z.string();
   

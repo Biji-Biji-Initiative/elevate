@@ -1,49 +1,72 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 
+import { useFormSubmission, useFileUpload } from '@elevate/forms'
+import { AMPLIFY } from '@elevate/types'
 import { AmplifySchema, type AmplifyInput } from '@elevate/types/schemas'
-import { Button, Input, Card, FormField, LoadingSpinner, Alert, AlertTitle, AlertDescription, FileUpload, FileList, type UploadedFile } from '@elevate/ui'
+import {
+  Button,
+  Input,
+  Card,
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from '@elevate/ui'
+import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
 
-import { isSuccessfulUpload, filterSuccessfulUploads } from '../../../../lib/file-upload-helpers'
 import { getApiClient } from '../../../../lib/api-client'
 
 export default function AmplifyFormPage() {
   const { userId } = useAuth()
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  const { isSubmitting, submitStatus, handleSubmit: handleFormSubmit, setSubmitStatus } = useFormSubmission({
+    successMessage: 'Amplify submission successful! You could earn points once approved.'
+  })
+  
+  const { uploadedFiles, handleFileSelect: handleFileUpload, removeFile, successfulUploads } = useFileUpload({
+    maxFiles: 5,
+    onUpload: async (files) => {
+      const uploadPromises = files.map(async (file) => {
+        try {
+          const api = getApiClient()
+          const result = await api.uploadFile(file, AMPLIFY)
+          return {
+            file,
+            path: result.data.path,
+            hash: result.data.hash,
+          }
+        } catch (error) {
+          return {
+            file,
+            error: error instanceof Error ? error.message : 'Upload failed',
+          }
+        }
+      })
+      return Promise.all(uploadPromises)
+    }
+  })
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors }
+    formState: { errors },
   } = useForm<AmplifyInput>({
     resolver: zodResolver(AmplifySchema),
     defaultValues: {
-      peersTrained: 0,
-      studentsTrained: 0
-    }
+      peers_trained: 0,
+      students_trained: 0,
+    },
   })
 
-  const watchedPeers = watch('peersTrained')
-  const watchedStudents = watch('studentsTrained')
-
-  // Narrow to successful uploaded files with path
-  const filterSuccessfulUploads = <T extends { path?: string; error?: unknown }>(
-    files: T[]
-  ): Array<T & { path: string }> => {
-    return files.filter((f) => typeof f.path === 'string' && !f.error) as Array<
-      T & { path: string }
-    >
-  }
+  const watchedPeers = watch('peers_trained')
+  const watchedStudents = watch('students_trained')
 
   // Calculate potential points (2 points per peer, 1 point per student)
   const calculatePoints = () => {
@@ -53,114 +76,54 @@ export default function AmplifyFormPage() {
   }
 
   const handleFileSelect = async (files: File[]) => {
-    const newFiles: UploadedFile[] = files.map(file => ({
-      file,
-      uploading: true
-    }))
-
-    setUploadedFiles(prev => [...prev, ...newFiles])
-
-    // Upload each file
-    const uploadPromises = files.map(async (file) => {
-      try {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('activityCode', 'AMPLIFY')
-
-        const api = getApiClient()
-        const result = await api.uploadFile(file, 'AMPLIFY')
-
-        return { file, path: result.data.path, hash: result.data.hash, uploading: false }
-
-      } catch (error) {
-        return {
-          file,
-          uploading: false,
-          error: error instanceof Error ? error.message : 'Upload failed'
-        }
-      }
-    })
-
-    const results = await Promise.all(uploadPromises)
-    
-    setUploadedFiles(prev => {
-      const newList = [...prev]
-      // Replace the uploading files with results
-      const startIndex = prev.length - files.length
-      results.forEach((result, index) => {
-        newList[startIndex + index] = result
-      })
-      return newList
-    })
-
-    // Update form value with successful uploads
-    const successfulPaths = filterSuccessfulUploads(results).map(r => r.path)
-    
-    setValue('attendanceProofFiles', successfulPaths)
+    const results = await handleFileUpload(files)
+    setValue('attendance_proof_files', results.map((r) => r.path))
   }
 
   const handleFileRemove = (index: number) => {
-    const newFiles = uploadedFiles.filter((_, i) => i !== index)
-    setUploadedFiles(newFiles)
-    
-    const successfulPaths = filterSuccessfulUploads(newFiles).map(f => f.path)
-    
-    setValue('attendanceProofFiles', successfulPaths)
+    removeFile(index)
+    setValue('attendance_proof_files', successfulUploads.map((f) => f.path))
   }
 
   const onSubmit = async (data: AmplifyInput) => {
-    if (!userId) {
-      setSubmitStatus({ type: 'error', message: 'You must be logged in to submit' })
-      return
-    }
-
-    const successfulFiles = uploadedFiles.filter(file => file.path && !file.error)
+    const potentialPoints = calculatePoints()
     
-    if (successfulFiles.length === 0) {
-      setSubmitStatus({ type: 'error', message: 'Please upload at least one attendance proof file' })
-      return
-    }
-
-    if ((data.peersTrained || 0) + (data.studentsTrained || 0) === 0) {
-      setSubmitStatus({ type: 'error', message: 'Please train at least one peer or student' })
-      return
-    }
-
-    setIsSubmitting(true)
-    setSubmitStatus(null)
-
     try {
-      const payload = {
-        peersTrained: Math.min(data.peersTrained || 0, 50),
-        studentsTrained: Math.min(data.studentsTrained || 0, 200),
-        attendanceProofFiles: filterSuccessfulUploads(successfulFiles).map(f => f.path)
-      }
+      await handleFormSubmit(async () => {
+        if (!userId) {
+          throw new Error('You must be logged in to submit')
+        }
 
-      const api2 = getApiClient()
-      await api2.createSubmission({
-        activityCode: 'AMPLIFY',
-        payload,
-        attachments: filterSuccessfulUploads(successfulFiles).map(f => f.path),
-        visibility: 'PRIVATE'
+        if (successfulUploads.length === 0) {
+          throw new Error('Please upload at least one attendance proof file')
+        }
+
+        if ((data.peers_trained || 0) + (data.students_trained || 0) === 0) {
+          throw new Error('Please train at least one peer or student')
+        }
+
+        const payload = {
+          peers_trained: Math.min(data.peers_trained || 0, 50),
+          students_trained: Math.min(data.students_trained || 0, 200),
+          attendance_proof_files: successfulUploads.map((f) => f.path),
+        }
+
+        const api = getApiClient()
+        await api.createSubmission({
+          activityCode: AMPLIFY,
+          payload,
+          attachments: successfulUploads.map((f) => f.path),
+          visibility: 'PRIVATE',
+        })
       })
-
-      const potentialPoints = calculatePoints()
       
-      setSubmitStatus({ 
-        type: 'success', 
-        message: `Amplify submission successful! You could earn up to ${potentialPoints} points once approved.` 
+      // Override success message with points info
+      setSubmitStatus({
+        type: 'success',
+        message: `Amplify submission successful! You could earn up to ${potentialPoints} points once approved.`
       })
-
-      // Reset form
-      setUploadedFiles([])
-      
     } catch (error) {
-      setSubmitStatus({ 
-        type: 'error', 
-        message: error instanceof Error ? error.message : 'Failed to submit amplify activity'
-      })
-    } finally {
-      setIsSubmitting(false)
+      // Error already handled by handleFormSubmit
     }
   }
 
@@ -168,18 +131,23 @@ export default function AmplifyFormPage() {
     <main style={{ padding: 24, fontFamily: 'system-ui' }}>
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Amplify — Train Peers & Students</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Amplify — Train Peers & Students
+          </h1>
           <p className="text-gray-600">
-            Share your AI knowledge by training peers and students. Earn 2 points per peer (max 50) and 1 point per student (max 200).
+            Share your AI knowledge by training peers and students. Earn 2
+            points per peer (max 50) and 1 point per student (max 200).
           </p>
         </div>
 
         {submitStatus && (
-          <Alert 
-            variant={submitStatus.type === 'error' ? 'destructive' : 'default'} 
+          <Alert
+            variant={submitStatus.type === 'error' ? 'destructive' : 'default'}
             className="mb-6"
           >
-            <AlertTitle>{submitStatus.type === 'success' ? 'Success!' : 'Error'}</AlertTitle>
+            <AlertTitle>
+              {submitStatus.type === 'success' ? 'Success!' : 'Error'}
+            </AlertTitle>
             <AlertDescription>{submitStatus.message}</AlertDescription>
           </Alert>
         )}
@@ -190,11 +158,11 @@ export default function AmplifyFormPage() {
               <FormField
                 label="Peers Trained"
                 required
-                error={errors.peersTrained?.message}
+                error={errors.peers_trained?.message}
                 description="Number of fellow educators trained (max 50)"
               >
                 <Input
-                  {...register('peersTrained', { valueAsNumber: true })}
+                  {...register('peers_trained', { valueAsNumber: true })}
                   type="number"
                   min={0}
                   max={50}
@@ -205,11 +173,11 @@ export default function AmplifyFormPage() {
               <FormField
                 label="Students Trained"
                 required
-                error={errors.studentsTrained?.message}
+                error={errors.students_trained?.message}
                 description="Number of students trained (max 200)"
               >
                 <Input
-                  {...register('studentsTrained', { valueAsNumber: true })}
+                  {...register('students_trained', { valueAsNumber: true })}
                   type="number"
                   min={0}
                   max={200}
@@ -219,10 +187,18 @@ export default function AmplifyFormPage() {
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-              <h3 className="text-sm font-medium text-blue-800 mb-2">Potential Points</h3>
+              <h3 className="text-sm font-medium text-blue-800 mb-2">
+                Potential Points
+              </h3>
               <div className="text-sm text-blue-700">
-                <div>Peers: {Math.min(watchedPeers || 0, 50)} × 2 = {Math.min(watchedPeers || 0, 50) * 2} points</div>
-                <div>Students: {Math.min(watchedStudents || 0, 200)} × 1 = {Math.min(watchedStudents || 0, 200) * 1} points</div>
+                <div>
+                  Peers: {Math.min(watchedPeers || 0, 50)} × 2 ={' '}
+                  {Math.min(watchedPeers || 0, 50) * 2} points
+                </div>
+                <div>
+                  Students: {Math.min(watchedStudents || 0, 200)} × 1 ={' '}
+                  {Math.min(watchedStudents || 0, 200) * 1} points
+                </div>
                 <div className="font-medium border-t border-blue-300 mt-2 pt-2">
                   Total: {calculatePoints()} points
                 </div>
@@ -232,7 +208,11 @@ export default function AmplifyFormPage() {
             <FormField
               label="Attendance Proof"
               required
-              error={uploadedFiles.some(f => f.error) ? 'Some files failed to upload' : undefined}
+              error={
+                uploadedFiles.some((f) => f.error)
+                  ? 'Some files failed to upload'
+                  : undefined
+              }
               description="Upload photos, certificates, or documents proving the training sessions occurred"
             >
               <FileUpload
@@ -242,19 +222,16 @@ export default function AmplifyFormPage() {
                 maxFiles={5}
                 disabled={isSubmitting}
               />
-              <FileList 
-                files={uploadedFiles} 
-                onRemove={handleFileRemove}
-              />
+              <FileList files={uploadedFiles} onRemove={handleFileRemove} />
             </FormField>
 
             <div className="pt-4 border-t border-gray-200">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={
-                  isSubmitting || 
-                  ((watchedPeers || 0) + (watchedStudents || 0) === 0) ||
-                  uploadedFiles.filter(f => f.path && !f.error).length === 0
+                  isSubmitting ||
+                  (watchedPeers || 0) + (watchedStudents || 0) === 0 ||
+                  successfulUploads.length === 0
                 }
                 className="w-full"
               >
@@ -272,7 +249,9 @@ export default function AmplifyFormPage() {
         </Card>
 
         <div className="mt-6 text-sm text-gray-500">
-          <h3 className="font-medium text-gray-700 mb-2">Submission Guidelines:</h3>
+          <h3 className="font-medium text-gray-700 mb-2">
+            Submission Guidelines:
+          </h3>
           <ul className="space-y-1">
             <li>• Provide honest counts of people trained</li>
             <li>• Include photos of training sessions or workshops</li>
@@ -282,9 +261,12 @@ export default function AmplifyFormPage() {
           </ul>
 
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-            <h4 className="font-medium text-yellow-800 text-sm">Anti-Gaming Measures</h4>
+            <h4 className="font-medium text-yellow-800 text-sm">
+              Anti-Gaming Measures
+            </h4>
             <div className="text-xs text-yellow-700 mt-1">
-              Maximum 50 peers and 200 students per submission. Submissions are tracked over 7-day rolling periods to prevent abuse.
+              Maximum 50 peers and 200 students per submission. Submissions are
+              tracked over 7-day rolling periods to prevent abuse.
             </div>
           </div>
         </div>

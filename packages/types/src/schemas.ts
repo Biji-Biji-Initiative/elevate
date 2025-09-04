@@ -1,35 +1,40 @@
 import { z } from 'zod'
 
+// Database storage schemas (snake_case) - source of truth
+// These schemas validate data as it will be stored in the database
+// Following Prisma-first principles where snake_case is the canonical format
+
 export const LearnSchema = z.object({
   provider: z.enum(['SPL', 'ILS']),
-  course: z.string().min(2),
-  completedAt: z.string(),
-  certificateFile: z.string().optional(), // Storage path after upload
+  course_name: z.string().min(2),
+  certificate_url: z.string().optional(),
+  certificate_hash: z.string().optional(), // For duplicate detection
+  completed_at: z.string(), // DB storage format: snake_case
 })
 
 export const ExploreSchema = z.object({
   reflection: z.string().min(150),
-  classDate: z.string(),
+  class_date: z.string(), // DB storage format: snake_case
   school: z.string().optional(),
-  evidenceFiles: z.array(z.string()).optional(), // Array of storage paths after upload
+  evidence_files: z.array(z.string()).optional(), // DB storage format: snake_case
 })
 
 export const AmplifySchema = z.object({
-  peersTrained: z.number().int().min(0).max(50),
-  studentsTrained: z.number().int().min(0).max(200),
-  attendanceProofFiles: z.array(z.string()).optional(), // Array of storage paths after upload
+  peers_trained: z.number().int().min(0).max(50), // DB storage format: snake_case
+  students_trained: z.number().int().min(0).max(200), // DB storage format: snake_case
+  attendance_proof_files: z.array(z.string()).optional(), // DB storage format: snake_case
 })
 
 export const PresentSchema = z.object({
-  linkedinUrl: z.string().url(),
-  screenshotFile: z.string().optional(), // Storage path after upload
+  linkedin_url: z.string().url(), // DB storage format: snake_case
+  screenshot_url: z.string().optional(), // DB storage format: snake_case
   caption: z.string().min(10),
 })
 
 export const ShineSchema = z.object({
-  ideaTitle: z.string().min(4),
-  ideaSummary: z.string().min(50),
-  attachment: z.array(z.string()).optional(), // Array of storage paths after upload
+  idea_title: z.string().min(4), // DB storage format: snake_case
+  idea_summary: z.string().min(50), // DB storage format: snake_case
+  attachments: z.array(z.string()).optional(), // DB storage format: snake_case
 })
 
 export type LearnInput = z.infer<typeof LearnSchema>

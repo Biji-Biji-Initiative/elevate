@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/node'
-import type { LogContext, ErrorInfo } from './types.js'
+
+import type { LogContext, ErrorInfo as _ErrorInfo } from './types'
 
 /**
  * Sentry integration for server-side logging
@@ -128,7 +129,7 @@ export class SentryIntegration {
     message: string,
     category: string,
     level: Sentry.SeverityLevel = 'info',
-    data?: Record<string, any>,
+    data?: Record<string, unknown>,
   ): void {
     if (!this.isEnabled()) return
 
@@ -177,7 +178,7 @@ export class SentryIntegration {
   /**
    * Set custom context
    */
-  setContext(key: string, context: Record<string, any>): void {
+  setContext(key: string, context: Record<string, unknown>): void {
     if (!this.isEnabled()) return
 
     Sentry.setContext(key, context)
@@ -218,7 +219,7 @@ export const addBreadcrumb = (
   message: string,
   category: string,
   level: Sentry.SeverityLevel = 'info',
-  data?: Record<string, any>,
+  data?: Record<string, unknown>,
 ) => sentry.addBreadcrumb(message, category, level, data)
 export const startTransaction = (
   name: string,
@@ -232,5 +233,5 @@ export const setSentryUser = (user: {
 }) => sentry.setUser(user)
 export const setSentryTag = (key: string, value: string | number) =>
   sentry.setTag(key, value)
-export const setSentryContext = (key: string, context: Record<string, any>) =>
+export const setSentryContext = (key: string, context: Record<string, unknown>) =>
   sentry.setContext(key, context)

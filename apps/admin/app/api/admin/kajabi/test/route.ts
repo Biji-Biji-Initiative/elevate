@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
 import { prisma, type Prisma } from '@elevate/db';
+import { createSuccessResponse, createErrorResponse as createHttpError } from '@elevate/http'
 import { KajabiTestSchema, buildAuditMeta } from '@elevate/types'
 
 export const runtime = 'nodejs';
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json();
     const parsed = KajabiTestSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
+      return createHttpError(new Error('Invalid request body'), 400)
     }
     const { user_email, course_name = 'Test Course - Admin Console' } = parsed.data;
 
@@ -33,10 +34,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found for email: ' + email },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('User not found for email: ' + email), 404)
     }
 
     // Generate unique event ID
@@ -57,10 +55,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!learnActivity) {
-      return NextResponse.json(
-        { error: 'LEARN activity not found in database' },
-        { status: 500 }
-      );
+      return createErrorResponse(new Error('LEARN activity not found in database'), 500)
     }
 
     // Create test event payload (simulating real Kajabi webhook)
@@ -159,13 +154,12 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse({
       message: 'Test Kajabi event created successfully',
       test_mode: true,
       timestamp: new Date().toISOString(),
       ...result
-    });
+    })
 
   } catch (error) {
     return createErrorResponse(error, 500);

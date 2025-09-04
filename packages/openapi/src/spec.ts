@@ -1,6 +1,22 @@
-import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
-import { z } from 'zod';
-import { BadgeCriteriaSchema } from '@elevate/types/common';
+/**
+ * OpenAPI specification generator for MS Elevate LEAPS Tracker API
+ *
+ * Generates comprehensive OpenAPI 3.1 specification from Zod schemas
+ */
+
+import {
+  OpenAPIRegistry,
+  OpenApiGeneratorV31,
+} from '@asteasolutions/zod-to-openapi'
+import type { OpenAPIObject } from 'openapi3-ts/oas31'
+import { z } from 'zod'
+
+import { BadgeCriteriaSchema } from '@elevate/types/common'
+import {
+  MetricsQuerySchema,
+  HandleParamSchema,
+} from '@elevate/types/query-schemas'
+
 import {
   ActivityCodeSchema,
   SubmissionStatusSchema,
@@ -26,27 +42,26 @@ import {
   PlatformStatsResponseSchema,
   StageMetricsResponseSchema,
   ProfileResponseSchema,
-} from './schemas.js';
-import { MetricsQuerySchema, HandleParamSchema } from '@elevate/types/query-schemas';
+} from './schemas'
 
 // Create OpenAPI registry
-const registry = new OpenAPIRegistry();
+const registry = new OpenAPIRegistry()
 
 // Register common schemas
-registry.register('ActivityCode', ActivityCodeSchema);
-registry.register('SubmissionStatus', SubmissionStatusSchema);
-registry.register('Visibility', VisibilitySchema);
-registry.register('LearnSubmission', LearnSchemaWithOpenApi);
-registry.register('ExploreSubmission', ExploreSchemaWithOpenApi);
-registry.register('AmplifySubmission', AmplifySchemaWithOpenApi);
-registry.register('PresentSubmission', PresentSchemaWithOpenApi);
-registry.register('ShineSubmission', ShineSchemaWithOpenApi);
-registry.register('SubmissionRequest', SubmissionRequestSchema);
-registry.register('SubmissionResponse', SubmissionResponseSchema);
-registry.register('LeaderboardResponse', LeaderboardResponseSchema);
-registry.register('FileUploadResponse', FileUploadResponseSchema);
-registry.register('ErrorResponse', ErrorResponseSchema);
-registry.register('SuccessResponse', SuccessResponseSchema);
+registry.register('ActivityCode', ActivityCodeSchema)
+registry.register('SubmissionStatus', SubmissionStatusSchema)
+registry.register('Visibility', VisibilitySchema)
+registry.register('LearnSubmission', LearnSchemaWithOpenApi)
+registry.register('ExploreSubmission', ExploreSchemaWithOpenApi)
+registry.register('AmplifySubmission', AmplifySchemaWithOpenApi)
+registry.register('PresentSubmission', PresentSchemaWithOpenApi)
+registry.register('ShineSubmission', ShineSchemaWithOpenApi)
+registry.register('SubmissionRequest', SubmissionRequestSchema)
+registry.register('SubmissionResponse', SubmissionResponseSchema)
+registry.register('LeaderboardResponse', LeaderboardResponseSchema)
+registry.register('FileUploadResponse', FileUploadResponseSchema)
+registry.register('ErrorResponse', ErrorResponseSchema)
+registry.register('SuccessResponse', SuccessResponseSchema)
 
 // Security schemes
 registry.registerComponent('securitySchemes', 'ClerkAuth', {
@@ -54,7 +69,7 @@ registry.registerComponent('securitySchemes', 'ClerkAuth', {
   scheme: 'bearer',
   bearerFormat: 'JWT',
   description: 'Clerk JWT token for authenticated requests',
-});
+})
 
 // Register API endpoints
 
@@ -66,9 +81,12 @@ registry.registerPath({
   summary: 'Platform Stats',
   tags: ['Public'],
   responses: {
-    200: { description: 'OK', content: { 'application/json': { schema: PlatformStatsResponseSchema } } },
+    200: {
+      description: 'OK',
+      content: { 'application/json': { schema: PlatformStatsResponseSchema } },
+    },
   },
-});
+})
 
 // Public: Stage metrics
 registry.registerPath({
@@ -79,10 +97,16 @@ registry.registerPath({
   tags: ['Public'],
   request: { query: MetricsQuerySchema },
   responses: {
-    200: { description: 'OK', content: { 'application/json': { schema: StageMetricsResponseSchema } } },
-    400: { description: 'Invalid query', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    200: {
+      description: 'OK',
+      content: { 'application/json': { schema: StageMetricsResponseSchema } },
+    },
+    400: {
+      description: 'Invalid query',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
   },
-});
+})
 
 // Public: Profile by handle
 registry.registerPath({
@@ -93,10 +117,16 @@ registry.registerPath({
   tags: ['Public'],
   request: { params: HandleParamSchema },
   responses: {
-    200: { description: 'OK', content: { 'application/json': { schema: ProfileResponseSchema } } },
-    404: { description: 'Not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    200: {
+      description: 'OK',
+      content: { 'application/json': { schema: ProfileResponseSchema } },
+    },
+    404: {
+      description: 'Not found',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
   },
-});
+})
 
 // Submissions endpoints
 registry.registerPath({
@@ -121,17 +151,22 @@ registry.registerPath({
       description: 'Submission created successfully',
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean().openapi({ example: true }),
-            data: z.object({
-              id: z.string().openapi({ example: 'sub_abc123' }),
-              activityCode: ActivityCodeSchema,
-              status: SubmissionStatusSchema,
-              visibility: VisibilitySchema,
-              createdAt: z.string().datetime().openapi({ example: '2024-01-15T10:00:00Z' }),
-              potentialPoints: z.number().int().openapi({ example: 20 }),
-            }),
-          }).openapi({ title: 'Submission Creation Response' }),
+          schema: z
+            .object({
+              success: z.boolean().openapi({ example: true }),
+              data: z.object({
+                id: z.string().openapi({ example: 'sub_abc123' }),
+                activityCode: ActivityCodeSchema,
+                status: SubmissionStatusSchema,
+                visibility: VisibilitySchema,
+                createdAt: z
+                  .string()
+                  .datetime()
+                  .openapi({ example: '2024-01-15T10:00:00Z' }),
+                potentialPoints: z.number().int().openapi({ example: 20 }),
+              }),
+            })
+            .openapi({ title: 'Submission Creation Response' }),
         },
       },
     },
@@ -160,7 +195,7 @@ registry.registerPath({
       },
     },
   },
-});
+})
 
 registry.registerPath({
   method: 'get',
@@ -186,10 +221,12 @@ registry.registerPath({
       description: 'User submissions retrieved successfully',
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean().openapi({ example: true }),
-            data: z.array(SubmissionResponseSchema),
-          }).openapi({ title: 'Submissions List Response' }),
+          schema: z
+            .object({
+              success: z.boolean().openapi({ example: true }),
+              data: z.array(SubmissionResponseSchema),
+            })
+            .openapi({ title: 'Submissions List Response' }),
         },
       },
     },
@@ -202,7 +239,7 @@ registry.registerPath({
       },
     },
   },
-});
+})
 
 // File upload endpoint
 registry.registerPath({
@@ -264,7 +301,7 @@ registry.registerPath({
       },
     },
   },
-});
+})
 
 // Leaderboard endpoint
 registry.registerPath({
@@ -320,13 +357,13 @@ registry.registerPath({
       },
     },
   },
-});
+})
 
 // Badges endpoint
 registry.registerPath({
   method: 'get',
   path: '/api/badges',
-  description: 'Get current user\'s earned badges',
+  description: "Get current user's earned badges",
   summary: 'Get User Badges',
   tags: ['Badges'],
   security: [{ ClerkAuth: [] }],
@@ -335,21 +372,34 @@ registry.registerPath({
       description: 'User badges retrieved successfully',
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean().openapi({ example: true }),
-            data: z.object({
-              badges: z.array(z.object({
-                code: z.string().openapi({ example: 'EARLY_ADOPTER' }),
-                name: z.string().openapi({ example: 'Early Adopter' }),
-                description: z.string().openapi({ example: 'One of the first educators to join the program' }),
-                iconUrl: z.string().url().nullable().openapi({ example: 'https://example.com/badge.png' }),
-                criteria: BadgeCriteriaSchema.openapi({ 
-                  example: { type: 'submissions', threshold: 1 }
-                }),
-                earnedAt: z.string().datetime().openapi({ example: '2024-01-15T10:00:00Z' }),
-              })),
-            }),
-          }).openapi({ title: 'User Badges Response' }),
+          schema: z
+            .object({
+              success: z.boolean().openapi({ example: true }),
+              data: z.object({
+                badges: z.array(
+                  z.object({
+                    code: z.string().openapi({ example: 'EARLY_ADOPTER' }),
+                    name: z.string().openapi({ example: 'Early Adopter' }),
+                    description: z.string().openapi({
+                      example: 'One of the first educators to join the program',
+                    }),
+                    iconUrl: z
+                      .string()
+                      .url()
+                      .nullable()
+                      .openapi({ example: 'https://example.com/badge.png' }),
+                    criteria: BadgeCriteriaSchema.openapi({
+                      example: { type: 'submissions', threshold: 1 },
+                    }),
+                    earnedAt: z
+                      .string()
+                      .datetime()
+                      .openapi({ example: '2024-01-15T10:00:00Z' }),
+                  }),
+                ),
+              }),
+            })
+            .openapi({ title: 'User Badges Response' }),
         },
       },
     },
@@ -362,13 +412,14 @@ registry.registerPath({
       },
     },
   },
-});
+})
 
 // Dashboard endpoint
 registry.registerPath({
   method: 'get',
   path: '/api/dashboard',
-  description: 'Get user dashboard data including progress and recent submissions',
+  description:
+    'Get user dashboard data including progress and recent submissions',
   summary: 'Get User Dashboard',
   tags: ['Dashboard'],
   security: [{ ClerkAuth: [] }],
@@ -377,43 +428,62 @@ registry.registerPath({
       description: 'Dashboard data retrieved successfully',
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean().openapi({ example: true }),
-            data: z.object({
-              user: z.object({
-                id: z.string().openapi({ example: 'user_123' }),
-                name: z.string().openapi({ example: 'Ahmad Sutanto' }),
-                handle: z.string().openapi({ example: 'educator_ahmad' }),
-                email: z.string().email().openapi({ example: 'ahmad@school.edu' }),
-                school: z.string().nullable().openapi({ example: 'SDN 123 Jakarta' }),
-                cohort: z.string().nullable().openapi({ example: 'Cohort-2024-A' }),
-                avatar_url: z.string().url().nullable().openapi({ 
-                  example: 'https://images.clerk.dev/abc123' 
+          schema: z
+            .object({
+              success: z.boolean().openapi({ example: true }),
+              data: z.object({
+                user: z.object({
+                  id: z.string().openapi({ example: 'user_123' }),
+                  name: z.string().openapi({ example: 'Ahmad Sutanto' }),
+                  handle: z.string().openapi({ example: 'educator_ahmad' }),
+                  email: z
+                    .string()
+                    .email()
+                    .openapi({ example: 'ahmad@school.edu' }),
+                  school: z
+                    .string()
+                    .nullable()
+                    .openapi({ example: 'SDN 123 Jakarta' }),
+                  cohort: z
+                    .string()
+                    .nullable()
+                    .openapi({ example: 'Cohort-2024-A' }),
+                  avatar_url: z.string().url().nullable().openapi({
+                    example: 'https://images.clerk.dev/abc123',
+                  }),
+                  profile_visibility: z.boolean().openapi({
+                    example: false,
+                    description: 'Whether profile is publicly visible',
+                  }),
                 }),
-                profile_visibility: z.boolean().openapi({ 
-                  example: false,
-                  description: 'Whether profile is publicly visible' 
+                progress: z.object({
+                  totalPoints: z.number().int().openapi({ example: 95 }),
+                  completedActivities: z.number().int().openapi({ example: 4 }),
+                  totalActivities: z.number().int().openapi({ example: 5 }),
+                  leaderboardRank: z
+                    .number()
+                    .int()
+                    .nullable()
+                    .openapi({ example: 15 }),
                 }),
+                recentSubmissions: z.array(SubmissionResponseSchema),
+                availableActivities: z.array(
+                  z.object({
+                    code: ActivityCodeSchema,
+                    name: z.string().openapi({ example: 'Learn' }),
+                    description: z.string().openapi({
+                      example: 'Complete AI training and upload certificate',
+                    }),
+                    default_points: z.number().int().openapi({ example: 20 }),
+                    hasSubmission: z.boolean().openapi({ example: true }),
+                    submissionStatus: SubmissionStatusSchema.nullable().openapi(
+                      { example: 'APPROVED' },
+                    ),
+                  }),
+                ),
               }),
-              progress: z.object({
-                totalPoints: z.number().int().openapi({ example: 95 }),
-                completedActivities: z.number().int().openapi({ example: 4 }),
-                totalActivities: z.number().int().openapi({ example: 5 }),
-                leaderboardRank: z.number().int().nullable().openapi({ example: 15 }),
-              }),
-              recentSubmissions: z.array(SubmissionResponseSchema),
-              availableActivities: z.array(z.object({
-                code: ActivityCodeSchema,
-                name: z.string().openapi({ example: 'Learn' }),
-                description: z.string().openapi({ 
-                  example: 'Complete AI training and upload certificate' 
-                }),
-                default_points: z.number().int().openapi({ example: 20 }),
-                hasSubmission: z.boolean().openapi({ example: true }),
-                submissionStatus: SubmissionStatusSchema.nullable().openapi({ example: 'APPROVED' }),
-              })),
-            }),
-          }).openapi({ title: 'Dashboard Response' }),
+            })
+            .openapi({ title: 'Dashboard Response' }),
         },
       },
     },
@@ -426,7 +496,7 @@ registry.registerPath({
       },
     },
   },
-});
+})
 
 // Health check endpoint
 registry.registerPath({
@@ -440,16 +510,21 @@ registry.registerPath({
       description: 'Service is healthy',
       content: {
         'application/json': {
-          schema: z.object({
-            status: z.string().openapi({ example: 'healthy' }),
-            timestamp: z.string().datetime().openapi({ example: '2024-01-15T10:00:00Z' }),
-            version: z.string().openapi({ example: '0.1.0' }),
-          }).openapi({ title: 'Health Check Response' }),
+          schema: z
+            .object({
+              status: z.string().openapi({ example: 'healthy' }),
+              timestamp: z
+                .string()
+                .datetime()
+                .openapi({ example: '2024-01-15T10:00:00Z' }),
+              version: z.string().openapi({ example: '0.1.0' }),
+            })
+            .openapi({ title: 'Health Check Response' }),
         },
       },
     },
   },
-});
+})
 
 // Webhooks
 registry.registerPath({
@@ -468,15 +543,23 @@ registry.registerPath({
       description: 'Kajabi webhook payload',
       content: {
         'application/json': {
-          schema: z.object({
-            event_type: z.string().openapi({ example: 'course_completion' }),
-            user_email: z.string().email().openapi({ example: 'ahmad@school.edu' }),
-            course_name: z.string().openapi({ example: 'AI for Educators' }),
-            completed_at: z.string().datetime().openapi({ example: '2024-01-15T10:00:00Z' }),
-            certificate_url: z.string().url().optional().openapi({ 
-              example: 'https://kajabi.com/certificates/abc123' 
-            }),
-          }).openapi({ title: 'Kajabi Webhook Payload' }),
+          schema: z
+            .object({
+              event_type: z.string().openapi({ example: 'course_completion' }),
+              user_email: z
+                .string()
+                .email()
+                .openapi({ example: 'ahmad@school.edu' }),
+              course_name: z.string().openapi({ example: 'AI for Educators' }),
+              completed_at: z
+                .string()
+                .datetime()
+                .openapi({ example: '2024-01-15T10:00:00Z' }),
+              certificate_url: z.string().url().optional().openapi({
+                example: 'https://kajabi.com/certificates/abc123',
+              }),
+            })
+            .openapi({ title: 'Kajabi Webhook Payload' }),
         },
       },
     },
@@ -486,11 +569,13 @@ registry.registerPath({
       description: 'Webhook processed successfully',
       content: {
         'application/json': {
-          schema: z.object({
-            success: z.boolean().openapi({ example: true }),
-            processed: z.boolean().openapi({ example: true }),
-            user_matched: z.boolean().openapi({ example: true }),
-          }).openapi({ title: 'Webhook Response' }),
+          schema: z
+            .object({
+              success: z.boolean().openapi({ example: true }),
+              processed: z.boolean().openapi({ example: true }),
+              user_matched: z.boolean().openapi({ example: true }),
+            })
+            .openapi({ title: 'Webhook Response' }),
         },
       },
     },
@@ -511,7 +596,7 @@ registry.registerPath({
       },
     },
   },
-});
+})
 
 // Admin endpoints (basic structure)
 registry.registerPath({
@@ -542,7 +627,12 @@ registry.registerPath({
     }),
   },
   responses: {
-    200: { description: 'Admin submissions retrieved successfully', content: { 'application/json': { schema: AdminSubmissionsListResponseSchema } } },
+    200: {
+      description: 'Admin submissions retrieved successfully',
+      content: {
+        'application/json': { schema: AdminSubmissionsListResponseSchema },
+      },
+    },
     401: {
       description: 'Unauthorized',
       content: {
@@ -560,7 +650,7 @@ registry.registerPath({
       },
     },
   },
-});
+})
 
 // Admin: Submission detail
 registry.registerPath({
@@ -571,9 +661,24 @@ registry.registerPath({
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
   request: {
-    params: z.object({ id: z.string().openapi({ description: 'Submission ID', example: 'sub_abc123' }) }),
+    params: z.object({
+      id: z
+        .string()
+        .openapi({ description: 'Submission ID', example: 'sub_abc123' }),
+    }),
   },
-  responses: { 200: { description: 'Submission retrieved', content: { 'application/json': { schema: AdminSubmissionDetailResponseSchema } } }, 404: { description: 'Not found', content: { 'application/json': { schema: ErrorResponseSchema } } } },
+  responses: {
+    200: {
+      description: 'Submission retrieved',
+      content: {
+        'application/json': { schema: AdminSubmissionDetailResponseSchema },
+      },
+    },
+    404: {
+      description: 'Not found',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
+  },
 })
 
 // Admin: Review single submission
@@ -599,8 +704,14 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: 'Reviewed', content: { 'application/json': { schema: SuccessResponseSchema } } },
-    400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    200: {
+      description: 'Reviewed',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+    400: {
+      description: 'Invalid body',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
   },
 })
 
@@ -626,8 +737,14 @@ registry.registerPath({
     },
   },
   responses: {
-    200: { description: 'Processed', content: { 'application/json': { schema: SuccessResponseSchema } } },
-    400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    200: {
+      description: 'Processed',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+    400: {
+      description: 'Invalid body',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
   },
 })
 
@@ -642,7 +759,9 @@ registry.registerPath({
   request: {
     query: z.object({
       search: z.string().optional(),
-      role: z.enum(['ALL', 'PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN']).optional(),
+      role: z
+        .enum(['ALL', 'PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN'])
+        .optional(),
       cohort: z.string().optional(),
       page: z.coerce.number().int().min(1).optional(),
       limit: z.coerce.number().int().min(1).max(100).optional(),
@@ -650,7 +769,16 @@ registry.registerPath({
       sortOrder: z.enum(['asc', 'desc']).optional(),
     }),
   },
-  responses: { 200: { description: 'Users retrieved', content: { 'application/json': { schema: AdminUsersListResponseSchema } } }, 400: { description: 'Invalid query', content: { 'application/json': { schema: ErrorResponseSchema } } } },
+  responses: {
+    200: {
+      description: 'Users retrieved',
+      content: { 'application/json': { schema: AdminUsersListResponseSchema } },
+    },
+    400: {
+      description: 'Invalid query',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
+  },
 })
 
 // Admin: Update user
@@ -662,11 +790,23 @@ registry.registerPath({
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
   request: {
-    body: { content: { 'application/json': { schema: z.object({ userId: z.string() }).passthrough() } } },
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({ userId: z.string() }).passthrough(),
+        },
+      },
+    },
   },
   responses: {
-    200: { description: 'Updated', content: { 'application/json': { schema: SuccessResponseSchema } } },
-    400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    200: {
+      description: 'Updated',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+    400: {
+      description: 'Invalid body',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
   },
 })
 
@@ -678,10 +818,24 @@ registry.registerPath({
   summary: 'Bulk Update Users',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  request: { body: { content: { 'application/json': { schema: z.object({ userIds: z.array(z.string()), role: z.string() }) } } } },
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({ userIds: z.array(z.string()), role: z.string() }),
+        },
+      },
+    },
+  },
   responses: {
-    200: { description: 'Updated', content: { 'application/json': { schema: SuccessResponseSchema } } },
-    400: { description: 'Invalid body', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    200: {
+      description: 'Updated',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+    400: {
+      description: 'Invalid body',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
   },
 })
 
@@ -693,8 +847,17 @@ registry.registerPath({
   summary: 'List Badges',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  request: { query: z.object({ includeStats: z.enum(['true', 'false']).optional() }) },
-  responses: { 200: { description: 'OK', content: { 'application/json': { schema: AdminBadgesListResponseSchema } } } },
+  request: {
+    query: z.object({ includeStats: z.enum(['true', 'false']).optional() }),
+  },
+  responses: {
+    200: {
+      description: 'OK',
+      content: {
+        'application/json': { schema: AdminBadgesListResponseSchema },
+      },
+    },
+  },
 })
 
 registry.registerPath({
@@ -704,8 +867,27 @@ registry.registerPath({
   summary: 'Create Badge',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  request: { body: { content: { 'application/json': { schema: z.object({ code: z.string(), name: z.string(), description: z.string() }).passthrough() } } } },
-  responses: { 200: { description: 'Created', content: { 'application/json': { schema: SuccessResponseSchema } } } },
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z
+            .object({
+              code: z.string(),
+              name: z.string(),
+              description: z.string(),
+            })
+            .passthrough(),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Created',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+  },
 })
 
 registry.registerPath({
@@ -715,8 +897,21 @@ registry.registerPath({
   summary: 'Update Badge',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  request: { body: { content: { 'application/json': { schema: z.object({ code: z.string() }).passthrough() } } } },
-  responses: { 200: { description: 'Updated', content: { 'application/json': { schema: SuccessResponseSchema } } } },
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({ code: z.string() }).passthrough(),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Updated',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+  },
 })
 
 registry.registerPath({
@@ -727,7 +922,12 @@ registry.registerPath({
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
   request: { query: z.object({ code: z.string() }) },
-  responses: { 200: { description: 'Deleted', content: { 'application/json': { schema: SuccessResponseSchema } } } },
+  responses: {
+    200: {
+      description: 'Deleted',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+  },
 })
 
 registry.registerPath({
@@ -737,8 +937,25 @@ registry.registerPath({
   summary: 'Assign Badge',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  request: { body: { content: { 'application/json': { schema: z.object({ badgeCode: z.string(), userIds: z.array(z.string()), reason: z.string().optional() }) } } } },
-  responses: { 200: { description: 'Assigned', content: { 'application/json': { schema: SuccessResponseSchema } } } },
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            badgeCode: z.string(),
+            userIds: z.array(z.string()),
+            reason: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Assigned',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+  },
 })
 
 registry.registerPath({
@@ -748,8 +965,25 @@ registry.registerPath({
   summary: 'Remove Badge',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  request: { body: { content: { 'application/json': { schema: z.object({ badgeCode: z.string(), userIds: z.array(z.string()), reason: z.string().optional() }) } } } },
-  responses: { 200: { description: 'Removed', content: { 'application/json': { schema: SuccessResponseSchema } } } },
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            badgeCode: z.string(),
+            userIds: z.array(z.string()),
+            reason: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Removed',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+  },
 })
 
 // Admin: Analytics
@@ -760,8 +994,19 @@ registry.registerPath({
   summary: 'Analytics',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  request: { query: z.object({ startDate: z.string().optional(), endDate: z.string().optional(), cohort: z.string().optional() }) },
-  responses: { 200: { description: 'OK', content: { 'application/json': { schema: AdminAnalyticsResponseSchema } } } },
+  request: {
+    query: z.object({
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+      cohort: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'OK',
+      content: { 'application/json': { schema: AdminAnalyticsResponseSchema } },
+    },
+  },
 })
 
 // Admin: Exports (CSV)
@@ -772,13 +1017,30 @@ registry.registerPath({
   summary: 'Exports',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  request: { query: z.object({ type: z.enum(['submissions', 'users', 'leaderboard', 'points']), format: z.literal('csv'), startDate: z.string().optional(), endDate: z.string().optional(), activity: z.string().optional(), status: z.string().optional(), cohort: z.string().optional() }) },
+  request: {
+    query: z.object({
+      type: z.enum(['submissions', 'users', 'leaderboard', 'points']),
+      format: z.literal('csv'),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+      activity: z.string().optional(),
+      status: z.string().optional(),
+      cohort: z.string().optional(),
+    }),
+  },
   responses: {
     200: {
       description: 'CSV content',
-      content: { 'text/csv': { schema: z.string().openapi({ example: 'col1,col2\nval1,val2' }) } },
+      content: {
+        'text/csv': {
+          schema: z.string().openapi({ example: 'col1,col2\nval1,val2' }),
+        },
+      },
     },
-    400: { description: 'Invalid query', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    400: {
+      description: 'Invalid query',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
   },
 })
 
@@ -790,7 +1052,12 @@ registry.registerPath({
   summary: 'Kajabi Events',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  responses: { 200: { description: 'OK', content: { 'application/json': { schema: AdminKajabiResponseSchema } } } },
+  responses: {
+    200: {
+      description: 'OK',
+      content: { 'application/json': { schema: AdminKajabiResponseSchema } },
+    },
+  },
 })
 
 registry.registerPath({
@@ -800,8 +1067,24 @@ registry.registerPath({
   summary: 'Kajabi Test Event',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  request: { body: { content: { 'application/json': { schema: z.object({ user_email: z.string().email(), course_name: z.string().optional() }) } } } },
-  responses: { 200: { description: 'Created', content: { 'application/json': { schema: SuccessResponseSchema } } } },
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            user_email: z.string().email(),
+            course_name: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Created',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+  },
 })
 
 registry.registerPath({
@@ -811,8 +1094,19 @@ registry.registerPath({
   summary: 'Kajabi Reprocess',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  request: { body: { content: { 'application/json': { schema: z.object({ event_id: z.string() }) } } } },
-  responses: { 200: { description: 'Reprocessed', content: { 'application/json': { schema: SuccessResponseSchema } } } },
+  request: {
+    body: {
+      content: {
+        'application/json': { schema: z.object({ event_id: z.string() }) },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Reprocessed',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+  },
 })
 
 // Admin: Meta cohorts
@@ -823,7 +1117,12 @@ registry.registerPath({
   summary: 'Cohorts',
   tags: ['Admin'],
   security: [{ ClerkAuth: [] }],
-  responses: { 200: { description: 'OK', content: { 'application/json': { schema: AdminCohortsResponseSchema } } } },
+  responses: {
+    200: {
+      description: 'OK',
+      content: { 'application/json': { schema: AdminCohortsResponseSchema } },
+    },
+  },
 })
 
 // Register webhook security scheme
@@ -832,12 +1131,12 @@ registry.registerComponent('securitySchemes', 'WebhookSignature', {
   in: 'header',
   name: 'X-Kajabi-Signature',
   description: 'Kajabi webhook signature for request verification',
-});
+})
 
 // Generate OpenAPI specification
-const generator = new OpenApiGeneratorV31(registry.definitions);
+const generator = new OpenApiGeneratorV31(registry.definitions)
 
-export const openApiSpec: any = generator.generateDocument({
+export const openApiSpec: OpenAPIObject = generator.generateDocument({
   openapi: '3.1.0',
   info: {
     version: '1.0.0',
@@ -956,7 +1255,7 @@ For API support, contact the development team or refer to the project documentat
       description: 'Health checks and system status',
     },
   ],
-});
+})
 
 // Export for direct use
-export default openApiSpec;
+export default openApiSpec

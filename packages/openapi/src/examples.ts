@@ -1,10 +1,12 @@
 // MS Elevate LEAPS API - Usage Examples
 
-import ElevateAPIClient, { 
+import ElevateAPIClient from './sdk';
+import { 
   APIError, 
   ValidationError,
-  AuthenticationError 
-} from './sdk.js';
+  AuthenticationError,
+  ForbiddenError
+} from '@elevate/types/errors';
 
 // Initialize the client
 const api = new ElevateAPIClient({
@@ -13,37 +15,39 @@ const api = new ElevateAPIClient({
 });
 
 // Example 1: Create a Learn submission
-async function createLearnSubmission() {
+async function _createLearnSubmission() {
   try {
     const submission = await api.createSubmission({
       activityCode: 'LEARN',
       payload: {
         provider: 'SPL',
-        course: 'AI for Educators',
+        courseName: 'AI for Educators',
         completedAt: new Date().toISOString(),
-        certificateFile: 'evidence/learn/user123/certificate.pdf'
+        certificateUrl: 'https://example.com/certificate.pdf'
       },
       visibility: 'PRIVATE'
     });
     
     console.log('Submission created:', submission.data);
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof ValidationError) {
       console.error('Validation errors:', error.details);
     } else if (error instanceof AuthenticationError) {
       console.error('Authentication required');
-    } else {
+    } else if (error instanceof Error) {
       console.error('Submission failed:', error.message);
+    } else {
+      console.error('Unknown error occurred:', error);
     }
   }
 }
 
-// Example 2: Upload evidence file
-async function uploadEvidence(file: File) {
+// Example 2: Upload evidence file  
+async function _uploadEvidence(file: File): Promise<string> {
   try {
     const upload = await api.uploadFile(file, 'EXPLORE');
     console.log('File uploaded:', upload.data);
-    return upload.data.path;
+    return upload.data.path || 'unknown-path';
   } catch (error) {
     console.error('Upload failed:', error);
     throw error;
@@ -51,7 +55,7 @@ async function uploadEvidence(file: File) {
 }
 
 // Example 3: Get user's dashboard data
-async function getUserDashboard() {
+async function _getUserDashboard() {
   try {
     const dashboard = await api.getDashboard();
     console.log('User progress:', dashboard.data.progress);
@@ -62,12 +66,12 @@ async function getUserDashboard() {
 }
 
 // Example 4: Get leaderboard with search
-async function getTopEducators(searchTerm?: string) {
+async function _getTopEducators(searchTerm?: string) {
   try {
     const leaderboard = await api.getLeaderboard({
       period: '30d',
       limit: 10,
-      search: searchTerm
+      ...(searchTerm && { search: searchTerm })
     });
     
     console.log('Top educators:', leaderboard.data);
@@ -78,33 +82,35 @@ async function getTopEducators(searchTerm?: string) {
 }
 
 // Example 5: Admin - Review submissions
-async function reviewSubmissions() {
+async function _reviewSubmissions() {
   try {
     const submissions = await api.getAdminSubmissions({
       status: 'PENDING',
       limit: 50
     });
     
-    console.log(`${submissions.data.length} submissions need review`);
+    console.log(`${submissions.data.submissions.length} submissions need review`);
     return submissions.data;
   } catch (error) {
     if (error instanceof ForbiddenError) {
       console.error('Admin access required');
+      return [];
     } else {
       console.error('Failed to fetch submissions:', error);
+      return [];
     }
   }
 }
 
 // Example 6: Complete submission workflow
-async function completeExploreSubmission(
+async function _completeExploreSubmission(
   reflectionText: string, 
   evidenceFiles: File[]
 ) {
   try {
     // 1. Upload evidence files
     const uploadedFiles = await Promise.all(
-      evidenceFiles.map(file => uploadEvidence(file))
+      evidenceFiles.map(file => _uploadEvidence(file))
     );
     
     // 2. Create submission
@@ -112,7 +118,7 @@ async function completeExploreSubmission(
       activityCode: 'EXPLORE',
       payload: {
         reflection: reflectionText,
-        classDate: new Date().toISOString().split('T')[0],
+        classDate: new Date().toISOString().split('T')[0] as string,
         school: 'SDN 123 Jakarta',
         evidenceFiles: uploadedFiles
       },
@@ -128,13 +134,13 @@ async function completeExploreSubmission(
 }
 
 // Example 7: Error handling patterns
-async function handleAPIErrors() {
+async function _handleAPIErrors() {
   try {
     await api.createSubmission({
       activityCode: 'LEARN',
       payload: {
         provider: 'SPL',
-        course: '', // This will cause validation error
+        courseName: '', // This will cause validation error
         completedAt: new Date().toISOString()
       }
     });

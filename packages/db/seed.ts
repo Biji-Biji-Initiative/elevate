@@ -1,38 +1,43 @@
-import { prisma } from './client.js'
-import { toPrismaJson } from './src/utils.js'
+import { ACTIVITY_CODES, USER_ROLES } from '@elevate/types/domain-constants'
+
+import { prisma } from './src/client'
+import { toPrismaJson } from './src/utils'
+
+import type { Prisma } from '@prisma/client'
 
 async function main() {
   console.log('🌱 Seeding database...')
 
   // Seed LEAPS activities
   console.log('📚 Seeding activities...')
-  const activities = [
+  type SeedActivity = { code: string; name: string; default_points: number; description: string }
+  const activities: SeedActivity[] = [
     { 
-      code: 'LEARN', 
+      code: ACTIVITY_CODES[0], // LEARN
       name: 'Learn', 
       default_points: 20,
       description: 'Complete AI training courses and earn certificates'
     },
     { 
-      code: 'EXPLORE', 
+      code: ACTIVITY_CODES[1], // EXPLORE
       name: 'Explore', 
       default_points: 50,
       description: 'Apply AI tools in classroom teaching with evidence'
     },
     { 
-      code: 'AMPLIFY', 
+      code: ACTIVITY_CODES[2], // AMPLIFY
       name: 'Amplify', 
       default_points: 0, // Variable points based on peer/student count
       description: 'Train other educators and students on AI usage'
     },
     { 
-      code: 'PRESENT', 
+      code: ACTIVITY_CODES[3], // PRESENT
       name: 'Present', 
       default_points: 20,
       description: 'Share your AI journey publicly on LinkedIn'
     },
     { 
-      code: 'SHINE', 
+      code: ACTIVITY_CODES[4], // SHINE
       name: 'Shine', 
       default_points: 0, // Recognition only in MVP
       description: 'Submit innovative AI ideas for recognition'
@@ -57,25 +62,26 @@ async function main() {
 
   // Seed initial badges (optional for MVP)
   console.log('🏆 Seeding badges...')
-  const badges = [
+  type SeedBadge = { code: string; name: string; description: string; criteria: Prisma.InputJsonValue }
+  const badges: SeedBadge[] = [
     {
       code: 'FIRST_LEARN',
       name: 'First Steps',
       description: 'Completed your first Learn activity',
-      criteria: toPrismaJson({ activity: 'LEARN', count: 1 }),
+      criteria: toPrismaJson({ activity: ACTIVITY_CODES[0], count: 1 }), // LEARN
     },
     {
       code: 'EXPLORER',
       name: 'AI Explorer',
       description: 'Successfully applied AI in the classroom',
-      criteria: toPrismaJson({ activity: 'EXPLORE', count: 1 }),
+      criteria: toPrismaJson({ activity: ACTIVITY_CODES[1], count: 1 }), // EXPLORE
     },
     {
       code: 'AMPLIFIER',
       name: 'Knowledge Amplifier',
       description: 'Trained 10+ peers or 25+ students',
       criteria: toPrismaJson({ 
-        activity: 'AMPLIFY', 
+        activity: ACTIVITY_CODES[2], // AMPLIFY
         peers: 10, 
         students: 25 
       }),
@@ -84,7 +90,7 @@ async function main() {
       code: 'PUBLIC_VOICE',
       name: 'Public Voice',
       description: 'Shared your AI journey publicly',
-      criteria: toPrismaJson({ activity: 'PRESENT', count: 1 }),
+      criteria: toPrismaJson({ activity: ACTIVITY_CODES[3], count: 1 }), // PRESENT
     },
   ]
 
@@ -114,14 +120,14 @@ async function main() {
     const adminUser = await prisma.user.upsert({
       where: { id },
       update: { 
-        role: 'ADMIN' as const, 
+        role: USER_ROLES[2] as const, // ADMIN 
         email, 
         name, 
         handle 
       },
       create: { 
         id, 
-        role: 'ADMIN' as const, 
+        role: USER_ROLES[2] as const, // ADMIN 
         email, 
         name, 
         handle 

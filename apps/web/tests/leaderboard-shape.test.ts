@@ -37,8 +37,8 @@ describe('Leaderboard API - basic shape', () => {
     ])
     earnedBadgeFindManyMock.mockResolvedValueOnce([])
 
-    const req = { url: 'http://localhost/api/leaderboard?period=all&limit=2&offset=0' } as any
-    const res = await GET(req as any)
+    const req = new Request('http://localhost/api/leaderboard?period=all&limit=2&offset=0')
+    const res = await GET(req)
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.success).toBe(true)
@@ -50,4 +50,3 @@ describe('Leaderboard API - basic shape', () => {
     expect(json.data[0]).toHaveProperty('user')
   })
 })
-

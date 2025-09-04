@@ -1,4 +1,7 @@
 #!/usr/bin/env tsx
+/* eslint-env node */
+/* eslint no-console: off */
+/* eslint @typescript-eslint/no-unsafe-assignment: off, @typescript-eslint/no-unsafe-member-access: off, @typescript-eslint/no-unsafe-call: off, @typescript-eslint/no-unsafe-return: off, @typescript-eslint/no-unsafe-argument: off, @typescript-eslint/consistent-type-exports: off */
 /**
  * Migration status checker for @elevate/db
  * 

@@ -119,7 +119,7 @@ export function isCanonicalProfileUrl(url: string): boolean {
     }
     
     // Check if path matches /u/[handle] format
-    const pathMatch = parsedUrl.pathname.match(/^\/u\/([^\/]+)$/)
+    const pathMatch = parsedUrl.pathname.match(new RegExp('^/u/([^/]+)$'))
     if (!pathMatch) {
       return false
     }
@@ -153,7 +153,7 @@ export function extractHandleFromUrl(url: string): string | null {
     }
     
     // Extract handle from path
-    const pathMatch = parsedUrl.pathname.match(/^\/u\/([^\/]+)$/)
+    const pathMatch = parsedUrl.pathname.match(new RegExp('^/u/([^/]+)$'))
     if (!pathMatch) {
       return null
     }

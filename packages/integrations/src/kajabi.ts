@@ -1,5 +1,4 @@
-import axios from 'axios';
-import type { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
+import axios, { type AxiosInstance, type AxiosResponse, type AxiosError } from 'axios';
 
 // Helper function to extract error message from Axios error
 function extractAxiosErrorMessage(error: unknown): string {

@@ -1,43 +1,17 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+
 import Image from 'next/image'
 
-import { adminClient } from '@/lib/admin-client'
+import { adminClient, type AdminBadge, type AdminUser } from '@/lib/admin-client'
 import { withRoleGuard } from '@elevate/auth/context'
-import { Button, Input, Textarea, DataTable, Modal, ConfirmModal, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, createColumns, Alert } from '@elevate/ui'
+import { Button, Input, Textarea, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
+import { DataTable, Modal, ConfirmModal, createColumns } from '@elevate/ui/blocks'
 
-type Badge = {
-  code: string
-  name: string
-  description: string
-  criteria: {
-    type: 'points' | 'submissions' | 'activities' | 'streak'
-    threshold: number
-    activity_codes?: string[] | undefined
-    conditions?: Record<string, unknown> | undefined // Keep flexible for badge conditions
-  }
-  icon_url?: string | undefined
-  earned_badges?: {
-    id: string
-    user: {
-      id: string
-      name: string
-      handle: string
-    }
-    earned_at: string
-  }[] | undefined
-  _count?: {
-    earned_badges?: number | undefined
-  } | undefined
-}
+type Badge = AdminBadge
 
-interface User {
-  id: string
-  name: string
-  handle: string
-  email: string
-}
+type User = AdminUser
 
 function BadgesPage() {
   const [badges, setBadges] = useState<Badge[]>([])

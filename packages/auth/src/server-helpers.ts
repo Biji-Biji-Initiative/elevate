@@ -1,30 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser, requireRole, RoleError } from './withRole.js'
-import type { RoleName, AuthUser } from './types.js'
+import { NextResponse, type NextRequest } from 'next/server'
+
 import type { LogContext } from '@elevate/logging'
+import type { ServerLogger } from '@elevate/logging/server'
+
+import { getCurrentUser, requireRole, RoleError } from './withRole'
+
+import type { RoleName, AuthUser } from './types'
 
 // Dynamic logger initialization for server-side only
-let logger: any = null
+let logger: ServerLogger | null = null
 const initializeLogger = async () => {
   if (typeof window === 'undefined' && typeof process !== 'undefined' && !logger) {
     try {
       const { getServerLogger } = await import('@elevate/logging/server')
       logger = getServerLogger({ name: 'elevate-auth' })
-    } catch (error) {
-      // Fallback to console if logging not available
-      console.warn('Failed to initialize auth logger, falling back to console')
+    } catch {
+      // No logger available in this environment
     }
   }
 }
 
 // Initialize logger asynchronously
 initializeLogger().catch(() => {
-  // Silent catch - fallback to console logging
+  // Silent catch: logger remains null
 })
 
 // Re-export commonly used functions
-export { requireRole, getCurrentUser, RoleError } from './withRole.js'
-export { hasRole } from './types.js'
+export { requireRole, getCurrentUser, RoleError } from './withRole'
+export { hasRole } from './types'
 
 /**
  * API route handler with role protection and logging
@@ -54,7 +57,7 @@ export function createProtectedApiHandler(
       if (logger) {
         logger.auth({
           action: 'role_check',
-          userId: user.id,
+          userId: user.userId,
           role: user.role,
           success: true,
         }, {
@@ -75,7 +78,7 @@ export function createProtectedApiHandler(
           duration,
         }, {
           ...requestContext,
-          userId: user.id,
+          userId: user.userId,
           role: user.role,
         })
       }
@@ -97,8 +100,6 @@ export function createProtectedApiHandler(
             statusCode: error.statusCode,
             duration,
           })
-        } else {
-          console.warn('Role access denied:', error.message, { url: req.url, minRole })
         }
 
         return NextResponse.json(
@@ -118,8 +119,6 @@ export function createProtectedApiHandler(
             statusCode,
             duration,
           })
-        } else {
-          console.error('API auth error:', error.message, { url: req.url })
         }
 
         const errorMessage = statusCode === 401 ? 'Authentication required' :
@@ -139,8 +138,6 @@ export function createProtectedApiHandler(
           statusCode: 500,
           duration,
         })
-      } else {
-        console.error('Unknown API error:', error, { url: req.url })
       }
 
       return NextResponse.json(
@@ -202,7 +199,7 @@ export async function validateAuth(minRole?: RoleName) {
  */
 export function createErrorResponse(
   error: unknown, 
-  fallbackStatus: number = 500, 
+  fallbackStatus = 500, 
   context?: LogContext
 ): NextResponse {
   if (error instanceof RoleError) {
@@ -214,8 +211,6 @@ export function createErrorResponse(
         error: error.message,
         statusCode: error.statusCode,
       })
-    } else {
-      console.warn('Role error:', error.message, context)
     }
 
     return NextResponse.json(
@@ -232,8 +227,6 @@ export function createErrorResponse(
         action: 'api_error',
         statusCode: fallbackStatus,
       })
-    } else {
-      console.error('API error:', error.message, context)
     }
 
     return NextResponse.json(
@@ -249,8 +242,6 @@ export function createErrorResponse(
       action: 'unknown_error',
       statusCode: fallbackStatus,
     })
-  } else {
-    console.error('Unknown error:', error, context)
   }
 
   return NextResponse.json(
@@ -265,14 +256,13 @@ export function createErrorResponse(
 export const authLogger = {
   login: (userId: string, success: boolean, provider?: string, context?: LogContext) => {
     if (logger) {
-      logger.auth({
+      const payload: { action: 'login'; userId: string; success: boolean; provider?: string } = {
         action: 'login',
         userId,
         success,
-        provider,
-      }, context)
-    } else {
-      console.log(`Login ${success ? 'success' : 'failed'} for user ${userId}`, { provider, ...context })
+      }
+      if (typeof provider === 'string') payload.provider = provider
+      logger.auth(payload, context)
     }
   },
 
@@ -283,8 +273,6 @@ export const authLogger = {
         userId,
         success: true,
       }, context)
-    } else {
-      console.log(`User ${userId} logged out`, context)
     }
   },
 
@@ -299,23 +287,21 @@ export const authLogger = {
         ...context,
         requiredRole,
       })
-    } else {
-      console.log(
-        `Role check ${success ? 'passed' : 'failed'} for user ${userId} (has: ${role}, needs: ${requiredRole})`,
-        context
-      )
     }
   },
 
-  securityEvent: (event: string, severity: 'low' | 'medium' | 'high' | 'critical', details: Record<string, unknown>, context?: LogContext) => {
+  securityEvent: (
+    event: 'csrf_violation' | 'csp_violation' | 'rate_limit_hit' | 'auth_failure' | 'suspicious_activity',
+    severity: 'low' | 'medium' | 'high' | 'critical',
+    details: Record<string, unknown>,
+    context?: LogContext
+  ) => {
     if (logger) {
       logger.security({
         event,
         severity,
         details,
       }, context)
-    } else {
-      console.warn(`Security event (${severity}): ${event}`, { details, ...context })
     }
   },
 }

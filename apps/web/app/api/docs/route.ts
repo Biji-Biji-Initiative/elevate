@@ -1,14 +1,13 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { spec } from '@elevate/openapi';
+import { createSuccessResponse } from '@elevate/http'
+import { spec } from '@elevate/openapi'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 export async function GET() {
-  return NextResponse.json({ success: true, data: spec }, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-    },
-  });
+  const res = createSuccessResponse(spec)
+  res.headers.set('Content-Type', 'application/json')
+  res.headers.set('Cache-Control', 'public, max-age=3600')
+  return res
 }

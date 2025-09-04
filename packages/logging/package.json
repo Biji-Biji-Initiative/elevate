@@ -6,20 +6,19 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/js/index.js"
     },
     "./client": {
       "types": "./dist/types/client.d.ts",
-      "import": "./dist/client.js",
-      "require": "./dist/client.cjs"
+      "import": "./dist/js/client.js"
     },
     "./server": {
       "types": "./dist/types/server.d.ts",
-      "import": "./dist/server.js", 
-      "require": "./dist/server.cjs"
+      "import": "./dist/js/server.js"
     }
   },
+  "main": "./dist/js/index.js",
+  "types": "./dist/types/index.d.ts",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -42,7 +41,18 @@
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   },
-  "peerDependencies": {
-    "zod": "^3.25.76"
+  "sideEffects": false,
+  "engines": { "node": ">=20.11" },
+  "files": [
+    "dist/js",
+    "dist/types",
+    "README.md",
+    "LICENSE",
+    "dist/js/**/*.map"
+  ],
+  "typesVersions": {
+    "*": {
+      "*": ["dist/types/*"]
+    }
   }
 }

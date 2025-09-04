@@ -1,11 +1,11 @@
-import { defineConfig } from 'tsup'
+import baseTsup from '../../tsup.base.mjs'
 
-export default defineConfig({
-  entry: ['src/index.ts', 'src/schemas.ts', 'src/query-schemas.ts'],
-  format: ['esm'],
-  outDir: 'dist/js',
-  dts: false,
-  sourcemap: true,
-  clean: true,
+export default baseTsup({
+  entry: {
+    index: 'src/index.ts',
+    'error-utils': 'src/error-utils.ts',
+    middleware: 'src/middleware.ts',
+    'test-utils': 'src/test-utils.ts',
+  },
   external: ['zod'],
 })

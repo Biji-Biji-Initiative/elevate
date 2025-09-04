@@ -4,14 +4,143 @@
 
 ```ts
 
-import type { ActivityCode } from '@elevate/types';
-import type { ActivityPayload } from '@elevate/types';
-
 // @public (undocumented)
 export function badgesToAward(progress: UserProgress): string[];
 
 // @public (undocumented)
-export function computePoints(activity: ActivityCode, payload: ActivityPayload): number;
+export function buildActivityNameMap(activities: Array<{
+    code: string;
+    name: string;
+}>): Record<string, string>;
+
+// @public (undocumented)
+export function computeActivationRate(active: number, total: number): number;
+
+// @public (undocumented)
+export function computeApprovalRate(approved: number, rejected: number): number;
+
+// @public (undocumented)
+export function computeDailySubmissionStats(submissions: DailySubmission[]): Array<{
+    date: string;
+    total: number;
+    approved: number;
+    rejected: number;
+    pending: number;
+}>;
+
+// Warning: (ae-forgotten-export) The symbol "ActivityCode" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function computePoints(activity: ActivityCode, payload: unknown): number;
+
+// @public (undocumented)
+export type DailySubmission = {
+    created_at: Date;
+    status: string;
+};
+
+// Warning: (ae-forgotten-export) The symbol "StageCounts" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function formatActivityBreakdown(breakdown: Record<string, StageCounts> | null | undefined): Partial<Record<ActivityCode, StageCounts>>;
+
+// @public (undocumented)
+export function formatCohortPerformanceStats(rows: Array<{
+    cohort_name: string;
+    user_count: number;
+    avg_points_per_user: number;
+}>): Array<{
+    name: string;
+    count: number;
+    avgPoints: number;
+}>;
+
+// @public (undocumented)
+export function formatMonthlyGrowthStats(rows: Array<{
+    month_label: string;
+    new_educators: number;
+    new_submissions: number;
+}>): Array<{
+    month: string;
+    educators: number;
+    submissions: number;
+}>;
+
+// @public (undocumented)
+export type GroupByPerformanceRow = {
+    reviewer_id: string | null;
+    status: string;
+    _count: number;
+};
+
+// @public (undocumented)
+export function mapActivityDistribution(result: Array<{
+    activity_code: string;
+    _count: number;
+}>, activityMap: Record<string, string>): Array<{
+    activity: ActivityCode | string;
+    activityName: string;
+    count: number;
+}>;
+
+// @public (undocumented)
+export function mapPointsByActivityDistribution(result: Array<{
+    activity_code: string;
+    _sum: {
+        delta_points: number | null;
+    };
+    _count: number;
+}>, activityMap: Record<string, string>): Array<{
+    activity: ActivityCode | string;
+    activityName: string;
+    totalPoints: number;
+    entries: number;
+}>;
+
+// @public (undocumented)
+export function mapPointsDistributionFromUserTotals(totals: number[]): {
+    totalUsers: number;
+    max: number;
+    min: number;
+    avg: number;
+    percentiles: Array<{
+        percentile: number;
+        value: number;
+    }>;
+};
+
+// @public (undocumented)
+export function mapReviewerPerformance(reviewers: Reviewer[], performance: GroupByPerformanceRow[]): Array<{
+    id: string;
+    name: string;
+    handle: string;
+    role: string;
+    approved: number;
+    rejected: number;
+    total: number;
+}>;
+
+// Warning: (ae-forgotten-export) The symbol "TopBadge" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function mapTopBadges(result: Array<{
+    badge_code: string;
+    _count: number;
+}>, badges: Array<{
+    code: string;
+    name: string;
+    description: string;
+    criteria: unknown;
+    icon_url: string | null;
+}>): TopBadge[];
+
+// @public (undocumented)
+export type Reviewer = {
+    id: string;
+    name: string;
+    handle: string;
+    role: string;
+};
 
 // @public (undocumented)
 export type Stage = 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE';

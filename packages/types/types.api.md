@@ -7,26 +7,684 @@
 import { z } from 'zod';
 
 // @public (undocumented)
-export type ActivityCode = 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE';
+export interface Activity {
+    // (undocumented)
+    code: string;
+    // (undocumented)
+    default_points: number;
+    // (undocumented)
+    name: string;
+}
+
+// @public
+export const ACTIVITY_CODES: readonly ["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"];
+
+// @public
+export const ACTIVITY_FILTER_OPTIONS: readonly ["ALL", "LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"];
+
+// @public (undocumented)
+export type ActivityCode = typeof ACTIVITY_CODES[number];
+
+// @public (undocumented)
+export const ActivityCodeEnum: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
 
 // @public (undocumented)
 export const ActivityCodeSchema: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
 
 // @public (undocumented)
-export type ActivityCodeType = z.infer<typeof ActivityCodeSchema>;
+export type ActivityCodeType = ActivityCode;
 
 // @public (undocumented)
-export interface ActivityDistribution {
-    // (undocumented)
-    activity: ActivityCode;
-    // (undocumented)
-    activityName: string;
-    // (undocumented)
-    count: number;
-}
+export type ActivityFilterOption = typeof ACTIVITY_FILTER_OPTIONS[number];
 
 // @public (undocumented)
-export type ActivityPayload = LearnInput | ExploreInput | AmplifyInput | PresentInput | ShineInput;
+export const ActivityFilterSchema: z.ZodEnum<["ALL", "LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+
+// @public (undocumented)
+export type ActivityLeaderboardEntry = z.infer<typeof ActivityLeaderboardEntrySchema>;
+
+// @public (undocumented)
+export const ActivityLeaderboardEntrySchema: z.ZodObject<{
+    user_id: z.ZodString;
+    handle: z.ZodString;
+    name: z.ZodString;
+    avatar_url: z.ZodNullable<z.ZodString>;
+    total_points: z.ZodNumber;
+    submission_count: z.ZodNumber;
+    latest_submission_at: z.ZodNullable<z.ZodDate>;
+}, "strip", z.ZodTypeAny, {
+    name: string;
+    handle: string;
+    user_id: string;
+    avatar_url: string | null;
+    total_points: number;
+    latest_submission_at: Date | null;
+    submission_count: number;
+}, {
+    name: string;
+    handle: string;
+    user_id: string;
+    avatar_url: string | null;
+    total_points: number;
+    latest_submission_at: Date | null;
+    submission_count: number;
+}>;
+
+// @public (undocumented)
+export type ActivityMetrics = z.infer<typeof ActivityMetricsSchema>;
+
+// @public (undocumented)
+export const ActivityMetricsSchema: z.ZodObject<{
+    code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+    name: z.ZodString;
+    default_points: z.ZodNumber;
+    total_submissions: z.ZodNumber;
+    pending_submissions: z.ZodNumber;
+    approved_submissions: z.ZodNumber;
+    rejected_submissions: z.ZodNumber;
+    public_submissions: z.ZodNumber;
+    total_points_awarded: z.ZodNumber;
+    positive_points_awarded: z.ZodNumber;
+    negative_points_awarded: z.ZodNumber;
+    avg_points_per_entry: z.ZodNumber;
+    first_submission_at: z.ZodNullable<z.ZodDate>;
+    latest_submission_at: z.ZodNullable<z.ZodDate>;
+    unique_participants: z.ZodNumber;
+    unique_approved_participants: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    name: string;
+    default_points: number;
+    public_submissions: number;
+    pending_submissions: number;
+    total_submissions: number;
+    approved_submissions: number;
+    rejected_submissions: number;
+    total_points_awarded: number;
+    positive_points_awarded: number;
+    negative_points_awarded: number;
+    avg_points_per_entry: number;
+    first_submission_at: Date | null;
+    latest_submission_at: Date | null;
+    unique_participants: number;
+    unique_approved_participants: number;
+}, {
+    code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    name: string;
+    default_points: number;
+    public_submissions: number;
+    pending_submissions: number;
+    total_submissions: number;
+    approved_submissions: number;
+    rejected_submissions: number;
+    total_points_awarded: number;
+    positive_points_awarded: number;
+    negative_points_awarded: number;
+    avg_points_per_entry: number;
+    first_submission_at: Date | null;
+    latest_submission_at: Date | null;
+    unique_participants: number;
+    unique_approved_participants: number;
+}>;
+
+// @public (undocumented)
+export const ActivitySchema: z.ZodObject<{
+    code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+    name: z.ZodString;
+    default_points: z.ZodOptional<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    name: string;
+    default_points?: number | undefined;
+}, {
+    code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    name: string;
+    default_points?: number | undefined;
+}>;
+
+// @public
+export function addAuthHeader(headers: Record<string, string>, token: string): Record<string, string>;
+
+// @public (undocumented)
+export const AdminBadgeSchema: z.ZodObject<{
+    code: z.ZodString;
+    name: z.ZodString;
+    description: z.ZodString;
+    criteria: z.ZodObject<{
+        type: z.ZodEnum<["points", "submissions", "activities", "streak"]>;
+        threshold: z.ZodNumber;
+        activity_codes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        conditions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>>>;
+    }, "strip", z.ZodTypeAny, {
+        type: "points" | "submissions" | "activities" | "streak";
+        threshold: number;
+        activity_codes?: string[] | undefined;
+        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+    }, {
+        type: "points" | "submissions" | "activities" | "streak";
+        threshold: number;
+        activity_codes?: string[] | undefined;
+        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+    }>;
+    icon_url: z.ZodOptional<z.ZodString>;
+    _count: z.ZodOptional<z.ZodObject<{
+        earned_badges: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        earned_badges: number;
+    }, {
+        earned_badges: number;
+    }>>;
+    earned_badges: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        user: z.ZodObject<{
+            id: z.ZodString;
+            name: z.ZodString;
+            handle: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            name: string;
+            handle: string;
+            id: string;
+        }, {
+            name: string;
+            handle: string;
+            id: string;
+        }>;
+        earned_at: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        user: {
+            name: string;
+            handle: string;
+            id: string;
+        };
+        id: string;
+        earned_at: string;
+    }, {
+        user: {
+            name: string;
+            handle: string;
+            id: string;
+        };
+        id: string;
+        earned_at: string;
+    }>, "many">>;
+}, "strip", z.ZodTypeAny, {
+    code: string;
+    name: string;
+    description: string;
+    criteria: {
+        type: "points" | "submissions" | "activities" | "streak";
+        threshold: number;
+        activity_codes?: string[] | undefined;
+        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+    };
+    icon_url?: string | undefined;
+    _count?: {
+        earned_badges: number;
+    } | undefined;
+    earned_badges?: {
+        user: {
+            name: string;
+            handle: string;
+            id: string;
+        };
+        id: string;
+        earned_at: string;
+    }[] | undefined;
+}, {
+    code: string;
+    name: string;
+    description: string;
+    criteria: {
+        type: "points" | "submissions" | "activities" | "streak";
+        threshold: number;
+        activity_codes?: string[] | undefined;
+        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+    };
+    icon_url?: string | undefined;
+    _count?: {
+        earned_badges: number;
+    } | undefined;
+    earned_badges?: {
+        user: {
+            name: string;
+            handle: string;
+            id: string;
+        };
+        id: string;
+        earned_at: string;
+    }[] | undefined;
+}>;
+
+// @public (undocumented)
+export const AdminSubmissionSchema: z.ZodObject<{
+    id: z.ZodString;
+    created_at: z.ZodString;
+    updated_at: z.ZodOptional<z.ZodString>;
+    status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+    visibility: z.ZodEnum<["PRIVATE", "PUBLIC"]>;
+    review_note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    points_awarded: z.ZodOptional<z.ZodNumber>;
+    payload: z.ZodEffects<z.ZodDiscriminatedUnion<"activityCode", [z.ZodObject<{
+        activityCode: z.ZodLiteral<"LEARN">;
+        data: z.ZodObject<{
+            provider: z.ZodEnum<["SPL", "ILS"]>;
+            course_name: z.ZodString;
+            certificate_url: z.ZodOptional<z.ZodString>;
+            completed_at: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            provider: "SPL" | "ILS";
+            course_name: string;
+            completed_at: string;
+            certificate_url?: string | undefined;
+        }, {
+            provider: "SPL" | "ILS";
+            course_name: string;
+            completed_at: string;
+            certificate_url?: string | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        activityCode: "LEARN";
+        data: {
+            provider: "SPL" | "ILS";
+            course_name: string;
+            completed_at: string;
+            certificate_url?: string | undefined;
+        };
+    }, {
+        activityCode: "LEARN";
+        data: {
+            provider: "SPL" | "ILS";
+            course_name: string;
+            completed_at: string;
+            certificate_url?: string | undefined;
+        };
+    }>, z.ZodObject<{
+        activityCode: z.ZodLiteral<"EXPLORE">;
+        data: z.ZodObject<{
+            reflection: z.ZodString;
+            class_date: z.ZodString;
+            school: z.ZodOptional<z.ZodString>;
+            evidence_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            reflection: string;
+            class_date: string;
+            school?: string | undefined;
+            evidence_files?: string[] | undefined;
+        }, {
+            reflection: string;
+            class_date: string;
+            school?: string | undefined;
+            evidence_files?: string[] | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        activityCode: "EXPLORE";
+        data: {
+            reflection: string;
+            class_date: string;
+            school?: string | undefined;
+            evidence_files?: string[] | undefined;
+        };
+    }, {
+        activityCode: "EXPLORE";
+        data: {
+            reflection: string;
+            class_date: string;
+            school?: string | undefined;
+            evidence_files?: string[] | undefined;
+        };
+    }>, z.ZodObject<{
+        activityCode: z.ZodLiteral<"AMPLIFY">;
+        data: z.ZodObject<{
+            peers_trained: z.ZodNumber;
+            students_trained: z.ZodNumber;
+            attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            peers_trained: number;
+            students_trained: number;
+            attendance_proof_files?: string[] | undefined;
+        }, {
+            peers_trained: number;
+            students_trained: number;
+            attendance_proof_files?: string[] | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        activityCode: "AMPLIFY";
+        data: {
+            peers_trained: number;
+            students_trained: number;
+            attendance_proof_files?: string[] | undefined;
+        };
+    }, {
+        activityCode: "AMPLIFY";
+        data: {
+            peers_trained: number;
+            students_trained: number;
+            attendance_proof_files?: string[] | undefined;
+        };
+    }>, z.ZodObject<{
+        activityCode: z.ZodLiteral<"PRESENT">;
+        data: z.ZodObject<{
+            linkedin_url: z.ZodString;
+            screenshot_url: z.ZodOptional<z.ZodString>;
+            caption: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            linkedin_url: string;
+            caption: string;
+            screenshot_url?: string | undefined;
+        }, {
+            linkedin_url: string;
+            caption: string;
+            screenshot_url?: string | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        activityCode: "PRESENT";
+        data: {
+            linkedin_url: string;
+            caption: string;
+            screenshot_url?: string | undefined;
+        };
+    }, {
+        activityCode: "PRESENT";
+        data: {
+            linkedin_url: string;
+            caption: string;
+            screenshot_url?: string | undefined;
+        };
+    }>, z.ZodObject<{
+        activityCode: z.ZodLiteral<"SHINE">;
+        data: z.ZodObject<{
+            idea_title: z.ZodString;
+            idea_summary: z.ZodString;
+            attachments: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            idea_title: string;
+            idea_summary: string;
+            attachments?: string[] | undefined;
+        }, {
+            idea_title: string;
+            idea_summary: string;
+            attachments?: string[] | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        activityCode: "SHINE";
+        data: {
+            idea_title: string;
+            idea_summary: string;
+            attachments?: string[] | undefined;
+        };
+    }, {
+        activityCode: "SHINE";
+        data: {
+            idea_title: string;
+            idea_summary: string;
+            attachments?: string[] | undefined;
+        };
+    }>]>, {
+        provider: "SPL" | "ILS";
+        course_name: string;
+        completed_at: string;
+        certificate_url?: string | undefined;
+    } | {
+        reflection: string;
+        class_date: string;
+        school?: string | undefined;
+        evidence_files?: string[] | undefined;
+    } | {
+        peers_trained: number;
+        students_trained: number;
+        attendance_proof_files?: string[] | undefined;
+    } | {
+        linkedin_url: string;
+        caption: string;
+        screenshot_url?: string | undefined;
+    } | {
+        idea_title: string;
+        idea_summary: string;
+        attachments?: string[] | undefined;
+    }, {
+        activityCode: "LEARN";
+        data: {
+            provider: "SPL" | "ILS";
+            course_name: string;
+            completed_at: string;
+            certificate_url?: string | undefined;
+        };
+    } | {
+        activityCode: "EXPLORE";
+        data: {
+            reflection: string;
+            class_date: string;
+            school?: string | undefined;
+            evidence_files?: string[] | undefined;
+        };
+    } | {
+        activityCode: "AMPLIFY";
+        data: {
+            peers_trained: number;
+            students_trained: number;
+            attendance_proof_files?: string[] | undefined;
+        };
+    } | {
+        activityCode: "PRESENT";
+        data: {
+            linkedin_url: string;
+            caption: string;
+            screenshot_url?: string | undefined;
+        };
+    } | {
+        activityCode: "SHINE";
+        data: {
+            idea_title: string;
+            idea_summary: string;
+            attachments?: string[] | undefined;
+        };
+    }>;
+    attachmentCount: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+    attachments_rel: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        submission_id: z.ZodString;
+        path: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        path: string;
+        id: string;
+        submission_id: string;
+    }, {
+        path: string;
+        id: string;
+        submission_id: string;
+    }>, "many">>>;
+    user: z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        handle: z.ZodString;
+        email: z.ZodOptional<z.ZodString>;
+        school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        handle: string;
+        id: string;
+        email?: string | undefined;
+        school?: string | null | undefined;
+        cohort?: string | null | undefined;
+    }, {
+        name: string;
+        handle: string;
+        id: string;
+        email?: string | undefined;
+        school?: string | null | undefined;
+        cohort?: string | null | undefined;
+    }>;
+    activity: z.ZodObject<{
+        code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+        name: z.ZodString;
+        default_points: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        name: string;
+        default_points?: number | undefined;
+    }, {
+        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        name: string;
+        default_points?: number | undefined;
+    }>;
+    reviewer: z.ZodOptional<z.ZodNullable<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        handle: z.ZodString;
+        email: z.ZodOptional<z.ZodString>;
+        school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        handle: string;
+        id: string;
+        email?: string | undefined;
+        school?: string | null | undefined;
+        cohort?: string | null | undefined;
+    }, {
+        name: string;
+        handle: string;
+        id: string;
+        email?: string | undefined;
+        school?: string | null | undefined;
+        cohort?: string | null | undefined;
+    }>>>;
+    reviewed_at: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+}, "strip", z.ZodTypeAny, {
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    activity: {
+        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        name: string;
+        default_points?: number | undefined;
+    };
+    created_at: string;
+    user: {
+        name: string;
+        handle: string;
+        id: string;
+        email?: string | undefined;
+        school?: string | null | undefined;
+        cohort?: string | null | undefined;
+    };
+    id: string;
+    visibility: "PRIVATE" | "PUBLIC";
+    payload: {
+        provider: "SPL" | "ILS";
+        course_name: string;
+        completed_at: string;
+        certificate_url?: string | undefined;
+    } | {
+        reflection: string;
+        class_date: string;
+        school?: string | undefined;
+        evidence_files?: string[] | undefined;
+    } | {
+        peers_trained: number;
+        students_trained: number;
+        attendance_proof_files?: string[] | undefined;
+    } | {
+        linkedin_url: string;
+        caption: string;
+        screenshot_url?: string | undefined;
+    } | {
+        idea_title: string;
+        idea_summary: string;
+        attachments?: string[] | undefined;
+    };
+    attachmentCount: number;
+    attachments_rel: {
+        path: string;
+        id: string;
+        submission_id: string;
+    }[];
+    points_awarded?: number | undefined;
+    updated_at?: string | undefined;
+    review_note?: string | null | undefined;
+    reviewer?: {
+        name: string;
+        handle: string;
+        id: string;
+        email?: string | undefined;
+        school?: string | null | undefined;
+        cohort?: string | null | undefined;
+    } | null | undefined;
+    reviewed_at?: string | null | undefined;
+}, {
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    activity: {
+        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        name: string;
+        default_points?: number | undefined;
+    };
+    created_at: string;
+    user: {
+        name: string;
+        handle: string;
+        id: string;
+        email?: string | undefined;
+        school?: string | null | undefined;
+        cohort?: string | null | undefined;
+    };
+    id: string;
+    visibility: "PRIVATE" | "PUBLIC";
+    payload: {
+        activityCode: "LEARN";
+        data: {
+            provider: "SPL" | "ILS";
+            course_name: string;
+            completed_at: string;
+            certificate_url?: string | undefined;
+        };
+    } | {
+        activityCode: "EXPLORE";
+        data: {
+            reflection: string;
+            class_date: string;
+            school?: string | undefined;
+            evidence_files?: string[] | undefined;
+        };
+    } | {
+        activityCode: "AMPLIFY";
+        data: {
+            peers_trained: number;
+            students_trained: number;
+            attendance_proof_files?: string[] | undefined;
+        };
+    } | {
+        activityCode: "PRESENT";
+        data: {
+            linkedin_url: string;
+            caption: string;
+            screenshot_url?: string | undefined;
+        };
+    } | {
+        activityCode: "SHINE";
+        data: {
+            idea_title: string;
+            idea_summary: string;
+            attachments?: string[] | undefined;
+        };
+    };
+    points_awarded?: number | undefined;
+    updated_at?: string | undefined;
+    review_note?: string | null | undefined;
+    attachmentCount?: number | undefined;
+    attachments_rel?: {
+        path: string;
+        id: string;
+        submission_id: string;
+    }[] | undefined;
+    reviewer?: {
+        name: string;
+        handle: string;
+        id: string;
+        email?: string | undefined;
+        school?: string | null | undefined;
+        cohort?: string | null | undefined;
+    } | null | undefined;
+    reviewed_at?: string | null | undefined;
+}>;
 
 // @public (undocumented)
 export type AdminSubmissionsQuery = z.infer<typeof AdminSubmissionsQuerySchema>;
@@ -41,21 +699,169 @@ export const AdminSubmissionsQuerySchema: z.ZodObject<{
     sortBy: z.ZodDefault<z.ZodEnum<["created_at", "updated_at", "status"]>>;
     sortOrder: z.ZodDefault<z.ZodEnum<["asc", "desc"]>>;
 }, "strip", z.ZodTypeAny, {
-    status: "ALL" | "PENDING" | "APPROVED" | "REJECTED";
-    activity: "ALL" | "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    status: "PENDING" | "APPROVED" | "REJECTED" | "ALL";
+    activity: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL";
     page: number;
     limit: number;
     sortBy: "status" | "created_at" | "updated_at";
     sortOrder: "asc" | "desc";
     userId?: string | undefined;
 }, {
-    status?: "ALL" | "PENDING" | "APPROVED" | "REJECTED" | undefined;
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined;
+    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
     userId?: string | undefined;
-    activity?: "ALL" | "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
     page?: number | undefined;
     limit?: number | undefined;
     sortBy?: "status" | "created_at" | "updated_at" | undefined;
     sortOrder?: "asc" | "desc" | undefined;
+}>;
+
+// @public (undocumented)
+export interface AdminUserDTO {
+    // (undocumented)
+    avatarUrl?: string | null;
+    // (undocumented)
+    cohort?: string | null;
+    // (undocumented)
+    counts: {
+        submissions: number;
+        ledgerEntries: number;
+        earnedBadges: number;
+    };
+    // (undocumented)
+    createdAt: string;
+    // (undocumented)
+    email: string;
+    // (undocumented)
+    handle: string;
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    role: string;
+    // (undocumented)
+    school?: string | null;
+    // (undocumented)
+    totalPoints: number;
+}
+
+// @public (undocumented)
+export const AdminUserDTOSchema: z.ZodObject<{
+    id: z.ZodString;
+    handle: z.ZodString;
+    name: z.ZodString;
+    email: z.ZodString;
+    avatarUrl: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    role: z.ZodString;
+    school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    createdAt: z.ZodString;
+    counts: z.ZodObject<{
+        submissions: z.ZodNumber;
+        ledgerEntries: z.ZodNumber;
+        earnedBadges: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        submissions: number;
+        earnedBadges: number;
+        ledgerEntries: number;
+    }, {
+        submissions: number;
+        earnedBadges: number;
+        ledgerEntries: number;
+    }>;
+    totalPoints: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    totalPoints: number;
+    name: string;
+    id: string;
+    handle: string;
+    email: string;
+    role: string;
+    createdAt: string;
+    counts: {
+        submissions: number;
+        earnedBadges: number;
+        ledgerEntries: number;
+    };
+    school?: string | null | undefined;
+    avatarUrl?: string | null | undefined;
+    cohort?: string | null | undefined;
+}, {
+    totalPoints: number;
+    name: string;
+    id: string;
+    handle: string;
+    email: string;
+    role: string;
+    createdAt: string;
+    counts: {
+        submissions: number;
+        earnedBadges: number;
+        ledgerEntries: number;
+    };
+    school?: string | null | undefined;
+    avatarUrl?: string | null | undefined;
+    cohort?: string | null | undefined;
+}>;
+
+// @public (undocumented)
+export const AdminUserSchema: z.ZodObject<{
+    id: z.ZodString;
+    handle: z.ZodString;
+    name: z.ZodString;
+    email: z.ZodString;
+    avatar_url: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    role: z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
+    school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    created_at: z.ZodString;
+    _count: z.ZodObject<{
+        submissions: z.ZodNumber;
+        ledger: z.ZodNumber;
+        earned_badges: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        submissions: number;
+        ledger: number;
+        earned_badges: number;
+    }, {
+        submissions: number;
+        ledger: number;
+        earned_badges: number;
+    }>;
+    totalPoints: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    name: string;
+    email: string;
+    handle: string;
+    role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+    created_at: string;
+    id: string;
+    _count: {
+        submissions: number;
+        ledger: number;
+        earned_badges: number;
+    };
+    totalPoints: number;
+    school?: string | null | undefined;
+    cohort?: string | null | undefined;
+    avatar_url?: string | null | undefined;
+}, {
+    name: string;
+    email: string;
+    handle: string;
+    role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+    created_at: string;
+    id: string;
+    _count: {
+        submissions: number;
+        ledger: number;
+        earned_badges: number;
+    };
+    totalPoints: number;
+    school?: string | null | undefined;
+    cohort?: string | null | undefined;
+    avatar_url?: string | null | undefined;
 }>;
 
 // @public (undocumented)
@@ -71,21 +877,21 @@ export const AdminUsersQuerySchema: z.ZodObject<{
     sortBy: z.ZodDefault<z.ZodEnum<["created_at", "name", "email"]>>;
     sortOrder: z.ZodDefault<z.ZodEnum<["asc", "desc"]>>;
 }, "strip", z.ZodTypeAny, {
-    role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL";
     cohort: string;
+    role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL";
     page: number;
     limit: number;
-    search: string;
     sortBy: "name" | "email" | "created_at";
     sortOrder: "asc" | "desc";
+    search: string;
 }, {
-    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
     cohort?: string | undefined;
+    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
     page?: number | undefined;
     limit?: number | undefined;
-    search?: string | undefined;
     sortBy?: "name" | "email" | "created_at" | undefined;
     sortOrder?: "asc" | "desc" | undefined;
+    search?: string | undefined;
 }>;
 
 // @public (undocumented)
@@ -95,106 +901,170 @@ export type AmplifyInput = z.infer<typeof AmplifySchema>;
 export type AmplifyPayload = z.infer<typeof AmplifyPayloadSchema>;
 
 // @public (undocumented)
+export interface AmplifyPayloadAPI {
+    // (undocumented)
+    attendanceProofFiles?: string[];
+    // (undocumented)
+    peersTrained: number;
+    // (undocumented)
+    studentsTrained: number;
+}
+
+// @public (undocumented)
+export interface AmplifyPayloadDB {
+    // (undocumented)
+    attendance_proof_files?: string[];
+    // (undocumented)
+    peers_trained: number;
+    // (undocumented)
+    students_trained: number;
+}
+
+// @public (undocumented)
 export const AmplifyPayloadSchema: z.ZodObject<{
     activityCode: z.ZodLiteral<"AMPLIFY">;
     data: z.ZodObject<{
-        peersTrained: z.ZodNumber;
-        studentsTrained: z.ZodNumber;
-        attendanceProofFiles: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        peers_trained: z.ZodNumber;
+        students_trained: z.ZodNumber;
+        attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        peersTrained: number;
-        studentsTrained: number;
-        attendanceProofFiles?: string[] | undefined;
+        peers_trained: number;
+        students_trained: number;
+        attendance_proof_files?: string[] | undefined;
     }, {
-        peersTrained: number;
-        studentsTrained: number;
-        attendanceProofFiles?: string[] | undefined;
+        peers_trained: number;
+        students_trained: number;
+        attendance_proof_files?: string[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     activityCode: "AMPLIFY";
     data: {
-        peersTrained: number;
-        studentsTrained: number;
-        attendanceProofFiles?: string[] | undefined;
+        peers_trained: number;
+        students_trained: number;
+        attendance_proof_files?: string[] | undefined;
     };
 }, {
     activityCode: "AMPLIFY";
     data: {
-        peersTrained: number;
-        studentsTrained: number;
-        attendanceProofFiles?: string[] | undefined;
+        peers_trained: number;
+        students_trained: number;
+        attendance_proof_files?: string[] | undefined;
     };
 }>;
 
 // @public (undocumented)
 export const AmplifySchema: z.ZodObject<{
-    peersTrained: z.ZodNumber;
-    studentsTrained: z.ZodNumber;
-    attendanceProofFiles: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    peers_trained: z.ZodNumber;
+    students_trained: z.ZodNumber;
+    attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    peersTrained: number;
-    studentsTrained: number;
-    attendanceProofFiles?: string[] | undefined;
+    peers_trained: number;
+    students_trained: number;
+    attendance_proof_files?: string[] | undefined;
 }, {
-    peersTrained: number;
-    studentsTrained: number;
-    attendanceProofFiles?: string[] | undefined;
+    peers_trained: number;
+    students_trained: number;
+    attendance_proof_files?: string[] | undefined;
 }>;
 
 // @public (undocumented)
-export interface AnalyticsCohortFilter {
+export const ANALYTICS_CACHE_KEYS: {
+    readonly LEADERBOARD_TOTALS: "analytics:leaderboard:totals";
+    readonly LEADERBOARD_30D: "analytics:leaderboard:30d";
+    readonly ACTIVITY_METRICS: "analytics:activity:metrics";
+    readonly COHORT_METRICS: "analytics:cohort:metrics";
+    readonly SCHOOL_METRICS: "analytics:school:metrics";
+    readonly TIME_SERIES: "analytics:timeseries";
+    readonly SUMMARY: "analytics:summary";
+};
+
+// @public (undocumented)
+export const ANALYTICS_REFRESH_INTERVALS: {
+    readonly LEADERBOARD: 300;
+    readonly ACTIVITY_METRICS: 600;
+    readonly COHORT_METRICS: 1800;
+    readonly SCHOOL_METRICS: 1800;
+    readonly TIME_SERIES: 3600;
+};
+
+// @public (undocumented)
+export const ANALYTICS_VIEW_DESCRIPTIONS: {
+    readonly LEADERBOARD_TOTALS: "All-time participant rankings based on cumulative points across all LEAPS activities";
+    readonly LEADERBOARD_30D: "Rolling 30-day participant rankings showing recent activity and engagement";
+    readonly ACTIVITY_METRICS: "Per-activity submission and point statistics with approval rates and participant engagement";
+    readonly COHORT_METRICS: "Cohort-level performance analysis for program evaluation and comparison";
+    readonly SCHOOL_METRICS: "School-level aggregations for institutional participation tracking and geographic analysis";
+    readonly TIME_SERIES_METRICS: "Daily trend data for the last 90 days with cumulative growth tracking";
+};
+
+// @public (undocumented)
+export interface AnalyticsCacheInfo {
     // (undocumented)
-    user?: {
-        cohort?: string;
-    };
+    cacheHit: boolean;
+    // (undocumented)
+    dataFreshness: number;
+    // (undocumented)
+    lastRefresh: string;
+    // (undocumented)
+    nextScheduledRefresh: string;
 }
 
 // @public (undocumented)
-export interface AnalyticsDateFilter {
-    // (undocumented)
-    created_at?: {
-        gte?: Date;
-        lte?: Date;
-    };
-}
+export type AnalyticsDateRange = z.infer<typeof AnalyticsDateRangeSchema>;
 
 // @public (undocumented)
-export interface AnalyticsDistributions {
-    // (undocumented)
-    pointsByActivity: PointsActivityDistribution[];
-    // (undocumented)
-    pointsDistribution: PointsDistributionStats;
-    // (undocumented)
-    submissionsByActivity: ActivityDistribution[];
-    // (undocumented)
-    submissionsByStatus: StatusDistribution[];
-    // (undocumented)
-    usersByCohort: CohortDistribution[];
-    // (undocumented)
-    usersByRole: RoleDistribution[];
-}
+export const AnalyticsDateRangeSchema: z.ZodObject<{
+    startDate: z.ZodOptional<z.ZodDate>;
+    endDate: z.ZodOptional<z.ZodDate>;
+}, "strip", z.ZodTypeAny, {
+    startDate?: Date | undefined;
+    endDate?: Date | undefined;
+}, {
+    startDate?: Date | undefined;
+    endDate?: Date | undefined;
+}>;
 
 // @public (undocumented)
-export interface AnalyticsOverview {
-    // (undocumented)
-    badges: BadgeStats;
-    // (undocumented)
-    points: PointsStats;
-    // (undocumented)
-    reviews: ReviewStats;
-    // (undocumented)
-    submissions: SubmissionStats;
-    // (undocumented)
-    users: UserAnalyticsStats;
-}
+export type AnalyticsFilters = z.infer<typeof AnalyticsFiltersSchema>;
 
 // @public (undocumented)
-export interface AnalyticsPerformance {
-    // (undocumented)
-    reviewers: ReviewerPerformance[];
-    // (undocumented)
-    topBadges: TopBadge[];
-}
+export const AnalyticsFiltersSchema: z.ZodObject<{
+    dateRange: z.ZodOptional<z.ZodObject<{
+        startDate: z.ZodOptional<z.ZodDate>;
+        endDate: z.ZodOptional<z.ZodDate>;
+    }, "strip", z.ZodTypeAny, {
+        startDate?: Date | undefined;
+        endDate?: Date | undefined;
+    }, {
+        startDate?: Date | undefined;
+        endDate?: Date | undefined;
+    }>>;
+    cohort: z.ZodOptional<z.ZodString>;
+    school: z.ZodOptional<z.ZodString>;
+    activityCode: z.ZodOptional<z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>>;
+    limit: z.ZodOptional<z.ZodNumber>;
+    offset: z.ZodOptional<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    school?: string | undefined;
+    cohort?: string | undefined;
+    activityCode?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
+    limit?: number | undefined;
+    offset?: number | undefined;
+    dateRange?: {
+        startDate?: Date | undefined;
+        endDate?: Date | undefined;
+    } | undefined;
+}, {
+    school?: string | undefined;
+    cohort?: string | undefined;
+    activityCode?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
+    limit?: number | undefined;
+    offset?: number | undefined;
+    dateRange?: {
+        startDate?: Date | undefined;
+        endDate?: Date | undefined;
+    } | undefined;
+}>;
 
 // @public (undocumented)
 export const AnalyticsQuerySchema: z.ZodObject<{
@@ -212,67 +1082,1557 @@ export const AnalyticsQuerySchema: z.ZodObject<{
 }>;
 
 // @public (undocumented)
-export interface AnalyticsRecentActivity {
+export interface AnalyticsResponse<T> {
     // (undocumented)
-    approvals: RecentApproval[];
+    cache: AnalyticsCacheInfo;
     // (undocumented)
-    submissions: RecentSubmission[];
+    data?: T;
     // (undocumented)
-    users: RecentUser[];
+    error?: string;
+    // (undocumented)
+    success: boolean;
 }
 
 // @public (undocumented)
-export interface AnalyticsSubmissionFilter extends AnalyticsDateFilter, AnalyticsCohortFilter {
-}
-
-// @public (undocumented)
-export interface AnalyticsTrends {
-    // (undocumented)
-    submissionsByDate: DailySubmissionStats[];
-    // (undocumented)
-    userRegistrationsByDate: DailyRegistrationStats[];
-}
-
-// @public (undocumented)
-export interface AnalyticsUserFilter {
-    // (undocumented)
-    cohort?: string;
-    // (undocumented)
-    created_at?: {
-        gte?: Date;
-        lte?: Date;
-    };
-}
-
-// @public (undocumented)
-export type ApiError = {
-    success: false;
-    error: string;
-    details?: unknown;
-};
-
-// @public (undocumented)
-export function apiError(message: string, details?: unknown): ApiError;
-
-// @public (undocumented)
-export const ApiErrorSchema: z.ZodObject<{
-    success: z.ZodLiteral<false>;
-    error: z.ZodString;
-    details: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+export const AnalyticsResponseSchema: z.ZodObject<{
+    success: z.ZodLiteral<true>;
+    data: z.ZodObject<{
+        overview: z.ZodObject<{
+            submissions: z.ZodObject<{
+                total: z.ZodNumber;
+                pending: z.ZodNumber;
+                approved: z.ZodNumber;
+                rejected: z.ZodNumber;
+                approvalRate: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+                approvalRate: number;
+            }, {
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+                approvalRate: number;
+            }>;
+            users: z.ZodObject<{
+                total: z.ZodNumber;
+                active: z.ZodNumber;
+                withSubmissions: z.ZodNumber;
+                withBadges: z.ZodNumber;
+                activationRate: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                total: number;
+                active: number;
+                withSubmissions: number;
+                withBadges: number;
+                activationRate: number;
+            }, {
+                total: number;
+                active: number;
+                withSubmissions: number;
+                withBadges: number;
+                activationRate: number;
+            }>;
+            points: z.ZodObject<{
+                totalAwarded: z.ZodNumber;
+                totalEntries: z.ZodNumber;
+                avgPerEntry: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
+            }, {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
+            }>;
+            badges: z.ZodObject<{
+                totalBadges: z.ZodNumber;
+                totalEarned: z.ZodNumber;
+                uniqueEarners: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                totalBadges: number;
+                totalEarned: number;
+                uniqueEarners: number;
+            }, {
+                totalBadges: number;
+                totalEarned: number;
+                uniqueEarners: number;
+            }>;
+            reviews: z.ZodObject<{
+                pendingReviews: z.ZodNumber;
+                avgReviewTimeHours: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                pendingReviews: number;
+                avgReviewTimeHours: number;
+            }, {
+                pendingReviews: number;
+                avgReviewTimeHours: number;
+            }>;
+        }, "strip", z.ZodTypeAny, {
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
+            };
+            submissions: {
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+                approvalRate: number;
+            };
+            users: {
+                total: number;
+                active: number;
+                withSubmissions: number;
+                withBadges: number;
+                activationRate: number;
+            };
+            badges: {
+                totalBadges: number;
+                totalEarned: number;
+                uniqueEarners: number;
+            };
+            reviews: {
+                pendingReviews: number;
+                avgReviewTimeHours: number;
+            };
+        }, {
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
+            };
+            submissions: {
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+                approvalRate: number;
+            };
+            users: {
+                total: number;
+                active: number;
+                withSubmissions: number;
+                withBadges: number;
+                activationRate: number;
+            };
+            badges: {
+                totalBadges: number;
+                totalEarned: number;
+                uniqueEarners: number;
+            };
+            reviews: {
+                pendingReviews: number;
+                avgReviewTimeHours: number;
+            };
+        }>;
+        distributions: z.ZodObject<{
+            submissionsByStatus: z.ZodArray<z.ZodObject<{
+                status: z.ZodString;
+                count: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                status: string;
+                count: number;
+            }, {
+                status: string;
+                count: number;
+            }>, "many">;
+            submissionsByActivity: z.ZodArray<z.ZodObject<{
+                activity: z.ZodString;
+                activityName: z.ZodOptional<z.ZodString>;
+                count: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                activity: string;
+                count: number;
+                activityName?: string | undefined;
+            }, {
+                activity: string;
+                count: number;
+                activityName?: string | undefined;
+            }>, "many">;
+            usersByRole: z.ZodArray<z.ZodObject<{
+                role: z.ZodString;
+                count: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                role: string;
+                count: number;
+            }, {
+                role: string;
+                count: number;
+            }>, "many">;
+            usersByCohort: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                cohort: z.ZodNullable<z.ZodString>;
+                count: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                cohort: string | null;
+                count: number;
+            }, {
+                cohort: string | null;
+                count: number;
+            }>, "many">>;
+            pointsByActivity: z.ZodArray<z.ZodObject<{
+                activity: z.ZodString;
+                activityName: z.ZodOptional<z.ZodString>;
+                totalPoints: z.ZodNumber;
+                entries: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                entries: number;
+                activity: string;
+                totalPoints: number;
+                activityName?: string | undefined;
+            }, {
+                entries: number;
+                activity: string;
+                totalPoints: number;
+                activityName?: string | undefined;
+            }>, "many">;
+            pointsDistribution: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                range: z.ZodString;
+                count: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                count: number;
+                range: string;
+            }, {
+                count: number;
+                range: string;
+            }>, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            submissionsByStatus: {
+                status: string;
+                count: number;
+            }[];
+            submissionsByActivity: {
+                activity: string;
+                count: number;
+                activityName?: string | undefined;
+            }[];
+            usersByRole: {
+                role: string;
+                count: number;
+            }[];
+            pointsByActivity: {
+                entries: number;
+                activity: string;
+                totalPoints: number;
+                activityName?: string | undefined;
+            }[];
+            usersByCohort?: {
+                cohort: string | null;
+                count: number;
+            }[] | undefined;
+            pointsDistribution?: {
+                count: number;
+                range: string;
+            }[] | undefined;
+        }, {
+            submissionsByStatus: {
+                status: string;
+                count: number;
+            }[];
+            submissionsByActivity: {
+                activity: string;
+                count: number;
+                activityName?: string | undefined;
+            }[];
+            usersByRole: {
+                role: string;
+                count: number;
+            }[];
+            pointsByActivity: {
+                entries: number;
+                activity: string;
+                totalPoints: number;
+                activityName?: string | undefined;
+            }[];
+            usersByCohort?: {
+                cohort: string | null;
+                count: number;
+            }[] | undefined;
+            pointsDistribution?: {
+                count: number;
+                range: string;
+            }[] | undefined;
+        }>;
+        trends: z.ZodObject<{
+            submissionsByDate: z.ZodArray<z.ZodObject<{
+                date: z.ZodString;
+                total: z.ZodNumber;
+                approved: z.ZodNumber;
+                rejected: z.ZodNumber;
+                pending: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                date: string;
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+            }, {
+                date: string;
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+            }>, "many">;
+            userRegistrationsByDate: z.ZodArray<z.ZodObject<{
+                date: z.ZodString;
+                count: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                date: string;
+                count: number;
+            }, {
+                date: string;
+                count: number;
+            }>, "many">;
+        }, "strip", z.ZodTypeAny, {
+            submissionsByDate: {
+                date: string;
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+            }[];
+            userRegistrationsByDate: {
+                date: string;
+                count: number;
+            }[];
+        }, {
+            submissionsByDate: {
+                date: string;
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+            }[];
+            userRegistrationsByDate: {
+                date: string;
+                count: number;
+            }[];
+        }>;
+        recentActivity: z.ZodObject<{
+            submissions: z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                activity_code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+                user_name: z.ZodString;
+                created_at: z.ZodString;
+                status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+            }, "strip", z.ZodTypeAny, {
+                status: "PENDING" | "APPROVED" | "REJECTED";
+                created_at: string;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+            }, {
+                status: "PENDING" | "APPROVED" | "REJECTED";
+                created_at: string;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+            }>, "many">;
+            approvals: z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                activity_code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+                user_name: z.ZodString;
+                reviewer_name: z.ZodString;
+                approved_at: z.ZodString;
+                points_awarded: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                points_awarded: number;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+                reviewer_name: string;
+                approved_at: string;
+            }, {
+                points_awarded: number;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+                reviewer_name: string;
+                approved_at: string;
+            }>, "many">;
+            users: z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                name: z.ZodString;
+                created_at: z.ZodString;
+                cohort: z.ZodNullable<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                name: string;
+                cohort: string | null;
+                created_at: string;
+                id: string;
+            }, {
+                name: string;
+                cohort: string | null;
+                created_at: string;
+                id: string;
+            }>, "many">;
+        }, "strip", z.ZodTypeAny, {
+            submissions: {
+                status: "PENDING" | "APPROVED" | "REJECTED";
+                created_at: string;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+            }[];
+            users: {
+                name: string;
+                cohort: string | null;
+                created_at: string;
+                id: string;
+            }[];
+            approvals: {
+                points_awarded: number;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+                reviewer_name: string;
+                approved_at: string;
+            }[];
+        }, {
+            submissions: {
+                status: "PENDING" | "APPROVED" | "REJECTED";
+                created_at: string;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+            }[];
+            users: {
+                name: string;
+                cohort: string | null;
+                created_at: string;
+                id: string;
+            }[];
+            approvals: {
+                points_awarded: number;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+                reviewer_name: string;
+                approved_at: string;
+            }[];
+        }>;
+        performance: z.ZodObject<{
+            reviewers: z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                name: z.ZodString;
+                reviewCount: z.ZodNumber;
+                avgReviewTimeHours: z.ZodNumber;
+                approvalRate: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                name: string;
+                id: string;
+                approvalRate: number;
+                avgReviewTimeHours: number;
+                reviewCount: number;
+            }, {
+                name: string;
+                id: string;
+                approvalRate: number;
+                avgReviewTimeHours: number;
+                reviewCount: number;
+            }>, "many">;
+            topBadges: z.ZodArray<z.ZodObject<{
+                code: z.ZodString;
+                name: z.ZodString;
+                earnedCount: z.ZodNumber;
+                uniqueEarners: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                code: string;
+                name: string;
+                uniqueEarners: number;
+                earnedCount: number;
+            }, {
+                code: string;
+                name: string;
+                uniqueEarners: number;
+                earnedCount: number;
+            }>, "many">;
+        }, "strip", z.ZodTypeAny, {
+            reviewers: {
+                name: string;
+                id: string;
+                approvalRate: number;
+                avgReviewTimeHours: number;
+                reviewCount: number;
+            }[];
+            topBadges: {
+                code: string;
+                name: string;
+                uniqueEarners: number;
+                earnedCount: number;
+            }[];
+        }, {
+            reviewers: {
+                name: string;
+                id: string;
+                approvalRate: number;
+                avgReviewTimeHours: number;
+                reviewCount: number;
+            }[];
+            topBadges: {
+                code: string;
+                name: string;
+                uniqueEarners: number;
+                earnedCount: number;
+            }[];
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        overview: {
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
+            };
+            submissions: {
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+                approvalRate: number;
+            };
+            users: {
+                total: number;
+                active: number;
+                withSubmissions: number;
+                withBadges: number;
+                activationRate: number;
+            };
+            badges: {
+                totalBadges: number;
+                totalEarned: number;
+                uniqueEarners: number;
+            };
+            reviews: {
+                pendingReviews: number;
+                avgReviewTimeHours: number;
+            };
+        };
+        distributions: {
+            submissionsByStatus: {
+                status: string;
+                count: number;
+            }[];
+            submissionsByActivity: {
+                activity: string;
+                count: number;
+                activityName?: string | undefined;
+            }[];
+            usersByRole: {
+                role: string;
+                count: number;
+            }[];
+            pointsByActivity: {
+                entries: number;
+                activity: string;
+                totalPoints: number;
+                activityName?: string | undefined;
+            }[];
+            usersByCohort?: {
+                cohort: string | null;
+                count: number;
+            }[] | undefined;
+            pointsDistribution?: {
+                count: number;
+                range: string;
+            }[] | undefined;
+        };
+        trends: {
+            submissionsByDate: {
+                date: string;
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+            }[];
+            userRegistrationsByDate: {
+                date: string;
+                count: number;
+            }[];
+        };
+        recentActivity: {
+            submissions: {
+                status: "PENDING" | "APPROVED" | "REJECTED";
+                created_at: string;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+            }[];
+            users: {
+                name: string;
+                cohort: string | null;
+                created_at: string;
+                id: string;
+            }[];
+            approvals: {
+                points_awarded: number;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+                reviewer_name: string;
+                approved_at: string;
+            }[];
+        };
+        performance: {
+            reviewers: {
+                name: string;
+                id: string;
+                approvalRate: number;
+                avgReviewTimeHours: number;
+                reviewCount: number;
+            }[];
+            topBadges: {
+                code: string;
+                name: string;
+                uniqueEarners: number;
+                earnedCount: number;
+            }[];
+        };
+    }, {
+        overview: {
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
+            };
+            submissions: {
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+                approvalRate: number;
+            };
+            users: {
+                total: number;
+                active: number;
+                withSubmissions: number;
+                withBadges: number;
+                activationRate: number;
+            };
+            badges: {
+                totalBadges: number;
+                totalEarned: number;
+                uniqueEarners: number;
+            };
+            reviews: {
+                pendingReviews: number;
+                avgReviewTimeHours: number;
+            };
+        };
+        distributions: {
+            submissionsByStatus: {
+                status: string;
+                count: number;
+            }[];
+            submissionsByActivity: {
+                activity: string;
+                count: number;
+                activityName?: string | undefined;
+            }[];
+            usersByRole: {
+                role: string;
+                count: number;
+            }[];
+            pointsByActivity: {
+                entries: number;
+                activity: string;
+                totalPoints: number;
+                activityName?: string | undefined;
+            }[];
+            usersByCohort?: {
+                cohort: string | null;
+                count: number;
+            }[] | undefined;
+            pointsDistribution?: {
+                count: number;
+                range: string;
+            }[] | undefined;
+        };
+        trends: {
+            submissionsByDate: {
+                date: string;
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+            }[];
+            userRegistrationsByDate: {
+                date: string;
+                count: number;
+            }[];
+        };
+        recentActivity: {
+            submissions: {
+                status: "PENDING" | "APPROVED" | "REJECTED";
+                created_at: string;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+            }[];
+            users: {
+                name: string;
+                cohort: string | null;
+                created_at: string;
+                id: string;
+            }[];
+            approvals: {
+                points_awarded: number;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+                reviewer_name: string;
+                approved_at: string;
+            }[];
+        };
+        performance: {
+            reviewers: {
+                name: string;
+                id: string;
+                approvalRate: number;
+                avgReviewTimeHours: number;
+                reviewCount: number;
+            }[];
+            topBadges: {
+                code: string;
+                name: string;
+                uniqueEarners: number;
+                earnedCount: number;
+            }[];
+        };
+    }>;
 }, "strip", z.ZodTypeAny, {
-    success: false;
-    error: string;
-    details?: Record<string, unknown> | undefined;
+    success: true;
+    data: {
+        overview: {
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
+            };
+            submissions: {
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+                approvalRate: number;
+            };
+            users: {
+                total: number;
+                active: number;
+                withSubmissions: number;
+                withBadges: number;
+                activationRate: number;
+            };
+            badges: {
+                totalBadges: number;
+                totalEarned: number;
+                uniqueEarners: number;
+            };
+            reviews: {
+                pendingReviews: number;
+                avgReviewTimeHours: number;
+            };
+        };
+        distributions: {
+            submissionsByStatus: {
+                status: string;
+                count: number;
+            }[];
+            submissionsByActivity: {
+                activity: string;
+                count: number;
+                activityName?: string | undefined;
+            }[];
+            usersByRole: {
+                role: string;
+                count: number;
+            }[];
+            pointsByActivity: {
+                entries: number;
+                activity: string;
+                totalPoints: number;
+                activityName?: string | undefined;
+            }[];
+            usersByCohort?: {
+                cohort: string | null;
+                count: number;
+            }[] | undefined;
+            pointsDistribution?: {
+                count: number;
+                range: string;
+            }[] | undefined;
+        };
+        trends: {
+            submissionsByDate: {
+                date: string;
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+            }[];
+            userRegistrationsByDate: {
+                date: string;
+                count: number;
+            }[];
+        };
+        recentActivity: {
+            submissions: {
+                status: "PENDING" | "APPROVED" | "REJECTED";
+                created_at: string;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+            }[];
+            users: {
+                name: string;
+                cohort: string | null;
+                created_at: string;
+                id: string;
+            }[];
+            approvals: {
+                points_awarded: number;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+                reviewer_name: string;
+                approved_at: string;
+            }[];
+        };
+        performance: {
+            reviewers: {
+                name: string;
+                id: string;
+                approvalRate: number;
+                avgReviewTimeHours: number;
+                reviewCount: number;
+            }[];
+            topBadges: {
+                code: string;
+                name: string;
+                uniqueEarners: number;
+                earnedCount: number;
+            }[];
+        };
+    };
 }, {
-    success: false;
-    error: string;
-    details?: Record<string, unknown> | undefined;
+    success: true;
+    data: {
+        overview: {
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
+            };
+            submissions: {
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+                approvalRate: number;
+            };
+            users: {
+                total: number;
+                active: number;
+                withSubmissions: number;
+                withBadges: number;
+                activationRate: number;
+            };
+            badges: {
+                totalBadges: number;
+                totalEarned: number;
+                uniqueEarners: number;
+            };
+            reviews: {
+                pendingReviews: number;
+                avgReviewTimeHours: number;
+            };
+        };
+        distributions: {
+            submissionsByStatus: {
+                status: string;
+                count: number;
+            }[];
+            submissionsByActivity: {
+                activity: string;
+                count: number;
+                activityName?: string | undefined;
+            }[];
+            usersByRole: {
+                role: string;
+                count: number;
+            }[];
+            pointsByActivity: {
+                entries: number;
+                activity: string;
+                totalPoints: number;
+                activityName?: string | undefined;
+            }[];
+            usersByCohort?: {
+                cohort: string | null;
+                count: number;
+            }[] | undefined;
+            pointsDistribution?: {
+                count: number;
+                range: string;
+            }[] | undefined;
+        };
+        trends: {
+            submissionsByDate: {
+                date: string;
+                total: number;
+                pending: number;
+                approved: number;
+                rejected: number;
+            }[];
+            userRegistrationsByDate: {
+                date: string;
+                count: number;
+            }[];
+        };
+        recentActivity: {
+            submissions: {
+                status: "PENDING" | "APPROVED" | "REJECTED";
+                created_at: string;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+            }[];
+            users: {
+                name: string;
+                cohort: string | null;
+                created_at: string;
+                id: string;
+            }[];
+            approvals: {
+                points_awarded: number;
+                id: string;
+                activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                user_name: string;
+                reviewer_name: string;
+                approved_at: string;
+            }[];
+        };
+        performance: {
+            reviewers: {
+                name: string;
+                id: string;
+                approvalRate: number;
+                avgReviewTimeHours: number;
+                reviewCount: number;
+            }[];
+            topBadges: {
+                code: string;
+                name: string;
+                uniqueEarners: number;
+                earnedCount: number;
+            }[];
+        };
+    };
 }>;
 
 // @public (undocumented)
-export type ApiErrorType = z.infer<typeof ApiErrorSchema>;
+export type AnalyticsSummary = z.infer<typeof AnalyticsSummarySchema>;
 
 // @public (undocumented)
+export const AnalyticsSummarySchema: z.ZodObject<{
+    totalUsers: z.ZodNumber;
+    activeUsers: z.ZodNumber;
+    totalSubmissions: z.ZodNumber;
+    totalPointsAwarded: z.ZodNumber;
+    activityBreakdown: z.ZodArray<z.ZodObject<{
+        code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+        name: z.ZodString;
+        default_points: z.ZodNumber;
+        total_submissions: z.ZodNumber;
+        pending_submissions: z.ZodNumber;
+        approved_submissions: z.ZodNumber;
+        rejected_submissions: z.ZodNumber;
+        public_submissions: z.ZodNumber;
+        total_points_awarded: z.ZodNumber;
+        positive_points_awarded: z.ZodNumber;
+        negative_points_awarded: z.ZodNumber;
+        avg_points_per_entry: z.ZodNumber;
+        first_submission_at: z.ZodNullable<z.ZodDate>;
+        latest_submission_at: z.ZodNullable<z.ZodDate>;
+        unique_participants: z.ZodNumber;
+        unique_approved_participants: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        name: string;
+        default_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        rejected_submissions: number;
+        total_points_awarded: number;
+        positive_points_awarded: number;
+        negative_points_awarded: number;
+        avg_points_per_entry: number;
+        first_submission_at: Date | null;
+        latest_submission_at: Date | null;
+        unique_participants: number;
+        unique_approved_participants: number;
+    }, {
+        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        name: string;
+        default_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        rejected_submissions: number;
+        total_points_awarded: number;
+        positive_points_awarded: number;
+        negative_points_awarded: number;
+        avg_points_per_entry: number;
+        first_submission_at: Date | null;
+        latest_submission_at: Date | null;
+        unique_participants: number;
+        unique_approved_participants: number;
+    }>, "many">;
+    topPerformersAllTime: z.ZodArray<z.ZodOptional<z.ZodObject<{
+        user_id: z.ZodString;
+        handle: z.ZodString;
+        name: z.ZodString;
+        avatar_url: z.ZodNullable<z.ZodString>;
+        school: z.ZodNullable<z.ZodString>;
+        cohort: z.ZodNullable<z.ZodString>;
+        total_points: z.ZodNumber;
+        public_submissions: z.ZodNumber;
+        total_approved_submissions: z.ZodNumber;
+        pending_submissions: z.ZodNumber;
+        last_activity_at: z.ZodNullable<z.ZodDate>;
+        first_points_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        handle: string;
+        school: string | null;
+        cohort: string | null;
+        user_id: string;
+        avatar_url: string | null;
+        total_points: number;
+        public_submissions: number;
+        total_approved_submissions: number;
+        pending_submissions: number;
+        last_activity_at: Date | null;
+        first_points_at?: Date | null | undefined;
+    }, {
+        name: string;
+        handle: string;
+        school: string | null;
+        cohort: string | null;
+        user_id: string;
+        avatar_url: string | null;
+        total_points: number;
+        public_submissions: number;
+        total_approved_submissions: number;
+        pending_submissions: number;
+        last_activity_at: Date | null;
+        first_points_at?: Date | null | undefined;
+    }>>, "many">;
+    topPerformers30d: z.ZodArray<z.ZodOptional<z.ZodObject<Omit<{
+        user_id: z.ZodString;
+        handle: z.ZodString;
+        name: z.ZodString;
+        avatar_url: z.ZodNullable<z.ZodString>;
+        school: z.ZodNullable<z.ZodString>;
+        cohort: z.ZodNullable<z.ZodString>;
+        total_points: z.ZodNumber;
+        public_submissions: z.ZodNumber;
+        total_approved_submissions: z.ZodNumber;
+        pending_submissions: z.ZodNumber;
+        last_activity_at: z.ZodNullable<z.ZodDate>;
+        first_points_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
+    }, "first_points_at">, "strip", z.ZodTypeAny, {
+        name: string;
+        handle: string;
+        school: string | null;
+        cohort: string | null;
+        user_id: string;
+        avatar_url: string | null;
+        total_points: number;
+        public_submissions: number;
+        total_approved_submissions: number;
+        pending_submissions: number;
+        last_activity_at: Date | null;
+    }, {
+        name: string;
+        handle: string;
+        school: string | null;
+        cohort: string | null;
+        user_id: string;
+        avatar_url: string | null;
+        total_points: number;
+        public_submissions: number;
+        total_approved_submissions: number;
+        pending_submissions: number;
+        last_activity_at: Date | null;
+    }>>, "many">;
+    cohortPerformance: z.ZodArray<z.ZodObject<{
+        cohort: z.ZodString;
+        total_participants: z.ZodNumber;
+        participants_with_points: z.ZodNumber;
+        participants_with_submissions: z.ZodNumber;
+        total_points: z.ZodNumber;
+        avg_points_per_participant: z.ZodNumber;
+        max_points_in_cohort: z.ZodNumber;
+        total_submissions: z.ZodNumber;
+        approved_submissions: z.ZodNumber;
+        pending_submissions: z.ZodNumber;
+        public_submissions: z.ZodNumber;
+        first_activity_at: z.ZodNullable<z.ZodDate>;
+        latest_activity_at: z.ZodNullable<z.ZodDate>;
+    }, "strip", z.ZodTypeAny, {
+        cohort: string;
+        total_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        total_participants: number;
+        participants_with_points: number;
+        participants_with_submissions: number;
+        avg_points_per_participant: number;
+        max_points_in_cohort: number;
+        first_activity_at: Date | null;
+        latest_activity_at: Date | null;
+    }, {
+        cohort: string;
+        total_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        total_participants: number;
+        participants_with_points: number;
+        participants_with_submissions: number;
+        avg_points_per_participant: number;
+        max_points_in_cohort: number;
+        first_activity_at: Date | null;
+        latest_activity_at: Date | null;
+    }>, "many">;
+    schoolPerformance: z.ZodArray<z.ZodObject<{
+        school: z.ZodString;
+        total_participants: z.ZodNumber;
+        participants_with_points: z.ZodNumber;
+        participants_with_submissions: z.ZodNumber;
+        total_points: z.ZodNumber;
+        avg_points_per_participant: z.ZodNumber;
+        max_points_in_school: z.ZodNumber;
+        total_submissions: z.ZodNumber;
+        approved_submissions: z.ZodNumber;
+        pending_submissions: z.ZodNumber;
+        public_submissions: z.ZodNumber;
+        cohort_count: z.ZodNumber;
+        first_activity_at: z.ZodNullable<z.ZodDate>;
+        latest_activity_at: z.ZodNullable<z.ZodDate>;
+    }, "strip", z.ZodTypeAny, {
+        school: string;
+        total_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        total_participants: number;
+        participants_with_points: number;
+        participants_with_submissions: number;
+        avg_points_per_participant: number;
+        first_activity_at: Date | null;
+        latest_activity_at: Date | null;
+        max_points_in_school: number;
+        cohort_count: number;
+    }, {
+        school: string;
+        total_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        total_participants: number;
+        participants_with_points: number;
+        participants_with_submissions: number;
+        avg_points_per_participant: number;
+        first_activity_at: Date | null;
+        latest_activity_at: Date | null;
+        max_points_in_school: number;
+        cohort_count: number;
+    }>, "many">;
+    recentTrends: z.ZodArray<z.ZodObject<{
+        date: z.ZodDate;
+        activity_code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+        activity_name: z.ZodString;
+        points_awarded: z.ZodNumber;
+        point_entries: z.ZodNumber;
+        unique_point_users: z.ZodNumber;
+        submissions_created: z.ZodNumber;
+        submissions_approved: z.ZodNumber;
+        submissions_rejected: z.ZodNumber;
+        unique_submitters: z.ZodNumber;
+        cumulative_points: z.ZodNumber;
+        cumulative_submissions: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        date: Date;
+        points_awarded: number;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        activity_name: string;
+        point_entries: number;
+        unique_point_users: number;
+        submissions_created: number;
+        submissions_approved: number;
+        submissions_rejected: number;
+        unique_submitters: number;
+        cumulative_points: number;
+        cumulative_submissions: number;
+    }, {
+        date: Date;
+        points_awarded: number;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        activity_name: string;
+        point_entries: number;
+        unique_point_users: number;
+        submissions_created: number;
+        submissions_approved: number;
+        submissions_rejected: number;
+        unique_submitters: number;
+        cumulative_points: number;
+        cumulative_submissions: number;
+    }>, "many">;
+    overallStats: z.ZodObject<{
+        submissionApprovalRate: z.ZodNumber;
+        averagePointsPerUser: z.ZodNumber;
+        averageSubmissionsPerUser: z.ZodNumber;
+        participationRate: z.ZodNumber;
+        cohortCount: z.ZodNumber;
+        schoolCount: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        submissionApprovalRate: number;
+        averagePointsPerUser: number;
+        averageSubmissionsPerUser: number;
+        participationRate: number;
+        cohortCount: number;
+        schoolCount: number;
+    }, {
+        submissionApprovalRate: number;
+        averagePointsPerUser: number;
+        averageSubmissionsPerUser: number;
+        participationRate: number;
+        cohortCount: number;
+        schoolCount: number;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    totalUsers: number;
+    activeUsers: number;
+    totalSubmissions: number;
+    totalPointsAwarded: number;
+    activityBreakdown: {
+        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        name: string;
+        default_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        rejected_submissions: number;
+        total_points_awarded: number;
+        positive_points_awarded: number;
+        negative_points_awarded: number;
+        avg_points_per_entry: number;
+        first_submission_at: Date | null;
+        latest_submission_at: Date | null;
+        unique_participants: number;
+        unique_approved_participants: number;
+    }[];
+    topPerformersAllTime: ({
+        name: string;
+        handle: string;
+        school: string | null;
+        cohort: string | null;
+        user_id: string;
+        avatar_url: string | null;
+        total_points: number;
+        public_submissions: number;
+        total_approved_submissions: number;
+        pending_submissions: number;
+        last_activity_at: Date | null;
+        first_points_at?: Date | null | undefined;
+    } | undefined)[];
+    topPerformers30d: ({
+        name: string;
+        handle: string;
+        school: string | null;
+        cohort: string | null;
+        user_id: string;
+        avatar_url: string | null;
+        total_points: number;
+        public_submissions: number;
+        total_approved_submissions: number;
+        pending_submissions: number;
+        last_activity_at: Date | null;
+    } | undefined)[];
+    cohortPerformance: {
+        cohort: string;
+        total_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        total_participants: number;
+        participants_with_points: number;
+        participants_with_submissions: number;
+        avg_points_per_participant: number;
+        max_points_in_cohort: number;
+        first_activity_at: Date | null;
+        latest_activity_at: Date | null;
+    }[];
+    schoolPerformance: {
+        school: string;
+        total_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        total_participants: number;
+        participants_with_points: number;
+        participants_with_submissions: number;
+        avg_points_per_participant: number;
+        first_activity_at: Date | null;
+        latest_activity_at: Date | null;
+        max_points_in_school: number;
+        cohort_count: number;
+    }[];
+    recentTrends: {
+        date: Date;
+        points_awarded: number;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        activity_name: string;
+        point_entries: number;
+        unique_point_users: number;
+        submissions_created: number;
+        submissions_approved: number;
+        submissions_rejected: number;
+        unique_submitters: number;
+        cumulative_points: number;
+        cumulative_submissions: number;
+    }[];
+    overallStats: {
+        submissionApprovalRate: number;
+        averagePointsPerUser: number;
+        averageSubmissionsPerUser: number;
+        participationRate: number;
+        cohortCount: number;
+        schoolCount: number;
+    };
+}, {
+    totalUsers: number;
+    activeUsers: number;
+    totalSubmissions: number;
+    totalPointsAwarded: number;
+    activityBreakdown: {
+        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        name: string;
+        default_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        rejected_submissions: number;
+        total_points_awarded: number;
+        positive_points_awarded: number;
+        negative_points_awarded: number;
+        avg_points_per_entry: number;
+        first_submission_at: Date | null;
+        latest_submission_at: Date | null;
+        unique_participants: number;
+        unique_approved_participants: number;
+    }[];
+    topPerformersAllTime: ({
+        name: string;
+        handle: string;
+        school: string | null;
+        cohort: string | null;
+        user_id: string;
+        avatar_url: string | null;
+        total_points: number;
+        public_submissions: number;
+        total_approved_submissions: number;
+        pending_submissions: number;
+        last_activity_at: Date | null;
+        first_points_at?: Date | null | undefined;
+    } | undefined)[];
+    topPerformers30d: ({
+        name: string;
+        handle: string;
+        school: string | null;
+        cohort: string | null;
+        user_id: string;
+        avatar_url: string | null;
+        total_points: number;
+        public_submissions: number;
+        total_approved_submissions: number;
+        pending_submissions: number;
+        last_activity_at: Date | null;
+    } | undefined)[];
+    cohortPerformance: {
+        cohort: string;
+        total_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        total_participants: number;
+        participants_with_points: number;
+        participants_with_submissions: number;
+        avg_points_per_participant: number;
+        max_points_in_cohort: number;
+        first_activity_at: Date | null;
+        latest_activity_at: Date | null;
+    }[];
+    schoolPerformance: {
+        school: string;
+        total_points: number;
+        public_submissions: number;
+        pending_submissions: number;
+        total_submissions: number;
+        approved_submissions: number;
+        total_participants: number;
+        participants_with_points: number;
+        participants_with_submissions: number;
+        avg_points_per_participant: number;
+        first_activity_at: Date | null;
+        latest_activity_at: Date | null;
+        max_points_in_school: number;
+        cohort_count: number;
+    }[];
+    recentTrends: {
+        date: Date;
+        points_awarded: number;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        activity_name: string;
+        point_entries: number;
+        unique_point_users: number;
+        submissions_created: number;
+        submissions_approved: number;
+        submissions_rejected: number;
+        unique_submitters: number;
+        cumulative_points: number;
+        cumulative_submissions: number;
+    }[];
+    overallStats: {
+        submissionApprovalRate: number;
+        averagePointsPerUser: number;
+        averageSubmissionsPerUser: number;
+        participationRate: number;
+        cohortCount: number;
+        schoolCount: number;
+    };
+}>;
+
+// @public (undocumented)
+export interface ApiError {
+    // (undocumented)
+    code?: string;
+    // (undocumented)
+    details?: unknown;
+    // (undocumented)
+    error: string;
+    // (undocumented)
+    success: false;
+    // (undocumented)
+    timestamp?: string;
+    // (undocumented)
+    traceId?: string;
+}
+
+// @public @deprecated (undocumented)
+export const apiError: typeof httpError;
+
+// @public
+export const ApiErrorSchema: z.ZodObject<{
+    success: z.ZodLiteral<false>;
+    error: z.ZodString;
+    details: z.ZodOptional<z.ZodObject<{
+        code: z.ZodOptional<z.ZodString>;
+        field: z.ZodOptional<z.ZodString>;
+        traceId: z.ZodOptional<z.ZodString>;
+        timestamp: z.ZodOptional<z.ZodString>;
+        validationErrors: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            path: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNumber]>, "many">;
+            message: z.ZodString;
+            code: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }, {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }>, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        code?: string | undefined;
+        field?: string | undefined;
+        traceId?: string | undefined;
+        timestamp?: string | undefined;
+        validationErrors?: {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }[] | undefined;
+    }, {
+        code?: string | undefined;
+        field?: string | undefined;
+        traceId?: string | undefined;
+        timestamp?: string | undefined;
+        validationErrors?: {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }[] | undefined;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    success: false;
+    error: string;
+    details?: {
+        code?: string | undefined;
+        field?: string | undefined;
+        traceId?: string | undefined;
+        timestamp?: string | undefined;
+        validationErrors?: {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }[] | undefined;
+    } | undefined;
+}, {
+    success: false;
+    error: string;
+    details?: {
+        code?: string | undefined;
+        field?: string | undefined;
+        traceId?: string | undefined;
+        timestamp?: string | undefined;
+        validationErrors?: {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }[] | undefined;
+    } | undefined;
+}>;
+
+// Warning: (ae-forgotten-export) The symbol "ApiError_2" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export type ApiErrorType = ApiError_2;
+
+// @public (undocumented)
+export type ApiResponse<T = unknown> = ApiSuccess<T> | ApiError;
+
+// @public
 export const ApiResponseSchema: <T extends z.ZodTypeAny>(dataSchema: T) => z.ZodDiscriminatedUnion<"success", [z.ZodObject<{
     success: z.ZodLiteral<true>;
     data: T;
@@ -288,27 +2648,87 @@ export const ApiResponseSchema: <T extends z.ZodTypeAny>(dataSchema: T) => z.Zod
 }> extends infer T_2 ? { [k_1 in keyof T_2]: T_2[k_1]; } : never>, z.ZodObject<{
     success: z.ZodLiteral<false>;
     error: z.ZodString;
-    details: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
+    details: z.ZodOptional<z.ZodObject<{
+        code: z.ZodOptional<z.ZodString>;
+        field: z.ZodOptional<z.ZodString>;
+        traceId: z.ZodOptional<z.ZodString>;
+        timestamp: z.ZodOptional<z.ZodString>;
+        validationErrors: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            path: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNumber]>, "many">;
+            message: z.ZodString;
+            code: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }, {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }>, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        code?: string | undefined;
+        field?: string | undefined;
+        traceId?: string | undefined;
+        timestamp?: string | undefined;
+        validationErrors?: {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }[] | undefined;
+    }, {
+        code?: string | undefined;
+        field?: string | undefined;
+        traceId?: string | undefined;
+        timestamp?: string | undefined;
+        validationErrors?: {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }[] | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     success: false;
     error: string;
-    details?: Record<string, unknown> | undefined;
+    details?: {
+        code?: string | undefined;
+        field?: string | undefined;
+        traceId?: string | undefined;
+        timestamp?: string | undefined;
+        validationErrors?: {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }[] | undefined;
+    } | undefined;
 }, {
     success: false;
     error: string;
-    details?: Record<string, unknown> | undefined;
+    details?: {
+        code?: string | undefined;
+        field?: string | undefined;
+        traceId?: string | undefined;
+        timestamp?: string | undefined;
+        validationErrors?: {
+            code: string;
+            path: (string | number)[];
+            message: string;
+        }[] | undefined;
+    } | undefined;
 }>]>;
 
 // @public (undocumented)
-export type ApiSuccess<T> = {
-    success: true;
+export interface ApiSuccess<T = unknown> {
+    // (undocumented)
     data: T;
-};
+    // (undocumented)
+    success: true;
+}
 
-// @public (undocumented)
-export function apiSuccess<T>(data: T): ApiSuccess<T>;
+// @public @deprecated (undocumented)
+export const apiSuccess: typeof httpSuccess;
 
-// @public (undocumented)
+// @public
 export const ApiSuccessSchema: <T extends z.ZodTypeAny>(dataSchema: T) => z.ZodObject<{
     success: z.ZodLiteral<true>;
     data: T;
@@ -336,25 +2756,31 @@ export const ApprovalEmailSchema: z.ZodObject<{
     leaderboardUrl: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     name: string;
-    email: string;
-    activityName: string;
     pointsAwarded: number;
+    email: string;
     totalPoints: number;
+    activityName: string;
     leaderboardPosition: number;
     dashboardUrl: string;
     leaderboardUrl: string;
     reviewerNote?: string | undefined;
 }, {
     name: string;
-    email: string;
-    activityName: string;
     pointsAwarded: number;
+    email: string;
     totalPoints: number;
+    activityName: string;
     leaderboardPosition: number;
     dashboardUrl: string;
     leaderboardUrl: string;
     reviewerNote?: string | undefined;
 }>;
+
+// @public
+export function assertDefined<T>(value: T | null | undefined, message?: string): asserts value is T;
+
+// @public
+export function assertUnreachable(value: never): never;
 
 // @public (undocumented)
 export const AssignBadgeSchema: z.ZodObject<{
@@ -372,241 +2798,28 @@ export const AssignBadgeSchema: z.ZodObject<{
 }>;
 
 // @public (undocumented)
-export type AuditEntityType = 'submission' | 'user' | 'badge' | 'export' | 'kajabi' | 'points' | 'cohort';
-
-// @public (undocumented)
-export interface AuditMeta {
-    // (undocumented)
-    [key: string]: unknown;
-    // (undocumented)
-    newStatus?: SubmissionStatus;
-    // (undocumented)
-    pointsAwarded?: number;
-    // (undocumented)
-    previousStatus?: SubmissionStatus;
-    // (undocumented)
-    reviewNote?: string;
-    // (undocumented)
-    submissionId?: string;
+export class AuthenticationError extends ElevateApiError {
+    constructor(message?: string, traceId?: string);
 }
 
 // @public (undocumented)
-export type AuditMetaUnion = z.infer<typeof AuditMetaUnionSchema>;
+export class AuthorizationError extends ElevateApiError {
+    constructor(message?: string, traceId?: string);
+}
 
 // @public (undocumented)
-export const AuditMetaUnionSchema: z.ZodUnion<[z.ZodObject<{
-    submissionId: z.ZodOptional<z.ZodString>;
-    pointsAwarded: z.ZodOptional<z.ZodNumber>;
-    reviewNote: z.ZodOptional<z.ZodString>;
-    previousStatus: z.ZodOptional<z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>>;
-    newStatus: z.ZodOptional<z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>>;
-    submissionType: z.ZodOptional<z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>>;
-    pointAdjustment: z.ZodOptional<z.ZodNumber>;
-    bulkOperation: z.ZodOptional<z.ZodBoolean>;
-    basePoints: z.ZodOptional<z.ZodNumber>;
-    adjustedPoints: z.ZodOptional<z.ZodNumber>;
-    reason: z.ZodOptional<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    submissionId?: string | undefined;
-    reviewNote?: string | undefined;
-    pointAdjustment?: number | undefined;
-    reason?: string | undefined;
-    pointsAwarded?: number | undefined;
-    previousStatus?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
-    newStatus?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
-    submissionType?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
-    bulkOperation?: boolean | undefined;
-    basePoints?: number | undefined;
-    adjustedPoints?: number | undefined;
-}, {
-    submissionId?: string | undefined;
-    reviewNote?: string | undefined;
-    pointAdjustment?: number | undefined;
-    reason?: string | undefined;
-    pointsAwarded?: number | undefined;
-    previousStatus?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
-    newStatus?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
-    submissionType?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
-    bulkOperation?: boolean | undefined;
-    basePoints?: number | undefined;
-    adjustedPoints?: number | undefined;
-}>, z.ZodObject<{
-    changes: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
-    originalRole: z.ZodOptional<z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>>;
-    newRole: z.ZodOptional<z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>>;
-    bulkOperation: z.ZodOptional<z.ZodBoolean>;
-}, "strip", z.ZodTypeAny, {
-    bulkOperation?: boolean | undefined;
-    changes?: Record<string, unknown> | undefined;
-    originalRole?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-    newRole?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-}, {
-    bulkOperation?: boolean | undefined;
-    changes?: Record<string, unknown> | undefined;
-    originalRole?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-    newRole?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-}>, z.ZodObject<{
-    badgeName: z.ZodOptional<z.ZodString>;
-    criteria: z.ZodOptional<z.ZodObject<{
-        type: z.ZodEnum<["points", "submissions", "activities", "streak"]>;
-        threshold: z.ZodNumber;
-        activity_codes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-        conditions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>>>;
-    }, "strip", z.ZodTypeAny, {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
-    }, {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
-    }>>;
-    updates: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>>>;
-    original: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>>>;
-}, "strip", z.ZodTypeAny, {
-    criteria?: {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
-    } | undefined;
-    badgeName?: string | undefined;
-    updates?: Record<string, string | number | boolean> | undefined;
-    original?: Record<string, string | number | boolean> | undefined;
-}, {
-    criteria?: {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
-    } | undefined;
-    badgeName?: string | undefined;
-    updates?: Record<string, string | number | boolean> | undefined;
-    original?: Record<string, string | number | boolean> | undefined;
-}>, z.ZodObject<{
-    type: z.ZodOptional<z.ZodString>;
-    format: z.ZodOptional<z.ZodString>;
-    filters: z.ZodOptional<z.ZodObject<{
-        startDate: z.ZodOptional<z.ZodString>;
-        endDate: z.ZodOptional<z.ZodString>;
-        activity: z.ZodOptional<z.ZodString>;
-        status: z.ZodOptional<z.ZodString>;
-        cohort: z.ZodOptional<z.ZodString>;
-    }, "strip", z.ZodTypeAny, {
-        status?: string | undefined;
-        cohort?: string | undefined;
-        startDate?: string | undefined;
-        endDate?: string | undefined;
-        activity?: string | undefined;
-    }, {
-        status?: string | undefined;
-        cohort?: string | undefined;
-        startDate?: string | undefined;
-        endDate?: string | undefined;
-        activity?: string | undefined;
-    }>>;
-}, "strip", z.ZodTypeAny, {
-    type?: string | undefined;
-    format?: string | undefined;
-    filters?: {
-        status?: string | undefined;
-        cohort?: string | undefined;
-        startDate?: string | undefined;
-        endDate?: string | undefined;
-        activity?: string | undefined;
-    } | undefined;
-}, {
-    type?: string | undefined;
-    format?: string | undefined;
-    filters?: {
-        status?: string | undefined;
-        cohort?: string | undefined;
-        startDate?: string | undefined;
-        endDate?: string | undefined;
-        activity?: string | undefined;
-    } | undefined;
-}>, z.ZodObject<{
-    event_id: z.ZodOptional<z.ZodString>;
-    tag_name: z.ZodOptional<z.ZodString>;
-    kajabi_contact_id: z.ZodOptional<z.ZodNumber>;
-    points_awarded: z.ZodOptional<z.ZodNumber>;
-    reprocessed_at: z.ZodOptional<z.ZodString>;
-    processed_at: z.ZodOptional<z.ZodString>;
-    user_id: z.ZodOptional<z.ZodString>;
-    email: z.ZodOptional<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    event_id?: string | undefined;
-    email?: string | undefined;
-    tag_name?: string | undefined;
-    kajabi_contact_id?: number | undefined;
-    points_awarded?: number | undefined;
-    reprocessed_at?: string | undefined;
-    processed_at?: string | undefined;
-    user_id?: string | undefined;
-}, {
-    event_id?: string | undefined;
-    email?: string | undefined;
-    tag_name?: string | undefined;
-    kajabi_contact_id?: number | undefined;
-    points_awarded?: number | undefined;
-    reprocessed_at?: string | undefined;
-    processed_at?: string | undefined;
-    user_id?: string | undefined;
-}>, z.ZodRecord<z.ZodString, z.ZodUnknown>]>;
-
-// @public (undocumented)
-export type BadgeAuditMeta = z.infer<typeof BadgeAuditMetaSchema>;
-
-// @public (undocumented)
-export const BadgeAuditMetaSchema: z.ZodObject<{
-    badgeName: z.ZodOptional<z.ZodString>;
-    criteria: z.ZodOptional<z.ZodObject<{
-        type: z.ZodEnum<["points", "submissions", "activities", "streak"]>;
-        threshold: z.ZodNumber;
-        activity_codes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-        conditions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>>>;
-    }, "strip", z.ZodTypeAny, {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
-    }, {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
-    }>>;
-    updates: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>>>;
-    original: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>>>;
-}, "strip", z.ZodTypeAny, {
-    criteria?: {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
-    } | undefined;
-    badgeName?: string | undefined;
-    updates?: Record<string, string | number | boolean> | undefined;
-    original?: Record<string, string | number | boolean> | undefined;
-}, {
-    criteria?: {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
-    } | undefined;
-    badgeName?: string | undefined;
-    updates?: Record<string, string | number | boolean> | undefined;
-    original?: Record<string, string | number | boolean> | undefined;
-}>;
-
-// @public (undocumented)
-export const BadgeConditionsSchema: z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>>;
-
-// @public (undocumented)
-export type BadgeCriteria = z.infer<typeof BadgeCriteriaSchema>;
+export interface Badge {
+    // (undocumented)
+    code: string;
+    // (undocumented)
+    criteria: unknown;
+    // (undocumented)
+    description: string;
+    // (undocumented)
+    icon_url: string | null;
+    // (undocumented)
+    name: string;
+}
 
 // @public (undocumented)
 export const BadgeCriteriaSchema: z.ZodObject<{
@@ -615,76 +2828,240 @@ export const BadgeCriteriaSchema: z.ZodObject<{
     activity_codes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     conditions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>>>;
 }, "strip", z.ZodTypeAny, {
-    type: "submissions" | "points" | "activities" | "streak";
+    type: "points" | "submissions" | "activities" | "streak";
     threshold: number;
     activity_codes?: string[] | undefined;
     conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
 }, {
-    type: "submissions" | "points" | "activities" | "streak";
+    type: "points" | "submissions" | "activities" | "streak";
     threshold: number;
     activity_codes?: string[] | undefined;
     conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
 }>;
 
 // @public (undocumented)
-export type BadgeInput = z.infer<typeof BadgeSchema>;
-
-// @public (undocumented)
-export const BadgeSchema: z.ZodObject<{
-    code: z.ZodString;
-    name: z.ZodString;
-    description: z.ZodString;
-    criteria: z.ZodObject<{
-        type: z.ZodEnum<["points", "submissions", "activities", "streak"]>;
-        threshold: z.ZodNumber;
-        activity_codes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-        conditions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>>>;
+export const BadgesListResponseSchema: z.ZodObject<{
+    success: z.ZodLiteral<true>;
+    data: z.ZodObject<{
+        badges: z.ZodArray<z.ZodObject<{
+            code: z.ZodString;
+            name: z.ZodString;
+            description: z.ZodString;
+            criteria: z.ZodObject<{
+                type: z.ZodEnum<["points", "submissions", "activities", "streak"]>;
+                threshold: z.ZodNumber;
+                activity_codes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                conditions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>>>;
+            }, "strip", z.ZodTypeAny, {
+                type: "points" | "submissions" | "activities" | "streak";
+                threshold: number;
+                activity_codes?: string[] | undefined;
+                conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+            }, {
+                type: "points" | "submissions" | "activities" | "streak";
+                threshold: number;
+                activity_codes?: string[] | undefined;
+                conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+            }>;
+            icon_url: z.ZodOptional<z.ZodString>;
+            _count: z.ZodOptional<z.ZodObject<{
+                earned_badges: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                earned_badges: number;
+            }, {
+                earned_badges: number;
+            }>>;
+            earned_badges: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                user: z.ZodObject<{
+                    id: z.ZodString;
+                    name: z.ZodString;
+                    handle: z.ZodString;
+                }, "strip", z.ZodTypeAny, {
+                    name: string;
+                    handle: string;
+                    id: string;
+                }, {
+                    name: string;
+                    handle: string;
+                    id: string;
+                }>;
+                earned_at: z.ZodString;
+            }, "strip", z.ZodTypeAny, {
+                user: {
+                    name: string;
+                    handle: string;
+                    id: string;
+                };
+                id: string;
+                earned_at: string;
+            }, {
+                user: {
+                    name: string;
+                    handle: string;
+                    id: string;
+                };
+                id: string;
+                earned_at: string;
+            }>, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            code: string;
+            name: string;
+            description: string;
+            criteria: {
+                type: "points" | "submissions" | "activities" | "streak";
+                threshold: number;
+                activity_codes?: string[] | undefined;
+                conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+            };
+            icon_url?: string | undefined;
+            _count?: {
+                earned_badges: number;
+            } | undefined;
+            earned_badges?: {
+                user: {
+                    name: string;
+                    handle: string;
+                    id: string;
+                };
+                id: string;
+                earned_at: string;
+            }[] | undefined;
+        }, {
+            code: string;
+            name: string;
+            description: string;
+            criteria: {
+                type: "points" | "submissions" | "activities" | "streak";
+                threshold: number;
+                activity_codes?: string[] | undefined;
+                conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+            };
+            icon_url?: string | undefined;
+            _count?: {
+                earned_badges: number;
+            } | undefined;
+            earned_badges?: {
+                user: {
+                    name: string;
+                    handle: string;
+                    id: string;
+                };
+                id: string;
+                earned_at: string;
+            }[] | undefined;
+        }>, "many">;
     }, "strip", z.ZodTypeAny, {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+        badges: {
+            code: string;
+            name: string;
+            description: string;
+            criteria: {
+                type: "points" | "submissions" | "activities" | "streak";
+                threshold: number;
+                activity_codes?: string[] | undefined;
+                conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+            };
+            icon_url?: string | undefined;
+            _count?: {
+                earned_badges: number;
+            } | undefined;
+            earned_badges?: {
+                user: {
+                    name: string;
+                    handle: string;
+                    id: string;
+                };
+                id: string;
+                earned_at: string;
+            }[] | undefined;
+        }[];
     }, {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+        badges: {
+            code: string;
+            name: string;
+            description: string;
+            criteria: {
+                type: "points" | "submissions" | "activities" | "streak";
+                threshold: number;
+                activity_codes?: string[] | undefined;
+                conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+            };
+            icon_url?: string | undefined;
+            _count?: {
+                earned_badges: number;
+            } | undefined;
+            earned_badges?: {
+                user: {
+                    name: string;
+                    handle: string;
+                    id: string;
+                };
+                id: string;
+                earned_at: string;
+            }[] | undefined;
+        }[];
     }>;
-    icon_url: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    code: string;
-    name: string;
-    description: string;
-    criteria: {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+    success: true;
+    data: {
+        badges: {
+            code: string;
+            name: string;
+            description: string;
+            criteria: {
+                type: "points" | "submissions" | "activities" | "streak";
+                threshold: number;
+                activity_codes?: string[] | undefined;
+                conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+            };
+            icon_url?: string | undefined;
+            _count?: {
+                earned_badges: number;
+            } | undefined;
+            earned_badges?: {
+                user: {
+                    name: string;
+                    handle: string;
+                    id: string;
+                };
+                id: string;
+                earned_at: string;
+            }[] | undefined;
+        }[];
     };
-    icon_url?: string | undefined;
 }, {
-    code: string;
-    name: string;
-    description: string;
-    criteria: {
-        type: "submissions" | "points" | "activities" | "streak";
-        threshold: number;
-        activity_codes?: string[] | undefined;
-        conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+    success: true;
+    data: {
+        badges: {
+            code: string;
+            name: string;
+            description: string;
+            criteria: {
+                type: "points" | "submissions" | "activities" | "streak";
+                threshold: number;
+                activity_codes?: string[] | undefined;
+                conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
+            };
+            icon_url?: string | undefined;
+            _count?: {
+                earned_badges: number;
+            } | undefined;
+            earned_badges?: {
+                user: {
+                    name: string;
+                    handle: string;
+                    id: string;
+                };
+                id: string;
+                earned_at: string;
+            }[] | undefined;
+        }[];
     };
-    icon_url?: string | undefined;
 }>;
 
-// @public (undocumented)
-export interface BadgeStats {
-    // (undocumented)
-    totalBadges: number;
-    // (undocumented)
-    totalEarned: number;
-    // (undocumented)
-    uniqueEarners: number;
-}
-
+// Warning: (ae-forgotten-export) The symbol "JsonValue" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 export function buildAuditMeta(envelope: {
     entityType: AuditEntityType;
@@ -795,7 +3172,22 @@ export const ClerkUserDataSchema: z.ZodObject<{
         last_name: z.ZodString;
         image_url: z.ZodString;
         username: z.ZodNullable<z.ZodString>;
-        public_metadata: z.ZodRecord<z.ZodString, z.ZodUnknown>;
+        public_metadata: z.ZodOptional<z.ZodObject<{
+            provider: z.ZodOptional<z.ZodString>;
+            emailAddress: z.ZodOptional<z.ZodString>;
+            firstName: z.ZodOptional<z.ZodString>;
+            lastName: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            provider?: string | undefined;
+            emailAddress?: string | undefined;
+            firstName?: string | undefined;
+            lastName?: string | undefined;
+        }, {
+            provider?: string | undefined;
+            emailAddress?: string | undefined;
+            firstName?: string | undefined;
+            lastName?: string | undefined;
+        }>>;
         label: z.ZodNullable<z.ZodString>;
         verification: z.ZodNullable<z.ZodObject<{
             status: z.ZodString;
@@ -815,8 +3207,8 @@ export const ClerkUserDataSchema: z.ZodObject<{
         }>>;
     }, "strip", z.ZodTypeAny, {
         object: "external_account";
-        provider: string;
         id: string;
+        provider: string;
         first_name: string;
         last_name: string;
         username: string | null;
@@ -831,12 +3223,17 @@ export const ClerkUserDataSchema: z.ZodObject<{
         identification_id: string;
         provider_user_id: string;
         approved_scopes: string;
-        public_metadata: Record<string, unknown>;
         label: string | null;
+        public_metadata?: {
+            provider?: string | undefined;
+            emailAddress?: string | undefined;
+            firstName?: string | undefined;
+            lastName?: string | undefined;
+        } | undefined;
     }, {
         object: "external_account";
-        provider: string;
         id: string;
+        provider: string;
         first_name: string;
         last_name: string;
         username: string | null;
@@ -851,8 +3248,13 @@ export const ClerkUserDataSchema: z.ZodObject<{
         identification_id: string;
         provider_user_id: string;
         approved_scopes: string;
-        public_metadata: Record<string, unknown>;
         label: string | null;
+        public_metadata?: {
+            provider?: string | undefined;
+            emailAddress?: string | undefined;
+            firstName?: string | undefined;
+            lastName?: string | undefined;
+        } | undefined;
     }>, "many">;
     created_at: z.ZodNumber;
     updated_at: z.ZodNumber;
@@ -864,13 +3266,40 @@ export const ClerkUserDataSchema: z.ZodObject<{
     locked: z.ZodBoolean;
     lockout_expires_in_seconds: z.ZodNullable<z.ZodNumber>;
     verification_attempts_remaining: z.ZodNumber;
-    public_metadata: z.ZodRecord<z.ZodString, z.ZodUnknown>;
-    private_metadata: z.ZodRecord<z.ZodString, z.ZodUnknown>;
-    unsafe_metadata: z.ZodRecord<z.ZodString, z.ZodUnknown>;
+    public_metadata: z.ZodOptional<z.ZodObject<{
+        role: z.ZodOptional<z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>>;
+        profileVisible: z.ZodOptional<z.ZodBoolean>;
+        onboardingCompleted: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+        profileVisible?: boolean | undefined;
+        onboardingCompleted?: boolean | undefined;
+    }, {
+        role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+        profileVisible?: boolean | undefined;
+        onboardingCompleted?: boolean | undefined;
+    }>>;
+    private_metadata: z.ZodOptional<z.ZodObject<{
+        internalNotes: z.ZodOptional<z.ZodString>;
+        migrationFlags: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodBoolean>>;
+    }, "strip", z.ZodTypeAny, {
+        internalNotes?: string | undefined;
+        migrationFlags?: Record<string, boolean> | undefined;
+    }, {
+        internalNotes?: string | undefined;
+        migrationFlags?: Record<string, boolean> | undefined;
+    }>>;
+    unsafe_metadata: z.ZodOptional<z.ZodObject<{
+        temporaryData: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+    }, "strip", z.ZodTypeAny, {
+        temporaryData?: Record<string, string> | undefined;
+    }, {
+        temporaryData?: Record<string, string> | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     object: "user";
-    created_at: number;
     id: string;
+    created_at: number;
     first_name: string | null;
     last_name: string | null;
     username: string | null;
@@ -899,8 +3328,8 @@ export const ClerkUserDataSchema: z.ZodObject<{
     web3_wallets: unknown[];
     external_accounts: {
         object: "external_account";
-        provider: string;
         id: string;
+        provider: string;
         first_name: string;
         last_name: string;
         username: string | null;
@@ -915,10 +3344,14 @@ export const ClerkUserDataSchema: z.ZodObject<{
         identification_id: string;
         provider_user_id: string;
         approved_scopes: string;
-        public_metadata: Record<string, unknown>;
         label: string | null;
+        public_metadata?: {
+            provider?: string | undefined;
+            emailAddress?: string | undefined;
+            firstName?: string | undefined;
+            lastName?: string | undefined;
+        } | undefined;
     }[];
-    public_metadata: Record<string, unknown>;
     updated_at: number;
     gender: string;
     birthday: string;
@@ -928,12 +3361,22 @@ export const ClerkUserDataSchema: z.ZodObject<{
     locked: boolean;
     lockout_expires_in_seconds: number | null;
     verification_attempts_remaining: number;
-    private_metadata: Record<string, unknown>;
-    unsafe_metadata: Record<string, unknown>;
+    public_metadata?: {
+        role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+        profileVisible?: boolean | undefined;
+        onboardingCompleted?: boolean | undefined;
+    } | undefined;
+    private_metadata?: {
+        internalNotes?: string | undefined;
+        migrationFlags?: Record<string, boolean> | undefined;
+    } | undefined;
+    unsafe_metadata?: {
+        temporaryData?: Record<string, string> | undefined;
+    } | undefined;
 }, {
     object: "user";
-    created_at: number;
     id: string;
+    created_at: number;
     first_name: string | null;
     last_name: string | null;
     username: string | null;
@@ -962,8 +3405,8 @@ export const ClerkUserDataSchema: z.ZodObject<{
     web3_wallets: unknown[];
     external_accounts: {
         object: "external_account";
-        provider: string;
         id: string;
+        provider: string;
         first_name: string;
         last_name: string;
         username: string | null;
@@ -978,10 +3421,14 @@ export const ClerkUserDataSchema: z.ZodObject<{
         identification_id: string;
         provider_user_id: string;
         approved_scopes: string;
-        public_metadata: Record<string, unknown>;
         label: string | null;
+        public_metadata?: {
+            provider?: string | undefined;
+            emailAddress?: string | undefined;
+            firstName?: string | undefined;
+            lastName?: string | undefined;
+        } | undefined;
     }[];
-    public_metadata: Record<string, unknown>;
     updated_at: number;
     gender: string;
     birthday: string;
@@ -991,8 +3438,18 @@ export const ClerkUserDataSchema: z.ZodObject<{
     locked: boolean;
     lockout_expires_in_seconds: number | null;
     verification_attempts_remaining: number;
-    private_metadata: Record<string, unknown>;
-    unsafe_metadata: Record<string, unknown>;
+    public_metadata?: {
+        role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+        profileVisible?: boolean | undefined;
+        onboardingCompleted?: boolean | undefined;
+    } | undefined;
+    private_metadata?: {
+        internalNotes?: string | undefined;
+        migrationFlags?: Record<string, boolean> | undefined;
+    } | undefined;
+    unsafe_metadata?: {
+        temporaryData?: Record<string, string> | undefined;
+    } | undefined;
 }>;
 
 // @public (undocumented)
@@ -1073,7 +3530,22 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
             last_name: z.ZodString;
             image_url: z.ZodString;
             username: z.ZodNullable<z.ZodString>;
-            public_metadata: z.ZodRecord<z.ZodString, z.ZodUnknown>;
+            public_metadata: z.ZodOptional<z.ZodObject<{
+                provider: z.ZodOptional<z.ZodString>;
+                emailAddress: z.ZodOptional<z.ZodString>;
+                firstName: z.ZodOptional<z.ZodString>;
+                lastName: z.ZodOptional<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                provider?: string | undefined;
+                emailAddress?: string | undefined;
+                firstName?: string | undefined;
+                lastName?: string | undefined;
+            }, {
+                provider?: string | undefined;
+                emailAddress?: string | undefined;
+                firstName?: string | undefined;
+                lastName?: string | undefined;
+            }>>;
             label: z.ZodNullable<z.ZodString>;
             verification: z.ZodNullable<z.ZodObject<{
                 status: z.ZodString;
@@ -1093,8 +3565,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
             }>>;
         }, "strip", z.ZodTypeAny, {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -1109,12 +3581,17 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
             identification_id: string;
             provider_user_id: string;
             approved_scopes: string;
-            public_metadata: Record<string, unknown>;
             label: string | null;
+            public_metadata?: {
+                provider?: string | undefined;
+                emailAddress?: string | undefined;
+                firstName?: string | undefined;
+                lastName?: string | undefined;
+            } | undefined;
         }, {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -1129,8 +3606,13 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
             identification_id: string;
             provider_user_id: string;
             approved_scopes: string;
-            public_metadata: Record<string, unknown>;
             label: string | null;
+            public_metadata?: {
+                provider?: string | undefined;
+                emailAddress?: string | undefined;
+                firstName?: string | undefined;
+                lastName?: string | undefined;
+            } | undefined;
         }>, "many">;
         created_at: z.ZodNumber;
         updated_at: z.ZodNumber;
@@ -1142,13 +3624,40 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         locked: z.ZodBoolean;
         lockout_expires_in_seconds: z.ZodNullable<z.ZodNumber>;
         verification_attempts_remaining: z.ZodNumber;
-        public_metadata: z.ZodRecord<z.ZodString, z.ZodUnknown>;
-        private_metadata: z.ZodRecord<z.ZodString, z.ZodUnknown>;
-        unsafe_metadata: z.ZodRecord<z.ZodString, z.ZodUnknown>;
+        public_metadata: z.ZodOptional<z.ZodObject<{
+            role: z.ZodOptional<z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>>;
+            profileVisible: z.ZodOptional<z.ZodBoolean>;
+            onboardingCompleted: z.ZodOptional<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+            profileVisible?: boolean | undefined;
+            onboardingCompleted?: boolean | undefined;
+        }, {
+            role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+            profileVisible?: boolean | undefined;
+            onboardingCompleted?: boolean | undefined;
+        }>>;
+        private_metadata: z.ZodOptional<z.ZodObject<{
+            internalNotes: z.ZodOptional<z.ZodString>;
+            migrationFlags: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodBoolean>>;
+        }, "strip", z.ZodTypeAny, {
+            internalNotes?: string | undefined;
+            migrationFlags?: Record<string, boolean> | undefined;
+        }, {
+            internalNotes?: string | undefined;
+            migrationFlags?: Record<string, boolean> | undefined;
+        }>>;
+        unsafe_metadata: z.ZodOptional<z.ZodObject<{
+            temporaryData: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            temporaryData?: Record<string, string> | undefined;
+        }, {
+            temporaryData?: Record<string, string> | undefined;
+        }>>;
     }, "strip", z.ZodTypeAny, {
         object: "user";
-        created_at: number;
         id: string;
+        created_at: number;
         first_name: string | null;
         last_name: string | null;
         username: string | null;
@@ -1177,8 +3686,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         web3_wallets: unknown[];
         external_accounts: {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -1193,10 +3702,14 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
             identification_id: string;
             provider_user_id: string;
             approved_scopes: string;
-            public_metadata: Record<string, unknown>;
             label: string | null;
+            public_metadata?: {
+                provider?: string | undefined;
+                emailAddress?: string | undefined;
+                firstName?: string | undefined;
+                lastName?: string | undefined;
+            } | undefined;
         }[];
-        public_metadata: Record<string, unknown>;
         updated_at: number;
         gender: string;
         birthday: string;
@@ -1206,12 +3719,22 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         locked: boolean;
         lockout_expires_in_seconds: number | null;
         verification_attempts_remaining: number;
-        private_metadata: Record<string, unknown>;
-        unsafe_metadata: Record<string, unknown>;
+        public_metadata?: {
+            role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+            profileVisible?: boolean | undefined;
+            onboardingCompleted?: boolean | undefined;
+        } | undefined;
+        private_metadata?: {
+            internalNotes?: string | undefined;
+            migrationFlags?: Record<string, boolean> | undefined;
+        } | undefined;
+        unsafe_metadata?: {
+            temporaryData?: Record<string, string> | undefined;
+        } | undefined;
     }, {
         object: "user";
-        created_at: number;
         id: string;
+        created_at: number;
         first_name: string | null;
         last_name: string | null;
         username: string | null;
@@ -1240,8 +3763,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         web3_wallets: unknown[];
         external_accounts: {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -1256,10 +3779,14 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
             identification_id: string;
             provider_user_id: string;
             approved_scopes: string;
-            public_metadata: Record<string, unknown>;
             label: string | null;
+            public_metadata?: {
+                provider?: string | undefined;
+                emailAddress?: string | undefined;
+                firstName?: string | undefined;
+                lastName?: string | undefined;
+            } | undefined;
         }[];
-        public_metadata: Record<string, unknown>;
         updated_at: number;
         gender: string;
         birthday: string;
@@ -1269,8 +3796,18 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         locked: boolean;
         lockout_expires_in_seconds: number | null;
         verification_attempts_remaining: number;
-        private_metadata: Record<string, unknown>;
-        unsafe_metadata: Record<string, unknown>;
+        public_metadata?: {
+            role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+            profileVisible?: boolean | undefined;
+            onboardingCompleted?: boolean | undefined;
+        } | undefined;
+        private_metadata?: {
+            internalNotes?: string | undefined;
+            migrationFlags?: Record<string, boolean> | undefined;
+        } | undefined;
+        unsafe_metadata?: {
+            temporaryData?: Record<string, string> | undefined;
+        } | undefined;
     }>;
     object: z.ZodLiteral<"event">;
     type: z.ZodEnum<["user.created", "user.updated", "user.deleted", "session.created", "session.ended", "session.removed", "session.revoked"]>;
@@ -1279,8 +3816,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
     type: "user.created" | "user.updated" | "user.deleted" | "session.created" | "session.ended" | "session.removed" | "session.revoked";
     data: {
         object: "user";
-        created_at: number;
         id: string;
+        created_at: number;
         first_name: string | null;
         last_name: string | null;
         username: string | null;
@@ -1309,8 +3846,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         web3_wallets: unknown[];
         external_accounts: {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -1325,10 +3862,14 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
             identification_id: string;
             provider_user_id: string;
             approved_scopes: string;
-            public_metadata: Record<string, unknown>;
             label: string | null;
+            public_metadata?: {
+                provider?: string | undefined;
+                emailAddress?: string | undefined;
+                firstName?: string | undefined;
+                lastName?: string | undefined;
+            } | undefined;
         }[];
-        public_metadata: Record<string, unknown>;
         updated_at: number;
         gender: string;
         birthday: string;
@@ -1338,16 +3879,26 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         locked: boolean;
         lockout_expires_in_seconds: number | null;
         verification_attempts_remaining: number;
-        private_metadata: Record<string, unknown>;
-        unsafe_metadata: Record<string, unknown>;
+        public_metadata?: {
+            role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+            profileVisible?: boolean | undefined;
+            onboardingCompleted?: boolean | undefined;
+        } | undefined;
+        private_metadata?: {
+            internalNotes?: string | undefined;
+            migrationFlags?: Record<string, boolean> | undefined;
+        } | undefined;
+        unsafe_metadata?: {
+            temporaryData?: Record<string, string> | undefined;
+        } | undefined;
     };
 }, {
     object: "event";
     type: "user.created" | "user.updated" | "user.deleted" | "session.created" | "session.ended" | "session.removed" | "session.revoked";
     data: {
         object: "user";
-        created_at: number;
         id: string;
+        created_at: number;
         first_name: string | null;
         last_name: string | null;
         username: string | null;
@@ -1376,8 +3927,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         web3_wallets: unknown[];
         external_accounts: {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -1392,10 +3943,14 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
             identification_id: string;
             provider_user_id: string;
             approved_scopes: string;
-            public_metadata: Record<string, unknown>;
             label: string | null;
+            public_metadata?: {
+                provider?: string | undefined;
+                emailAddress?: string | undefined;
+                firstName?: string | undefined;
+                lastName?: string | undefined;
+            } | undefined;
         }[];
-        public_metadata: Record<string, unknown>;
         updated_at: number;
         gender: string;
         birthday: string;
@@ -1405,21 +3960,255 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         locked: boolean;
         lockout_expires_in_seconds: number | null;
         verification_attempts_remaining: number;
-        private_metadata: Record<string, unknown>;
-        unsafe_metadata: Record<string, unknown>;
+        public_metadata?: {
+            role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+            profileVisible?: boolean | undefined;
+            onboardingCompleted?: boolean | undefined;
+        } | undefined;
+        private_metadata?: {
+            internalNotes?: string | undefined;
+            migrationFlags?: Record<string, boolean> | undefined;
+        } | undefined;
+        unsafe_metadata?: {
+            temporaryData?: Record<string, string> | undefined;
+        } | undefined;
     };
 }>;
 
 // @public (undocumented)
-export interface CohortDistribution {
-    // (undocumented)
-    cohort: string;
-    // (undocumented)
-    count: number;
-}
+export type ClientErrorReport = z.infer<typeof ClientErrorReportSchema>;
 
 // @public (undocumented)
+export const ClientErrorReportSchema: z.ZodObject<{
+    level: z.ZodEnum<["error", "warn", "info"]>;
+    message: z.ZodString;
+    error: z.ZodOptional<z.ZodObject<{
+        name: z.ZodString;
+        message: z.ZodString;
+        stack: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        message: string;
+        name: string;
+        stack?: string | undefined;
+    }, {
+        message: string;
+        name: string;
+        stack?: string | undefined;
+    }>>;
+    context: z.ZodOptional<z.ZodObject<{
+        url: z.ZodOptional<z.ZodString>;
+        userId: z.ZodOptional<z.ZodString>;
+        userAgent: z.ZodOptional<z.ZodString>;
+        timestamp: z.ZodOptional<z.ZodString>;
+        component: z.ZodOptional<z.ZodString>;
+        action: z.ZodOptional<z.ZodString>;
+        sessionId: z.ZodOptional<z.ZodString>;
+        buildId: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        url?: string | undefined;
+        userId?: string | undefined;
+        userAgent?: string | undefined;
+        timestamp?: string | undefined;
+        component?: string | undefined;
+        action?: string | undefined;
+        sessionId?: string | undefined;
+        buildId?: string | undefined;
+    }, {
+        url?: string | undefined;
+        userId?: string | undefined;
+        userAgent?: string | undefined;
+        timestamp?: string | undefined;
+        component?: string | undefined;
+        action?: string | undefined;
+        sessionId?: string | undefined;
+        buildId?: string | undefined;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    level: "error" | "warn" | "info";
+    message: string;
+    error?: {
+        message: string;
+        name: string;
+        stack?: string | undefined;
+    } | undefined;
+    context?: {
+        url?: string | undefined;
+        userId?: string | undefined;
+        userAgent?: string | undefined;
+        timestamp?: string | undefined;
+        component?: string | undefined;
+        action?: string | undefined;
+        sessionId?: string | undefined;
+        buildId?: string | undefined;
+    } | undefined;
+}, {
+    level: "error" | "warn" | "info";
+    message: string;
+    error?: {
+        message: string;
+        name: string;
+        stack?: string | undefined;
+    } | undefined;
+    context?: {
+        url?: string | undefined;
+        userId?: string | undefined;
+        userAgent?: string | undefined;
+        timestamp?: string | undefined;
+        component?: string | undefined;
+        action?: string | undefined;
+        sessionId?: string | undefined;
+        buildId?: string | undefined;
+    } | undefined;
+}>;
+
+// @public (undocumented)
+export type CohortComparison = z.infer<typeof CohortComparisonSchema>;
+
+// @public (undocumented)
+export const CohortComparisonSchema: z.ZodObject<{
+    cohort: z.ZodString;
+    participant_count: z.ZodNumber;
+    avg_points_per_user: z.ZodNumber;
+    total_points: z.ZodNumber;
+    completion_rate: z.ZodNumber;
+    top_user_points: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    cohort: string;
+    total_points: number;
+    participant_count: number;
+    avg_points_per_user: number;
+    completion_rate: number;
+    top_user_points: number;
+}, {
+    cohort: string;
+    total_points: number;
+    participant_count: number;
+    avg_points_per_user: number;
+    completion_rate: number;
+    top_user_points: number;
+}>;
+
+// @public (undocumented)
+export type CohortMetrics = z.infer<typeof CohortMetricsSchema>;
+
+// @public (undocumented)
+export const CohortMetricsSchema: z.ZodObject<{
+    cohort: z.ZodString;
+    total_participants: z.ZodNumber;
+    participants_with_points: z.ZodNumber;
+    participants_with_submissions: z.ZodNumber;
+    total_points: z.ZodNumber;
+    avg_points_per_participant: z.ZodNumber;
+    max_points_in_cohort: z.ZodNumber;
+    total_submissions: z.ZodNumber;
+    approved_submissions: z.ZodNumber;
+    pending_submissions: z.ZodNumber;
+    public_submissions: z.ZodNumber;
+    first_activity_at: z.ZodNullable<z.ZodDate>;
+    latest_activity_at: z.ZodNullable<z.ZodDate>;
+}, "strip", z.ZodTypeAny, {
+    cohort: string;
+    total_points: number;
+    public_submissions: number;
+    pending_submissions: number;
+    total_submissions: number;
+    approved_submissions: number;
+    total_participants: number;
+    participants_with_points: number;
+    participants_with_submissions: number;
+    avg_points_per_participant: number;
+    max_points_in_cohort: number;
+    first_activity_at: Date | null;
+    latest_activity_at: Date | null;
+}, {
+    cohort: string;
+    total_points: number;
+    public_submissions: number;
+    pending_submissions: number;
+    total_submissions: number;
+    approved_submissions: number;
+    total_participants: number;
+    participants_with_points: number;
+    participants_with_submissions: number;
+    avg_points_per_participant: number;
+    max_points_in_cohort: number;
+    first_activity_at: Date | null;
+    latest_activity_at: Date | null;
+}>;
+
+// @public
 export const CohortSchema: z.ZodString;
+
+// @public (undocumented)
+export type ComparisonMetrics = z.infer<typeof ComparisonMetricsSchema>;
+
+// @public (undocumented)
+export const ComparisonMetricsSchema: z.ZodObject<{
+    entity: z.ZodString;
+    entityType: z.ZodEnum<["cohort", "school", "activity"]>;
+    metrics: z.ZodObject<{
+        totalPoints: z.ZodNumber;
+        totalSubmissions: z.ZodNumber;
+        activeParticipants: z.ZodNumber;
+        approvalRate: z.ZodNumber;
+        avgPointsPerParticipant: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        totalPoints: number;
+        approvalRate: number;
+        totalSubmissions: number;
+        activeParticipants: number;
+        avgPointsPerParticipant: number;
+    }, {
+        totalPoints: number;
+        approvalRate: number;
+        totalSubmissions: number;
+        activeParticipants: number;
+        avgPointsPerParticipant: number;
+    }>;
+    ranking: z.ZodOptional<z.ZodObject<{
+        pointsRank: z.ZodNumber;
+        participationRank: z.ZodNumber;
+        approvalRateRank: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        pointsRank: number;
+        participationRank: number;
+        approvalRateRank: number;
+    }, {
+        pointsRank: number;
+        participationRank: number;
+        approvalRateRank: number;
+    }>>;
+}, "strip", z.ZodTypeAny, {
+    entityType: "school" | "cohort" | "activity";
+    entity: string;
+    metrics: {
+        totalPoints: number;
+        approvalRate: number;
+        totalSubmissions: number;
+        activeParticipants: number;
+        avgPointsPerParticipant: number;
+    };
+    ranking?: {
+        pointsRank: number;
+        participationRank: number;
+        approvalRateRank: number;
+    } | undefined;
+}, {
+    entityType: "school" | "cohort" | "activity";
+    entity: string;
+    metrics: {
+        totalPoints: number;
+        approvalRate: number;
+        totalSubmissions: number;
+        activeParticipants: number;
+        avgPointsPerParticipant: number;
+    };
+    ranking?: {
+        pointsRank: number;
+        participationRank: number;
+        approvalRateRank: number;
+    } | undefined;
+}>;
 
 // @public (undocumented)
 export type ComponentSize = 'sm' | 'md' | 'lg';
@@ -1428,26 +4217,12 @@ export type ComponentSize = 'sm' | 'md' | 'lg';
 export type ComponentVariant = 'default' | 'primary' | 'secondary' | 'ghost' | 'destructive';
 
 // @public (undocumented)
-export interface DailyRegistrationStats {
-    // (undocumented)
-    count: number;
-    // (undocumented)
-    date: string;
+export class ConflictError extends ElevateApiError {
+    constructor(message: string, details?: unknown, traceId?: string);
 }
 
-// @public (undocumented)
-export interface DailySubmissionStats {
-    // (undocumented)
-    approved: number;
-    // (undocumented)
-    date: string;
-    // (undocumented)
-    pending: number;
-    // (undocumented)
-    rejected: number;
-    // (undocumented)
-    total: number;
-}
+// @public
+export function createHeaders(headers?: Record<string, string>): Record<string, string>;
 
 // @public (undocumented)
 export interface DashboardStats {
@@ -1461,27 +4236,430 @@ export interface DashboardStats {
     totalSubmissions: number;
 }
 
+// @public
+export const DateStringSchema: z.ZodEffects<z.ZodString, string, string>;
+
+// @public
+export const DateTimeWithOffsetSchema: z.ZodString;
+
+// @public
+export const DEFAULTS: {
+    readonly PAGINATION_PAGE: 1;
+    readonly PAGINATION_LIMIT: 20;
+    readonly LEADERBOARD_PERIOD: "all";
+    readonly ADMIN_SUBMISSIONS_STATUS: "PENDING";
+    readonly ADMIN_SUBMISSIONS_ACTIVITY: "ALL";
+    readonly ADMIN_USERS_ROLE: "ALL";
+    readonly SORT_ORDER: "desc";
+};
+
 // @public (undocumented)
-export interface DatabaseFilter {
+export const DistributionsSchema: z.ZodObject<{
+    submissionsByStatus: z.ZodArray<z.ZodObject<{
+        status: z.ZodString;
+        count: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        status: string;
+        count: number;
+    }, {
+        status: string;
+        count: number;
+    }>, "many">;
+    submissionsByActivity: z.ZodArray<z.ZodObject<{
+        activity: z.ZodString;
+        activityName: z.ZodOptional<z.ZodString>;
+        count: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        activity: string;
+        count: number;
+        activityName?: string | undefined;
+    }, {
+        activity: string;
+        count: number;
+        activityName?: string | undefined;
+    }>, "many">;
+    usersByRole: z.ZodArray<z.ZodObject<{
+        role: z.ZodString;
+        count: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        role: string;
+        count: number;
+    }, {
+        role: string;
+        count: number;
+    }>, "many">;
+    usersByCohort: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        cohort: z.ZodNullable<z.ZodString>;
+        count: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        cohort: string | null;
+        count: number;
+    }, {
+        cohort: string | null;
+        count: number;
+    }>, "many">>;
+    pointsByActivity: z.ZodArray<z.ZodObject<{
+        activity: z.ZodString;
+        activityName: z.ZodOptional<z.ZodString>;
+        totalPoints: z.ZodNumber;
+        entries: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        entries: number;
+        activity: string;
+        totalPoints: number;
+        activityName?: string | undefined;
+    }, {
+        entries: number;
+        activity: string;
+        totalPoints: number;
+        activityName?: string | undefined;
+    }>, "many">;
+    pointsDistribution: z.ZodOptional<z.ZodArray<z.ZodObject<{
+        range: z.ZodString;
+        count: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        count: number;
+        range: string;
+    }, {
+        count: number;
+        range: string;
+    }>, "many">>;
+}, "strip", z.ZodTypeAny, {
+    submissionsByStatus: {
+        status: string;
+        count: number;
+    }[];
+    submissionsByActivity: {
+        activity: string;
+        count: number;
+        activityName?: string | undefined;
+    }[];
+    usersByRole: {
+        role: string;
+        count: number;
+    }[];
+    pointsByActivity: {
+        entries: number;
+        activity: string;
+        totalPoints: number;
+        activityName?: string | undefined;
+    }[];
+    usersByCohort?: {
+        cohort: string | null;
+        count: number;
+    }[] | undefined;
+    pointsDistribution?: {
+        count: number;
+        range: string;
+    }[] | undefined;
+}, {
+    submissionsByStatus: {
+        status: string;
+        count: number;
+    }[];
+    submissionsByActivity: {
+        activity: string;
+        count: number;
+        activityName?: string | undefined;
+    }[];
+    usersByRole: {
+        role: string;
+        count: number;
+    }[];
+    pointsByActivity: {
+        entries: number;
+        activity: string;
+        totalPoints: number;
+        activityName?: string | undefined;
+    }[];
+    usersByCohort?: {
+        cohort: string | null;
+        count: number;
+    }[] | undefined;
+    pointsDistribution?: {
+        count: number;
+        range: string;
+    }[] | undefined;
+}>;
+
+// @public
+export const DomainSchemas: {
+    readonly ActivityCode: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+    readonly UserRole: z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
+    readonly SubmissionStatus: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+    readonly Visibility: z.ZodEnum<["PRIVATE", "PUBLIC"]>;
+    readonly LedgerSource: z.ZodEnum<["MANUAL", "WEBHOOK", "FORM"]>;
+    readonly Handle: z.ZodString;
+    readonly Email: z.ZodString;
+    readonly Url: z.ZodString;
+    readonly Cohort: z.ZodString;
+    readonly School: z.ZodString;
+    readonly DateTimeWithOffset: z.ZodString;
+    readonly DateString: z.ZodEffects<z.ZodString, string, string>;
+    readonly PaginationParams: z.ZodObject<{
+        page: z.ZodDefault<z.ZodNumber>;
+        limit: z.ZodDefault<z.ZodNumber>;
+        offset: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        page: number;
+        limit: number;
+        offset?: number | undefined;
+    }, {
+        page?: number | undefined;
+        limit?: number | undefined;
+        offset?: number | undefined;
+    }>;
+    readonly ActivityFilter: z.ZodEnum<["ALL", "LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+    readonly StatusFilter: z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED"]>;
+    readonly RoleFilter: z.ZodEnum<["ALL", "PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
+    readonly ApiSuccess: <T extends z.ZodTypeAny>(dataSchema: T) => z.ZodObject<{
+        success: z.ZodLiteral<true>;
+        data: T;
+        message: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, z.objectUtil.addQuestionMarks<z.baseObjectOutputType<{
+        success: z.ZodLiteral<true>;
+        data: T;
+        message: z.ZodOptional<z.ZodString>;
+    }>, any> extends infer T_1 ? { [k in keyof T_1]: T_1[k]; } : never, z.baseObjectInputType<{
+        success: z.ZodLiteral<true>;
+        data: T;
+        message: z.ZodOptional<z.ZodString>;
+    }> extends infer T_2 ? { [k_1 in keyof T_2]: T_2[k_1]; } : never>;
+    readonly ApiError: z.ZodObject<{
+        success: z.ZodLiteral<false>;
+        error: z.ZodString;
+        details: z.ZodOptional<z.ZodObject<{
+            code: z.ZodOptional<z.ZodString>;
+            field: z.ZodOptional<z.ZodString>;
+            traceId: z.ZodOptional<z.ZodString>;
+            timestamp: z.ZodOptional<z.ZodString>;
+            validationErrors: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                path: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNumber]>, "many">;
+                message: z.ZodString;
+                code: z.ZodString;
+            }, "strip", z.ZodTypeAny, {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }, {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }>, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            code?: string | undefined;
+            field?: string | undefined;
+            traceId?: string | undefined;
+            timestamp?: string | undefined;
+            validationErrors?: {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }[] | undefined;
+        }, {
+            code?: string | undefined;
+            field?: string | undefined;
+            traceId?: string | undefined;
+            timestamp?: string | undefined;
+            validationErrors?: {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }[] | undefined;
+        }>>;
+    }, "strip", z.ZodTypeAny, {
+        success: false;
+        error: string;
+        details?: {
+            code?: string | undefined;
+            field?: string | undefined;
+            traceId?: string | undefined;
+            timestamp?: string | undefined;
+            validationErrors?: {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }[] | undefined;
+        } | undefined;
+    }, {
+        success: false;
+        error: string;
+        details?: {
+            code?: string | undefined;
+            field?: string | undefined;
+            traceId?: string | undefined;
+            timestamp?: string | undefined;
+            validationErrors?: {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }[] | undefined;
+        } | undefined;
+    }>;
+    readonly ApiResponse: <T extends z.ZodTypeAny>(dataSchema: T) => z.ZodDiscriminatedUnion<"success", [z.ZodObject<{
+        success: z.ZodLiteral<true>;
+        data: T;
+        message: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, z.objectUtil.addQuestionMarks<z.baseObjectOutputType<{
+        success: z.ZodLiteral<true>;
+        data: T;
+        message: z.ZodOptional<z.ZodString>;
+    }>, any> extends infer T_1 ? { [k in keyof T_1]: T_1[k]; } : never, z.baseObjectInputType<{
+        success: z.ZodLiteral<true>;
+        data: T;
+        message: z.ZodOptional<z.ZodString>;
+    }> extends infer T_2 ? { [k_1 in keyof T_2]: T_2[k_1]; } : never>, z.ZodObject<{
+        success: z.ZodLiteral<false>;
+        error: z.ZodString;
+        details: z.ZodOptional<z.ZodObject<{
+            code: z.ZodOptional<z.ZodString>;
+            field: z.ZodOptional<z.ZodString>;
+            traceId: z.ZodOptional<z.ZodString>;
+            timestamp: z.ZodOptional<z.ZodString>;
+            validationErrors: z.ZodOptional<z.ZodArray<z.ZodObject<{
+                path: z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNumber]>, "many">;
+                message: z.ZodString;
+                code: z.ZodString;
+            }, "strip", z.ZodTypeAny, {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }, {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }>, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            code?: string | undefined;
+            field?: string | undefined;
+            traceId?: string | undefined;
+            timestamp?: string | undefined;
+            validationErrors?: {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }[] | undefined;
+        }, {
+            code?: string | undefined;
+            field?: string | undefined;
+            traceId?: string | undefined;
+            timestamp?: string | undefined;
+            validationErrors?: {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }[] | undefined;
+        }>>;
+    }, "strip", z.ZodTypeAny, {
+        success: false;
+        error: string;
+        details?: {
+            code?: string | undefined;
+            field?: string | undefined;
+            traceId?: string | undefined;
+            timestamp?: string | undefined;
+            validationErrors?: {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }[] | undefined;
+        } | undefined;
+    }, {
+        success: false;
+        error: string;
+        details?: {
+            code?: string | undefined;
+            field?: string | undefined;
+            traceId?: string | undefined;
+            timestamp?: string | undefined;
+            validationErrors?: {
+                code: string;
+                path: (string | number)[];
+                message: string;
+            }[] | undefined;
+        } | undefined;
+    }>]>;
+};
+
+// @public (undocumented)
+export interface EarnedBadge {
     // (undocumented)
-    activityCode?: ActivityCode;
+    badge_code: string;
     // (undocumented)
-    cohort?: string;
+    earned_at: Date;
     // (undocumented)
-    endDate?: string;
+    id: string;
     // (undocumented)
-    role?: Role;
-    // (undocumented)
-    startDate?: string;
-    // (undocumented)
-    status?: SubmissionStatus;
+    user_id: string;
 }
 
 // @public (undocumented)
-export const DateStringSchema: z.ZodEffects<z.ZodString, string, string>;
+export class ElevateApiError extends Error {
+    constructor(message: string, code?: ErrorCode, details?: unknown, traceId?: string);
+    // (undocumented)
+    readonly code: ErrorCode;
+    // (undocumented)
+    readonly details?: unknown;
+    // (undocumented)
+    readonly severity: ErrorSeverityLevel;
+    // (undocumented)
+    readonly statusCode: number;
+    // (undocumented)
+    readonly traceId?: string;
+}
+
+// @public
+export const EmailSchema: z.ZodString;
 
 // @public (undocumented)
-export const EmailSchema: z.ZodString;
+export type ErrorCode = keyof typeof ErrorCodes;
+
+// @public (undocumented)
+export const ErrorCodes: {
+    readonly UNAUTHORIZED: "UNAUTHORIZED";
+    readonly FORBIDDEN: "FORBIDDEN";
+    readonly TOKEN_EXPIRED: "TOKEN_EXPIRED";
+    readonly INVALID_CREDENTIALS: "INVALID_CREDENTIALS";
+    readonly VALIDATION_ERROR: "VALIDATION_ERROR";
+    readonly INVALID_INPUT: "INVALID_INPUT";
+    readonly MISSING_REQUIRED_FIELD: "MISSING_REQUIRED_FIELD";
+    readonly NOT_FOUND: "NOT_FOUND";
+    readonly ALREADY_EXISTS: "ALREADY_EXISTS";
+    readonly RESOURCE_CONFLICT: "RESOURCE_CONFLICT";
+    readonly SUBMISSION_LIMIT_EXCEEDED: "SUBMISSION_LIMIT_EXCEEDED";
+    readonly INVALID_SUBMISSION_STATUS: "INVALID_SUBMISSION_STATUS";
+    readonly POINT_ADJUSTMENT_OUT_OF_BOUNDS: "POINT_ADJUSTMENT_OUT_OF_BOUNDS";
+    readonly FILE_TOO_LARGE: "FILE_TOO_LARGE";
+    readonly INVALID_FILE_TYPE: "INVALID_FILE_TYPE";
+    readonly FILE_UPLOAD_FAILED: "FILE_UPLOAD_FAILED";
+    readonly RATE_LIMIT_EXCEEDED: "RATE_LIMIT_EXCEEDED";
+    readonly EXTERNAL_SERVICE_ERROR: "EXTERNAL_SERVICE_ERROR";
+    readonly WEBHOOK_VALIDATION_FAILED: "WEBHOOK_VALIDATION_FAILED";
+    readonly INTERNAL_ERROR: "INTERNAL_ERROR";
+    readonly SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE";
+    readonly DATABASE_ERROR: "DATABASE_ERROR";
+    readonly INVALID_CONFIG: "INVALID_CONFIG";
+    readonly TEST_ERROR: "TEST_ERROR";
+    readonly CONNECTION_ERROR: "CONNECTION_ERROR";
+    readonly CUSTOM_ERROR: "CUSTOM_ERROR";
+};
+
+// @public (undocumented)
+export const ErrorSeverity: {
+    readonly LOW: "low";
+    readonly MEDIUM: "medium";
+    readonly HIGH: "high";
+    readonly CRITICAL: "critical";
+};
+
+// @public (undocumented)
+export type ErrorSeverityLevel = (typeof ErrorSeverity)[keyof typeof ErrorSeverity];
+
+// @public (undocumented)
+export const ErrorSeverityMap: Record<ErrorCode, ErrorSeverityLevel>;
+
+// @public (undocumented)
+export const ErrorStatusCodes: Record<ErrorCode, number>;
 
 // @public (undocumented)
 export type ExploreInput = z.infer<typeof ExploreSchema>;
@@ -1490,106 +4668,82 @@ export type ExploreInput = z.infer<typeof ExploreSchema>;
 export type ExplorePayload = z.infer<typeof ExplorePayloadSchema>;
 
 // @public (undocumented)
+export interface ExplorePayloadAPI {
+    // (undocumented)
+    classDate: string;
+    // (undocumented)
+    evidenceFiles?: string[];
+    // (undocumented)
+    reflection: string;
+    // (undocumented)
+    school?: string;
+}
+
+// @public (undocumented)
+export interface ExplorePayloadDB {
+    // (undocumented)
+    class_date: string;
+    // (undocumented)
+    evidence_files?: string[];
+    // (undocumented)
+    reflection: string;
+    // (undocumented)
+    school?: string;
+}
+
+// @public (undocumented)
 export const ExplorePayloadSchema: z.ZodObject<{
     activityCode: z.ZodLiteral<"EXPLORE">;
     data: z.ZodObject<{
         reflection: z.ZodString;
-        classDate: z.ZodString;
+        class_date: z.ZodString;
         school: z.ZodOptional<z.ZodString>;
-        evidenceFiles: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        evidence_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         reflection: string;
-        classDate: string;
+        class_date: string;
         school?: string | undefined;
-        evidenceFiles?: string[] | undefined;
+        evidence_files?: string[] | undefined;
     }, {
         reflection: string;
-        classDate: string;
+        class_date: string;
         school?: string | undefined;
-        evidenceFiles?: string[] | undefined;
+        evidence_files?: string[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     activityCode: "EXPLORE";
     data: {
         reflection: string;
-        classDate: string;
+        class_date: string;
         school?: string | undefined;
-        evidenceFiles?: string[] | undefined;
+        evidence_files?: string[] | undefined;
     };
 }, {
     activityCode: "EXPLORE";
     data: {
         reflection: string;
-        classDate: string;
+        class_date: string;
         school?: string | undefined;
-        evidenceFiles?: string[] | undefined;
+        evidence_files?: string[] | undefined;
     };
 }>;
 
 // @public (undocumented)
 export const ExploreSchema: z.ZodObject<{
     reflection: z.ZodString;
-    classDate: z.ZodString;
+    class_date: z.ZodString;
     school: z.ZodOptional<z.ZodString>;
-    evidenceFiles: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    evidence_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
     reflection: string;
-    classDate: string;
+    class_date: string;
     school?: string | undefined;
-    evidenceFiles?: string[] | undefined;
+    evidence_files?: string[] | undefined;
 }, {
     reflection: string;
-    classDate: string;
+    class_date: string;
     school?: string | undefined;
-    evidenceFiles?: string[] | undefined;
-}>;
-
-// @public (undocumented)
-export type ExportAuditMeta = z.infer<typeof ExportAuditMetaSchema>;
-
-// @public (undocumented)
-export const ExportAuditMetaSchema: z.ZodObject<{
-    type: z.ZodOptional<z.ZodString>;
-    format: z.ZodOptional<z.ZodString>;
-    filters: z.ZodOptional<z.ZodObject<{
-        startDate: z.ZodOptional<z.ZodString>;
-        endDate: z.ZodOptional<z.ZodString>;
-        activity: z.ZodOptional<z.ZodString>;
-        status: z.ZodOptional<z.ZodString>;
-        cohort: z.ZodOptional<z.ZodString>;
-    }, "strip", z.ZodTypeAny, {
-        status?: string | undefined;
-        cohort?: string | undefined;
-        startDate?: string | undefined;
-        endDate?: string | undefined;
-        activity?: string | undefined;
-    }, {
-        status?: string | undefined;
-        cohort?: string | undefined;
-        startDate?: string | undefined;
-        endDate?: string | undefined;
-        activity?: string | undefined;
-    }>>;
-}, "strip", z.ZodTypeAny, {
-    type?: string | undefined;
-    format?: string | undefined;
-    filters?: {
-        status?: string | undefined;
-        cohort?: string | undefined;
-        startDate?: string | undefined;
-        endDate?: string | undefined;
-        activity?: string | undefined;
-    } | undefined;
-}, {
-    type?: string | undefined;
-    format?: string | undefined;
-    filters?: {
-        status?: string | undefined;
-        cohort?: string | undefined;
-        startDate?: string | undefined;
-        endDate?: string | undefined;
-        activity?: string | undefined;
-    } | undefined;
+    evidence_files?: string[] | undefined;
 }>;
 
 // @public (undocumented)
@@ -1602,25 +4756,38 @@ export const ExportsQuerySchema: z.ZodObject<{
     status: z.ZodOptional<z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED"]>>;
     cohort: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    type: "submissions" | "users" | "leaderboard" | "points";
+    type: "points" | "submissions" | "users" | "leaderboard";
     format: "csv";
-    status?: "ALL" | "PENDING" | "APPROVED" | "REJECTED" | undefined;
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined;
     cohort?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
-    activity?: "ALL" | "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
+    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
 }, {
-    type: "submissions" | "users" | "leaderboard" | "points";
+    type: "points" | "submissions" | "users" | "leaderboard";
     format: "csv";
-    status?: "ALL" | "PENDING" | "APPROVED" | "REJECTED" | undefined;
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined;
     cohort?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
-    activity?: "ALL" | "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
+    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
 }>;
+
+// @public (undocumented)
+export class ExternalServiceError extends ElevateApiError {
+    constructor(service: string, operation: string, originalError?: Error, traceId?: string);
+}
 
 // @public
 export function extractHandleFromUrl(url: string): string | null;
+
+// @public (undocumented)
+export function extractPointsFromAggregation(aggregation: PrismaAggregationResult | null | undefined): number;
+
+// @public (undocumented)
+export class FileValidationError extends ElevateApiError {
+    constructor(message: string, details?: unknown, traceId?: string);
+}
 
 // @public (undocumented)
 export type FormFieldProps = z.infer<typeof FormFieldSchema> & {
@@ -1636,13 +4803,13 @@ export const FormFieldSchema: z.ZodObject<{
     error: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     label: string;
-    error?: string | undefined;
     description?: string | undefined;
+    error?: string | undefined;
     required?: boolean | undefined;
 }, {
     label: string;
-    error?: string | undefined;
     description?: string | undefined;
+    error?: string | undefined;
     required?: boolean | undefined;
 }>;
 
@@ -1657,6 +4824,12 @@ export function getProfilePath(handle: string): string;
 
 // @public
 export function getProfileUrl(handle: string): string;
+
+// @public (undocumented)
+export const HANDLE_ERROR_MESSAGE = "Handle must be 3-30 characters and contain only letters, numbers, underscores, and hyphens";
+
+// @public
+export const HANDLE_REGEX: RegExp;
 
 // @public (undocumented)
 export type HandleParam = z.infer<typeof HandleParamSchema>;
@@ -1674,7 +4847,32 @@ export const HandleParamSchema: z.ZodObject<{
 export const HandleSchema: z.ZodString;
 
 // @public (undocumented)
+export type HttpError = {
+    success: false;
+    error: string;
+    details?: unknown;
+};
+
+// @public (undocumented)
+export function httpError(message: string, details?: unknown): HttpError;
+
+// @public (undocumented)
+export type HttpSuccess<T> = {
+    success: true;
+    data: T;
+};
+
+// @public (undocumented)
+export function httpSuccess<T>(data: T): HttpSuccess<T>;
+
+// @public
+export function isActivityCode(value: unknown): value is ActivityCode;
+
+// @public (undocumented)
 export function isArray<T>(value: unknown, itemCheck?: (item: unknown) => item is T): value is T[];
+
+// @public
+export function isBoolean(value: unknown): value is boolean;
 
 // @public
 export function isCanonicalProfileUrl(url: string): boolean;
@@ -1691,55 +4889,20 @@ export function isNumber(value: unknown): value is number;
 // @public (undocumented)
 export function isObject(value: unknown): value is Record<string, unknown>;
 
+// @public
+export function isRecord(value: unknown): value is Record<string, unknown>;
+
+// @public
+export function isRole(value: unknown): value is Role;
+
 // @public (undocumented)
 export function isStatusValue(value: unknown): value is StatusValue;
 
 // @public (undocumented)
 export function isString(value: unknown): value is string;
 
-// @public (undocumented)
-export type JsonArray = JsonValue[];
-
-// @public (undocumented)
-export type JsonObject = {
-    [k: string]: JsonValue;
-};
-
-// @public (undocumented)
-export type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
-
-// @public (undocumented)
-export type KajabiAuditMeta = z.infer<typeof KajabiAuditMetaSchema>;
-
-// @public (undocumented)
-export const KajabiAuditMetaSchema: z.ZodObject<{
-    event_id: z.ZodOptional<z.ZodString>;
-    tag_name: z.ZodOptional<z.ZodString>;
-    kajabi_contact_id: z.ZodOptional<z.ZodNumber>;
-    points_awarded: z.ZodOptional<z.ZodNumber>;
-    reprocessed_at: z.ZodOptional<z.ZodString>;
-    processed_at: z.ZodOptional<z.ZodString>;
-    user_id: z.ZodOptional<z.ZodString>;
-    email: z.ZodOptional<z.ZodString>;
-}, "strip", z.ZodTypeAny, {
-    event_id?: string | undefined;
-    email?: string | undefined;
-    tag_name?: string | undefined;
-    kajabi_contact_id?: number | undefined;
-    points_awarded?: number | undefined;
-    reprocessed_at?: string | undefined;
-    processed_at?: string | undefined;
-    user_id?: string | undefined;
-}, {
-    event_id?: string | undefined;
-    email?: string | undefined;
-    tag_name?: string | undefined;
-    kajabi_contact_id?: number | undefined;
-    points_awarded?: number | undefined;
-    reprocessed_at?: string | undefined;
-    processed_at?: string | undefined;
-    user_id?: string | undefined;
-}>;
+// @public
+export function isSubmissionStatus(value: unknown): value is SubmissionStatus;
 
 // @public (undocumented)
 export type KajabiContact = z.infer<typeof KajabiContactSchema>;
@@ -1752,17 +4915,119 @@ export const KajabiContactSchema: z.ZodObject<{
     last_name: z.ZodOptional<z.ZodString>;
     tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    email: string;
     id: number;
+    email: string;
     first_name?: string | undefined;
     last_name?: string | undefined;
     tags?: string[] | undefined;
 }, {
-    email: string;
     id: number;
+    email: string;
     first_name?: string | undefined;
     last_name?: string | undefined;
     tags?: string[] | undefined;
+}>;
+
+// @public (undocumented)
+export const KajabiEventSchema: z.ZodObject<{
+    id: z.ZodString;
+    received_at: z.ZodString;
+    processed_at: z.ZodNullable<z.ZodString>;
+    user_match: z.ZodNullable<z.ZodString>;
+    payload: z.ZodObject<{
+        event_id: z.ZodOptional<z.ZodString>;
+        event_type: z.ZodEnum<["contact.tagged", "tag.added", "tag.removed"]>;
+        contact: z.ZodObject<{
+            id: z.ZodNumber;
+            email: z.ZodString;
+            first_name: z.ZodOptional<z.ZodString>;
+            last_name: z.ZodOptional<z.ZodString>;
+            tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        }, "strip", z.ZodTypeAny, {
+            email: string;
+            id: number;
+            first_name?: string | undefined;
+            last_name?: string | undefined;
+            tags?: string[] | undefined;
+        }, {
+            email: string;
+            id: number;
+            first_name?: string | undefined;
+            last_name?: string | undefined;
+            tags?: string[] | undefined;
+        }>;
+        tag: z.ZodObject<{
+            name: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            name: string;
+        }, {
+            name: string;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        event_type: "contact.tagged" | "tag.added" | "tag.removed";
+        contact: {
+            email: string;
+            id: number;
+            first_name?: string | undefined;
+            last_name?: string | undefined;
+            tags?: string[] | undefined;
+        };
+        tag: {
+            name: string;
+        };
+        event_id?: string | undefined;
+    }, {
+        event_type: "contact.tagged" | "tag.added" | "tag.removed";
+        contact: {
+            email: string;
+            id: number;
+            first_name?: string | undefined;
+            last_name?: string | undefined;
+            tags?: string[] | undefined;
+        };
+        tag: {
+            name: string;
+        };
+        event_id?: string | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    processed_at: string | null;
+    id: string;
+    payload: {
+        event_type: "contact.tagged" | "tag.added" | "tag.removed";
+        contact: {
+            email: string;
+            id: number;
+            first_name?: string | undefined;
+            last_name?: string | undefined;
+            tags?: string[] | undefined;
+        };
+        tag: {
+            name: string;
+        };
+        event_id?: string | undefined;
+    };
+    received_at: string;
+    user_match: string | null;
+}, {
+    processed_at: string | null;
+    id: string;
+    payload: {
+        event_type: "contact.tagged" | "tag.added" | "tag.removed";
+        contact: {
+            email: string;
+            id: number;
+            first_name?: string | undefined;
+            last_name?: string | undefined;
+            tags?: string[] | undefined;
+        };
+        tag: {
+            name: string;
+        };
+        event_id?: string | undefined;
+    };
+    received_at: string;
+    user_match: string | null;
 }>;
 
 // @public (undocumented)
@@ -1772,6 +5037,271 @@ export const KajabiReprocessSchema: z.ZodObject<{
     event_id: string;
 }, {
     event_id: string;
+}>;
+
+// @public (undocumented)
+export const KajabiResponseSchema: z.ZodObject<{
+    success: z.ZodLiteral<true>;
+    data: z.ZodObject<{
+        events: z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            received_at: z.ZodString;
+            processed_at: z.ZodNullable<z.ZodString>;
+            user_match: z.ZodNullable<z.ZodString>;
+            payload: z.ZodObject<{
+                event_id: z.ZodOptional<z.ZodString>;
+                event_type: z.ZodEnum<["contact.tagged", "tag.added", "tag.removed"]>;
+                contact: z.ZodObject<{
+                    id: z.ZodNumber;
+                    email: z.ZodString;
+                    first_name: z.ZodOptional<z.ZodString>;
+                    last_name: z.ZodOptional<z.ZodString>;
+                    tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    email: string;
+                    id: number;
+                    first_name?: string | undefined;
+                    last_name?: string | undefined;
+                    tags?: string[] | undefined;
+                }, {
+                    email: string;
+                    id: number;
+                    first_name?: string | undefined;
+                    last_name?: string | undefined;
+                    tags?: string[] | undefined;
+                }>;
+                tag: z.ZodObject<{
+                    name: z.ZodString;
+                }, "strip", z.ZodTypeAny, {
+                    name: string;
+                }, {
+                    name: string;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                event_type: "contact.tagged" | "tag.added" | "tag.removed";
+                contact: {
+                    email: string;
+                    id: number;
+                    first_name?: string | undefined;
+                    last_name?: string | undefined;
+                    tags?: string[] | undefined;
+                };
+                tag: {
+                    name: string;
+                };
+                event_id?: string | undefined;
+            }, {
+                event_type: "contact.tagged" | "tag.added" | "tag.removed";
+                contact: {
+                    email: string;
+                    id: number;
+                    first_name?: string | undefined;
+                    last_name?: string | undefined;
+                    tags?: string[] | undefined;
+                };
+                tag: {
+                    name: string;
+                };
+                event_id?: string | undefined;
+            }>;
+        }, "strip", z.ZodTypeAny, {
+            processed_at: string | null;
+            id: string;
+            payload: {
+                event_type: "contact.tagged" | "tag.added" | "tag.removed";
+                contact: {
+                    email: string;
+                    id: number;
+                    first_name?: string | undefined;
+                    last_name?: string | undefined;
+                    tags?: string[] | undefined;
+                };
+                tag: {
+                    name: string;
+                };
+                event_id?: string | undefined;
+            };
+            received_at: string;
+            user_match: string | null;
+        }, {
+            processed_at: string | null;
+            id: string;
+            payload: {
+                event_type: "contact.tagged" | "tag.added" | "tag.removed";
+                contact: {
+                    email: string;
+                    id: number;
+                    first_name?: string | undefined;
+                    last_name?: string | undefined;
+                    tags?: string[] | undefined;
+                };
+                tag: {
+                    name: string;
+                };
+                event_id?: string | undefined;
+            };
+            received_at: string;
+            user_match: string | null;
+        }>, "many">;
+        stats: z.ZodObject<{
+            total_events: z.ZodNumber;
+            processed_events: z.ZodNumber;
+            matched_users: z.ZodNumber;
+            unmatched_events: z.ZodNumber;
+            points_awarded: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            points_awarded: number;
+            total_events: number;
+            processed_events: number;
+            matched_users: number;
+            unmatched_events: number;
+        }, {
+            points_awarded: number;
+            total_events: number;
+            processed_events: number;
+            matched_users: number;
+            unmatched_events: number;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        events: {
+            processed_at: string | null;
+            id: string;
+            payload: {
+                event_type: "contact.tagged" | "tag.added" | "tag.removed";
+                contact: {
+                    email: string;
+                    id: number;
+                    first_name?: string | undefined;
+                    last_name?: string | undefined;
+                    tags?: string[] | undefined;
+                };
+                tag: {
+                    name: string;
+                };
+                event_id?: string | undefined;
+            };
+            received_at: string;
+            user_match: string | null;
+        }[];
+        stats: {
+            points_awarded: number;
+            total_events: number;
+            processed_events: number;
+            matched_users: number;
+            unmatched_events: number;
+        };
+    }, {
+        events: {
+            processed_at: string | null;
+            id: string;
+            payload: {
+                event_type: "contact.tagged" | "tag.added" | "tag.removed";
+                contact: {
+                    email: string;
+                    id: number;
+                    first_name?: string | undefined;
+                    last_name?: string | undefined;
+                    tags?: string[] | undefined;
+                };
+                tag: {
+                    name: string;
+                };
+                event_id?: string | undefined;
+            };
+            received_at: string;
+            user_match: string | null;
+        }[];
+        stats: {
+            points_awarded: number;
+            total_events: number;
+            processed_events: number;
+            matched_users: number;
+            unmatched_events: number;
+        };
+    }>;
+}, "strip", z.ZodTypeAny, {
+    success: true;
+    data: {
+        events: {
+            processed_at: string | null;
+            id: string;
+            payload: {
+                event_type: "contact.tagged" | "tag.added" | "tag.removed";
+                contact: {
+                    email: string;
+                    id: number;
+                    first_name?: string | undefined;
+                    last_name?: string | undefined;
+                    tags?: string[] | undefined;
+                };
+                tag: {
+                    name: string;
+                };
+                event_id?: string | undefined;
+            };
+            received_at: string;
+            user_match: string | null;
+        }[];
+        stats: {
+            points_awarded: number;
+            total_events: number;
+            processed_events: number;
+            matched_users: number;
+            unmatched_events: number;
+        };
+    };
+}, {
+    success: true;
+    data: {
+        events: {
+            processed_at: string | null;
+            id: string;
+            payload: {
+                event_type: "contact.tagged" | "tag.added" | "tag.removed";
+                contact: {
+                    email: string;
+                    id: number;
+                    first_name?: string | undefined;
+                    last_name?: string | undefined;
+                    tags?: string[] | undefined;
+                };
+                tag: {
+                    name: string;
+                };
+                event_id?: string | undefined;
+            };
+            received_at: string;
+            user_match: string | null;
+        }[];
+        stats: {
+            points_awarded: number;
+            total_events: number;
+            processed_events: number;
+            matched_users: number;
+            unmatched_events: number;
+        };
+    };
+}>;
+
+// @public (undocumented)
+export const KajabiStatsSchema: z.ZodObject<{
+    total_events: z.ZodNumber;
+    processed_events: z.ZodNumber;
+    matched_users: z.ZodNumber;
+    unmatched_events: z.ZodNumber;
+    points_awarded: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    points_awarded: number;
+    total_events: number;
+    processed_events: number;
+    matched_users: number;
+    unmatched_events: number;
+}, {
+    points_awarded: number;
+    total_events: number;
+    processed_events: number;
+    matched_users: number;
+    unmatched_events: number;
 }>;
 
 // @public (undocumented)
@@ -1791,14 +5321,14 @@ export const KajabiTagEventSchema: z.ZodObject<{
         last_name: z.ZodOptional<z.ZodString>;
         tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        email: string;
         id: number;
+        email: string;
         first_name?: string | undefined;
         last_name?: string | undefined;
         tags?: string[] | undefined;
     }, {
-        email: string;
         id: number;
+        email: string;
         first_name?: string | undefined;
         last_name?: string | undefined;
         tags?: string[] | undefined;
@@ -1813,8 +5343,8 @@ export const KajabiTagEventSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     event_type: "contact.tagged" | "tag.added" | "tag.removed";
     contact: {
-        email: string;
         id: number;
+        email: string;
         first_name?: string | undefined;
         last_name?: string | undefined;
         tags?: string[] | undefined;
@@ -1826,8 +5356,8 @@ export const KajabiTagEventSchema: z.ZodObject<{
 }, {
     event_type: "contact.tagged" | "tag.added" | "tag.removed";
     contact: {
-        email: string;
         id: number;
+        email: string;
         first_name?: string | undefined;
         last_name?: string | undefined;
         tags?: string[] | undefined;
@@ -1852,15 +5382,61 @@ export const KajabiTestSchema: z.ZodObject<{
     user_email: z.ZodString;
     course_name: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    user_email: string;
     course_name: string;
+    user_email: string;
 }, {
-    user_email: string;
     course_name: string;
+    user_email: string;
 }>;
 
 // @public (undocumented)
-export interface LeaderboardEntry {
+export type Leaderboard30d = z.infer<typeof Leaderboard30dSchema>;
+
+// @public (undocumented)
+export const Leaderboard30dSchema: z.ZodObject<Omit<{
+    user_id: z.ZodString;
+    handle: z.ZodString;
+    name: z.ZodString;
+    avatar_url: z.ZodNullable<z.ZodString>;
+    school: z.ZodNullable<z.ZodString>;
+    cohort: z.ZodNullable<z.ZodString>;
+    total_points: z.ZodNumber;
+    public_submissions: z.ZodNumber;
+    total_approved_submissions: z.ZodNumber;
+    pending_submissions: z.ZodNumber;
+    last_activity_at: z.ZodNullable<z.ZodDate>;
+    first_points_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
+}, "first_points_at">, "strip", z.ZodTypeAny, {
+    name: string;
+    handle: string;
+    school: string | null;
+    cohort: string | null;
+    user_id: string;
+    avatar_url: string | null;
+    total_points: number;
+    public_submissions: number;
+    total_approved_submissions: number;
+    pending_submissions: number;
+    last_activity_at: Date | null;
+}, {
+    name: string;
+    handle: string;
+    school: string | null;
+    cohort: string | null;
+    user_id: string;
+    avatar_url: string | null;
+    total_points: number;
+    public_submissions: number;
+    total_approved_submissions: number;
+    pending_submissions: number;
+    last_activity_at: Date | null;
+}>;
+
+// @public (undocumented)
+export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>;
+
+// @public (undocumented)
+export interface LeaderboardEntryDTO {
     // (undocumented)
     rank: number;
     // (undocumented)
@@ -1868,15 +5444,172 @@ export interface LeaderboardEntry {
         id: string;
         handle: string;
         name: string;
-        school?: string | null;
-        avatar_url?: string | null;
-        earned_badges?: LeaderboardUserBadge[];
-        _sum?: {
-            points: number;
-        };
-        points?: number;
+        school?: string | null | undefined;
+        avatarUrl?: string | null | undefined;
+        earnedBadges?: LeaderboardUserBadgeDTO[] | undefined;
+        totalPoints: number;
     };
 }
+
+// @public (undocumented)
+export const LeaderboardEntryDTOSchema: z.ZodObject<{
+    rank: z.ZodNumber;
+    user: z.ZodObject<{
+        id: z.ZodString;
+        handle: z.ZodString;
+        name: z.ZodString;
+        school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        avatarUrl: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        earnedBadges: z.ZodOptional<z.ZodArray<z.ZodObject<{
+            badge: z.ZodObject<{
+                code: z.ZodString;
+                name: z.ZodString;
+                description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+                iconUrl: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                code: string;
+                name: string;
+                description?: string | null | undefined;
+                iconUrl?: string | null | undefined;
+            }, {
+                code: string;
+                name: string;
+                description?: string | null | undefined;
+                iconUrl?: string | null | undefined;
+            }>;
+            earnedAt: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            badge: {
+                code: string;
+                name: string;
+                description?: string | null | undefined;
+                iconUrl?: string | null | undefined;
+            };
+            earnedAt?: string | undefined;
+        }, {
+            badge: {
+                code: string;
+                name: string;
+                description?: string | null | undefined;
+                iconUrl?: string | null | undefined;
+            };
+            earnedAt?: string | undefined;
+        }>, "many">>;
+        totalPoints: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        totalPoints: number;
+        name: string;
+        id: string;
+        handle: string;
+        school?: string | null | undefined;
+        avatarUrl?: string | null | undefined;
+        earnedBadges?: {
+            badge: {
+                code: string;
+                name: string;
+                description?: string | null | undefined;
+                iconUrl?: string | null | undefined;
+            };
+            earnedAt?: string | undefined;
+        }[] | undefined;
+    }, {
+        totalPoints: number;
+        name: string;
+        id: string;
+        handle: string;
+        school?: string | null | undefined;
+        avatarUrl?: string | null | undefined;
+        earnedBadges?: {
+            badge: {
+                code: string;
+                name: string;
+                description?: string | null | undefined;
+                iconUrl?: string | null | undefined;
+            };
+            earnedAt?: string | undefined;
+        }[] | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    rank: number;
+    user: {
+        totalPoints: number;
+        name: string;
+        id: string;
+        handle: string;
+        school?: string | null | undefined;
+        avatarUrl?: string | null | undefined;
+        earnedBadges?: {
+            badge: {
+                code: string;
+                name: string;
+                description?: string | null | undefined;
+                iconUrl?: string | null | undefined;
+            };
+            earnedAt?: string | undefined;
+        }[] | undefined;
+    };
+}, {
+    rank: number;
+    user: {
+        totalPoints: number;
+        name: string;
+        id: string;
+        handle: string;
+        school?: string | null | undefined;
+        avatarUrl?: string | null | undefined;
+        earnedBadges?: {
+            badge: {
+                code: string;
+                name: string;
+                description?: string | null | undefined;
+                iconUrl?: string | null | undefined;
+            };
+            earnedAt?: string | undefined;
+        }[] | undefined;
+    };
+}>;
+
+// @public (undocumented)
+export const LeaderboardEntrySchema: z.ZodObject<{
+    user_id: z.ZodString;
+    handle: z.ZodString;
+    name: z.ZodString;
+    avatar_url: z.ZodNullable<z.ZodString>;
+    school: z.ZodNullable<z.ZodString>;
+    cohort: z.ZodNullable<z.ZodString>;
+    total_points: z.ZodNumber;
+    public_submissions: z.ZodNumber;
+    total_approved_submissions: z.ZodNumber;
+    pending_submissions: z.ZodNumber;
+    last_activity_at: z.ZodNullable<z.ZodDate>;
+    first_points_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
+}, "strip", z.ZodTypeAny, {
+    name: string;
+    handle: string;
+    school: string | null;
+    cohort: string | null;
+    user_id: string;
+    avatar_url: string | null;
+    total_points: number;
+    public_submissions: number;
+    total_approved_submissions: number;
+    pending_submissions: number;
+    last_activity_at: Date | null;
+    first_points_at?: Date | null | undefined;
+}, {
+    name: string;
+    handle: string;
+    school: string | null;
+    cohort: string | null;
+    user_id: string;
+    avatar_url: string | null;
+    total_points: number;
+    public_submissions: number;
+    total_approved_submissions: number;
+    pending_submissions: number;
+    last_activity_at: Date | null;
+    first_points_at?: Date | null | undefined;
+}>;
 
 // @public (undocumented)
 export type LeaderboardQuery = z.infer<typeof LeaderboardQuerySchema>;
@@ -1888,26 +5621,108 @@ export const LeaderboardQuerySchema: z.ZodObject<{
     offset: z.ZodDefault<z.ZodNumber>;
     search: z.ZodDefault<z.ZodOptional<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    offset: number;
     limit: number;
-    period: "all" | "30d";
+    offset: number;
     search: string;
+    period: "30d" | "all";
 }, {
-    offset?: number | undefined;
     limit?: number | undefined;
-    period?: "all" | "30d" | undefined;
+    offset?: number | undefined;
     search?: string | undefined;
+    period?: "30d" | "all" | undefined;
 }>;
 
 // @public (undocumented)
-export interface LeaderboardUserBadge {
+export type LeaderboardTotals = z.infer<typeof LeaderboardTotalsSchema>;
+
+// @public (undocumented)
+export const LeaderboardTotalsSchema: z.ZodObject<{
+    user_id: z.ZodString;
+    handle: z.ZodString;
+    name: z.ZodString;
+    avatar_url: z.ZodNullable<z.ZodString>;
+    school: z.ZodNullable<z.ZodString>;
+    cohort: z.ZodNullable<z.ZodString>;
+    total_points: z.ZodNumber;
+    public_submissions: z.ZodNumber;
+    total_approved_submissions: z.ZodNumber;
+    pending_submissions: z.ZodNumber;
+    last_activity_at: z.ZodNullable<z.ZodDate>;
+    first_points_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
+}, "strip", z.ZodTypeAny, {
+    name: string;
+    handle: string;
+    school: string | null;
+    cohort: string | null;
+    user_id: string;
+    avatar_url: string | null;
+    total_points: number;
+    public_submissions: number;
+    total_approved_submissions: number;
+    pending_submissions: number;
+    last_activity_at: Date | null;
+    first_points_at?: Date | null | undefined;
+}, {
+    name: string;
+    handle: string;
+    school: string | null;
+    cohort: string | null;
+    user_id: string;
+    avatar_url: string | null;
+    total_points: number;
+    public_submissions: number;
+    total_approved_submissions: number;
+    pending_submissions: number;
+    last_activity_at: Date | null;
+    first_points_at?: Date | null | undefined;
+}>;
+
+// @public (undocumented)
+export interface LeaderboardUserBadgeDTO {
     // (undocumented)
     badge: {
         code: string;
         name: string;
-        icon_url?: string | null;
+        iconUrl?: string | null;
     };
 }
+
+// @public (undocumented)
+export const LeaderboardUserBadgeDTOSchema: z.ZodObject<{
+    badge: z.ZodObject<{
+        code: z.ZodString;
+        name: z.ZodString;
+        description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        iconUrl: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    }, "strip", z.ZodTypeAny, {
+        code: string;
+        name: string;
+        description?: string | null | undefined;
+        iconUrl?: string | null | undefined;
+    }, {
+        code: string;
+        name: string;
+        description?: string | null | undefined;
+        iconUrl?: string | null | undefined;
+    }>;
+    earnedAt: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    badge: {
+        code: string;
+        name: string;
+        description?: string | null | undefined;
+        iconUrl?: string | null | undefined;
+    };
+    earnedAt?: string | undefined;
+}, {
+    badge: {
+        code: string;
+        name: string;
+        description?: string | null | undefined;
+        iconUrl?: string | null | undefined;
+    };
+    earnedAt?: string | undefined;
+}>;
 
 // @public (undocumented)
 export type LearnInput = z.infer<typeof LearnSchema>;
@@ -1916,59 +5731,227 @@ export type LearnInput = z.infer<typeof LearnSchema>;
 export type LearnPayload = z.infer<typeof LearnPayloadSchema>;
 
 // @public (undocumented)
+export interface LearnPayloadAPI {
+    // (undocumented)
+    certificateUrl?: string;
+    // (undocumented)
+    completedAt: string;
+    // (undocumented)
+    courseName: string;
+    // (undocumented)
+    provider: 'SPL' | 'ILS';
+}
+
+// @public (undocumented)
+export interface LearnPayloadDB {
+    // (undocumented)
+    certificate_url?: string;
+    // (undocumented)
+    completed_at: string;
+    // (undocumented)
+    course_name: string;
+    // (undocumented)
+    provider: 'SPL' | 'ILS';
+}
+
+// @public (undocumented)
 export const LearnPayloadSchema: z.ZodObject<{
     activityCode: z.ZodLiteral<"LEARN">;
     data: z.ZodObject<{
         provider: z.ZodEnum<["SPL", "ILS"]>;
-        course: z.ZodString;
-        completedAt: z.ZodString;
-        certificateFile: z.ZodOptional<z.ZodString>;
+        course_name: z.ZodString;
+        certificate_url: z.ZodOptional<z.ZodString>;
+        completed_at: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         provider: "SPL" | "ILS";
-        course: string;
-        completedAt: string;
-        certificateFile?: string | undefined;
+        course_name: string;
+        completed_at: string;
+        certificate_url?: string | undefined;
     }, {
         provider: "SPL" | "ILS";
-        course: string;
-        completedAt: string;
-        certificateFile?: string | undefined;
+        course_name: string;
+        completed_at: string;
+        certificate_url?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     activityCode: "LEARN";
     data: {
         provider: "SPL" | "ILS";
-        course: string;
-        completedAt: string;
-        certificateFile?: string | undefined;
+        course_name: string;
+        completed_at: string;
+        certificate_url?: string | undefined;
     };
 }, {
     activityCode: "LEARN";
     data: {
         provider: "SPL" | "ILS";
-        course: string;
-        completedAt: string;
-        certificateFile?: string | undefined;
+        course_name: string;
+        completed_at: string;
+        certificate_url?: string | undefined;
     };
 }>;
 
 // @public (undocumented)
 export const LearnSchema: z.ZodObject<{
     provider: z.ZodEnum<["SPL", "ILS"]>;
-    course: z.ZodString;
-    completedAt: z.ZodString;
-    certificateFile: z.ZodOptional<z.ZodString>;
+    course_name: z.ZodString;
+    certificate_url: z.ZodOptional<z.ZodString>;
+    completed_at: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     provider: "SPL" | "ILS";
-    course: string;
-    completedAt: string;
-    certificateFile?: string | undefined;
+    course_name: string;
+    completed_at: string;
+    certificate_url?: string | undefined;
 }, {
     provider: "SPL" | "ILS";
-    course: string;
-    completedAt: string;
-    certificateFile?: string | undefined;
+    course_name: string;
+    completed_at: string;
+    certificate_url?: string | undefined;
 }>;
+
+// @public
+export const LEDGER_SOURCES: readonly ["MANUAL", "WEBHOOK", "FORM"];
+
+// @public (undocumented)
+export type LedgerSource = typeof LEDGER_SOURCES[number];
+
+// @public (undocumented)
+export const LedgerSourceSchema: z.ZodEnum<["MANUAL", "WEBHOOK", "FORM"]>;
+
+// @public
+export const LIMITS: {
+    readonly HANDLE_MIN: 3;
+    readonly HANDLE_MAX: 30;
+    readonly EMAIL_MAX: 254;
+    readonly NAME_MAX: 200;
+    readonly SCHOOL_MAX: 200;
+    readonly COHORT_MAX: 100;
+    readonly PAGE_SIZE_DEFAULT: 20;
+    readonly PAGE_SIZE_MAX: 100;
+    readonly REVIEW_NOTE_MAX: 1000;
+    readonly POINT_ADJUSTMENT_MIN: -1000;
+    readonly POINT_ADJUSTMENT_MAX: 1000;
+    readonly BULK_USERS_MAX: 100;
+    readonly BULK_SUBMISSIONS_MAX: 50;
+    readonly BULK_BADGE_ASSIGNMENTS_MAX: 100;
+};
+
+// @public (undocumented)
+export function mapLeaderboardEntryToDTO(rank: number, user: User & {
+    earned_badges?: (EarnedBadge & {
+        badge: Badge;
+    })[];
+}, totalPoints: number): LeaderboardEntryDTO;
+
+// @public (undocumented)
+export function mapLeaderboardUserBadgeToDTO(earnedBadge: EarnedBadge & {
+    badge: Badge;
+}): LeaderboardUserBadgeDTO;
+
+// @public (undocumented)
+export function mapRawAdminUserToDTO(raw: {
+    id: string;
+    handle: string;
+    name: string;
+    email: string;
+    avatar_url: string | null;
+    role: string;
+    school: string | null;
+    cohort: string | null;
+    created_at: Date;
+    _count: {
+        submissions: number;
+        ledger: number;
+        earned_badges: number;
+    };
+}, totalPoints: number): AdminUserDTO;
+
+// @public (undocumented)
+export function mapRawLeaderboardEntryToDTO(rank: number, rawUser: {
+    id: string;
+    handle: string;
+    name: string;
+    avatar_url: string | null;
+    school: string | null;
+    earned_badges: Array<{
+        badge: {
+            code: string;
+            name: string;
+            icon_url: string | null;
+        };
+    }>;
+    _sum: {
+        points: number;
+    };
+}): LeaderboardEntryDTO;
+
+// @public (undocumented)
+export function mapRawUserProfileToDTO(rawUser: {
+    id: string;
+    handle: string;
+    name: string;
+    school?: string | null;
+    cohort?: string | null;
+    created_at: Date | string;
+    _sum: {
+        points: number;
+    };
+    earned_badges: Array<{
+        badge_code?: string;
+        badge: {
+            code: string;
+            name: string;
+            description: string;
+            icon_url?: string | null;
+        };
+        earned_at: Date | string;
+    }>;
+    submissions: Array<{
+        id: string;
+        activity_code: string;
+        activity: {
+            name: string;
+            code: string;
+        };
+        status: string;
+        visibility: string;
+        payload: Record<string, unknown>;
+        created_at: Date | string;
+        updated_at: Date | string;
+    }>;
+}): UserProfileDTO;
+
+// @public (undocumented)
+export function mapSubmissionToDTO(submission: Submission & {
+    activity: Activity;
+}): SubmissionDTO;
+
+// @public (undocumented)
+export function mapUserProfileBadgeToDTO(earnedBadge: EarnedBadge & {
+    badge: Badge;
+}): UserProfileBadgeDTO;
+
+// @public (undocumented)
+export function mapUserProfileToDTO(user: User & {
+    submissions: (Submission & {
+        activity: Activity;
+    })[];
+    earned_badges: (EarnedBadge & {
+        badge: Badge;
+    })[];
+}, totalPoints: number): UserProfileDTO;
+
+// @public (undocumented)
+export const MAX_ANALYTICS_RESULTS: {
+    readonly LEADERBOARD: 1000;
+    readonly TIME_SERIES_DAYS: 90;
+    readonly COHORT_LIST: 100;
+    readonly SCHOOL_LIST: 500;
+    readonly ACTIVITY_LEADERBOARD: 100;
+};
+
+// @public
+export function mergeHeaders(baseHeaders: Record<string, string>, optionsHeaders?: HeadersInit): Record<string, string>;
 
 // @public (undocumented)
 export type MetricsQuery = z.infer<typeof MetricsQuerySchema>;
@@ -1983,18 +5966,192 @@ export const MetricsQuerySchema: z.ZodObject<{
 }>;
 
 // @public (undocumented)
-export interface PaginatedResult<T> {
+export class NotFoundError extends ElevateApiError {
+    constructor(resource: string, id?: string, traceId?: string);
+}
+
+// @public (undocumented)
+export const OverviewStatsSchema: z.ZodObject<{
+    submissions: z.ZodObject<{
+        total: z.ZodNumber;
+        pending: z.ZodNumber;
+        approved: z.ZodNumber;
+        rejected: z.ZodNumber;
+        approvalRate: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        total: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+        approvalRate: number;
+    }, {
+        total: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+        approvalRate: number;
+    }>;
+    users: z.ZodObject<{
+        total: z.ZodNumber;
+        active: z.ZodNumber;
+        withSubmissions: z.ZodNumber;
+        withBadges: z.ZodNumber;
+        activationRate: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        total: number;
+        active: number;
+        withSubmissions: number;
+        withBadges: number;
+        activationRate: number;
+    }, {
+        total: number;
+        active: number;
+        withSubmissions: number;
+        withBadges: number;
+        activationRate: number;
+    }>;
+    points: z.ZodObject<{
+        totalAwarded: z.ZodNumber;
+        totalEntries: z.ZodNumber;
+        avgPerEntry: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        totalAwarded: number;
+        totalEntries: number;
+        avgPerEntry: number;
+    }, {
+        totalAwarded: number;
+        totalEntries: number;
+        avgPerEntry: number;
+    }>;
+    badges: z.ZodObject<{
+        totalBadges: z.ZodNumber;
+        totalEarned: z.ZodNumber;
+        uniqueEarners: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        totalBadges: number;
+        totalEarned: number;
+        uniqueEarners: number;
+    }, {
+        totalBadges: number;
+        totalEarned: number;
+        uniqueEarners: number;
+    }>;
+    reviews: z.ZodObject<{
+        pendingReviews: z.ZodNumber;
+        avgReviewTimeHours: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        pendingReviews: number;
+        avgReviewTimeHours: number;
+    }, {
+        pendingReviews: number;
+        avgReviewTimeHours: number;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    points: {
+        totalAwarded: number;
+        totalEntries: number;
+        avgPerEntry: number;
+    };
+    submissions: {
+        total: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+        approvalRate: number;
+    };
+    users: {
+        total: number;
+        active: number;
+        withSubmissions: number;
+        withBadges: number;
+        activationRate: number;
+    };
+    badges: {
+        totalBadges: number;
+        totalEarned: number;
+        uniqueEarners: number;
+    };
+    reviews: {
+        pendingReviews: number;
+        avgReviewTimeHours: number;
+    };
+}, {
+    points: {
+        totalAwarded: number;
+        totalEntries: number;
+        avgPerEntry: number;
+    };
+    submissions: {
+        total: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+        approvalRate: number;
+    };
+    users: {
+        total: number;
+        active: number;
+        withSubmissions: number;
+        withBadges: number;
+        activationRate: number;
+    };
+    badges: {
+        totalBadges: number;
+        totalEarned: number;
+        uniqueEarners: number;
+    };
+    reviews: {
+        pendingReviews: number;
+        avgReviewTimeHours: number;
+    };
+}>;
+
+// @public (undocumented)
+export interface PaginatedAnalytics<T> {
     // (undocumented)
     data: T[];
     // (undocumented)
-    limit: number;
+    filters: AnalyticsFilters;
     // (undocumented)
-    page: number;
+    generatedAt: string;
     // (undocumented)
-    total: number;
-    // (undocumented)
-    totalPages: number;
+    pagination: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+    };
 }
+
+// @public (undocumented)
+export type PaginatedResponse<T> = {
+    data: T[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+};
+
+// @public
+export const PaginatedResponseSchema: <T extends z.ZodTypeAny>(dataSchema: T) => z.ZodObject<{
+    data: z.ZodArray<T, "many">;
+    total: z.ZodNumber;
+    page: z.ZodNumber;
+    limit: z.ZodNumber;
+    totalPages: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    total: number;
+    page: number;
+    limit: number;
+    data: T["_output"][];
+    totalPages: number;
+}, {
+    total: number;
+    page: number;
+    limit: number;
+    data: T["_input"][];
+    totalPages: number;
+}>;
 
 // @public (undocumented)
 export interface PaginationConfig {
@@ -2011,14 +6168,22 @@ export interface PaginationConfig {
 }
 
 // @public (undocumented)
-export interface PaginationParams {
-    // (undocumented)
-    limit?: number;
-    // (undocumented)
-    offset?: number;
-    // (undocumented)
-    page?: number;
-}
+export type PaginationParams = z.infer<typeof PaginationParamsSchema>;
+
+// @public
+export const PaginationParamsSchema: z.ZodObject<{
+    page: z.ZodDefault<z.ZodNumber>;
+    limit: z.ZodDefault<z.ZodNumber>;
+    offset: z.ZodOptional<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    page: number;
+    limit: number;
+    offset?: number | undefined;
+}, {
+    page?: number | undefined;
+    limit?: number | undefined;
+    offset?: number | undefined;
+}>;
 
 // @public (undocumented)
 export const PaginationSchema: z.ZodObject<{
@@ -2030,73 +6195,55 @@ export const PaginationSchema: z.ZodObject<{
     limit: number;
     offset?: number | undefined;
 }, {
-    offset?: number | undefined;
     page?: number | undefined;
     limit?: number | undefined;
+    offset?: number | undefined;
 }>;
 
 // @public (undocumented)
-export type PaginationType = z.infer<typeof PaginationSchema>;
+export type PaginationType = PaginationParams;
 
 // @public (undocumented)
 export function parseActivityCode(value: unknown): ActivityCode | null;
 
 // @public (undocumented)
+export function parseActivityLeaderboardEntry(data: unknown): ActivityLeaderboardEntry | null;
+
+// @public (undocumented)
+export function parseActivityMetrics(data: unknown): ActivityMetrics | null;
+
+// @public (undocumented)
 export function parseAmplifyPayload(payload: unknown): AmplifyPayload | null;
 
 // @public (undocumented)
-export function parseApiResponse<T>(value: unknown, dataSchema: z.ZodType<T>): unknown;
+export function parseAnalyticsFilters(data: unknown): AnalyticsFilters | null;
 
 // @public (undocumented)
-export function parseAuditMeta(value: unknown): AuditMetaUnion | null;
-
-// @public (undocumented)
-export function parseBadgeAuditMeta(value: unknown): BadgeAuditMeta | null;
-
-// @public (undocumented)
-export function parseBadgeCriteria(value: unknown): BadgeCriteria | null;
-
-// @public (undocumented)
-export function parseBadgeInput(value: unknown): BadgeInput | null;
+export function parseAnalyticsSummary(data: unknown): AnalyticsSummary | null;
 
 // @public (undocumented)
 export function parseClerkWebhook(payload: unknown): ClerkWebhookEvent | null;
 
 // @public (undocumented)
-export function parseCohort(value: unknown): string | null;
+export function parseCohortComparison(data: unknown): CohortComparison | null;
 
 // @public (undocumented)
-export function parseDateString(value: unknown): string | null;
+export function parseCohortMetrics(data: unknown): CohortMetrics | null;
 
 // @public (undocumented)
-export function parseEmail(value: unknown): string | null;
+export function parseComparisonMetrics(data: unknown): ComparisonMetrics | null;
 
 // @public (undocumented)
 export function parseExplorePayload(payload: unknown): ExplorePayload | null;
 
 // @public (undocumented)
-export function parseExportAuditMeta(value: unknown): ExportAuditMeta | null;
-
-// @public (undocumented)
-export function parseHandle(value: unknown): string | null;
-
-// @public (undocumented)
-export function parseJSONWithErrors<T>(json: string, schema: z.ZodType<T>): {
-    data: T | null;
-    errors: z.ZodIssue[];
-};
-
-// @public (undocumented)
-export function parseKajabiAuditMeta(value: unknown): KajabiAuditMeta | null;
-
-// @public (undocumented)
 export function parseKajabiWebhook(payload: unknown): KajabiTagEvent | null;
 
 // @public (undocumented)
-export function parseLearnPayload(payload: unknown): LearnPayload | null;
+export function parseLeaderboardEntry(data: unknown): LeaderboardEntry | null;
 
 // @public (undocumented)
-export function parsePagination(value: unknown): PaginationType | null;
+export function parseLearnPayload(payload: unknown): LearnPayload | null;
 
 // @public (undocumented)
 export function parsePresentPayload(payload: unknown): PresentPayload | null;
@@ -2105,13 +6252,10 @@ export function parsePresentPayload(payload: unknown): PresentPayload | null;
 export function parseRole(value: unknown): Role | null;
 
 // @public (undocumented)
-export function parseSchool(value: unknown): string | null;
+export function parseSchoolMetrics(data: unknown): SchoolMetrics | null;
 
 // @public (undocumented)
 export function parseShinePayload(payload: unknown): ShinePayload | null;
-
-// @public (undocumented)
-export function parseSubmissionAuditMeta(value: unknown): SubmissionAuditMeta | null;
 
 // @public (undocumented)
 export function parseSubmissionPayload(payload: unknown): SubmissionPayload | null;
@@ -2120,102 +6264,83 @@ export function parseSubmissionPayload(payload: unknown): SubmissionPayload | nu
 export function parseSubmissionStatus(value: unknown): SubmissionStatus | null;
 
 // @public (undocumented)
-export function parseUrl(value: unknown): string | null;
+export function parseTimeSeriesMetrics(data: unknown): TimeSeriesMetrics | null;
 
 // @public (undocumented)
-export function parseUserAuditMeta(value: unknown): UserAuditMeta | null;
+export function parseTrendAnalysis(data: unknown): TrendAnalysis | null;
 
 // @public (undocumented)
-export function parseVisibility(value: unknown): Visibility | null;
+export function parseUserPointSummary(data: unknown): UserPointSummary | null;
 
 // @public (undocumented)
 export function parseWebhookHeaders(headers: unknown): WebhookHeaders | null;
 
 // @public (undocumented)
-export function parseWithErrors<T>(value: unknown, schema: z.ZodType<T>): {
-    data: T | null;
-    errors: z.ZodIssue[];
-};
-
-// @public (undocumented)
-export interface PointsActivityDistribution {
-    // (undocumented)
-    activity: ActivityCode;
-    // (undocumented)
-    activityName: string;
-    // (undocumented)
-    entries: number;
-    // (undocumented)
-    totalPoints: number;
-}
-
-// @public (undocumented)
-export interface PointsDistributionStats {
-    // (undocumented)
-    avg: number;
-    // (undocumented)
-    max: number;
-    // (undocumented)
-    min: number;
-    // (undocumented)
-    percentiles: Array<{
-        percentile: number;
-        value: number;
-    }>;
-    // (undocumented)
-    totalUsers: number;
-}
-
-// @public (undocumented)
-export interface PointsExportRow {
-    // (undocumented)
-    activity_code: ActivityCode;
-    // (undocumented)
-    created_at: string;
-    // (undocumented)
-    delta_points: number;
-    // (undocumented)
-    external_source?: string;
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    source: string;
-    // (undocumented)
-    user_email: string;
-    // (undocumented)
-    user_id: string;
-    // (undocumented)
-    user_name: string;
-}
-
-// @public (undocumented)
-export interface PointsLedgerWhereClause {
-    // (undocumented)
-    activity_code?: ActivityCode | {
-        in: ActivityCode[];
-    };
-    // (undocumented)
-    created_at?: {
-        gte?: Date;
-        lte?: Date;
-    };
-    // (undocumented)
-    user?: UserWhereClause;
-    // (undocumented)
-    user_id?: string | {
-        in: string[];
-    };
-}
-
-// @public (undocumented)
-export interface PointsStats {
-    // (undocumented)
-    avgPerEntry: number;
-    // (undocumented)
-    totalAwarded: number;
-    // (undocumented)
-    totalEntries: number;
-}
+export const PerformanceSchema: z.ZodObject<{
+    reviewers: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        reviewCount: z.ZodNumber;
+        avgReviewTimeHours: z.ZodNumber;
+        approvalRate: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        id: string;
+        approvalRate: number;
+        avgReviewTimeHours: number;
+        reviewCount: number;
+    }, {
+        name: string;
+        id: string;
+        approvalRate: number;
+        avgReviewTimeHours: number;
+        reviewCount: number;
+    }>, "many">;
+    topBadges: z.ZodArray<z.ZodObject<{
+        code: z.ZodString;
+        name: z.ZodString;
+        earnedCount: z.ZodNumber;
+        uniqueEarners: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        code: string;
+        name: string;
+        uniqueEarners: number;
+        earnedCount: number;
+    }, {
+        code: string;
+        name: string;
+        uniqueEarners: number;
+        earnedCount: number;
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    reviewers: {
+        name: string;
+        id: string;
+        approvalRate: number;
+        avgReviewTimeHours: number;
+        reviewCount: number;
+    }[];
+    topBadges: {
+        code: string;
+        name: string;
+        uniqueEarners: number;
+        earnedCount: number;
+    }[];
+}, {
+    reviewers: {
+        name: string;
+        id: string;
+        approvalRate: number;
+        avgReviewTimeHours: number;
+        reviewCount: number;
+    }[];
+    topBadges: {
+        code: string;
+        name: string;
+        uniqueEarners: number;
+        earnedCount: number;
+    }[];
+}>;
 
 // @public (undocumented)
 export type PresentInput = z.infer<typeof PresentSchema>;
@@ -2224,51 +6349,79 @@ export type PresentInput = z.infer<typeof PresentSchema>;
 export type PresentPayload = z.infer<typeof PresentPayloadSchema>;
 
 // @public (undocumented)
+export interface PresentPayloadAPI {
+    // (undocumented)
+    caption: string;
+    // (undocumented)
+    linkedinUrl: string;
+    // (undocumented)
+    screenshotUrl?: string;
+}
+
+// @public (undocumented)
+export interface PresentPayloadDB {
+    // (undocumented)
+    caption: string;
+    // (undocumented)
+    linkedin_url: string;
+    // (undocumented)
+    screenshot_url?: string;
+}
+
+// @public (undocumented)
 export const PresentPayloadSchema: z.ZodObject<{
     activityCode: z.ZodLiteral<"PRESENT">;
     data: z.ZodObject<{
-        linkedinUrl: z.ZodString;
-        screenshotFile: z.ZodOptional<z.ZodString>;
+        linkedin_url: z.ZodString;
+        screenshot_url: z.ZodOptional<z.ZodString>;
         caption: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        linkedinUrl: string;
+        linkedin_url: string;
         caption: string;
-        screenshotFile?: string | undefined;
+        screenshot_url?: string | undefined;
     }, {
-        linkedinUrl: string;
+        linkedin_url: string;
         caption: string;
-        screenshotFile?: string | undefined;
+        screenshot_url?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     activityCode: "PRESENT";
     data: {
-        linkedinUrl: string;
+        linkedin_url: string;
         caption: string;
-        screenshotFile?: string | undefined;
+        screenshot_url?: string | undefined;
     };
 }, {
     activityCode: "PRESENT";
     data: {
-        linkedinUrl: string;
+        linkedin_url: string;
         caption: string;
-        screenshotFile?: string | undefined;
+        screenshot_url?: string | undefined;
     };
 }>;
 
 // @public (undocumented)
 export const PresentSchema: z.ZodObject<{
-    linkedinUrl: z.ZodString;
-    screenshotFile: z.ZodOptional<z.ZodString>;
+    linkedin_url: z.ZodString;
+    screenshot_url: z.ZodOptional<z.ZodString>;
     caption: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    linkedinUrl: string;
+    linkedin_url: string;
     caption: string;
-    screenshotFile?: string | undefined;
+    screenshot_url?: string | undefined;
 }, {
-    linkedinUrl: string;
+    linkedin_url: string;
     caption: string;
-    screenshotFile?: string | undefined;
+    screenshot_url?: string | undefined;
 }>;
+
+// @public (undocumented)
+export interface PrismaAggregationResult {
+    // (undocumented)
+    _sum?: {
+        points?: number | null;
+    } | null;
+}
 
 // @public (undocumented)
 export interface ProgressStage {
@@ -2294,66 +6447,117 @@ export interface ProgressStage {
 }
 
 // @public (undocumented)
-export interface RecentApproval {
-    // (undocumented)
-    activity: {
-        name: string;
-    };
-    // (undocumented)
-    activity_code: ActivityCode;
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    status: SubmissionStatus;
-    // (undocumented)
-    updated_at: Date;
-    // (undocumented)
-    user: {
-        name: string;
-        handle: string;
-    };
-    // (undocumented)
-    user_id: string;
+export class RateLimitError extends ElevateApiError {
+    constructor(limit: number, windowMs: number, retryAfter?: number, traceId?: string);
 }
 
 // @public (undocumented)
-export interface RecentSubmission {
-    // (undocumented)
-    activity: {
-        name: string;
-    };
-    // (undocumented)
-    activity_code: ActivityCode;
-    // (undocumented)
-    created_at: Date;
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    status: SubmissionStatus;
-    // (undocumented)
-    user: {
-        name: string;
-        handle: string;
-    };
-    // (undocumented)
-    user_id: string;
-}
+export type RawAnalyticsResult = Record<string, unknown>[];
 
 // @public (undocumented)
-export interface RecentUser {
-    // (undocumented)
-    created_at: Date;
-    // (undocumented)
-    email: string;
-    // (undocumented)
-    handle: string;
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    name: string;
-    // (undocumented)
-    role: Role;
-}
+export const RecentActivitySchema: z.ZodObject<{
+    submissions: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        activity_code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+        user_name: z.ZodString;
+        created_at: z.ZodString;
+        status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+    }, "strip", z.ZodTypeAny, {
+        status: "PENDING" | "APPROVED" | "REJECTED";
+        created_at: string;
+        id: string;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        user_name: string;
+    }, {
+        status: "PENDING" | "APPROVED" | "REJECTED";
+        created_at: string;
+        id: string;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        user_name: string;
+    }>, "many">;
+    approvals: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        activity_code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+        user_name: z.ZodString;
+        reviewer_name: z.ZodString;
+        approved_at: z.ZodString;
+        points_awarded: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        points_awarded: number;
+        id: string;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        user_name: string;
+        reviewer_name: string;
+        approved_at: string;
+    }, {
+        points_awarded: number;
+        id: string;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        user_name: string;
+        reviewer_name: string;
+        approved_at: string;
+    }>, "many">;
+    users: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodString;
+        created_at: z.ZodString;
+        cohort: z.ZodNullable<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        cohort: string | null;
+        created_at: string;
+        id: string;
+    }, {
+        name: string;
+        cohort: string | null;
+        created_at: string;
+        id: string;
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    submissions: {
+        status: "PENDING" | "APPROVED" | "REJECTED";
+        created_at: string;
+        id: string;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        user_name: string;
+    }[];
+    users: {
+        name: string;
+        cohort: string | null;
+        created_at: string;
+        id: string;
+    }[];
+    approvals: {
+        points_awarded: number;
+        id: string;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        user_name: string;
+        reviewer_name: string;
+        approved_at: string;
+    }[];
+}, {
+    submissions: {
+        status: "PENDING" | "APPROVED" | "REJECTED";
+        created_at: string;
+        id: string;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        user_name: string;
+    }[];
+    users: {
+        name: string;
+        cohort: string | null;
+        created_at: string;
+        id: string;
+    }[];
+    approvals: {
+        points_awarded: number;
+        id: string;
+        activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        user_name: string;
+        reviewer_name: string;
+        approved_at: string;
+    }[];
+}>;
 
 // @public (undocumented)
 export const RejectionEmailSchema: z.ZodObject<{
@@ -2395,42 +6599,6 @@ export const RemoveBadgeSchema: z.ZodObject<{
 }>;
 
 // @public (undocumented)
-export interface ReviewAction {
-    // (undocumented)
-    action: 'approve' | 'reject';
-    // (undocumented)
-    note?: string;
-    // (undocumented)
-    points?: number;
-}
-
-// @public (undocumented)
-export interface ReviewerPerformance {
-    // (undocumented)
-    approved: number;
-    // (undocumented)
-    handle: string;
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    name: string;
-    // (undocumented)
-    rejected: number;
-    // (undocumented)
-    role: Role;
-    // (undocumented)
-    total: number;
-}
-
-// @public (undocumented)
-export interface ReviewStats {
-    // (undocumented)
-    avgReviewTimeHours: number;
-    // (undocumented)
-    pendingReviews: number;
-}
-
-// @public (undocumented)
 export const ReviewSubmissionSchema: z.ZodObject<{
     submissionId: z.ZodString;
     action: z.ZodEnum<["approve", "reject"]>;
@@ -2448,25 +6616,26 @@ export const ReviewSubmissionSchema: z.ZodObject<{
     pointAdjustment?: number | undefined;
 }>;
 
-// @public (undocumented)
-export type Role = 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN';
+// @public
+export type Role = UserRole;
 
-// @public (undocumented)
-export interface RoleDistribution {
-    // (undocumented)
-    count: number;
-    // (undocumented)
-    role: Role;
-}
+// @public
+export const ROLE_FILTER_OPTIONS: readonly ["ALL", "PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"];
 
 // @public (undocumented)
 export const RoleEnum: z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
 
 // @public (undocumented)
+export type RoleFilterOption = typeof ROLE_FILTER_OPTIONS[number];
+
+// @public (undocumented)
+export const RoleFilterSchema: z.ZodEnum<["ALL", "PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
+
+// @public (undocumented)
 export const RoleSchema: z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
 
 // @public (undocumented)
-export type RoleType = z.infer<typeof RoleSchema>;
+export type RoleType = UserRole;
 
 // @public (undocumented)
 export interface SafeBadge {
@@ -2523,11 +6692,8 @@ export interface SafeEventHandlers {
 // @public (undocumented)
 export function safeGet<T extends Record<string, unknown>, K extends keyof T>(obj: T, key: K): T[K] | undefined;
 
-// @public (undocumented)
-export function safeParseJSON<T>(json: string, schema: z.ZodType<T>): T | null;
-
-// @public (undocumented)
-export function safeParseUnknown<T>(value: unknown, schema: z.ZodType<T>): T | null;
+// @public
+export function safeJsonParse<T>(json: string, guard: (value: unknown) => value is T): T | undefined;
 
 // @public (undocumented)
 export interface SafeSelectProps {
@@ -2603,6 +6769,57 @@ export function sanitizeNumber(input: unknown): number | null;
 export function sanitizeString(input: unknown): string;
 
 // @public (undocumented)
+export type SchoolMetrics = z.infer<typeof SchoolMetricsSchema>;
+
+// @public (undocumented)
+export const SchoolMetricsSchema: z.ZodObject<{
+    school: z.ZodString;
+    total_participants: z.ZodNumber;
+    participants_with_points: z.ZodNumber;
+    participants_with_submissions: z.ZodNumber;
+    total_points: z.ZodNumber;
+    avg_points_per_participant: z.ZodNumber;
+    max_points_in_school: z.ZodNumber;
+    total_submissions: z.ZodNumber;
+    approved_submissions: z.ZodNumber;
+    pending_submissions: z.ZodNumber;
+    public_submissions: z.ZodNumber;
+    cohort_count: z.ZodNumber;
+    first_activity_at: z.ZodNullable<z.ZodDate>;
+    latest_activity_at: z.ZodNullable<z.ZodDate>;
+}, "strip", z.ZodTypeAny, {
+    school: string;
+    total_points: number;
+    public_submissions: number;
+    pending_submissions: number;
+    total_submissions: number;
+    approved_submissions: number;
+    total_participants: number;
+    participants_with_points: number;
+    participants_with_submissions: number;
+    avg_points_per_participant: number;
+    first_activity_at: Date | null;
+    latest_activity_at: Date | null;
+    max_points_in_school: number;
+    cohort_count: number;
+}, {
+    school: string;
+    total_points: number;
+    public_submissions: number;
+    pending_submissions: number;
+    total_submissions: number;
+    approved_submissions: number;
+    total_participants: number;
+    participants_with_points: number;
+    participants_with_submissions: number;
+    avg_points_per_participant: number;
+    first_activity_at: Date | null;
+    latest_activity_at: Date | null;
+    max_points_in_school: number;
+    cohort_count: number;
+}>;
+
+// @public
 export const SchoolSchema: z.ZodString;
 
 // @public (undocumented)
@@ -2622,54 +6839,74 @@ export type ShineInput = z.infer<typeof ShineSchema>;
 export type ShinePayload = z.infer<typeof ShinePayloadSchema>;
 
 // @public (undocumented)
+export interface ShinePayloadAPI {
+    // (undocumented)
+    attachments?: string[];
+    // (undocumented)
+    ideaSummary: string;
+    // (undocumented)
+    ideaTitle: string;
+}
+
+// @public (undocumented)
+export interface ShinePayloadDB {
+    // (undocumented)
+    attachments?: string[];
+    // (undocumented)
+    idea_summary: string;
+    // (undocumented)
+    idea_title: string;
+}
+
+// @public (undocumented)
 export const ShinePayloadSchema: z.ZodObject<{
     activityCode: z.ZodLiteral<"SHINE">;
     data: z.ZodObject<{
-        ideaTitle: z.ZodString;
-        ideaSummary: z.ZodString;
-        attachment: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        idea_title: z.ZodString;
+        idea_summary: z.ZodString;
+        attachments: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        ideaTitle: string;
-        ideaSummary: string;
-        attachment?: string[] | undefined;
+        idea_title: string;
+        idea_summary: string;
+        attachments?: string[] | undefined;
     }, {
-        ideaTitle: string;
-        ideaSummary: string;
-        attachment?: string[] | undefined;
+        idea_title: string;
+        idea_summary: string;
+        attachments?: string[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     activityCode: "SHINE";
     data: {
-        ideaTitle: string;
-        ideaSummary: string;
-        attachment?: string[] | undefined;
+        idea_title: string;
+        idea_summary: string;
+        attachments?: string[] | undefined;
     };
 }, {
     activityCode: "SHINE";
     data: {
-        ideaTitle: string;
-        ideaSummary: string;
-        attachment?: string[] | undefined;
+        idea_title: string;
+        idea_summary: string;
+        attachments?: string[] | undefined;
     };
 }>;
 
 // @public (undocumented)
 export const ShineSchema: z.ZodObject<{
-    ideaTitle: z.ZodString;
-    ideaSummary: z.ZodString;
-    attachment: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    idea_title: z.ZodString;
+    idea_summary: z.ZodString;
+    attachments: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    ideaTitle: string;
-    ideaSummary: string;
-    attachment?: string[] | undefined;
+    idea_title: string;
+    idea_summary: string;
+    attachments?: string[] | undefined;
 }, {
-    ideaTitle: string;
-    ideaSummary: string;
-    attachment?: string[] | undefined;
+    idea_title: string;
+    idea_summary: string;
+    attachments?: string[] | undefined;
 }>;
 
 // @public (undocumented)
-export interface StageBreakdown {
+export interface StageBreakdownDTO {
     // (undocumented)
     approved: number;
     // (undocumented)
@@ -2681,7 +6918,25 @@ export interface StageBreakdown {
 }
 
 // @public (undocumented)
-export interface StageMetricsResponse {
+export const StageBreakdownDTOSchema: z.ZodObject<{
+    total: z.ZodNumber;
+    approved: z.ZodNumber;
+    pending: z.ZodNumber;
+    rejected: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    total: number;
+    approved: number;
+    pending: number;
+    rejected: number;
+}, {
+    total: number;
+    approved: number;
+    pending: number;
+    rejected: number;
+}>;
+
+// @public (undocumented)
+export interface StageMetricsDTO {
     // (undocumented)
     approvedSubmissions: number;
     // (undocumented)
@@ -2717,7 +6972,96 @@ export interface StageMetricsResponse {
 }
 
 // @public (undocumented)
-export interface StatsResponse {
+export const StageMetricsDTOSchema: z.ZodObject<{
+    stage: z.ZodString;
+    totalSubmissions: z.ZodNumber;
+    approvedSubmissions: z.ZodNumber;
+    pendingSubmissions: z.ZodNumber;
+    rejectedSubmissions: z.ZodNumber;
+    avgPointsEarned: z.ZodNumber;
+    uniqueEducators: z.ZodNumber;
+    topSchools: z.ZodArray<z.ZodObject<{
+        name: z.ZodString;
+        count: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        count: number;
+    }, {
+        name: string;
+        count: number;
+    }>, "many">;
+    cohortBreakdown: z.ZodArray<z.ZodObject<{
+        cohort: z.ZodString;
+        count: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        count: number;
+        cohort: string;
+    }, {
+        count: number;
+        cohort: string;
+    }>, "many">;
+    monthlyTrend: z.ZodArray<z.ZodObject<{
+        month: z.ZodString;
+        submissions: z.ZodNumber;
+        approvals: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        month: string;
+        submissions: number;
+        approvals: number;
+    }, {
+        month: string;
+        submissions: number;
+        approvals: number;
+    }>, "many">;
+    completionRate: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    totalSubmissions: number;
+    stage: string;
+    approvedSubmissions: number;
+    pendingSubmissions: number;
+    rejectedSubmissions: number;
+    avgPointsEarned: number;
+    uniqueEducators: number;
+    topSchools: {
+        name: string;
+        count: number;
+    }[];
+    cohortBreakdown: {
+        count: number;
+        cohort: string;
+    }[];
+    monthlyTrend: {
+        month: string;
+        submissions: number;
+        approvals: number;
+    }[];
+    completionRate: number;
+}, {
+    totalSubmissions: number;
+    stage: string;
+    approvedSubmissions: number;
+    pendingSubmissions: number;
+    rejectedSubmissions: number;
+    avgPointsEarned: number;
+    uniqueEducators: number;
+    topSchools: {
+        name: string;
+        count: number;
+    }[];
+    cohortBreakdown: {
+        count: number;
+        cohort: string;
+    }[];
+    monthlyTrend: {
+        month: string;
+        submissions: number;
+        approvals: number;
+    }[];
+    completionRate: number;
+}>;
+
+// @public (undocumented)
+export interface StatsResponseDTO {
     // (undocumented)
     badges: {
         totalAwarded: number;
@@ -2730,11 +7074,11 @@ export interface StatsResponse {
     };
     // (undocumented)
     byStage: {
-        learn: StageBreakdown;
-        explore: StageBreakdown;
-        amplify: StageBreakdown;
-        present: StageBreakdown;
-        shine: StageBreakdown;
+        learn: StageBreakdownDTO;
+        explore: StageBreakdownDTO;
+        amplify: StageBreakdownDTO;
+        present: StageBreakdownDTO;
+        shine: StageBreakdownDTO;
     };
     // (undocumented)
     monthlyGrowth: Array<{
@@ -2759,75 +7103,383 @@ export interface StatsResponse {
 }
 
 // @public (undocumented)
+export const StatsResponseDTOSchema: z.ZodObject<{
+    totalEducators: z.ZodNumber;
+    totalSubmissions: z.ZodNumber;
+    totalPoints: z.ZodNumber;
+    studentsImpacted: z.ZodOptional<z.ZodNumber>;
+    byStage: z.ZodObject<{
+        learn: z.ZodObject<{
+            total: z.ZodNumber;
+            approved: z.ZodNumber;
+            pending: z.ZodNumber;
+            rejected: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        }, {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        }>;
+        explore: z.ZodObject<{
+            total: z.ZodNumber;
+            approved: z.ZodNumber;
+            pending: z.ZodNumber;
+            rejected: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        }, {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        }>;
+        amplify: z.ZodObject<{
+            total: z.ZodNumber;
+            approved: z.ZodNumber;
+            pending: z.ZodNumber;
+            rejected: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        }, {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        }>;
+        present: z.ZodObject<{
+            total: z.ZodNumber;
+            approved: z.ZodNumber;
+            pending: z.ZodNumber;
+            rejected: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        }, {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        }>;
+        shine: z.ZodObject<{
+            total: z.ZodNumber;
+            approved: z.ZodNumber;
+            pending: z.ZodNumber;
+            rejected: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        }, {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        learn: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        explore: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        amplify: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        present: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        shine: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+    }, {
+        learn: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        explore: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        amplify: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        present: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        shine: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+    }>;
+    topCohorts: z.ZodArray<z.ZodObject<{
+        name: z.ZodString;
+        count: z.ZodNumber;
+        avgPoints: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        name: string;
+        count: number;
+        avgPoints?: number | undefined;
+    }, {
+        name: string;
+        count: number;
+        avgPoints?: number | undefined;
+    }>, "many">;
+    monthlyGrowth: z.ZodArray<z.ZodObject<{
+        month: z.ZodString;
+        educators: z.ZodNumber;
+        submissions: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        month: string;
+        educators: number;
+        submissions: number;
+    }, {
+        month: string;
+        educators: number;
+        submissions: number;
+    }>, "many">;
+    badges: z.ZodObject<{
+        totalAwarded: z.ZodNumber;
+        uniqueBadges: z.ZodNumber;
+        mostPopular: z.ZodArray<z.ZodObject<{
+            code: z.ZodString;
+            name: z.ZodString;
+            count: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            code: string;
+            name: string;
+            count: number;
+        }, {
+            code: string;
+            name: string;
+            count: number;
+        }>, "many">;
+    }, "strip", z.ZodTypeAny, {
+        totalAwarded: number;
+        uniqueBadges: number;
+        mostPopular: {
+            code: string;
+            name: string;
+            count: number;
+        }[];
+    }, {
+        totalAwarded: number;
+        uniqueBadges: number;
+        mostPopular: {
+            code: string;
+            name: string;
+            count: number;
+        }[];
+    }>;
+}, "strip", z.ZodTypeAny, {
+    totalEducators: number;
+    totalSubmissions: number;
+    totalPoints: number;
+    byStage: {
+        learn: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        explore: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        amplify: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        present: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        shine: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+    };
+    topCohorts: {
+        name: string;
+        count: number;
+        avgPoints?: number | undefined;
+    }[];
+    monthlyGrowth: {
+        month: string;
+        educators: number;
+        submissions: number;
+    }[];
+    badges: {
+        totalAwarded: number;
+        uniqueBadges: number;
+        mostPopular: {
+            code: string;
+            name: string;
+            count: number;
+        }[];
+    };
+    studentsImpacted?: number | undefined;
+}, {
+    totalEducators: number;
+    totalSubmissions: number;
+    totalPoints: number;
+    byStage: {
+        learn: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        explore: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        amplify: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        present: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+        shine: {
+            total: number;
+            approved: number;
+            pending: number;
+            rejected: number;
+        };
+    };
+    topCohorts: {
+        name: string;
+        count: number;
+        avgPoints?: number | undefined;
+    }[];
+    monthlyGrowth: {
+        month: string;
+        educators: number;
+        submissions: number;
+    }[];
+    badges: {
+        totalAwarded: number;
+        uniqueBadges: number;
+        mostPopular: {
+            code: string;
+            name: string;
+            count: number;
+        }[];
+    };
+    studentsImpacted?: number | undefined;
+}>;
+
+// @public
+export const STATUS_FILTER_OPTIONS: readonly ["ALL", "PENDING", "APPROVED", "REJECTED"];
+
+// @public (undocumented)
 export const STATUS_VALUES: readonly ["PENDING", "APPROVED", "REJECTED", "PUBLIC", "PRIVATE"];
 
 // @public (undocumented)
-export interface StatusDistribution {
-    // (undocumented)
-    count: number;
-    // (undocumented)
-    status: SubmissionStatus;
-}
+export type StatusFilterOption = typeof STATUS_FILTER_OPTIONS[number];
+
+// @public (undocumented)
+export const StatusFilterSchema: z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED"]>;
 
 // @public (undocumented)
 export type StatusValue = typeof STATUS_VALUES[number];
 
 // @public (undocumented)
-export interface StorageMetadata {
+export interface Submission {
     // (undocumented)
-    [key: string]: string | number | boolean | undefined;
+    activity_code: string;
     // (undocumented)
-    activityCode?: ActivityCode;
+    created_at: Date;
     // (undocumented)
-    mimeType?: string;
+    id: string;
     // (undocumented)
-    originalName?: string;
+    payload: unknown;
     // (undocumented)
-    submissionId?: string;
+    review_note: string | null;
     // (undocumented)
-    userId?: string;
+    reviewer_id: string | null;
+    // (undocumented)
+    status: SubmissionStatus;
+    // (undocumented)
+    updated_at: Date;
+    // (undocumented)
+    user_id: string;
+    // (undocumented)
+    visibility: Visibility;
 }
 
-// @public (undocumented)
-export type SubmissionAuditMeta = z.infer<typeof SubmissionAuditMetaSchema>;
+// @public
+export const SUBMISSION_STATUSES: readonly ["PENDING", "APPROVED", "REJECTED"];
 
 // @public (undocumented)
-export const SubmissionAuditMetaSchema: z.ZodObject<{
-    submissionId: z.ZodOptional<z.ZodString>;
-    pointsAwarded: z.ZodOptional<z.ZodNumber>;
-    reviewNote: z.ZodOptional<z.ZodString>;
-    previousStatus: z.ZodOptional<z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>>;
-    newStatus: z.ZodOptional<z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>>;
-    submissionType: z.ZodOptional<z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>>;
-    pointAdjustment: z.ZodOptional<z.ZodNumber>;
-    bulkOperation: z.ZodOptional<z.ZodBoolean>;
-    basePoints: z.ZodOptional<z.ZodNumber>;
-    adjustedPoints: z.ZodOptional<z.ZodNumber>;
-    reason: z.ZodOptional<z.ZodString>;
+export const SubmissionAttachmentSchema: z.ZodObject<{
+    id: z.ZodString;
+    submission_id: z.ZodString;
+    path: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    submissionId?: string | undefined;
-    reviewNote?: string | undefined;
-    pointAdjustment?: number | undefined;
-    reason?: string | undefined;
-    pointsAwarded?: number | undefined;
-    previousStatus?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
-    newStatus?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
-    submissionType?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
-    bulkOperation?: boolean | undefined;
-    basePoints?: number | undefined;
-    adjustedPoints?: number | undefined;
+    path: string;
+    id: string;
+    submission_id: string;
 }, {
-    submissionId?: string | undefined;
-    reviewNote?: string | undefined;
-    pointAdjustment?: number | undefined;
-    reason?: string | undefined;
-    pointsAwarded?: number | undefined;
-    previousStatus?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
-    newStatus?: "PENDING" | "APPROVED" | "REJECTED" | undefined;
-    submissionType?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
-    bulkOperation?: boolean | undefined;
-    basePoints?: number | undefined;
-    adjustedPoints?: number | undefined;
+    path: string;
+    id: string;
+    submission_id: string;
 }>;
 
 // @public (undocumented)
@@ -2852,29 +7504,818 @@ export const SubmissionConfirmationEmailSchema: z.ZodObject<{
 }>;
 
 // @public (undocumented)
-export interface SubmissionExportRow {
+export type SubmissionCreateRequest = z.infer<typeof SubmissionCreateRequestSchema>;
+
+// @public (undocumented)
+export const SubmissionCreateRequestSchema: z.ZodObject<{
+    activityCode: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+    payload: z.ZodRecord<z.ZodString, z.ZodUnknown>;
+    attachments: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    visibility: z.ZodOptional<z.ZodEnum<["PRIVATE", "PUBLIC"]>>;
+}, "strip", z.ZodTypeAny, {
+    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    payload: Record<string, unknown>;
+    attachments?: string[] | undefined;
+    visibility?: "PRIVATE" | "PUBLIC" | undefined;
+}, {
+    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    payload: Record<string, unknown>;
+    attachments?: string[] | undefined;
+    visibility?: "PRIVATE" | "PUBLIC" | undefined;
+}>;
+
+// @public (undocumented)
+export const SubmissionDetailResponseSchema: z.ZodObject<{
+    success: z.ZodLiteral<true>;
+    data: z.ZodObject<{
+        submission: z.ZodObject<{
+            id: z.ZodString;
+            created_at: z.ZodString;
+            updated_at: z.ZodOptional<z.ZodString>;
+            status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+            visibility: z.ZodEnum<["PRIVATE", "PUBLIC"]>;
+            review_note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            points_awarded: z.ZodOptional<z.ZodNumber>;
+            payload: z.ZodEffects<z.ZodDiscriminatedUnion<"activityCode", [z.ZodObject<{
+                activityCode: z.ZodLiteral<"LEARN">;
+                data: z.ZodObject<{
+                    provider: z.ZodEnum<["SPL", "ILS"]>;
+                    course_name: z.ZodString;
+                    certificate_url: z.ZodOptional<z.ZodString>;
+                    completed_at: z.ZodString;
+                }, "strip", z.ZodTypeAny, {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                }, {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            }, {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            }>, z.ZodObject<{
+                activityCode: z.ZodLiteral<"EXPLORE">;
+                data: z.ZodObject<{
+                    reflection: z.ZodString;
+                    class_date: z.ZodString;
+                    school: z.ZodOptional<z.ZodString>;
+                    evidence_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                }, {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            }, {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            }>, z.ZodObject<{
+                activityCode: z.ZodLiteral<"AMPLIFY">;
+                data: z.ZodObject<{
+                    peers_trained: z.ZodNumber;
+                    students_trained: z.ZodNumber;
+                    attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                }, {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            }, {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            }>, z.ZodObject<{
+                activityCode: z.ZodLiteral<"PRESENT">;
+                data: z.ZodObject<{
+                    linkedin_url: z.ZodString;
+                    screenshot_url: z.ZodOptional<z.ZodString>;
+                    caption: z.ZodString;
+                }, "strip", z.ZodTypeAny, {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                }, {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            }, {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            }>, z.ZodObject<{
+                activityCode: z.ZodLiteral<"SHINE">;
+                data: z.ZodObject<{
+                    idea_title: z.ZodString;
+                    idea_summary: z.ZodString;
+                    attachments: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                }, {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            }, {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            }>]>, {
+                provider: "SPL" | "ILS";
+                course_name: string;
+                completed_at: string;
+                certificate_url?: string | undefined;
+            } | {
+                reflection: string;
+                class_date: string;
+                school?: string | undefined;
+                evidence_files?: string[] | undefined;
+            } | {
+                peers_trained: number;
+                students_trained: number;
+                attendance_proof_files?: string[] | undefined;
+            } | {
+                linkedin_url: string;
+                caption: string;
+                screenshot_url?: string | undefined;
+            } | {
+                idea_title: string;
+                idea_summary: string;
+                attachments?: string[] | undefined;
+            }, {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            } | {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            } | {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            }>;
+            attachmentCount: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            attachments_rel: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                submission_id: z.ZodString;
+                path: z.ZodString;
+            }, "strip", z.ZodTypeAny, {
+                path: string;
+                id: string;
+                submission_id: string;
+            }, {
+                path: string;
+                id: string;
+                submission_id: string;
+            }>, "many">>>;
+            user: z.ZodObject<{
+                id: z.ZodString;
+                name: z.ZodString;
+                handle: z.ZodString;
+                email: z.ZodOptional<z.ZodString>;
+                school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+                cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            }, {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            }>;
+            activity: z.ZodObject<{
+                code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+                name: z.ZodString;
+                default_points: z.ZodOptional<z.ZodNumber>;
+            }, "strip", z.ZodTypeAny, {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            }, {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            }>;
+            reviewer: z.ZodOptional<z.ZodNullable<z.ZodObject<{
+                id: z.ZodString;
+                name: z.ZodString;
+                handle: z.ZodString;
+                email: z.ZodOptional<z.ZodString>;
+                school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+                cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            }, {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            }>>>;
+            reviewed_at: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                provider: "SPL" | "ILS";
+                course_name: string;
+                completed_at: string;
+                certificate_url?: string | undefined;
+            } | {
+                reflection: string;
+                class_date: string;
+                school?: string | undefined;
+                evidence_files?: string[] | undefined;
+            } | {
+                peers_trained: number;
+                students_trained: number;
+                attendance_proof_files?: string[] | undefined;
+            } | {
+                linkedin_url: string;
+                caption: string;
+                screenshot_url?: string | undefined;
+            } | {
+                idea_title: string;
+                idea_summary: string;
+                attachments?: string[] | undefined;
+            };
+            attachmentCount: number;
+            attachments_rel: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[];
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        }, {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            } | {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            } | {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            };
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            attachmentCount?: number | undefined;
+            attachments_rel?: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[] | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        }>;
+        evidence: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        submission: {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                provider: "SPL" | "ILS";
+                course_name: string;
+                completed_at: string;
+                certificate_url?: string | undefined;
+            } | {
+                reflection: string;
+                class_date: string;
+                school?: string | undefined;
+                evidence_files?: string[] | undefined;
+            } | {
+                peers_trained: number;
+                students_trained: number;
+                attendance_proof_files?: string[] | undefined;
+            } | {
+                linkedin_url: string;
+                caption: string;
+                screenshot_url?: string | undefined;
+            } | {
+                idea_title: string;
+                idea_summary: string;
+                attachments?: string[] | undefined;
+            };
+            attachmentCount: number;
+            attachments_rel: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[];
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        };
+        evidence?: string | undefined;
+    }, {
+        submission: {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            } | {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            } | {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            };
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            attachmentCount?: number | undefined;
+            attachments_rel?: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[] | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        };
+        evidence?: string | undefined;
+    }>;
+}, "strip", z.ZodTypeAny, {
+    success: true;
+    data: {
+        submission: {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                provider: "SPL" | "ILS";
+                course_name: string;
+                completed_at: string;
+                certificate_url?: string | undefined;
+            } | {
+                reflection: string;
+                class_date: string;
+                school?: string | undefined;
+                evidence_files?: string[] | undefined;
+            } | {
+                peers_trained: number;
+                students_trained: number;
+                attendance_proof_files?: string[] | undefined;
+            } | {
+                linkedin_url: string;
+                caption: string;
+                screenshot_url?: string | undefined;
+            } | {
+                idea_title: string;
+                idea_summary: string;
+                attachments?: string[] | undefined;
+            };
+            attachmentCount: number;
+            attachments_rel: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[];
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        };
+        evidence?: string | undefined;
+    };
+}, {
+    success: true;
+    data: {
+        submission: {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            } | {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            } | {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            };
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            attachmentCount?: number | undefined;
+            attachments_rel?: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[] | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        };
+        evidence?: string | undefined;
+    };
+}>;
+
+// @public (undocumented)
+export interface SubmissionDTO {
     // (undocumented)
-    activity_code: ActivityCode;
+    activity: {
+        name: string;
+        code: string;
+    };
     // (undocumented)
-    created_at: string;
+    activityCode: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE';
+    // (undocumented)
+    createdAt: string;
     // (undocumented)
     id: string;
     // (undocumented)
-    points_awarded: number;
+    payload: Record<string, unknown>;
     // (undocumented)
-    reviewed_at?: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
     // (undocumented)
-    reviewer_name?: string;
+    updatedAt: string;
     // (undocumented)
-    status: SubmissionStatus;
-    // (undocumented)
-    user_email: string;
-    // (undocumented)
-    user_id: string;
-    // (undocumented)
-    user_name: string;
-    // (undocumented)
-    visibility: Visibility;
+    visibility: 'PUBLIC' | 'PRIVATE';
+}
+
+// @public (undocumented)
+export const SubmissionDTOSchema: z.ZodObject<{
+    id: z.ZodString;
+    activityCode: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+    activity: z.ZodObject<{
+        name: z.ZodString;
+        code: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        code: string;
+        name: string;
+    }, {
+        code: string;
+        name: string;
+    }>;
+    status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+    visibility: z.ZodEnum<["PUBLIC", "PRIVATE"]>;
+    payload: z.ZodRecord<z.ZodString, z.ZodUnknown>;
+    createdAt: z.ZodString;
+    updatedAt: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    id: string;
+    createdAt: string;
+    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    activity: {
+        code: string;
+        name: string;
+    };
+    visibility: "PUBLIC" | "PRIVATE";
+    payload: Record<string, unknown>;
+    updatedAt: string;
+}, {
+    status: "PENDING" | "APPROVED" | "REJECTED";
+    id: string;
+    createdAt: string;
+    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    activity: {
+        code: string;
+        name: string;
+    };
+    visibility: "PUBLIC" | "PRIVATE";
+    payload: Record<string, unknown>;
+    updatedAt: string;
+}>;
+
+// @public (undocumented)
+export class SubmissionLimitError extends ElevateApiError {
+    constructor(activityType: string, currentCount: number, maxAllowed: number, traceId?: string);
 }
 
 // @public (undocumented)
@@ -2885,204 +8326,952 @@ export const SubmissionPayloadSchema: z.ZodDiscriminatedUnion<"activityCode", [z
     activityCode: z.ZodLiteral<"LEARN">;
     data: z.ZodObject<{
         provider: z.ZodEnum<["SPL", "ILS"]>;
-        course: z.ZodString;
-        completedAt: z.ZodString;
-        certificateFile: z.ZodOptional<z.ZodString>;
+        course_name: z.ZodString;
+        certificate_url: z.ZodOptional<z.ZodString>;
+        completed_at: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         provider: "SPL" | "ILS";
-        course: string;
-        completedAt: string;
-        certificateFile?: string | undefined;
+        course_name: string;
+        completed_at: string;
+        certificate_url?: string | undefined;
     }, {
         provider: "SPL" | "ILS";
-        course: string;
-        completedAt: string;
-        certificateFile?: string | undefined;
+        course_name: string;
+        completed_at: string;
+        certificate_url?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     activityCode: "LEARN";
     data: {
         provider: "SPL" | "ILS";
-        course: string;
-        completedAt: string;
-        certificateFile?: string | undefined;
+        course_name: string;
+        completed_at: string;
+        certificate_url?: string | undefined;
     };
 }, {
     activityCode: "LEARN";
     data: {
         provider: "SPL" | "ILS";
-        course: string;
-        completedAt: string;
-        certificateFile?: string | undefined;
+        course_name: string;
+        completed_at: string;
+        certificate_url?: string | undefined;
     };
 }>, z.ZodObject<{
     activityCode: z.ZodLiteral<"EXPLORE">;
     data: z.ZodObject<{
         reflection: z.ZodString;
-        classDate: z.ZodString;
+        class_date: z.ZodString;
         school: z.ZodOptional<z.ZodString>;
-        evidenceFiles: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        evidence_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
         reflection: string;
-        classDate: string;
+        class_date: string;
         school?: string | undefined;
-        evidenceFiles?: string[] | undefined;
+        evidence_files?: string[] | undefined;
     }, {
         reflection: string;
-        classDate: string;
+        class_date: string;
         school?: string | undefined;
-        evidenceFiles?: string[] | undefined;
+        evidence_files?: string[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     activityCode: "EXPLORE";
     data: {
         reflection: string;
-        classDate: string;
+        class_date: string;
         school?: string | undefined;
-        evidenceFiles?: string[] | undefined;
+        evidence_files?: string[] | undefined;
     };
 }, {
     activityCode: "EXPLORE";
     data: {
         reflection: string;
-        classDate: string;
+        class_date: string;
         school?: string | undefined;
-        evidenceFiles?: string[] | undefined;
+        evidence_files?: string[] | undefined;
     };
 }>, z.ZodObject<{
     activityCode: z.ZodLiteral<"AMPLIFY">;
     data: z.ZodObject<{
-        peersTrained: z.ZodNumber;
-        studentsTrained: z.ZodNumber;
-        attendanceProofFiles: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        peers_trained: z.ZodNumber;
+        students_trained: z.ZodNumber;
+        attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        peersTrained: number;
-        studentsTrained: number;
-        attendanceProofFiles?: string[] | undefined;
+        peers_trained: number;
+        students_trained: number;
+        attendance_proof_files?: string[] | undefined;
     }, {
-        peersTrained: number;
-        studentsTrained: number;
-        attendanceProofFiles?: string[] | undefined;
+        peers_trained: number;
+        students_trained: number;
+        attendance_proof_files?: string[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     activityCode: "AMPLIFY";
     data: {
-        peersTrained: number;
-        studentsTrained: number;
-        attendanceProofFiles?: string[] | undefined;
+        peers_trained: number;
+        students_trained: number;
+        attendance_proof_files?: string[] | undefined;
     };
 }, {
     activityCode: "AMPLIFY";
     data: {
-        peersTrained: number;
-        studentsTrained: number;
-        attendanceProofFiles?: string[] | undefined;
+        peers_trained: number;
+        students_trained: number;
+        attendance_proof_files?: string[] | undefined;
     };
 }>, z.ZodObject<{
     activityCode: z.ZodLiteral<"PRESENT">;
     data: z.ZodObject<{
-        linkedinUrl: z.ZodString;
-        screenshotFile: z.ZodOptional<z.ZodString>;
+        linkedin_url: z.ZodString;
+        screenshot_url: z.ZodOptional<z.ZodString>;
         caption: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        linkedinUrl: string;
+        linkedin_url: string;
         caption: string;
-        screenshotFile?: string | undefined;
+        screenshot_url?: string | undefined;
     }, {
-        linkedinUrl: string;
+        linkedin_url: string;
         caption: string;
-        screenshotFile?: string | undefined;
+        screenshot_url?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     activityCode: "PRESENT";
     data: {
-        linkedinUrl: string;
+        linkedin_url: string;
         caption: string;
-        screenshotFile?: string | undefined;
+        screenshot_url?: string | undefined;
     };
 }, {
     activityCode: "PRESENT";
     data: {
-        linkedinUrl: string;
+        linkedin_url: string;
         caption: string;
-        screenshotFile?: string | undefined;
+        screenshot_url?: string | undefined;
     };
 }>, z.ZodObject<{
     activityCode: z.ZodLiteral<"SHINE">;
     data: z.ZodObject<{
-        ideaTitle: z.ZodString;
-        ideaSummary: z.ZodString;
-        attachment: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        idea_title: z.ZodString;
+        idea_summary: z.ZodString;
+        attachments: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        ideaTitle: string;
-        ideaSummary: string;
-        attachment?: string[] | undefined;
+        idea_title: string;
+        idea_summary: string;
+        attachments?: string[] | undefined;
     }, {
-        ideaTitle: string;
-        ideaSummary: string;
-        attachment?: string[] | undefined;
+        idea_title: string;
+        idea_summary: string;
+        attachments?: string[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     activityCode: "SHINE";
     data: {
-        ideaTitle: string;
-        ideaSummary: string;
-        attachment?: string[] | undefined;
+        idea_title: string;
+        idea_summary: string;
+        attachments?: string[] | undefined;
     };
 }, {
     activityCode: "SHINE";
     data: {
-        ideaTitle: string;
-        ideaSummary: string;
-        attachment?: string[] | undefined;
+        idea_title: string;
+        idea_summary: string;
+        attachments?: string[] | undefined;
     };
 }>]>;
 
 // @public (undocumented)
-export interface SubmissionStats {
-    // (undocumented)
-    approvalRate: number;
-    // (undocumented)
-    approved: number;
-    // (undocumented)
-    pending: number;
-    // (undocumented)
-    rejected: number;
-    // (undocumented)
-    total: number;
-}
+export const SubmissionsListResponseSchema: z.ZodObject<{
+    success: z.ZodLiteral<true>;
+    data: z.ZodObject<{
+        submissions: z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            created_at: z.ZodString;
+            updated_at: z.ZodOptional<z.ZodString>;
+            status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+            visibility: z.ZodEnum<["PRIVATE", "PUBLIC"]>;
+            review_note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            points_awarded: z.ZodOptional<z.ZodNumber>;
+            payload: z.ZodEffects<z.ZodDiscriminatedUnion<"activityCode", [z.ZodObject<{
+                activityCode: z.ZodLiteral<"LEARN">;
+                data: z.ZodObject<{
+                    provider: z.ZodEnum<["SPL", "ILS"]>;
+                    course_name: z.ZodString;
+                    certificate_url: z.ZodOptional<z.ZodString>;
+                    completed_at: z.ZodString;
+                }, "strip", z.ZodTypeAny, {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                }, {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            }, {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            }>, z.ZodObject<{
+                activityCode: z.ZodLiteral<"EXPLORE">;
+                data: z.ZodObject<{
+                    reflection: z.ZodString;
+                    class_date: z.ZodString;
+                    school: z.ZodOptional<z.ZodString>;
+                    evidence_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                }, {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            }, {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            }>, z.ZodObject<{
+                activityCode: z.ZodLiteral<"AMPLIFY">;
+                data: z.ZodObject<{
+                    peers_trained: z.ZodNumber;
+                    students_trained: z.ZodNumber;
+                    attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                }, {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            }, {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            }>, z.ZodObject<{
+                activityCode: z.ZodLiteral<"PRESENT">;
+                data: z.ZodObject<{
+                    linkedin_url: z.ZodString;
+                    screenshot_url: z.ZodOptional<z.ZodString>;
+                    caption: z.ZodString;
+                }, "strip", z.ZodTypeAny, {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                }, {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            }, {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            }>, z.ZodObject<{
+                activityCode: z.ZodLiteral<"SHINE">;
+                data: z.ZodObject<{
+                    idea_title: z.ZodString;
+                    idea_summary: z.ZodString;
+                    attachments: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                }, "strip", z.ZodTypeAny, {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                }, {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                }>;
+            }, "strip", z.ZodTypeAny, {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            }, {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            }>]>, {
+                provider: "SPL" | "ILS";
+                course_name: string;
+                completed_at: string;
+                certificate_url?: string | undefined;
+            } | {
+                reflection: string;
+                class_date: string;
+                school?: string | undefined;
+                evidence_files?: string[] | undefined;
+            } | {
+                peers_trained: number;
+                students_trained: number;
+                attendance_proof_files?: string[] | undefined;
+            } | {
+                linkedin_url: string;
+                caption: string;
+                screenshot_url?: string | undefined;
+            } | {
+                idea_title: string;
+                idea_summary: string;
+                attachments?: string[] | undefined;
+            }, {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            } | {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            } | {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            }>;
+            attachmentCount: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            attachments_rel: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodObject<{
+                id: z.ZodString;
+                submission_id: z.ZodString;
+                path: z.ZodString;
+            }, "strip", z.ZodTypeAny, {
+                path: string;
+                id: string;
+                submission_id: string;
+            }, {
+                path: string;
+                id: string;
+                submission_id: string;
+            }>, "many">>>;
+            user: z.ZodObject<{
+                id: z.ZodString;
+                name: z.ZodString;
+                handle: z.ZodString;
+                email: z.ZodOptional<z.ZodString>;
+                school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+                cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            }, {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            }>;
+            activity: z.ZodObject<{
+                code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+                name: z.ZodString;
+                default_points: z.ZodOptional<z.ZodNumber>;
+            }, "strip", z.ZodTypeAny, {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            }, {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            }>;
+            reviewer: z.ZodOptional<z.ZodNullable<z.ZodObject<{
+                id: z.ZodString;
+                name: z.ZodString;
+                handle: z.ZodString;
+                email: z.ZodOptional<z.ZodString>;
+                school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+                cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            }, "strip", z.ZodTypeAny, {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            }, {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            }>>>;
+            reviewed_at: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                provider: "SPL" | "ILS";
+                course_name: string;
+                completed_at: string;
+                certificate_url?: string | undefined;
+            } | {
+                reflection: string;
+                class_date: string;
+                school?: string | undefined;
+                evidence_files?: string[] | undefined;
+            } | {
+                peers_trained: number;
+                students_trained: number;
+                attendance_proof_files?: string[] | undefined;
+            } | {
+                linkedin_url: string;
+                caption: string;
+                screenshot_url?: string | undefined;
+            } | {
+                idea_title: string;
+                idea_summary: string;
+                attachments?: string[] | undefined;
+            };
+            attachmentCount: number;
+            attachments_rel: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[];
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        }, {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            } | {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            } | {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            };
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            attachmentCount?: number | undefined;
+            attachments_rel?: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[] | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        }>, "many">;
+        pagination: z.ZodObject<{
+            page: z.ZodDefault<z.ZodNumber>;
+            limit: z.ZodDefault<z.ZodNumber>;
+            offset: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            page: number;
+            limit: number;
+            offset?: number | undefined;
+        }, {
+            page?: number | undefined;
+            limit?: number | undefined;
+            offset?: number | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        submissions: {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                provider: "SPL" | "ILS";
+                course_name: string;
+                completed_at: string;
+                certificate_url?: string | undefined;
+            } | {
+                reflection: string;
+                class_date: string;
+                school?: string | undefined;
+                evidence_files?: string[] | undefined;
+            } | {
+                peers_trained: number;
+                students_trained: number;
+                attendance_proof_files?: string[] | undefined;
+            } | {
+                linkedin_url: string;
+                caption: string;
+                screenshot_url?: string | undefined;
+            } | {
+                idea_title: string;
+                idea_summary: string;
+                attachments?: string[] | undefined;
+            };
+            attachmentCount: number;
+            attachments_rel: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[];
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        }[];
+        pagination: {
+            page: number;
+            limit: number;
+            offset?: number | undefined;
+        };
+    }, {
+        submissions: {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            } | {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            } | {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            };
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            attachmentCount?: number | undefined;
+            attachments_rel?: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[] | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        }[];
+        pagination: {
+            page?: number | undefined;
+            limit?: number | undefined;
+            offset?: number | undefined;
+        };
+    }>;
+}, "strip", z.ZodTypeAny, {
+    success: true;
+    data: {
+        submissions: {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                provider: "SPL" | "ILS";
+                course_name: string;
+                completed_at: string;
+                certificate_url?: string | undefined;
+            } | {
+                reflection: string;
+                class_date: string;
+                school?: string | undefined;
+                evidence_files?: string[] | undefined;
+            } | {
+                peers_trained: number;
+                students_trained: number;
+                attendance_proof_files?: string[] | undefined;
+            } | {
+                linkedin_url: string;
+                caption: string;
+                screenshot_url?: string | undefined;
+            } | {
+                idea_title: string;
+                idea_summary: string;
+                attachments?: string[] | undefined;
+            };
+            attachmentCount: number;
+            attachments_rel: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[];
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        }[];
+        pagination: {
+            page: number;
+            limit: number;
+            offset?: number | undefined;
+        };
+    };
+}, {
+    success: true;
+    data: {
+        submissions: {
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            activity: {
+                code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                name: string;
+                default_points?: number | undefined;
+            };
+            created_at: string;
+            user: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            };
+            id: string;
+            visibility: "PRIVATE" | "PUBLIC";
+            payload: {
+                activityCode: "LEARN";
+                data: {
+                    provider: "SPL" | "ILS";
+                    course_name: string;
+                    completed_at: string;
+                    certificate_url?: string | undefined;
+                };
+            } | {
+                activityCode: "EXPLORE";
+                data: {
+                    reflection: string;
+                    class_date: string;
+                    school?: string | undefined;
+                    evidence_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "AMPLIFY";
+                data: {
+                    peers_trained: number;
+                    students_trained: number;
+                    attendance_proof_files?: string[] | undefined;
+                };
+            } | {
+                activityCode: "PRESENT";
+                data: {
+                    linkedin_url: string;
+                    caption: string;
+                    screenshot_url?: string | undefined;
+                };
+            } | {
+                activityCode: "SHINE";
+                data: {
+                    idea_title: string;
+                    idea_summary: string;
+                    attachments?: string[] | undefined;
+                };
+            };
+            points_awarded?: number | undefined;
+            updated_at?: string | undefined;
+            review_note?: string | null | undefined;
+            attachmentCount?: number | undefined;
+            attachments_rel?: {
+                path: string;
+                id: string;
+                submission_id: string;
+            }[] | undefined;
+            reviewer?: {
+                name: string;
+                handle: string;
+                id: string;
+                email?: string | undefined;
+                school?: string | null | undefined;
+                cohort?: string | null | undefined;
+            } | null | undefined;
+            reviewed_at?: string | null | undefined;
+        }[];
+        pagination: {
+            page?: number | undefined;
+            limit?: number | undefined;
+            offset?: number | undefined;
+        };
+    };
+}>;
 
 // @public (undocumented)
-export type SubmissionStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export const SubmissionsQuerySchema: z.ZodObject<{
+    status: z.ZodOptional<z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED"]>>;
+    activity: z.ZodOptional<z.ZodEnum<["ALL", "LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>>;
+    userId: z.ZodOptional<z.ZodString>;
+    page: z.ZodOptional<z.ZodNumber>;
+    limit: z.ZodOptional<z.ZodNumber>;
+    sortBy: z.ZodOptional<z.ZodEnum<["created_at", "updated_at", "status"]>>;
+    sortOrder: z.ZodOptional<z.ZodEnum<["asc", "desc"]>>;
+    search: z.ZodOptional<z.ZodString>;
+    cohort: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined;
+    cohort?: string | undefined;
+    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
+    userId?: string | undefined;
+    page?: number | undefined;
+    limit?: number | undefined;
+    sortBy?: "status" | "created_at" | "updated_at" | undefined;
+    sortOrder?: "asc" | "desc" | undefined;
+    search?: string | undefined;
+}, {
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined;
+    cohort?: string | undefined;
+    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
+    userId?: string | undefined;
+    page?: number | undefined;
+    limit?: number | undefined;
+    sortBy?: "status" | "created_at" | "updated_at" | undefined;
+    sortOrder?: "asc" | "desc" | undefined;
+    search?: string | undefined;
+}>;
+
+// @public (undocumented)
+export type SubmissionStatus = typeof SUBMISSION_STATUSES[number];
+
+// @public (undocumented)
+export const SubmissionStatusEnum: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
 
 // @public (undocumented)
 export const SubmissionStatusSchema: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
 
 // @public (undocumented)
-export type SubmissionStatusType = z.infer<typeof SubmissionStatusSchema>;
-
-// @public (undocumented)
-export interface SubmissionWhereClause {
-    // (undocumented)
-    activity_code?: ActivityCode | {
-        in: ActivityCode[];
-    };
-    // (undocumented)
-    created_at?: {
-        gte?: Date;
-        lte?: Date;
-    };
-    // (undocumented)
-    status?: SubmissionStatus | {
-        in: SubmissionStatus[];
-    };
-    // (undocumented)
-    user?: UserWhereClause;
-    // (undocumented)
-    user_id?: string;
-    // (undocumented)
-    visibility?: Visibility;
-}
+export type SubmissionStatusType = SubmissionStatus;
 
 // @public (undocumented)
 export interface TableFilters {
@@ -3099,6 +9288,51 @@ export interface TableFilters {
     // (undocumented)
     status?: string;
 }
+
+// @public (undocumented)
+export type TimeSeriesMetrics = z.infer<typeof TimeSeriesMetricsSchema>;
+
+// @public (undocumented)
+export const TimeSeriesMetricsSchema: z.ZodObject<{
+    date: z.ZodDate;
+    activity_code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+    activity_name: z.ZodString;
+    points_awarded: z.ZodNumber;
+    point_entries: z.ZodNumber;
+    unique_point_users: z.ZodNumber;
+    submissions_created: z.ZodNumber;
+    submissions_approved: z.ZodNumber;
+    submissions_rejected: z.ZodNumber;
+    unique_submitters: z.ZodNumber;
+    cumulative_points: z.ZodNumber;
+    cumulative_submissions: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    date: Date;
+    points_awarded: number;
+    activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    activity_name: string;
+    point_entries: number;
+    unique_point_users: number;
+    submissions_created: number;
+    submissions_approved: number;
+    submissions_rejected: number;
+    unique_submitters: number;
+    cumulative_points: number;
+    cumulative_submissions: number;
+}, {
+    date: Date;
+    points_awarded: number;
+    activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+    activity_name: string;
+    point_entries: number;
+    unique_point_users: number;
+    submissions_created: number;
+    submissions_approved: number;
+    submissions_rejected: number;
+    unique_submitters: number;
+    cumulative_points: number;
+    cumulative_submissions: number;
+}>;
 
 // @public (undocumented)
 export function toJsonValue(value: unknown): JsonValue;
@@ -3121,6 +9355,186 @@ export interface TopBadge {
 export function toPrismaJson(value: unknown): JsonValue;
 
 // @public (undocumented)
+export function transformAmplifyAPIToDB(payload: AmplifyPayloadAPI): AmplifyPayloadDB;
+
+// @public (undocumented)
+export function transformAmplifyDBToAPI(payload: AmplifyPayloadDB): AmplifyPayloadAPI;
+
+// @public (undocumented)
+export function transformExploreAPIToDB(payload: ExplorePayloadAPI): ExplorePayloadDB;
+
+// @public (undocumented)
+export function transformExploreDBToAPI(payload: ExplorePayloadDB): ExplorePayloadAPI;
+
+// @public (undocumented)
+export function transformLearnAPIToDB(payload: LearnPayloadAPI): LearnPayloadDB;
+
+// @public (undocumented)
+export function transformLearnDBToAPI(payload: LearnPayloadDB): LearnPayloadAPI;
+
+// @public (undocumented)
+export function transformPayloadAPIToDB(activityCode: string, payload: Record<string, unknown>): LearnPayloadDB | ExplorePayloadDB | AmplifyPayloadDB | PresentPayloadDB | ShinePayloadDB;
+
+// @public (undocumented)
+export function transformPayloadDBToAPI(activityCode: string, payload: Record<string, unknown>): LearnPayloadAPI | ExplorePayloadAPI | AmplifyPayloadAPI | PresentPayloadAPI | ShinePayloadAPI;
+
+// @public (undocumented)
+export function transformPresentAPIToDB(payload: PresentPayloadAPI): PresentPayloadDB;
+
+// @public (undocumented)
+export function transformPresentDBToAPI(payload: PresentPayloadDB): PresentPayloadAPI;
+
+// @public (undocumented)
+export function transformRawAnalytics<T>(rawResults: RawAnalyticsResult, parser: (data: unknown) => T | null): T[];
+
+// @public (undocumented)
+export function transformShineAPIToDB(payload: ShinePayloadAPI): ShinePayloadDB;
+
+// @public (undocumented)
+export function transformShineDBToAPI(payload: ShinePayloadDB): ShinePayloadAPI;
+
+// @public (undocumented)
+export type TrendAnalysis = z.infer<typeof TrendAnalysisSchema>;
+
+// @public (undocumented)
+export const TrendAnalysisSchema: z.ZodObject<{
+    period: z.ZodEnum<["7d", "30d", "90d"]>;
+    metric: z.ZodEnum<["submissions", "points", "users", "approvals"]>;
+    data: z.ZodArray<z.ZodObject<{
+        date: z.ZodString;
+        value: z.ZodNumber;
+        label: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        value: number;
+        date: string;
+        label?: string | undefined;
+    }, {
+        value: number;
+        date: string;
+        label?: string | undefined;
+    }>, "many">;
+    summary: z.ZodObject<{
+        total: z.ZodNumber;
+        average: z.ZodNumber;
+        growth: z.ZodNumber;
+        trend: z.ZodEnum<["up", "down", "stable"]>;
+    }, "strip", z.ZodTypeAny, {
+        total: number;
+        average: number;
+        growth: number;
+        trend: "up" | "down" | "stable";
+    }, {
+        total: number;
+        average: number;
+        growth: number;
+        trend: "up" | "down" | "stable";
+    }>;
+}, "strip", z.ZodTypeAny, {
+    data: {
+        value: number;
+        date: string;
+        label?: string | undefined;
+    }[];
+    period: "7d" | "30d" | "90d";
+    metric: "points" | "submissions" | "users" | "approvals";
+    summary: {
+        total: number;
+        average: number;
+        growth: number;
+        trend: "up" | "down" | "stable";
+    };
+}, {
+    data: {
+        value: number;
+        date: string;
+        label?: string | undefined;
+    }[];
+    period: "7d" | "30d" | "90d";
+    metric: "points" | "submissions" | "users" | "approvals";
+    summary: {
+        total: number;
+        average: number;
+        growth: number;
+        trend: "up" | "down" | "stable";
+    };
+}>;
+
+// @public (undocumented)
+export type TrendDataPoint = z.infer<typeof TrendDataPointSchema>;
+
+// @public (undocumented)
+export const TrendDataPointSchema: z.ZodObject<{
+    date: z.ZodString;
+    value: z.ZodNumber;
+    label: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    value: number;
+    date: string;
+    label?: string | undefined;
+}, {
+    value: number;
+    date: string;
+    label?: string | undefined;
+}>;
+
+// @public (undocumented)
+export const TrendsSchema: z.ZodObject<{
+    submissionsByDate: z.ZodArray<z.ZodObject<{
+        date: z.ZodString;
+        total: z.ZodNumber;
+        approved: z.ZodNumber;
+        rejected: z.ZodNumber;
+        pending: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        date: string;
+        total: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+    }, {
+        date: string;
+        total: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+    }>, "many">;
+    userRegistrationsByDate: z.ZodArray<z.ZodObject<{
+        date: z.ZodString;
+        count: z.ZodNumber;
+    }, "strip", z.ZodTypeAny, {
+        date: string;
+        count: number;
+    }, {
+        date: string;
+        count: number;
+    }>, "many">;
+}, "strip", z.ZodTypeAny, {
+    submissionsByDate: {
+        date: string;
+        total: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+    }[];
+    userRegistrationsByDate: {
+        date: string;
+        count: number;
+    }[];
+}, {
+    submissionsByDate: {
+        date: string;
+        total: number;
+        pending: number;
+        approved: number;
+        rejected: number;
+    }[];
+    userRegistrationsByDate: {
+        date: string;
+        count: number;
+    }[];
+}>;
+
+// @public (undocumented)
 export type UIApiResponse<T = unknown> = {
     success: true;
     data: T;
@@ -3140,64 +9554,31 @@ export const UpdateUserSchema: z.ZodObject<{
     handle: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     userId: string;
-    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-    school?: string | undefined;
-    cohort?: string | undefined;
     name?: string | undefined;
     handle?: string | undefined;
+    school?: string | undefined;
+    cohort?: string | undefined;
+    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
 }, {
     userId: string;
-    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-    school?: string | undefined;
-    cohort?: string | undefined;
     name?: string | undefined;
     handle?: string | undefined;
+    school?: string | undefined;
+    cohort?: string | undefined;
+    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
 }>;
 
-// @public (undocumented)
+// @public
 export const UrlSchema: z.ZodString;
 
 // @public (undocumented)
-export interface UserAnalyticsStats {
+export interface User {
     // (undocumented)
-    activationRate: number;
+    avatar_url: string | null;
     // (undocumented)
-    active: number;
+    cohort: string | null;
     // (undocumented)
-    total: number;
-    // (undocumented)
-    withBadges: number;
-    // (undocumented)
-    withSubmissions: number;
-}
-
-// @public (undocumented)
-export type UserAuditMeta = z.infer<typeof UserAuditMetaSchema>;
-
-// @public (undocumented)
-export const UserAuditMetaSchema: z.ZodObject<{
-    changes: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnknown>>;
-    originalRole: z.ZodOptional<z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>>;
-    newRole: z.ZodOptional<z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>>;
-    bulkOperation: z.ZodOptional<z.ZodBoolean>;
-}, "strip", z.ZodTypeAny, {
-    bulkOperation?: boolean | undefined;
-    changes?: Record<string, unknown> | undefined;
-    originalRole?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-    newRole?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-}, {
-    bulkOperation?: boolean | undefined;
-    changes?: Record<string, unknown> | undefined;
-    originalRole?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-    newRole?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-}>;
-
-// @public (undocumented)
-export interface UserExportRow {
-    // (undocumented)
-    cohort?: string;
-    // (undocumented)
-    created_at: string;
+    created_at: Date;
     // (undocumented)
     email: string;
     // (undocumented)
@@ -3205,40 +9586,135 @@ export interface UserExportRow {
     // (undocumented)
     id: string;
     // (undocumented)
+    kajabi_contact_id: string | null;
+    // (undocumented)
     name: string;
     // (undocumented)
-    role: Role;
+    role: string;
     // (undocumented)
-    school?: string;
-    // (undocumented)
-    submissions_count: number;
-    // (undocumented)
-    total_points: number;
+    school: string | null;
 }
 
+// @public
+export const USER_ROLES: readonly ["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"];
+
 // @public (undocumented)
-export interface UserProfileBadge {
+export const UserMiniSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodString;
+    handle: z.ZodString;
+    email: z.ZodOptional<z.ZodString>;
+    school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+}, "strip", z.ZodTypeAny, {
+    name: string;
+    handle: string;
+    id: string;
+    email?: string | undefined;
+    school?: string | null | undefined;
+    cohort?: string | null | undefined;
+}, {
+    name: string;
+    handle: string;
+    id: string;
+    email?: string | undefined;
+    school?: string | null | undefined;
+    cohort?: string | null | undefined;
+}>;
+
+// @public (undocumented)
+export type UserPointSummary = z.infer<typeof UserPointSummarySchema>;
+
+// @public (undocumented)
+export const UserPointSummarySchema: z.ZodObject<{
+    user_id: z.ZodString;
+    total_points: z.ZodNumber;
+    positive_points: z.ZodNumber;
+    negative_points: z.ZodNumber;
+    point_entries: z.ZodNumber;
+    activities_with_points: z.ZodNumber;
+    first_points_at: z.ZodNullable<z.ZodDate>;
+    latest_points_at: z.ZodNullable<z.ZodDate>;
+}, "strip", z.ZodTypeAny, {
+    user_id: string;
+    total_points: number;
+    first_points_at: Date | null;
+    point_entries: number;
+    positive_points: number;
+    negative_points: number;
+    activities_with_points: number;
+    latest_points_at: Date | null;
+}, {
+    user_id: string;
+    total_points: number;
+    first_points_at: Date | null;
+    point_entries: number;
+    positive_points: number;
+    negative_points: number;
+    activities_with_points: number;
+    latest_points_at: Date | null;
+}>;
+
+// @public (undocumented)
+export interface UserProfileBadgeDTO {
     // (undocumented)
     badge: {
         code: string;
         name: string;
-        description: string;
-        icon_url?: string | null;
+        description: string | null;
+        iconUrl?: string | null;
     };
     // (undocumented)
-    earned_at: string;
+    earnedAt: string;
 }
 
 // @public (undocumented)
-export interface UserProfileResponse {
+export const UserProfileBadgeDTOSchema: z.ZodObject<{
+    badge: z.ZodObject<{
+        code: z.ZodString;
+        name: z.ZodString;
+        description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        iconUrl: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    }, "strip", z.ZodTypeAny, {
+        code: string;
+        name: string;
+        description?: string | null | undefined;
+        iconUrl?: string | null | undefined;
+    }, {
+        code: string;
+        name: string;
+        description?: string | null | undefined;
+        iconUrl?: string | null | undefined;
+    }>;
+    earnedAt: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    badge: {
+        code: string;
+        name: string;
+        description?: string | null | undefined;
+        iconUrl?: string | null | undefined;
+    };
+    earnedAt: string;
+}, {
+    badge: {
+        code: string;
+        name: string;
+        description?: string | null | undefined;
+        iconUrl?: string | null | undefined;
+    };
+    earnedAt: string;
+}>;
+
+// @public (undocumented)
+export interface UserProfileDTO {
     // (undocumented)
-    avatar_url?: string | null;
+    avatarUrl?: string | null;
     // (undocumented)
     cohort?: string | null;
     // (undocumented)
-    created_at: string;
+    createdAt: string;
     // (undocumented)
-    earned_badges: UserProfileBadge[];
+    earnedBadges: UserProfileBadgeDTO[];
     // (undocumented)
     email: string;
     // (undocumented)
@@ -3250,89 +9726,376 @@ export interface UserProfileResponse {
     // (undocumented)
     school?: string | null;
     // (undocumented)
-    submissions: UserProfileSubmission[];
+    submissions: SubmissionDTO[];
     // (undocumented)
-    _sum: {
-        points: number;
-    };
+    totalPoints: number;
 }
 
 // @public (undocumented)
-export interface UserProfileSubmission {
-    // (undocumented)
-    activity: {
-        name: string;
-        code: string;
-    };
-    // (undocumented)
-    activity_code: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE';
-    // (undocumented)
-    created_at: string;
-    // (undocumented)
+export const UserProfileDTOSchema: z.ZodObject<{
+    id: z.ZodString;
+    handle: z.ZodString;
+    name: z.ZodString;
+    email: z.ZodString;
+    avatarUrl: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    createdAt: z.ZodString;
+    submissions: z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        activityCode: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
+        activity: z.ZodObject<{
+            name: z.ZodString;
+            code: z.ZodString;
+        }, "strip", z.ZodTypeAny, {
+            code: string;
+            name: string;
+        }, {
+            code: string;
+            name: string;
+        }>;
+        status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+        visibility: z.ZodEnum<["PUBLIC", "PRIVATE"]>;
+        payload: z.ZodRecord<z.ZodString, z.ZodUnknown>;
+        createdAt: z.ZodString;
+        updatedAt: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        status: "PENDING" | "APPROVED" | "REJECTED";
+        id: string;
+        createdAt: string;
+        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        activity: {
+            code: string;
+            name: string;
+        };
+        visibility: "PUBLIC" | "PRIVATE";
+        payload: Record<string, unknown>;
+        updatedAt: string;
+    }, {
+        status: "PENDING" | "APPROVED" | "REJECTED";
+        id: string;
+        createdAt: string;
+        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        activity: {
+            code: string;
+            name: string;
+        };
+        visibility: "PUBLIC" | "PRIVATE";
+        payload: Record<string, unknown>;
+        updatedAt: string;
+    }>, "many">;
+    earnedBadges: z.ZodArray<z.ZodObject<{
+        badge: z.ZodObject<{
+            code: z.ZodString;
+            name: z.ZodString;
+            description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            iconUrl: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        }, "strip", z.ZodTypeAny, {
+            code: string;
+            name: string;
+            description?: string | null | undefined;
+            iconUrl?: string | null | undefined;
+        }, {
+            code: string;
+            name: string;
+            description?: string | null | undefined;
+            iconUrl?: string | null | undefined;
+        }>;
+        earnedAt: z.ZodString;
+    }, "strip", z.ZodTypeAny, {
+        badge: {
+            code: string;
+            name: string;
+            description?: string | null | undefined;
+            iconUrl?: string | null | undefined;
+        };
+        earnedAt: string;
+    }, {
+        badge: {
+            code: string;
+            name: string;
+            description?: string | null | undefined;
+            iconUrl?: string | null | undefined;
+        };
+        earnedAt: string;
+    }>, "many">;
+    totalPoints: z.ZodNumber;
+}, "strip", z.ZodTypeAny, {
+    totalPoints: number;
+    name: string;
+    submissions: {
+        status: "PENDING" | "APPROVED" | "REJECTED";
+        id: string;
+        createdAt: string;
+        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        activity: {
+            code: string;
+            name: string;
+        };
+        visibility: "PUBLIC" | "PRIVATE";
+        payload: Record<string, unknown>;
+        updatedAt: string;
+    }[];
     id: string;
-    // (undocumented)
-    payload: Record<string, unknown>;
-    // (undocumented)
-    status: 'PENDING' | 'APPROVED' | 'REJECTED';
-    // (undocumented)
-    updated_at: string;
-    // (undocumented)
-    visibility: 'PUBLIC' | 'PRIVATE';
-}
+    handle: string;
+    earnedBadges: {
+        badge: {
+            code: string;
+            name: string;
+            description?: string | null | undefined;
+            iconUrl?: string | null | undefined;
+        };
+        earnedAt: string;
+    }[];
+    email: string;
+    createdAt: string;
+    school?: string | null | undefined;
+    avatarUrl?: string | null | undefined;
+    cohort?: string | null | undefined;
+}, {
+    totalPoints: number;
+    name: string;
+    submissions: {
+        status: "PENDING" | "APPROVED" | "REJECTED";
+        id: string;
+        createdAt: string;
+        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        activity: {
+            code: string;
+            name: string;
+        };
+        visibility: "PUBLIC" | "PRIVATE";
+        payload: Record<string, unknown>;
+        updatedAt: string;
+    }[];
+    id: string;
+    handle: string;
+    earnedBadges: {
+        badge: {
+            code: string;
+            name: string;
+            description?: string | null | undefined;
+            iconUrl?: string | null | undefined;
+        };
+        earnedAt: string;
+    }[];
+    email: string;
+    createdAt: string;
+    school?: string | null | undefined;
+    avatarUrl?: string | null | undefined;
+    cohort?: string | null | undefined;
+}>;
 
 // @public (undocumented)
-export interface UserStats {
-    // (undocumented)
-    active: number;
-    // (undocumented)
-    byRole: Record<Role, number>;
-    // (undocumented)
-    total: number;
-}
+export type UserRole = typeof USER_ROLES[number];
 
 // @public (undocumented)
-export interface UserWhereClause {
-    // (undocumented)
-    cohort?: string;
-    // (undocumented)
-    created_at?: {
-        gte?: Date;
-        lte?: Date;
-    };
-    // (undocumented)
-    email?: {
-        contains: string;
-        mode: 'insensitive';
-    };
-    // (undocumented)
-    handle?: {
-        contains: string;
-        mode: 'insensitive';
-    };
-    // (undocumented)
-    id?: string;
-    // (undocumented)
-    name?: {
-        contains: string;
-        mode: 'insensitive';
-    };
-    // (undocumented)
-    role?: Role | {
-        in: Role[];
-    };
-}
+export const UserRoleSchema: z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
 
 // @public (undocumented)
-export interface UserWithRole {
-    // (undocumented)
-    email?: string;
-    // (undocumented)
-    name?: string;
-    // (undocumented)
-    role: Role;
-    // (undocumented)
-    userId: string;
-}
+export const UsersListResponseSchema: z.ZodObject<{
+    success: z.ZodLiteral<true>;
+    data: z.ZodObject<{
+        users: z.ZodArray<z.ZodObject<{
+            id: z.ZodString;
+            handle: z.ZodString;
+            name: z.ZodString;
+            email: z.ZodString;
+            avatar_url: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            role: z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
+            school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+            created_at: z.ZodString;
+            _count: z.ZodObject<{
+                submissions: z.ZodNumber;
+                ledger: z.ZodNumber;
+                earned_badges: z.ZodNumber;
+            }, "strip", z.ZodTypeAny, {
+                submissions: number;
+                ledger: number;
+                earned_badges: number;
+            }, {
+                submissions: number;
+                ledger: number;
+                earned_badges: number;
+            }>;
+            totalPoints: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            name: string;
+            email: string;
+            handle: string;
+            role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            created_at: string;
+            id: string;
+            _count: {
+                submissions: number;
+                ledger: number;
+                earned_badges: number;
+            };
+            totalPoints: number;
+            school?: string | null | undefined;
+            cohort?: string | null | undefined;
+            avatar_url?: string | null | undefined;
+        }, {
+            name: string;
+            email: string;
+            handle: string;
+            role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            created_at: string;
+            id: string;
+            _count: {
+                submissions: number;
+                ledger: number;
+                earned_badges: number;
+            };
+            totalPoints: number;
+            school?: string | null | undefined;
+            cohort?: string | null | undefined;
+            avatar_url?: string | null | undefined;
+        }>, "many">;
+        pagination: z.ZodObject<{
+            page: z.ZodDefault<z.ZodNumber>;
+            limit: z.ZodDefault<z.ZodNumber>;
+            offset: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            page: number;
+            limit: number;
+            offset?: number | undefined;
+        }, {
+            page?: number | undefined;
+            limit?: number | undefined;
+            offset?: number | undefined;
+        }>;
+    }, "strip", z.ZodTypeAny, {
+        pagination: {
+            page: number;
+            limit: number;
+            offset?: number | undefined;
+        };
+        users: {
+            name: string;
+            email: string;
+            handle: string;
+            role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            created_at: string;
+            id: string;
+            _count: {
+                submissions: number;
+                ledger: number;
+                earned_badges: number;
+            };
+            totalPoints: number;
+            school?: string | null | undefined;
+            cohort?: string | null | undefined;
+            avatar_url?: string | null | undefined;
+        }[];
+    }, {
+        pagination: {
+            page?: number | undefined;
+            limit?: number | undefined;
+            offset?: number | undefined;
+        };
+        users: {
+            name: string;
+            email: string;
+            handle: string;
+            role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            created_at: string;
+            id: string;
+            _count: {
+                submissions: number;
+                ledger: number;
+                earned_badges: number;
+            };
+            totalPoints: number;
+            school?: string | null | undefined;
+            cohort?: string | null | undefined;
+            avatar_url?: string | null | undefined;
+        }[];
+    }>;
+}, "strip", z.ZodTypeAny, {
+    success: true;
+    data: {
+        pagination: {
+            page: number;
+            limit: number;
+            offset?: number | undefined;
+        };
+        users: {
+            name: string;
+            email: string;
+            handle: string;
+            role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            created_at: string;
+            id: string;
+            _count: {
+                submissions: number;
+                ledger: number;
+                earned_badges: number;
+            };
+            totalPoints: number;
+            school?: string | null | undefined;
+            cohort?: string | null | undefined;
+            avatar_url?: string | null | undefined;
+        }[];
+    };
+}, {
+    success: true;
+    data: {
+        pagination: {
+            page?: number | undefined;
+            limit?: number | undefined;
+            offset?: number | undefined;
+        };
+        users: {
+            name: string;
+            email: string;
+            handle: string;
+            role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            created_at: string;
+            id: string;
+            _count: {
+                submissions: number;
+                ledger: number;
+                earned_badges: number;
+            };
+            totalPoints: number;
+            school?: string | null | undefined;
+            cohort?: string | null | undefined;
+            avatar_url?: string | null | undefined;
+        }[];
+    };
+}>;
+
+// @public (undocumented)
+export const UsersQuerySchema: z.ZodObject<{
+    search: z.ZodOptional<z.ZodString>;
+    role: z.ZodOptional<z.ZodEnum<["ALL", "PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>>;
+    cohort: z.ZodOptional<z.ZodString>;
+    page: z.ZodOptional<z.ZodNumber>;
+    limit: z.ZodOptional<z.ZodNumber>;
+    sortBy: z.ZodOptional<z.ZodEnum<["created_at", "name", "email"]>>;
+    sortOrder: z.ZodOptional<z.ZodEnum<["asc", "desc"]>>;
+}, "strip", z.ZodTypeAny, {
+    cohort?: string | undefined;
+    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
+    page?: number | undefined;
+    limit?: number | undefined;
+    sortBy?: "name" | "email" | "created_at" | undefined;
+    sortOrder?: "asc" | "desc" | undefined;
+    search?: string | undefined;
+}, {
+    cohort?: string | undefined;
+    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
+    page?: number | undefined;
+    limit?: number | undefined;
+    sortBy?: "name" | "email" | "created_at" | undefined;
+    sortOrder?: "asc" | "desc" | undefined;
+    search?: string | undefined;
+}>;
+
+// @public
+export function validate<T>(value: unknown, guard: (value: unknown) => value is T, errorMessage?: string): T;
 
 // @public (undocumented)
 export function validateEmail(email: string): boolean;
@@ -3341,13 +10104,24 @@ export function validateEmail(email: string): boolean;
 export function validateHandle(handle: string): boolean;
 
 // @public (undocumented)
-export type Visibility = 'PRIVATE' | 'PUBLIC';
+export class ValidationError extends ElevateApiError {
+    constructor(zodError: z.ZodError, customMessage?: string, traceId?: string);
+}
+
+// @public (undocumented)
+export type Visibility = typeof VISIBILITY_OPTIONS[number];
+
+// @public
+export const VISIBILITY_OPTIONS: readonly ["PRIVATE", "PUBLIC"];
+
+// @public (undocumented)
+export const VisibilityEnum: z.ZodEnum<["PRIVATE", "PUBLIC"]>;
 
 // @public (undocumented)
 export const VisibilitySchema: z.ZodEnum<["PRIVATE", "PUBLIC"]>;
 
 // @public (undocumented)
-export type VisibilityType = z.infer<typeof VisibilitySchema>;
+export type VisibilityType = Visibility;
 
 // @public (undocumented)
 export type WebhookHeaders = z.infer<typeof WebhookHeadersSchema>;
@@ -3387,6 +10161,10 @@ export const WelcomeEmailSchema: z.ZodObject<{
     email: string;
     dashboardUrl: string;
 }>;
+
+// Warnings were encountered during analysis:
+//
+// src/common.ts:731:15 - (ae-forgotten-export) The symbol "AuditEntityType" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

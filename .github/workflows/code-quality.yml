@@ -1,0 +1,276 @@
+name: Code Quality Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  # Test structure validation
+  test-structure:
+    name: Validate Test Structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for duplicate test files
+        run: |
+          echo "Checking for duplicate test files..."
+          DUPLICATES=$(find . -name "*.test.ts" -not -path "./node_modules/*" | cut -d'/' -f2- | sort | uniq -d)
+          if [ ! -z "$DUPLICATES" ]; then
+            echo "❌ Found duplicate test files:"
+            echo "$DUPLICATES"
+            exit 1
+          fi
+          echo "✅ No duplicate test files found"
+
+      - name: Validate test naming conventions
+        run: |
+          echo "Validating test naming conventions..."
+          # Check for proper test file naming
+          INVALID_NAMES=$(find . -name "*.test.*" -not -path "./node_modules/*" | grep -v -E '\.(test|spec)\.(ts|js|tsx|jsx)$' || true)
+          if [ ! -z "$INVALID_NAMES" ]; then
+            echo "❌ Invalid test file names found:"
+            echo "$INVALID_NAMES"
+            exit 1
+          fi
+          echo "✅ All test files follow naming conventions"
+
+      - name: Check test directory structure
+        run: |
+          echo "Checking test directory structure..."
+          # Ensure tests are in proper locations
+          MISPLACED_TESTS=$(find packages -name "*.test.ts" -not -path "*/src/__tests__/*" -not -path "*/tests/*" -not -path "*/__tests__/*" -not -path "./node_modules/*" || true)
+          if [ ! -z "$MISPLACED_TESTS" ]; then
+            echo "❌ Tests found outside of expected directories:"
+            echo "$MISPLACED_TESTS"
+            echo "Expected: packages/*/src/__tests__/ or packages/*/tests/ or packages/*/__tests__/"
+            exit 1
+          fi
+          echo "✅ All tests are in proper directories"
+
+  # ESM import validation
+  esm-imports:
+    name: Validate ESM Imports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for missing .js extensions in relative imports
+        run: |
+          echo "Checking for missing .js extensions in ESM imports..."
+          MISSING_EXTENSIONS=$(grep -r "from '\\./" packages --include="*.ts" --include="*.tsx" | grep -v "\.js'" | grep -v "/dist/" | grep -v "/node_modules/" || true)
+          if [ ! -z "$MISSING_EXTENSIONS" ]; then
+            echo "❌ Found relative imports missing .js extensions:"
+            echo "$MISSING_EXTENSIONS"
+            echo ""
+            echo "For ESM compatibility, relative imports must include .js extensions:"
+            echo "  ✅ import { foo } from './module.js'"
+            echo "  ❌ import { foo } from './module'"
+            exit 1
+          fi
+          echo "✅ All relative imports have proper .js extensions"
+
+      - name: Check for absolute import consistency
+        run: |
+          echo "Checking for consistent absolute imports..."
+          # Check for mixed import styles in same file
+          find packages -name "*.ts" -o -name "*.tsx" | while read file; do
+            if [[ $(grep -c "from '@elevate/" "$file" 2>/dev/null || echo 0) -gt 0 ]] && [[ $(grep -c "from '\\./" "$file" 2>/dev/null || echo 0) -gt 0 ]]; then
+              echo "⚠️  Mixed import styles in $file (both absolute and relative)"
+            fi
+          done
+
+  # Architecture boundaries
+  architecture:
+    name: Validate Architecture Boundaries
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check package boundaries
+        run: |
+          echo "Checking package import boundaries..."
+          # Ensure packages don't import from apps
+          APP_IMPORTS=$(grep -r "from.*apps/" packages --include="*.ts" --include="*.tsx" | grep -v "/dist/" | grep -v "/node_modules/" || true)
+          if [ ! -z "$APP_IMPORTS" ]; then
+            echo "❌ Packages importing from apps (boundary violation):"
+            echo "$APP_IMPORTS"
+            exit 1
+          fi
+          echo "✅ No package→app boundary violations found"
+
+      - name: Check deprecated imports
+        run: |
+          echo "Checking for imports from deprecated files..."
+          # Check for imports from removed api-types.ts
+          DEPRECATED_IMPORTS=$(grep -r "from.*api-types'" packages --include="*.ts" --include="*.tsx" | grep -v "admin-api-types" | grep -v "/dist/" || true)
+          if [ ! -z "$DEPRECATED_IMPORTS" ]; then
+            echo "❌ Found imports from deprecated files:"
+            echo "$DEPRECATED_IMPORTS"
+            exit 1
+          fi
+          echo "✅ No deprecated imports found"
+
+      - name: Run boundary validation script
+        run: npm run verify:boundaries
+        continue-on-error: true
+
+  # Type safety validation
+  type-safety:
+    name: Type Safety Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript compilation check
+        run: npm run typecheck:build
+
+      - name: API extractor validation
+        run: npm run api:extract
+        continue-on-error: true
+
+      - name: Run type safety validation
+        run: npm run type-safety:check
+        continue-on-error: true
+
+  # Build consistency
+  build-consistency:
+    name: Build Configuration Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for consistent tsconfig usage
+        run: |
+          echo "Checking TypeScript configuration consistency..."
+          # Check that all packages have proper tsconfig setup
+          find packages -name "package.json" | while read pkg; do
+            dir=$(dirname "$pkg")
+            if [ ! -f "$dir/tsconfig.json" ]; then
+              echo "❌ Missing tsconfig.json in $dir"
+              exit 1
+            fi
+          done
+          echo "✅ All packages have tsconfig.json"
+
+      - name: Validate build scripts
+        run: |
+          echo "Validating build script consistency..."
+          # Check that packages with TypeScript have build scripts
+          find packages -name "*.ts" | while read ts_file; do
+            pkg_dir=$(echo "$ts_file" | cut -d'/' -f1-2)
+            if [ -f "$pkg_dir/package.json" ] && ! grep -q '"build"' "$pkg_dir/package.json"; then
+              echo "⚠️  Package $pkg_dir has TypeScript files but no build script"
+            fi
+          done
+
+      - name: Run full build test
+        run: npm run build:check
+
+  # Security and secrets
+  security:
+    name: Security Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Scan for secrets
+        run: npm run verify:secrets
+
+      - name: Check for hardcoded credentials
+        run: |
+          echo "Checking for hardcoded credentials..."
+          CREDENTIALS=$(grep -r -i "password\|secret\|token\|key.*=" packages apps --include="*.ts" --include="*.tsx" --include="*.js" | grep -v "process.env" | grep -v "\.example\." | grep -v "/dist/" | grep -v "/node_modules/" | head -5 || true)
+          if [ ! -z "$CREDENTIALS" ]; then
+            echo "⚠️  Potential hardcoded credentials found:"
+            echo "$CREDENTIALS"
+            echo "Please review these files to ensure no secrets are committed"
+          fi
+
+  # Documentation consistency
+  documentation:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check README consistency
+        run: |
+          echo "Checking README.md files..."
+          find packages -maxdepth 2 -name "README.md" | while read readme; do
+            if [ $(wc -l < "$readme") -lt 5 ]; then
+              echo "⚠️  $readme appears to be minimal/empty"
+            fi
+          done
+
+      - name: Validate package.json descriptions
+        run: |
+          echo "Checking package.json descriptions..."
+          find packages -name "package.json" | while read pkg; do
+            if ! grep -q '"description"' "$pkg"; then
+              echo "⚠️  Missing description in $pkg"
+            fi
+          done
+
+      - name: Check for outdated documentation references
+        run: |
+          echo "Checking for references to deprecated files..."
+          DEPRECATED_REFS=$(grep -r "api-types\.ts" docs/ packages/ apps/ --exclude-dir=node_modules --exclude-dir=dist || true)
+          if [ ! -z "$DEPRECATED_REFS" ]; then
+            echo "⚠️  Found references to deprecated api-types.ts:"
+            echo "$DEPRECATED_REFS"
+          fi

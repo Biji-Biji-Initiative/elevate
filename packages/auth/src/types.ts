@@ -2,11 +2,11 @@
 import { parseRole, type Role } from '@elevate/types'
 
 // Map Prisma Role enum to lowercase for UI
-const ROLE_MAPPING: Record<Role, string> = {
-  'PARTICIPANT': 'participant',
-  'REVIEWER': 'reviewer', 
-  'ADMIN': 'admin',
-  'SUPERADMIN': 'superadmin'
+const ROLE_MAPPING: Record<Role, 'participant' | 'reviewer' | 'admin' | 'superadmin'> = {
+  PARTICIPANT: 'participant',
+  REVIEWER: 'reviewer',
+  ADMIN: 'admin',
+  SUPERADMIN: 'superadmin',
 } as const
 
 export const ROLE_ORDER = ['participant', 'reviewer', 'admin', 'superadmin'] as const
@@ -14,13 +14,19 @@ export type RoleName = (typeof ROLE_ORDER)[number]
 
 // Utility to convert Prisma Role to lowercase RoleName
 export function roleToRoleName(role: Role): RoleName {
-  return ROLE_MAPPING[role] as RoleName
+  return ROLE_MAPPING[role]
 }
 
 // Utility to convert RoleName back to Prisma Role
+const ROLE_NAME_TO_ROLE: Record<RoleName, Role> = {
+  participant: 'PARTICIPANT',
+  reviewer: 'REVIEWER',
+  admin: 'ADMIN',
+  superadmin: 'SUPERADMIN',
+}
+
 export function roleNameToRole(roleName: RoleName): Role {
-  const roleEntry = Object.entries(ROLE_MAPPING).find(([, value]) => value === roleName)
-  return (roleEntry ? roleEntry[0] : 'PARTICIPANT') as Role
+  return ROLE_NAME_TO_ROLE[roleName]
 }
 
 export interface AuthUser {

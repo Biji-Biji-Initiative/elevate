@@ -5,20 +5,45 @@ import React, { useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 
+import { useFormSubmission, useFileUpload } from '@elevate/forms'
+import { SHINE } from '@elevate/types'
 import { ShineSchema, type ShineInput } from '@elevate/types/schemas'
-import { Button, Input, Textarea, Card, FormField, LoadingSpinner, Alert, AlertTitle, AlertDescription, FileUpload, FileList, type UploadedFile } from '@elevate/ui'
+import { Button, Input, Textarea, Card, Alert, AlertTitle, AlertDescription } from '@elevate/ui'
+import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
 
-import { isSuccessfulUpload, filterSuccessfulUploads } from '../../../../lib/file-upload-helpers'
 import { getApiClient } from '../../../../lib/api-client'
 
 export default function ShineFormPage() {
   const { userId } = useAuth()
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [makePublic, setMakePublic] = useState(true) // Default to public for Shine
+
+  const { isSubmitting, submitStatus, handleSubmit: handleFormSubmit } = useFormSubmission({
+    successMessage: 'Innovation idea submitted successfully! Your idea is now under review for recognition.'
+  })
+  
+  const { uploadedFiles, handleFileSelect: handleFileUpload, removeFile, successfulUploads } = useFileUpload({
+    maxFiles: 3,
+    onUpload: async (files) => {
+      const uploadPromises = files.map(async (file) => {
+        try {
+          const api = getApiClient()
+          const result = await api.uploadFile(file, SHINE)
+          return {
+            file,
+            path: result.data.path,
+            hash: result.data.hash,
+          }
+        } catch (error) {
+          return {
+            file,
+            error: error instanceof Error ? error.message : 'Upload failed',
+          }
+        }
+      })
+      return Promise.all(uploadPromises)
+    }
+  })
 
   const {
     register,
@@ -33,112 +58,36 @@ export default function ShineFormPage() {
   const watchedTitle = watch('ideaTitle')
   const watchedSummary = watch('ideaSummary')
 
-  // Narrow to successful uploaded files with path
-  const filterSuccessfulUploads = <T extends { path?: string; error?: unknown }>(
-    files: T[]
-  ): Array<T & { path: string }> => {
-    return files.filter((f) => typeof f.path === 'string' && !f.error) as Array<
-      T & { path: string }
-    >
-  }
-
   const handleFileSelect = async (files: File[]) => {
-    const newFiles: UploadedFile[] = files.map(file => ({
-      file,
-      uploading: true
-    }))
-
-    setUploadedFiles(prev => [...prev, ...newFiles])
-
-    // Upload each file
-    const uploadPromises = files.map(async (file) => {
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('activityCode', 'SHINE')
-
-      const api = getApiClient()
-      const result = await api.uploadFile(file, 'SHINE')
-      return { file, path: result.data.path, hash: result.data.hash, uploading: false }
-
-      } catch (error) {
-        return {
-          file,
-          uploading: false,
-          error: error instanceof Error ? error.message : 'Upload failed'
-        }
-      }
-    })
-
-    const results = await Promise.all(uploadPromises)
-    
-    setUploadedFiles(prev => {
-      const newList = [...prev]
-      // Replace the uploading files with results
-      const startIndex = prev.length - files.length
-      results.forEach((result, index) => {
-        newList[startIndex + index] = result
-      })
-      return newList
-    })
-
-    // Update form value with successful uploads
-    const successfulPaths = filterSuccessfulUploads(results).map(r => r.path)
-    
-    setValue('attachment', successfulPaths.length > 0 ? successfulPaths : undefined)
+    const results = await handleFileUpload(files)
+    setValue('attachment', results.length > 0 ? results.map(r => r.path) : undefined)
   }
 
   const handleFileRemove = (index: number) => {
-    const newFiles = uploadedFiles.filter((_, i) => i !== index)
-    setUploadedFiles(newFiles)
-    
-    const successfulPaths = filterSuccessfulUploads(newFiles).map(f => f.path)
-    
-    setValue('attachment', successfulPaths.length > 0 ? successfulPaths : undefined)
+    removeFile(index)
+    setValue('attachment', successfulUploads.length > 0 ? successfulUploads.map(f => f.path) : undefined)
   }
 
   const onSubmit = async (data: ShineInput) => {
-    if (!userId) {
-      setSubmitStatus({ type: 'error', message: 'You must be logged in to submit' })
-      return
-    }
+    await handleFormSubmit(async () => {
+      if (!userId) {
+        throw new Error('You must be logged in to submit')
+      }
 
-    setIsSubmitting(true)
-    setSubmitStatus(null)
-
-    try {
-      const successfulFiles = filterSuccessfulUploads(uploadedFiles)
-      
       const payload = {
         ideaTitle: data.ideaTitle,
         ideaSummary: data.ideaSummary,
-        attachments: successfulFiles.length > 0 ? successfulFiles.map(f => f.path) : undefined
+        attachments: successfulUploads.length > 0 ? successfulUploads.map(f => f.path) : undefined
       }
 
-      const api2 = getApiClient()
-      await api2.createSubmission({
-        activityCode: 'SHINE',
+      const api = getApiClient()
+      await api.createSubmission({
+        activityCode: SHINE,
         payload,
-        attachments: successfulFiles.map(f => f.path),
+        attachments: successfulUploads.map(f => f.path),
         visibility: makePublic ? 'PUBLIC' : 'PRIVATE'
       })
-
-      setSubmitStatus({ 
-        type: 'success', 
-        message: 'Innovation idea submitted successfully! Your idea is now under review for recognition.' 
-      })
-
-      // Reset form
-      setUploadedFiles([])
-      
-    } catch (error) {
-      setSubmitStatus({ 
-        type: 'error', 
-        message: error instanceof Error ? error.message : 'Failed to submit innovation idea'
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
+    })
   }
 
   return (

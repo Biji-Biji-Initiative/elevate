@@ -5,7 +5,11 @@
  * for monitoring and debugging purposes. Admin app specific handling.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
+
+import { createErrorResponse } from '@elevate/http'
+import { getServerLogger } from '@elevate/logging/server'
 import { createCSPReportHandler } from '@elevate/security/security-middleware';
 
 // Create CSP report handler with admin app specific configuration
@@ -14,22 +18,27 @@ const handleCSPReport = createCSPReportHandler({
   logToDB: false, // Can be enabled later with database integration
   alertOnSeverity: 'medium', // More sensitive for admin app
   onViolation: (violation) => {
+    const logger = getServerLogger({ name: 'admin-csp' })
     // Custom handling for admin app violations
     if (violation.severity === 'high' || violation.severity === 'medium') {
-      console.error(`🔒 ${violation.severity.toUpperCase()} SEVERITY CSP VIOLATION in Admin App:`, {
-        directive: violation['violated-directive'],
-        blockedUri: violation['blocked-uri'],
-        documentUri: violation['document-uri'],
-        sourceFile: violation['source-file'],
-        lineNumber: violation['line-number'],
-        timestamp: new Date().toISOString(),
-        userAgent: violation.userAgent || 'unknown',
-        adminContext: true
-      });
+      logger.security({
+        event: 'csp_violation',
+        severity: violation.severity || 'medium',
+        details: {
+          directive: violation['violated-directive'],
+          blockedUri: violation['blocked-uri'],
+          documentUri: violation['document-uri'],
+          sourceFile: violation['source-file'],
+          lineNumber: violation['line-number'],
+          timestamp: new Date().toISOString(),
+          userAgent: violation.userAgent || 'unknown',
+          adminContext: true,
+        },
+      })
 
       // Admin violations might be more concerning - log with more detail
       if (violation['violated-directive']?.includes('script-src')) {
-        console.warn('⚠️ Script injection attempt detected in admin panel');
+        logger.warn('Script injection attempt detected in admin panel')
       }
 
       // In production, send immediate alerts for admin violations
@@ -55,10 +64,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const contentType = request.headers.get('content-type');
     if (!contentType?.includes('application/csp-report') && 
         !contentType?.includes('application/json')) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid content type. Expected application/csp-report or application/json' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid content type. Expected application/csp-report or application/json'), 400)
     }
 
     // Enhanced security for admin app - log all reports
@@ -68,12 +74,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     
     const userAgent = request.headers.get('user-agent') || 'unknown';
     
-    console.log('📊 CSP Report received in Admin App:', {
+    getServerLogger({ name: 'admin-csp' }).info('CSP Report received in Admin App', {
       clientIP,
       userAgent,
       timestamp: new Date().toISOString(),
       url: request.url
-    });
+    })
 
     // Stricter rate limiting for admin app
     // Implementation would be environment-specific
@@ -81,13 +87,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Process the violation report
     return await handleCSPReport(request);
   } catch (error) {
-    console.error('Error in Admin CSP report handler:', error);
+    getServerLogger({ name: 'admin-csp' }).error('Error in Admin CSP report handler', error as Error)
     
     // Don't expose internal errors to clients
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    return createErrorResponse(new Error('Internal server error'), 500)
   }
 }
 
@@ -114,49 +117,25 @@ export async function OPTIONS(request: NextRequest): Promise<NextResponse> {
  * Reject other HTTP methods
  */
 export async function GET(): Promise<NextResponse> {
-  return NextResponse.json(
-    { success: false, error: 'Method not allowed. This endpoint only accepts POST requests for CSP violation reports.' },
-    { 
-      status: 405,
-      headers: {
-        'Allow': 'POST, OPTIONS'
-      }
-    }
-  );
+  const res = createErrorResponse(new Error('Method not allowed. This endpoint only accepts POST requests for CSP violation reports.'), 405)
+  res.headers.set('Allow', 'POST, OPTIONS')
+  return res
 }
 
 export async function PUT(): Promise<NextResponse> {
-  return NextResponse.json(
-    { success: false, error: 'Method not allowed. This endpoint only accepts POST requests for CSP violation reports.' },
-    { 
-      status: 405,
-      headers: {
-        'Allow': 'POST, OPTIONS'
-      }
-    }
-  );
+  const res = createErrorResponse(new Error('Method not allowed. This endpoint only accepts POST requests for CSP violation reports.'), 405)
+  res.headers.set('Allow', 'POST, OPTIONS')
+  return res
 }
 
 export async function DELETE(): Promise<NextResponse> {
-  return NextResponse.json(
-    { success: false, error: 'Method not allowed. This endpoint only accepts POST requests for CSP violation reports.' },
-    { 
-      status: 405,
-      headers: {
-        'Allow': 'POST, OPTIONS'
-      }
-    }
-  );
+  const res = createErrorResponse(new Error('Method not allowed. This endpoint only accepts POST requests for CSP violation reports.'), 405)
+  res.headers.set('Allow', 'POST, OPTIONS')
+  return res
 }
 
 export async function PATCH(): Promise<NextResponse> {
-  return NextResponse.json(
-    { success: false, error: 'Method not allowed. This endpoint only accepts POST requests for CSP violation reports.' },
-    { 
-      status: 405,
-      headers: {
-        'Allow': 'POST, OPTIONS'
-      }
-    }
-  );
+  const res = createErrorResponse(new Error('Method not allowed. This endpoint only accepts POST requests for CSP violation reports.'), 405)
+  res.headers.set('Allow', 'POST, OPTIONS')
+  return res
 }

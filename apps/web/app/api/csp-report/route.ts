@@ -5,12 +5,16 @@
  * for monitoring and debugging purposes.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server';
+
+import { createErrorResponse } from '@elevate/http'
 import { createCSPReportHandler } from '@elevate/security/security-middleware';
 
 // Initialize logger
-let logger: any = null;
-(async () => {
+type ServerLogger = import('@elevate/logging/server').ServerLogger
+let logger: ServerLogger | null = null;
+void (async () => {
   try {
     const { getServerLogger } = await import('@elevate/logging/server');
     logger = getServerLogger({ name: 'csp-report' });
@@ -80,21 +84,20 @@ const handleCSPReport = createCSPReportHandler({
  * @returns Response indicating receipt of the report
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Hoist clientIP outside try block for error handler access
+  const clientIP = request.headers.get('x-forwarded-for') || 
+                  request.headers.get('x-real-ip') || 
+                  'unknown';
+  
   try {
     // Validate content type
     const contentType = request.headers.get('content-type');
     if (!contentType?.includes('application/csp-report') && 
         !contentType?.includes('application/json')) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid content type. Expected application/csp-report or application/json' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid content type. Expected application/csp-report or application/json'), 400)
     }
 
     // Rate limiting check (basic implementation)
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                    request.headers.get('x-real-ip') || 
-                    'unknown';
     
     // Simple in-memory rate limiting (in production, use Redis or similar)
     const rateLimitKey = `csp-report:${clientIP}`;
@@ -115,10 +118,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
     
     // Don't expose internal errors to clients
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    return createErrorResponse(new Error('Internal server error'), 500)
   }
 }
 
@@ -145,29 +145,17 @@ export async function OPTIONS(request: NextRequest): Promise<NextResponse> {
  * Reject other HTTP methods
  */
 export async function GET(): Promise<NextResponse> {
-  return NextResponse.json(
-    { success: false, error: 'Method not allowed. This endpoint only accepts POST requests for CSP violation reports.' },
-    { status: 405 }
-  );
+  return createErrorResponse(new Error('Method not allowed. This endpoint only accepts POST requests for CSP violation reports.'), 405)
 }
 
 export async function PUT(): Promise<NextResponse> {
-  return NextResponse.json(
-    { success: false, error: 'Method not allowed. This endpoint only accepts POST requests for CSP violation reports.' },
-    { status: 405 }
-  );
+  return createErrorResponse(new Error('Method not allowed. This endpoint only accepts POST requests for CSP violation reports.'), 405)
 }
 
 export async function DELETE(): Promise<NextResponse> {
-  return NextResponse.json(
-    { success: false, error: 'Method not allowed. This endpoint only accepts POST requests for CSP violation reports.' },
-    { status: 405 }
-  );
+  return createErrorResponse(new Error('Method not allowed. This endpoint only accepts POST requests for CSP violation reports.'), 405)
 }
 
 export async function PATCH(): Promise<NextResponse> {
-  return NextResponse.json(
-    { success: false, error: 'Method not allowed. This endpoint only accepts POST requests for CSP violation reports.' },
-    { status: 405 }
-  );
+  return createErrorResponse(new Error('Method not allowed. This endpoint only accepts POST requests for CSP violation reports.'), 405)
 }

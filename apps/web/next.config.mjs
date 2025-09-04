@@ -10,12 +10,54 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig = {
   // Remove X-Powered-By header for security
   poweredByHeader: false,
-  // Fix workspace root warning
-  outputFileTracingRoot: '/Users/agent-g/elevate/elevate',
   
-  // React 19 and Next.js 15 configuration
+  // React 19 and Next.js 15 configuration with Turbopack
   experimental: {
     reactCompiler: false, // Disable React Compiler for now
+    // Enable Turbopack for faster builds
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+      resolveAlias: {
+        // Optimize package resolution for faster builds
+        '@elevate/ui': './packages/ui/src',
+        '@elevate/types': './packages/types/src',
+        '@elevate/auth': './packages/auth/src',
+        '@elevate/db': './packages/db/src',
+        '@elevate/storage': './packages/storage/src',
+        '@elevate/logic': './packages/logic/src',
+        '@elevate/config': './packages/config/src',
+        '@elevate/security': './packages/security/src',
+        '@elevate/integrations': './packages/integrations/src',
+      },
+      memoryLimit: 4096,
+      // Enable faster development builds
+      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
+      loaders: {
+        '.ts': 'tsx',
+        '.tsx': 'tsx'
+      },
+    },
+    // Additional build optimizations
+    esmExternals: true,
+    serverExternalPackages: ['@prisma/client', 'bcryptjs'],
+    // Optimize builds with caching
+    outputFileTracing: true,
+    // Development optimizations
+    optimizePackageImports: [
+      '@elevate/ui',
+      '@elevate/types', 
+      '@elevate/auth',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-select',
+      'lucide-react'
+    ],
+    // Enable faster builds with SWC (moved from forceSwcTransforms which is deprecated)
+    // swcTraceProfiling is deprecated and removed
   },
 
   // Transpile internal packages with React
@@ -44,6 +86,9 @@ const nextConfig = {
     // Enable type checking in development
     tsconfigPath: './tsconfig.json',
   },
+
+  // SWC minification
+  swcMinify: true,
 
   // Image configuration
   images: {
@@ -179,9 +224,6 @@ const nextConfig = {
       },
     ];
   },
-
-  // Remove X-Powered-By header for security
-  poweredByHeader: false,
 
   // Webpack configuration for optimized bundle splitting
   webpack: (config, { isServer }) => {

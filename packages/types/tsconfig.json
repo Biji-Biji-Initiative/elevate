@@ -1,16 +1,22 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true,
     "rootDir": "src",
+    "outDir": "dist",
     "jsx": "preserve",
-    "composite": true
+    "composite": true,
+    "declaration": true
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    ".turbo",
+    "src/__tests__/**",
+    "src/**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

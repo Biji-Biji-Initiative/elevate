@@ -6,9 +6,12 @@ import {
   rateLimit,
   withApiErrorHandling,
   compose,
+  validateBody,
+  validateQuery,
   type ApiContext
-} from '../middleware.js'
-import { ElevateApiError } from '@elevate/types'
+} from '../middleware'
+import { z } from 'zod'
+import { ElevateApiError } from '@elevate/types/errors'
 
 // Mock environment variables
 const mockEnv = {
@@ -46,7 +49,7 @@ describe('CORS Middleware Security Tests', () => {
     request
   })
 
-  const mockNext = vi.fn().mockResolvedValue(new NextResponse('OK'))
+  const mockNext = vi.fn().mockImplementation(() => Promise.resolve(new NextResponse('OK')))
 
   beforeEach(() => {
     mockNext.mockClear()
@@ -198,6 +201,8 @@ describe('CORS Middleware Security Tests', () => {
       expect(response.headers.get('Access-Control-Allow-Methods')).toBe('GET, POST, PUT')
       expect(response.headers.get('Access-Control-Allow-Headers')).toBe('Content-Type, Authorization')
       expect(response.headers.get('Access-Control-Allow-Credentials')).toBe('true')
+      expect(response.headers.get('Access-Control-Max-Age')).toBe('600')
+      expect(response.headers.get('Access-Control-Expose-Headers')).toContain('X-Trace-Id')
       expect(response.headers.get('Vary')).toBe('Origin')
       
       // Should not call next() for OPTIONS requests
@@ -217,6 +222,25 @@ describe('CORS Middleware Security Tests', () => {
       expect(response.status).toBe(200)
       expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull()
       expect(response.headers.get('Vary')).toBe('Origin')
+    })
+
+    it('should reflect requested headers and method when present', async () => {
+      const corsMiddleware = cors({ origin: ['https://example.com'] })
+      const url = 'https://api.example.com/test'
+      const request = new NextRequest(url, {
+        method: 'OPTIONS',
+        headers: new Headers({
+          origin: 'https://example.com',
+          'access-control-request-method': 'PATCH',
+          'access-control-request-headers': 'X-Foo, X-Bar'
+        })
+      })
+      const context = createContext(request)
+
+      const response = await corsMiddleware(request, context, mockNext)
+
+      expect(response.headers.get('Access-Control-Allow-Methods')).toBe('PATCH')
+      expect(response.headers.get('Access-Control-Allow-Headers')).toBe('X-Foo, X-Bar')
     })
   })
 
@@ -311,20 +335,21 @@ describe('CORS Middleware Security Tests', () => {
       const corsMiddleware = cors({ origin: ['https://example.com'] })
       const middleware = compose(corsMiddleware)
       
-      const handler = vi.fn().mockResolvedValue(new NextResponse('Success'))
+      const handler = vi.fn().mockImplementation(() => Promise.resolve(new NextResponse('Success')))
       const composedHandler = middleware(handler)
       
       const request = createRequest('GET', 'https://example.com')
       const response = await composedHandler(request)
 
       expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
+      expect(response.headers.get('Access-Control-Expose-Headers')).toContain('X-Trace-Id')
       expect(response.headers.get('Vary')).toBe('Origin')
       expect(handler).toHaveBeenCalled()
     })
 
     it('should handle errors in downstream middleware', async () => {
       const corsMiddleware = cors({ origin: ['https://example.com'] })
-      const errorMiddleware = vi.fn().mockRejectedValue(new Error('Test error'))
+      const errorMiddleware = vi.fn().mockImplementation(() => Promise.reject(new Error('Test error')))
       const middleware = compose(corsMiddleware)
       
       const composedHandler = middleware(errorMiddleware)
@@ -335,6 +360,56 @@ describe('CORS Middleware Security Tests', () => {
       expect(response.status).toBe(500)
       expect(response.headers.get('X-Trace-Id')).toBeDefined()
     })
+  })
+})
+
+describe('Validation Middleware Tests', () => {
+  const mkContext = (request: NextRequest): ApiContext => ({
+    traceId: 'test-trace-id',
+    startTime: Date.now(),
+    request
+  })
+
+  it('validateBody should treat invalid JSON as 400', async () => {
+    const schema = z.object({ name: z.string() })
+    const middleware = validateBody(schema)
+    const badReq = new NextRequest('https://api.example.com/test', {
+      method: 'POST',
+      // Simulate invalid JSON by providing a body that will fail to parse
+      body: '{"name": "John"',
+      headers: new Headers({ 'content-type': 'application/json' })
+    })
+    const context = mkContext(badReq)
+
+    // Wrap in error handler to capture the response
+    const handler = compose(middleware)(async () => new NextResponse('ok'))
+    const response = await handler(badReq)
+    expect(response.status).toBe(400)
+  })
+
+  it('validateQuery should preserve arrays for repeated params', async () => {
+    const schema = z.object({ tags: z.array(z.string()), q: z.string().optional() })
+    const middleware = validateQuery(schema)
+    const req = new NextRequest('https://api.example.com/test?tags=a&tags=b&tags=c', { method: 'GET' })
+    const context = mkContext(req)
+
+    const next = vi.fn().mockResolvedValue(new NextResponse('OK'))
+    await middleware(req, context, next)
+    expect(next).toHaveBeenCalled()
+    expect((context.validatedQuery as { tags?: string[] }).tags).toEqual(['a', 'b', 'c'])
+  })
+})
+
+describe('Rate Limiter Integration', () => {
+  it('should include Retry-After header when limited', async () => {
+    const limiter = rateLimit(1, 2000)
+    const handler = compose(limiter)(async () => new NextResponse('ok'))
+    const request = new NextRequest('https://api.example.com/test', { method: 'GET' })
+    const first = await handler(request)
+    expect(first.status).toBe(200)
+    const second = await handler(request)
+    expect(second.status).toBe(429)
+    expect(second.headers.get('Retry-After')).toBeDefined()
   })
 })
 
@@ -556,7 +631,7 @@ describe('Rate Limit Middleware Tests', () => {
       const elevateError = error as ElevateApiError
       expect(elevateError.code).toBe('RATE_LIMIT_EXCEEDED')
       expect(elevateError.details).toHaveProperty('retryAfter')
-      expect(elevateError.details?.retryAfter).toBeGreaterThan(0)
+      expect((elevateError.details as { retryAfter?: number }).retryAfter).toBeGreaterThan(0)
     }
   })
 })
@@ -565,7 +640,7 @@ describe('Error Handling Middleware Tests', () => {
   const createRequest = () => new NextRequest('https://api.example.com/test', { method: 'GET' })
 
   it('should add trace ID to successful responses', async () => {
-    const handler = vi.fn().mockResolvedValue(new NextResponse('Success'))
+    const handler = vi.fn().mockImplementation(() => Promise.resolve(new NextResponse('Success')))
     const wrappedHandler = withApiErrorHandling(handler)
     const request = createRequest()
 
@@ -576,7 +651,7 @@ describe('Error Handling Middleware Tests', () => {
   })
 
   it('should handle errors and return error response', async () => {
-    const handler = vi.fn().mockRejectedValue(new Error('Test error'))
+    const handler = vi.fn().mockImplementation(() => Promise.reject(new Error('Test error')))
     const wrappedHandler = withApiErrorHandling(handler)
     const request = createRequest()
 
@@ -618,13 +693,13 @@ describe('Error Handling Middleware Tests', () => {
 
   it('should handle ElevateApiError instances', async () => {
     const error = new ElevateApiError('Custom error', 'CUSTOM_ERROR', { test: 'data' })
-    const handler = vi.fn().mockRejectedValue(error)
+    const handler = vi.fn().mockImplementation(() => Promise.reject(error))
     const wrappedHandler = withApiErrorHandling(handler)
     const request = createRequest()
 
     const response = await wrappedHandler(request)
 
-    expect(response.status).toBe(400) // Default status for ElevateApiError
+    expect(response.status).toBe(500) // Status derived from ErrorCodes mapping
     
     const body = await response.json()
     expect(body.code).toBe('CUSTOM_ERROR')
@@ -634,16 +709,20 @@ describe('Error Handling Middleware Tests', () => {
 
 describe('Middleware Composition Tests', () => {
   const createRequest = (origin?: string) => {
+    const headers = new Headers()
+    if (origin) {
+      headers.set('origin', origin)
+    }
     return new NextRequest('https://api.example.com/test', { 
       method: 'GET',
-      headers: origin ? new Headers({ origin }) : undefined
+      headers
     })
   }
 
   it('should compose multiple middleware correctly', async () => {
     const corsMiddleware = cors({ origin: ['https://example.com'] })
     const securityMiddleware = securityHeaders()
-    const handler = vi.fn().mockResolvedValue(new NextResponse('Success'))
+    const handler = vi.fn().mockImplementation(() => Promise.resolve(new NextResponse('Success')))
     
     const composedHandler = compose(corsMiddleware, securityMiddleware)(handler)
     const request = createRequest('https://example.com')
@@ -658,8 +737,8 @@ describe('Middleware Composition Tests', () => {
   })
 
   it('should handle middleware errors in composition', async () => {
-    const errorMiddleware = vi.fn().mockRejectedValue(new Error('Middleware error'))
-    const handler = vi.fn().mockResolvedValue(new NextResponse('Success'))
+    const errorMiddleware = vi.fn().mockImplementation(() => Promise.reject(new Error('Middleware error')))
+    const handler = vi.fn().mockImplementation(() => Promise.resolve(new NextResponse('Success')))
     
     const composedHandler = compose(errorMiddleware)(handler)
     const request = createRequest()
@@ -673,14 +752,14 @@ describe('Middleware Composition Tests', () => {
   it('should execute middleware in correct order', async () => {
     const executionOrder: number[] = []
     
-    const middleware1 = vi.fn().mockImplementation(async (req, ctx, next) => {
+    const middleware1 = vi.fn().mockImplementation(async (_req, _ctx, next) => {
       executionOrder.push(1)
       const response = await next()
       executionOrder.push(4)
       return response
     })
     
-    const middleware2 = vi.fn().mockImplementation(async (req, ctx, next) => {
+    const middleware2 = vi.fn().mockImplementation(async (_req, _ctx, next) => {
       executionOrder.push(2)
       const response = await next()
       executionOrder.push(3)

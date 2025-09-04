@@ -1,3 +1,7 @@
+/**
+ * JSON type definition for Supabase JSONB fields
+ * Supports all valid JSON value types including nested objects and arrays
+ */
 export type Json =
   | string
   | number
@@ -6,6 +10,16 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+/**
+ * Complete database schema definition for MS Elevate LEAPS Tracker
+ * This type provides full type safety for all database operations via Supabase client
+ * 
+ * Schema includes:
+ * - Core tables: users, activities, submissions, points_ledger, badges, etc.
+ * - Materialized views: leaderboard_totals, leaderboard_30d, metric_counts, etc.
+ * - Database functions: get_evidence_url, refresh_leaderboards, etc.
+ * - Enums: Role, SubmissionStatus, Visibility, LedgerSource
+ */
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)

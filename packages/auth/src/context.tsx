@@ -1,10 +1,17 @@
 'use client'
 
+import React, { createContext, useContext, type ReactNode } from 'react'
+
 import { useUser } from '@clerk/nextjs'
-import React, { createContext, useContext } from 'react'
-import type { ReactNode } from 'react'
-import { safeParseRole, hasRole, hasPermission, parseClerkPublicMetadata } from './types.js'
-import type { RoleName, Permission } from './types.js'
+
+import {
+  safeParseRole,
+  hasRole,
+  hasPermission,
+  parseClerkPublicMetadata,
+  type RoleName,
+  type Permission,
+} from './types'
 
 interface AuthContextValue {
   isLoaded: boolean
@@ -25,7 +32,7 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const { isLoaded, isSignedIn, user } = useUser()
-  
+
   const userId = user?.id
   const email = user?.emailAddresses?.[0]?.emailAddress
   const name = user?.fullName ?? undefined
@@ -44,9 +51,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   )
 }
 
@@ -70,19 +75,19 @@ export function useAuth(): AuthContextValue {
  */
 export function useRequireAuth(minRole?: RoleName): AuthContextValue {
   const auth = useAuth()
-  
+
   if (!auth.isLoaded) {
     throw new Error('Auth not loaded')
   }
-  
+
   if (!auth.isSignedIn) {
     throw new Error('Authentication required')
   }
-  
+
   if (minRole && !auth.hasRole(minRole)) {
     throw new Error(`Requires ${minRole} role or higher`)
   }
-  
+
   return auth
 }
 
@@ -97,15 +102,15 @@ interface RoleGuardProps {
 
 export function RoleGuard({ role, children, fallback = null }: RoleGuardProps) {
   const auth = useAuth()
-  
+
   if (!auth.isLoaded) {
     return <div>Loading...</div>
   }
-  
+
   if (!auth.isSignedIn || !auth.hasRole(role)) {
     return <>{fallback}</>
   }
-  
+
   return <>{children}</>
 }
 
@@ -118,17 +123,21 @@ interface PermissionGuardProps {
   fallback?: ReactNode
 }
 
-export function PermissionGuard({ permission, children, fallback = null }: PermissionGuardProps) {
+export function PermissionGuard({
+  permission,
+  children,
+  fallback = null,
+}: PermissionGuardProps) {
   const auth = useAuth()
-  
+
   if (!auth.isLoaded) {
     return <div>Loading...</div>
   }
-  
+
   if (!auth.isSignedIn || !auth.hasPermission(permission)) {
     return <>{fallback}</>
   }
-  
+
   return <>{children}</>
 }
 
@@ -137,23 +146,23 @@ export function PermissionGuard({ permission, children, fallback = null }: Permi
  */
 export function withRoleGuard<P extends object>(
   Component: React.ComponentType<P>,
-  requiredRoles: RoleName[]
+  requiredRoles: RoleName[],
 ) {
   return function ProtectedComponent(props: P) {
     const auth = useAuth()
-    
+
     if (!auth.isLoaded) {
       return <div>Loading...</div>
     }
-    
+
     if (!auth.isSignedIn) {
       return <div>Please sign in to access this page.</div>
     }
-    
-    if (!requiredRoles.some(role => auth.hasRole(role))) {
+
+    if (!requiredRoles.some((role) => auth.hasRole(role))) {
       return <div>You don't have permission to access this page.</div>
     }
-    
+
     return <Component {...props} />
   }
 }

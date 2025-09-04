@@ -6,23 +6,27 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "default": "./dist/js/index.js"
+      "import": "./dist/js/index.js"
     },
     "./context": {
       "types": "./dist/types/context.d.ts",
-      "default": "./dist/js/context.js"
+      "import": "./dist/js/context.js"
     },
     "./server-helpers": {
       "types": "./dist/types/server-helpers.d.ts",
-      "default": "./dist/js/server-helpers.js"
+      "import": "./dist/js/server-helpers.js"
     },
     "./withRole": {
       "types": "./dist/types/withRole.d.ts",
-      "default": "./dist/js/withRole.js"
+      "import": "./dist/js/withRole.js"
+    },
+    "./window-clerk": {
+      "types": "./dist/types/window-clerk.d.ts",
+      "import": "./dist/js/window-clerk.js"
     },
     "./types": {
       "types": "./dist/types/types.d.ts",
-      "default": "./dist/js/types.js"
+      "import": "./dist/js/types.js"
     },
     "./package.json": "./package.json"
   },
@@ -36,7 +40,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "build:types": "tsc -b --force tsconfig.build.json",
+    "build:types": "tsc -b tsconfig.build.json",
     "api:extract": "../../node_modules/.bin/api-extractor run --local",
     "api:check": "../../node_modules/.bin/api-extractor run"
   },

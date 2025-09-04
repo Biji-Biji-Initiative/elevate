@@ -1,18 +1,13 @@
-import { defineConfig } from 'tsup'
+import baseTsup from '../../tsup.base.mjs'
 
-export default defineConfig({
+export default baseTsup({
   entry: {
-    'index': 'src/index.ts',
-    'spec': 'src/spec.ts',
-    'sdk': 'src/simple-sdk.ts'
+    index: 'src/index.ts',
+    spec: 'src/spec.ts',
+    schemas: 'src/schemas.ts',
+    client: 'src/client.ts',
+    sdk: 'src/sdk.ts',
+    examples: 'src/examples.ts',
   },
-  format: ['esm'],
-  outDir: 'dist/js',
-  dts: false,
-  sourcemap: true,
-  clean: true,
-  external: [
-    '@asteasolutions/zod-to-openapi',
-    'zod'
-  ],
+  external: ['@asteasolutions/zod-to-openapi', 'zod'],
 })

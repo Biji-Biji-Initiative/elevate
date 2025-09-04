@@ -1,5 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
+
+import { createClient } from '@supabase/supabase-js'
+
 import { parseWebEnv } from '@elevate/config'
 
 // Enforce server-only usage to prevent leaking service-role keys to clients
@@ -13,9 +15,12 @@ let supabaseClient: ReturnType<typeof createClient> | null = null
 function getSupabaseClient() {
   if (!supabaseClient) {
     const env = parseWebEnv(process.env)
+    if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error('Missing required Supabase configuration')
+    }
     supabaseClient = createClient(
-      env.NEXT_PUBLIC_SUPABASE_URL!,
-      env.SUPABASE_SERVICE_ROLE_KEY!
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.SUPABASE_SERVICE_ROLE_KEY
     )
   }
   return supabaseClient
@@ -104,7 +109,7 @@ export async function saveEvidenceFile(
 }
 
 // Get signed URL for file access (1 hour TTL)
-export async function getSignedUrl(path: string, expiresIn: number = 3600): Promise<string> {
+export async function getSignedUrl(path: string, expiresIn = 3600): Promise<string> {
   const supabase = getSupabaseClient()
   
   const { data, error } = await supabase.storage
@@ -136,9 +141,7 @@ export async function deleteEvidenceFile(path: string): Promise<void> {
 }
 
 // Get multiple signed URLs for an array of paths
-export async function getMultipleSignedUrls(paths: string[], expiresIn: number = 3600): Promise<Record<string, string>> {
-  const supabase = getSupabaseClient()
-  
+export async function getMultipleSignedUrls(paths: string[], expiresIn = 3600): Promise<Record<string, string>> {
   const urlPromises = paths.map(async (path) => {
     try {
       const url = await getSignedUrl(path, expiresIn)

@@ -25,6 +25,12 @@ export const AdminEnvSchema: z.ZodObject<Pick<{
     OPENAI_API_KEY: z.ZodOptional<z.ZodString>;
     CRON_SECRET: z.ZodOptional<z.ZodString>;
     DEBUG: z.ZodOptional<z.ZodDefault<z.ZodEffects<z.ZodString, boolean, string>>>;
+    LOG_LEVEL: z.ZodOptional<z.ZodDefault<z.ZodEnum<["fatal", "error", "warn", "info", "debug", "trace"]>>>;
+    LOG_PRETTY: z.ZodOptional<z.ZodDefault<z.ZodEffects<z.ZodString, boolean, string>>>;
+    LOG_REDACT: z.ZodOptional<z.ZodDefault<z.ZodString>>;
+    LOG_NAME: z.ZodOptional<z.ZodDefault<z.ZodString>>;
+    SENTRY_DSN: z.ZodOptional<z.ZodString>;
+    LOGTAIL_TOKEN: z.ZodOptional<z.ZodString>;
 }, "DATABASE_URL" | "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" | "CLERK_SECRET_KEY" | "NODE_ENV" | "KAJABI_API_KEY" | "KAJABI_CLIENT_SECRET" | "NEXT_PUBLIC_SITE_URL" | "RATE_LIMIT_RPM" | "DEBUG">, "strip", z.ZodTypeAny, {
     DATABASE_URL: string;
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: string;
@@ -66,6 +72,12 @@ export const EnvSchema: z.ZodObject<{
     OPENAI_API_KEY: z.ZodOptional<z.ZodString>;
     CRON_SECRET: z.ZodOptional<z.ZodString>;
     DEBUG: z.ZodOptional<z.ZodDefault<z.ZodEffects<z.ZodString, boolean, string>>>;
+    LOG_LEVEL: z.ZodOptional<z.ZodDefault<z.ZodEnum<["fatal", "error", "warn", "info", "debug", "trace"]>>>;
+    LOG_PRETTY: z.ZodOptional<z.ZodDefault<z.ZodEffects<z.ZodString, boolean, string>>>;
+    LOG_REDACT: z.ZodOptional<z.ZodDefault<z.ZodString>>;
+    LOG_NAME: z.ZodOptional<z.ZodDefault<z.ZodString>>;
+    SENTRY_DSN: z.ZodOptional<z.ZodString>;
+    LOGTAIL_TOKEN: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     DATABASE_URL: string;
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: string;
@@ -84,6 +96,12 @@ export const EnvSchema: z.ZodObject<{
     OPENAI_API_KEY?: string | undefined;
     CRON_SECRET?: string | undefined;
     DEBUG?: boolean | undefined;
+    LOG_LEVEL?: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | undefined;
+    LOG_PRETTY?: boolean | undefined;
+    LOG_REDACT?: string | undefined;
+    LOG_NAME?: string | undefined;
+    SENTRY_DSN?: string | undefined;
+    LOGTAIL_TOKEN?: string | undefined;
 }, {
     DATABASE_URL: string;
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: string;
@@ -102,6 +120,12 @@ export const EnvSchema: z.ZodObject<{
     OPENAI_API_KEY?: string | undefined;
     CRON_SECRET?: string | undefined;
     DEBUG?: string | undefined;
+    LOG_LEVEL?: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | undefined;
+    LOG_PRETTY?: string | undefined;
+    LOG_REDACT?: string | undefined;
+    LOG_NAME?: string | undefined;
+    SENTRY_DSN?: string | undefined;
+    LOGTAIL_TOKEN?: string | undefined;
 }>;
 
 // @public (undocumented)
@@ -134,6 +158,12 @@ export const WebEnvSchema: z.ZodObject<{
     OPENAI_API_KEY: z.ZodOptional<z.ZodString>;
     CRON_SECRET: z.ZodOptional<z.ZodString>;
     DEBUG: z.ZodOptional<z.ZodDefault<z.ZodEffects<z.ZodString, boolean, string>>>;
+    LOG_LEVEL: z.ZodOptional<z.ZodDefault<z.ZodEnum<["fatal", "error", "warn", "info", "debug", "trace"]>>>;
+    LOG_PRETTY: z.ZodOptional<z.ZodDefault<z.ZodEffects<z.ZodString, boolean, string>>>;
+    LOG_REDACT: z.ZodOptional<z.ZodDefault<z.ZodString>>;
+    LOG_NAME: z.ZodOptional<z.ZodDefault<z.ZodString>>;
+    SENTRY_DSN: z.ZodOptional<z.ZodString>;
+    LOGTAIL_TOKEN: z.ZodOptional<z.ZodString>;
 } & {
     NEXT_PUBLIC_SUPABASE_URL: z.ZodEffects<z.ZodString, string, string>;
     SUPABASE_SERVICE_ROLE_KEY: z.ZodEffects<z.ZodString, string, string>;
@@ -157,6 +187,12 @@ export const WebEnvSchema: z.ZodObject<{
     OPENAI_API_KEY?: string | undefined;
     CRON_SECRET?: string | undefined;
     DEBUG?: boolean | undefined;
+    LOG_LEVEL?: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | undefined;
+    LOG_PRETTY?: boolean | undefined;
+    LOG_REDACT?: string | undefined;
+    LOG_NAME?: string | undefined;
+    SENTRY_DSN?: string | undefined;
+    LOGTAIL_TOKEN?: string | undefined;
 }, {
     DATABASE_URL: string;
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: string;
@@ -175,6 +211,12 @@ export const WebEnvSchema: z.ZodObject<{
     OPENAI_API_KEY?: string | undefined;
     CRON_SECRET?: string | undefined;
     DEBUG?: string | undefined;
+    LOG_LEVEL?: "fatal" | "error" | "warn" | "info" | "debug" | "trace" | undefined;
+    LOG_PRETTY?: string | undefined;
+    LOG_REDACT?: string | undefined;
+    LOG_NAME?: string | undefined;
+    SENTRY_DSN?: string | undefined;
+    LOGTAIL_TOKEN?: string | undefined;
 }>;
 
 // (No @packageDocumentation comment for this package)

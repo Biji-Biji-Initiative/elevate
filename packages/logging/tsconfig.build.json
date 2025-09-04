@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist/types",
+    "declarationDir": "dist/types",
     "rootDir": "src",
     "composite": true,
     "declaration": true,
@@ -15,5 +16,11 @@
     "esModuleInterop": true
   },
   "include": ["src/**/*"],
-  "exclude": ["dist", "**/*.test.ts", "**/*.spec.ts", "node_modules", "src/__tests__"]
+  "exclude": [
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "node_modules",
+    "src/__tests__"
+  ]
 }

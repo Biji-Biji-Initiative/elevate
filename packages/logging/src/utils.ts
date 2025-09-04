@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
-import type { ErrorInfo, LogContext, TimingData, CompletedTimingData } from './types.js'
+
+import type { ErrorInfo, LogContext, TimingData, CompletedTimingData } from './types'
 
 /**
  * Generate a unique trace ID for request tracking
@@ -20,7 +21,7 @@ export function generateRequestId(): string {
  */
 export function mergeContexts(parent?: LogContext, child?: LogContext): LogContext {
   if (!parent && !child) return {}
-  if (!parent) return child!
+  if (!parent) return child || {}
   if (!child) return parent
 
   return {
@@ -38,12 +39,15 @@ export function mergeContexts(parent?: LogContext, child?: LogContext): LogConte
  */
 export function serializeError(error: unknown, context?: LogContext): ErrorInfo {
   if (error instanceof Error) {
+    const rawCode = (error as { code?: unknown }).code
+    const code = typeof rawCode === 'string' || typeof rawCode === 'number' ? rawCode : undefined
+    const rawCause = (error as { cause?: unknown }).cause
     const errorObj: ErrorInfo = {
       name: error.name,
       message: error.message,
       ...(error.stack && { stack: error.stack }),
-      ...((error as any).code !== undefined && { code: (error as any).code }),
-      ...((error as any).cause !== undefined && { cause: (error as any).cause }),
+      ...(code !== undefined && { code }),
+      ...(rawCause !== undefined && { cause: rawCause }),
       ...(context && { context })
     }
     return errorObj
@@ -58,13 +62,16 @@ export function serializeError(error: unknown, context?: LogContext): ErrorInfo 
   }
 
   if (typeof error === 'object' && error !== null) {
-    const obj = error as any
+    const obj = error as Record<string, unknown>
+    const rawCode = (obj as { code?: unknown }).code
+    const code = typeof rawCode === 'string' || typeof rawCode === 'number' ? rawCode : undefined
+    const rawCause = (obj as { cause?: unknown }).cause
     return {
-      name: obj.name || 'UnknownError',
-      message: obj.message || String(error),
-      ...(obj.stack && { stack: obj.stack }),
-      ...(obj.code !== undefined && { code: obj.code }),
-      ...(obj.cause !== undefined && { cause: obj.cause }),
+      name: typeof obj.name === 'string' ? obj.name : 'UnknownError',
+      message: typeof obj.message === 'string' ? obj.message : String(error),
+      ...(typeof obj.stack === 'string' && { stack: obj.stack }),
+      ...(code !== undefined && { code }),
+      ...(rawCause !== undefined && { cause: rawCause }),
       ...(context && { context })
     }
   }

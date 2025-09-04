@@ -13,11 +13,6 @@
     "rootDir": "src",
     "tsBuildInfoFile": "dist/.tsbuildinfo"
   },
-  "include": [
-    "src/**/*"
-  ],
-  "references": [
-    { "path": "../db/tsconfig.build.json" },
-    { "path": "../types/tsconfig.build.json" }
-  ]
+  "include": ["src/**/*"],
+  "references": [{ "path": "../types/tsconfig.build.json" }]
 }

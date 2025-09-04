@@ -38,7 +38,7 @@ describe('Admin submissions detail - attachmentCount via relation only', () => {
       attachments: ['legacy.json.should.not.be.used'],
     })
 
-    const req = { url: 'http://localhost/api/admin/submissions/sub_1' } as any
+    const req = new Request('http://localhost/api/admin/submissions/sub_1')
     const params = Promise.resolve({ id: 'sub_1' })
     const res = await GET(req, { params })
     expect(res.status).toBe(200)
@@ -47,4 +47,3 @@ describe('Admin submissions detail - attachmentCount via relation only', () => {
     expect(json.data.submission.attachmentCount).toBe(2)
   })
 })
-

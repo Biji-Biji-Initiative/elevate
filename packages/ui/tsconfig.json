@@ -9,16 +9,23 @@
     "types": [
       "node"
     ],
-    "noEmit": true,
     "rootDir": "src",
+    "outDir": "dist",
     "jsx": "preserve",
-    "composite": true
+    "composite": true,
+    "declaration": true
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    ".turbo"
+  ],
+  "references": [
+    { "path": "../types" },
+    { "path": "../forms" },
+    { "path": "../logging" }
   ]
 }

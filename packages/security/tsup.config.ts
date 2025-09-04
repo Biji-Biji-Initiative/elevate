@@ -1,6 +1,6 @@
-import { defineConfig } from 'tsup'
+import baseTsup from '../../tsup.base.mjs'
 
-export default defineConfig({
+export default baseTsup({
   entry: [
     'src/index.ts',
     'src/csrf.ts',
@@ -10,10 +10,5 @@ export default defineConfig({
     'src/csp-hooks.tsx',
     'src/sanitizer.ts',
   ],
-  format: ['esm'],
-  outDir: 'dist/js',
-  dts: false,
-  sourcemap: true,
-  clean: true,
-  external: ['next'],
+  external: ['@upstash/redis', 'crypto'],
 })

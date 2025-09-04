@@ -3,24 +3,41 @@
  * Validates that database security policies work correctly
  */
 
-import { PrismaClient, Role } from '@prisma/client';
-import { TestDatabase, DatabaseAssertions, withTestDatabase } from './helpers.js';
-import { DatabaseFixtures } from './fixtures.js';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { Role } from '@prisma/client';
+import { TestDatabase, DatabaseAssertions, withTestDatabase } from './helpers';
+import type { TestUser } from './fixtures';
+import { getSecureLogger } from '../src/logger';
 
 describe('Row Level Security Policies', () => {
   let testDb: TestDatabase;
   let assertions: DatabaseAssertions;
-  let fixtures: DatabaseFixtures;
+  const logger = getSecureLogger();
 
   beforeEach(async () => {
     testDb = new TestDatabase();
     await testDb.setup();
     assertions = new DatabaseAssertions(testDb.prisma);
-    fixtures = testDb.fixtures;
+    
+    // Log test setup
+    logger.database({
+      operation: 'TEST_SETUP',
+      table: 'test_environment',
+      duration: 0,
+      recordCount: 0,
+    });
   });
 
   afterEach(async () => {
     await testDb.cleanup();
+    
+    // Log test cleanup
+    logger.database({
+      operation: 'TEST_CLEANUP',
+      table: 'test_environment',
+      duration: 0,
+      recordCount: 0,
+    });
   });
 
   describe('User Table Policies', () => {
@@ -58,6 +75,8 @@ describe('Row Level Security Policies', () => {
 
       expect(publicProfile).toBeTruthy();
       expect(publicProfile?.handle).toBe('user2');
+      // Ensure we are not accidentally reading user1's profile
+      expect(publicProfile?.handle).not.toBe(user1.handle);
     }));
 
     it('should allow users to update their own profile', withTestDatabase(async (db) => {
@@ -135,7 +154,7 @@ describe('Row Level Security Policies', () => {
 
     it('should allow reviewers to view all submissions', withTestDatabase(async (db) => {
       const user = await db.fixtures.createTestUser();
-      const reviewer = await db.fixtures.createTestUser({
+      await db.fixtures.createTestUser({
         role: Role.REVIEWER,
         handle: 'reviewer',
         email: 'reviewer@example.com',
@@ -186,7 +205,7 @@ describe('Row Level Security Policies', () => {
 
     it('should allow reviewers to update submission status', withTestDatabase(async (db) => {
       const user = await db.fixtures.createTestUser();
-      const reviewer = await db.fixtures.createTestUser({
+      await db.fixtures.createTestUser({
         role: Role.REVIEWER,
         handle: 'reviewer',
         email: 'reviewer@example.com',
@@ -214,7 +233,7 @@ describe('Row Level Security Policies', () => {
   describe('Points Ledger Policies', () => {
     it('should allow users to view their own points', withTestDatabase(async (db) => {
       const user = await db.fixtures.createTestUser();
-      const pointsEntry = await db.fixtures.createPointsEntry({
+      await db.fixtures.createPointsEntry({
         user_id: user.id,
         activity_code: 'LEARN',
         delta_points: 20,
@@ -230,7 +249,7 @@ describe('Row Level Security Policies', () => {
 
     it('should allow reviewers to view all points', withTestDatabase(async (db) => {
       const user = await db.fixtures.createTestUser();
-      const reviewer = await db.fixtures.createTestUser({
+      await db.fixtures.createTestUser({
         role: Role.REVIEWER,
         handle: 'reviewer',
         email: 'reviewer@example.com',
@@ -349,7 +368,7 @@ describe('Row Level Security Policies', () => {
 
     it('should allow reviewers to award badges', withTestDatabase(async (db) => {
       const user = await db.fixtures.createTestUser();
-      const reviewer = await db.fixtures.createTestUser({
+      await db.fixtures.createTestUser({
         role: Role.REVIEWER,
         handle: 'reviewer',
         email: 'reviewer@example.com',

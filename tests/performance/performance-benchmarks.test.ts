@@ -25,8 +25,8 @@ const PERFORMANCE_THRESHOLDS = {
 describe('Performance: Critical Queries and Endpoints', () => {
   let testDb: TestDatabase
   let performanceHelper: PerformanceHelper
-  let testUsers: any[]
-  let apiHandlers: any
+  let testUsers: Array<{ id: string; email: string; handle: string }>
+  let apiHandlers: Record<string, (req: Request) => Promise<Response>>
 
   beforeEach(async () => {
     // Setup isolated test database

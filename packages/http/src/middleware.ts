@@ -1,12 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
+
 import { z } from 'zod'
+
 import { 
   createErrorResponse, 
   generateTraceId, 
   logError,
   ElevateApiError,
-  ValidationError
-} from './error-utils.js'
+  ValidationError,
+  TRACE_HEADER,
+  redactSensitiveData
+} from './error-utils'
 
 // Context for API handlers
 export interface ApiContext {
@@ -18,13 +22,16 @@ export interface ApiContext {
 }
 
 // API handler type with context
-export type ApiHandler<T = unknown> = (
+export type ApiHandler<_T = unknown> = (
   request: NextRequest,
   context: ApiContext
 ) => Promise<NextResponse>
 
+// Simple handler type (Next.js style)
+export type SimpleHandler = (request: NextRequest) => Promise<NextResponse>
+
 // Global error boundary for API routes
-export function withApiErrorHandling(handler: ApiHandler): ApiHandler {
+export function withApiErrorHandling(handler: ApiHandler): SimpleHandler {
   return async (request: NextRequest) => {
     const traceId = generateTraceId()
     const startTime = Date.now()
@@ -33,7 +40,7 @@ export function withApiErrorHandling(handler: ApiHandler): ApiHandler {
     try {
       // Add trace ID to response headers
       const response = await handler(request, context)
-      response.headers.set('X-Trace-Id', traceId)
+      response.headers.set(TRACE_HEADER, traceId)
       
       // Add performance timing (if response time > 1s, log it)
       const duration = Date.now() - startTime
@@ -62,7 +69,7 @@ export function withApiErrorHandling(handler: ApiHandler): ApiHandler {
       })
 
       const response = createErrorResponse(error, 500, traceId)
-      response.headers.set('X-Trace-Id', traceId)
+      response.headers.set(TRACE_HEADER, traceId)
       return response
     }
   }
@@ -70,7 +77,7 @@ export function withApiErrorHandling(handler: ApiHandler): ApiHandler {
 
 // Authentication middleware that can be composed with other middleware
 export function requireAuth() {
-  return async (request: NextRequest, context: ApiContext, next: () => Promise<NextResponse>) => {
+  return async (_request: NextRequest, _context: ApiContext, next: () => Promise<NextResponse>) => {
     // This is a placeholder - actual auth checking would happen here
     // For now, we'll assume auth is handled by Clerk in the handlers themselves
     return next()
@@ -81,6 +88,7 @@ export function requireAuth() {
 export function rateLimit(maxRequests: number, windowMs: number) {
   // Simple in-memory rate limiter - in production you'd use Redis
   const requests = new Map<string, { count: number; resetTime: number }>()
+  const MAX_KEYS = 10_000
   
   return async (request: NextRequest, context: ApiContext, next: () => Promise<NextResponse>) => {
     const ip = request.headers.get('x-forwarded-for') || 
@@ -89,9 +97,20 @@ export function rateLimit(maxRequests: number, windowMs: number) {
     const key = `rate_limit:${ip}`
     const now = Date.now()
     
+    // Sweep expired entries to prevent unbounded growth
+    for (const [k, v] of requests) {
+      if (now > v.resetTime) {
+        requests.delete(k)
+      }
+    }
+
     const current = requests.get(key)
     if (!current || now > current.resetTime) {
       requests.set(key, { count: 1, resetTime: now + windowMs })
+      if (requests.size > MAX_KEYS) {
+        const oldestKey = requests.keys().next().value
+        if (oldestKey) requests.delete(oldestKey)
+      }
       return next()
     }
     
@@ -114,14 +133,17 @@ export function rateLimit(maxRequests: number, windowMs: number) {
 export function validateBody<T>(schema: z.ZodSchema<T>) {
   return async (request: NextRequest, context: ApiContext, next: () => Promise<NextResponse>) => {
     try {
-      const body = await request.json()
-      const validatedData = schema.parse(body)
+      const raw: unknown = await request.json()
+      const validatedData = schema.parse(raw)
       // Attach validated data to the context for use in handlers
       context.validatedBody = validatedData
       return next()
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new ValidationError(error, 'Request validation failed', context.traceId)
+      }
+      if (error instanceof SyntaxError) {
+        throw new ElevateApiError('Invalid JSON', 'VALIDATION_ERROR', undefined, context.traceId)
       }
       throw error
     }
@@ -133,7 +155,11 @@ export function validateQuery<T>(schema: z.ZodSchema<T>) {
   return async (request: NextRequest, context: ApiContext, next: () => Promise<NextResponse>) => {
     try {
       const { searchParams } = new URL(request.url)
-      const queryData = Object.fromEntries(searchParams)
+      const queryData: Record<string, string | string[]> = {}
+      for (const key of new Set(searchParams.keys())) {
+        const all = searchParams.getAll(key)
+        queryData[key] = all.length > 1 ? all : (all[0] ?? '')
+      }
       const validatedQuery = schema.parse(queryData)
       // Attach validated query to the context
       context.validatedQuery = validatedQuery
@@ -149,14 +175,17 @@ export function validateQuery<T>(schema: z.ZodSchema<T>) {
 
 // Compose multiple middleware functions
 export function compose(...middleware: Array<(req: NextRequest, ctx: ApiContext, next: () => Promise<NextResponse>) => Promise<NextResponse>>) {
-  return (handler: ApiHandler) => {
+  return (handler: ApiHandler): SimpleHandler => {
     return withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
       let index = 0
       
       const next = async (): Promise<NextResponse> => {
         if (index < middleware.length) {
-          const currentMiddleware = middleware[index++]!
-          return currentMiddleware(request, context, next)
+          const current = middleware[index]
+          index += 1
+          if (current) {
+            return current(request, context, next)
+          }
         }
         return handler(request, context)
       }
@@ -193,12 +222,14 @@ export function cors(options: {
   methods?: string[]
   headers?: string[]
   credentials?: boolean
+  exposeHeaders?: string[]
 } = {}) {
   const {
     origin = getAllowedOrigins(),
     methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     headers = ['Content-Type', 'Authorization', 'X-Requested-With'],
-    credentials = false
+    credentials = false,
+    exposeHeaders = [TRACE_HEADER]
   } = options
 
   // CRITICAL SECURITY CHECK: Never allow wildcard origin with credentials
@@ -213,7 +244,7 @@ export function cors(options: {
   // Normalize origin to array for consistent handling
   const allowedOrigins = Array.isArray(origin) ? origin : [origin]
 
-  return async (request: NextRequest, context: ApiContext, next: () => Promise<NextResponse>) => {
+  return async (request: NextRequest, _context: ApiContext, next: () => Promise<NextResponse>) => {
     const requestOrigin = request.headers.get('origin')
     
     // Determine if origin is allowed
@@ -233,9 +264,13 @@ export function cors(options: {
       
       // Set CORS headers only if origin is allowed
       if (allowedOrigin) {
+        const reqMethod = request.headers.get('access-control-request-method')
+        const reqHeaders = request.headers.get('access-control-request-headers')
         response.headers.set('Access-Control-Allow-Origin', allowedOrigin)
-        response.headers.set('Access-Control-Allow-Methods', methods.join(', '))
-        response.headers.set('Access-Control-Allow-Headers', headers.join(', '))
+        response.headers.set('Access-Control-Allow-Methods', (reqMethod ? [reqMethod] : methods).join(', '))
+        response.headers.set('Access-Control-Allow-Headers', (reqHeaders ? reqHeaders.split(/\s*,\s*/).filter(Boolean) : headers).join(', '))
+        response.headers.set('Access-Control-Max-Age', '600')
+        response.headers.set('Access-Control-Expose-Headers', exposeHeaders.join(', '))
         
         if (credentials) {
           response.headers.set('Access-Control-Allow-Credentials', 'true')
@@ -254,6 +289,7 @@ export function cors(options: {
     // Set CORS headers only if origin is allowed
     if (allowedOrigin) {
       response.headers.set('Access-Control-Allow-Origin', allowedOrigin)
+      response.headers.set('Access-Control-Expose-Headers', exposeHeaders.join(', '))
       
       if (credentials) {
         response.headers.set('Access-Control-Allow-Credentials', 'true')
@@ -269,7 +305,7 @@ export function cors(options: {
 
 // Comprehensive security headers middleware
 export function securityHeaders() {
-  return async (request: NextRequest, context: ApiContext, next: () => Promise<NextResponse>) => {
+  return async (request: NextRequest, _context: ApiContext, next: () => Promise<NextResponse>) => {
     const response = await next()
     const isProduction = process.env.NODE_ENV === 'production'
     
@@ -318,13 +354,23 @@ export function securityHeaders() {
     // HSTS for production - force HTTPS and include subdomains
     if (isProduction) {
       response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+    } else {
+      // Ensure not present in non-production environments
+      response.headers.delete('Strict-Transport-Security')
     }
     
     // Additional modern security headers
     response.headers.set('X-Permitted-Cross-Domain-Policies', 'none')
-    response.headers.set('Cross-Origin-Embedder-Policy', 'credentialless')
+    response.headers.set('Cross-Origin-Embedder-Policy', 'require-corp')
     response.headers.set('Cross-Origin-Opener-Policy', 'same-origin')
     response.headers.set('Cross-Origin-Resource-Policy', 'same-origin')
+    const csp = [
+      "default-src 'self'",
+      "img-src 'self' data: https:",
+      "script-src 'self'",
+      "style-src 'self' 'unsafe-inline'"
+    ].join('; ')
+    response.headers.set('Content-Security-Policy', csp)
     
     // Remove server info and fingerprinting headers
     response.headers.delete('Server')
@@ -349,14 +395,14 @@ export function requestLogger() {
   return async (request: NextRequest, context: ApiContext, next: () => Promise<NextResponse>) => {
     const start = Date.now()
     
+    const ua = request.headers.get('user-agent') || ''
+    const rawIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
     console.log(`[API] ${request.method} ${request.url} - Start`, {
       traceId: context.traceId,
       method: request.method,
-      url: request.url,
-      userAgent: request.headers.get('user-agent'),
-      ip: request.headers.get('x-forwarded-for') || 
-          request.headers.get('x-real-ip') ||
-          'unknown'
+      url: redactSensitiveData(request.url),
+      userAgent: redactSensitiveData(ua),
+      ip: redactSensitiveData(rawIp)
     })
     
     const response = await next()
@@ -365,7 +411,7 @@ export function requestLogger() {
     console.log(`[API] ${request.method} ${request.url} - ${response.status}`, {
       traceId: context.traceId,
       method: request.method,
-      url: request.url,
+      url: redactSensitiveData(request.url),
       status: response.status,
       duration
     })

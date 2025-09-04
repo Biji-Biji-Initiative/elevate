@@ -37,13 +37,13 @@ import { db } from '@elevate/db/client'
 // Type-safe queries
 const users = await db.user.findMany({
   where: { role: 'PARTICIPANT' },
-  include: { submissions: true }
+  include: { submissions: true },
 })
 
 // Transactions
 await db.$transaction([
   db.submission.create({ data: submissionData }),
-  db.pointsLedger.create({ data: pointsData })
+  db.pointsLedger.create({ data: pointsData }),
 ])
 ```
 
@@ -92,7 +92,7 @@ Legacy SQL migrations are preserved in `migrations_legacy_sql/` for reference.
 ### Materialized Views
 
 - **leaderboard_totals** - All-time point rankings
-- **leaderboard_30d** - 30-day rolling rankings  
+- **leaderboard_30d** - 30-day rolling rankings
 - **activity_metrics** - Per-stage submission statistics
 
 Refresh via: `SELECT refresh_leaderboards();`
@@ -117,15 +117,15 @@ DIRECT_URL="postgresql://user:pass@host:5432/elevate_dev"
 
 ## Development Commands
 
-| Command | Description |
-|---------|-------------|
-| `pnpm db:generate` | Generate Prisma client |
-| `pnpm db:migrate:dev` | Create and apply development migration |
-| `pnpm db:migrate` | Apply migrations (production) |
-| `pnpm db:migrate:reset` | Reset database (⚠️ destroys data) |
-| `pnpm db:seed` | Seed database with default data |
-| `pnpm db:studio` | Open Prisma Studio GUI |
-| `pnpm db:push` | Push schema changes (dev only) |
+| Command                 | Description                            |
+| ----------------------- | -------------------------------------- |
+| `pnpm db:generate`      | Generate Prisma client                 |
+| `pnpm db:migrate:dev`   | Create and apply development migration |
+| `pnpm db:migrate`       | Apply migrations (production)          |
+| `pnpm db:migrate:reset` | Reset database (⚠️ destroys data)      |
+| `pnpm db:seed`          | Seed database with default data        |
+| `pnpm db:studio`        | Open Prisma Studio GUI                 |
+| `pnpm db:push`          | Push schema changes (dev only)         |
 
 ## Testing
 
@@ -142,12 +142,12 @@ pnpm test:watch
 The package exports comprehensive TypeScript types:
 
 ```typescript
-import type { 
-  User, 
-  Submission, 
+import type {
+  User,
+  Submission,
   PointsLedger,
   SubmissionStatus,
-  Role 
+  Role,
 } from '@elevate/db'
 
 // Prisma client with full type safety
@@ -197,12 +197,60 @@ Key metrics to monitor:
 - Query performance on leaderboard views
 - Constraint violation patterns (anti-gaming triggers)
 
+## JSON Payload Mapping
+
+### Important: Database JSON Storage Format
+
+The database stores JSON payloads in **snake_case** format, while the API layer accepts and returns **camelCase**. This separation is handled by DTO mappers in `@elevate/types`.
+
+#### Database JSON Fields (snake_case)
+
+- **LEARN**: `course_name`, `certificate_url`, `certificate_hash`, `completed_at`
+- **EXPLORE**: `class_date`, `evidence_files`
+- **AMPLIFY**: `peers_trained`, `students_trained`, `attendance_proof_files`
+- **PRESENT**: `linkedin_url`, `screenshot_url`
+- **SHINE**: `idea_title`, `idea_summary`
+
+#### API Fields (camelCase)
+
+- **LEARN**: `courseName`, `certificateUrl`, `certificateHash`, `completedAt`
+- **EXPLORE**: `classDate`, `evidenceFiles`
+- **AMPLIFY**: `peersTrained`, `studentsTrained`, `attendanceProofFiles`
+- **PRESENT**: `linkedinUrl`, `screenshotUrl`
+- **SHINE**: `ideaTitle`, `ideaSummary`
+
+#### Using DTO Mappers
+
+```typescript
+import {
+  transformPayloadAPIToDB,
+  transformPayloadDBToAPI,
+} from '@elevate/types'
+
+// Before writing to database
+const dbPayload = transformPayloadAPIToDB('LEARN', apiPayload)
+await db.submission.create({
+  data: {
+    payload: dbPayload,
+    // ... other fields
+  },
+})
+
+// When reading from database
+const submission = await db.submission.findUnique({ where: { id } })
+const apiPayload = transformPayloadDBToAPI(
+  submission.activity_code,
+  submission.payload,
+)
+```
+
 ## Contributing
 
 1. Follow the [migration guide](./MIGRATIONS.md) for schema changes
 2. Update seed data when adding new required fields
 3. Add tests for new utility functions
 4. Document breaking changes in pull requests
+5. Ensure JSON payloads use snake_case in database, camelCase in API
 
 ## Support
 

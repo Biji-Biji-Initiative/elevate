@@ -1,18 +1,18 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
-import { createSuccessResponse } from '@elevate/types'
 import { prisma } from '@elevate/db'
+import { createSuccessResponse } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await requireRole('reviewer')
-    const { id } = await params
+    const { id } = params
     
     const submission = await prisma.submission.findUnique({
       where: { id },

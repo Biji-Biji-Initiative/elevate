@@ -1,15 +1,6 @@
-import { defineConfig } from 'tsup'
+import baseTsup from '../../tsup.base.mjs'
 
-export default defineConfig({
+export default baseTsup({
   entry: ['src/index.ts', 'src/scoring.ts', 'src/badges.ts'],
-  format: ['esm'],
-  outDir: 'dist/js',
-  dts: false,
-  sourcemap: true,
-  clean: true,
-  external: [
-    '@elevate/db',
-    '@elevate/types',
-    'zod'
-  ],
+  external: ['zod'],
 })

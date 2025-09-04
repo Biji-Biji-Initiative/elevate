@@ -1,7 +1,14 @@
-import { z } from 'zod';
+/**
+ * OpenAPI-enhanced Zod schemas for MS Elevate LEAPS Tracker API
+ * 
+ * Defines all API schemas with OpenAPI metadata for documentation generation
+ */
+
 import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
-import { SubmissionPayloadSchema } from '@elevate/types/submission-payloads';
+import { z } from 'zod';
+
 import { BadgeCriteriaSchema } from '@elevate/types/common';
+import { SubmissionPayloadSchema as _SubmissionPayloadSchema } from '@elevate/types/submission-payloads';
 import { KajabiTagEventSchema } from '@elevate/types/webhooks';
 
 // Extend Zod with OpenAPI functionality
@@ -188,52 +195,19 @@ export const LeaderboardEntrySchema = z
         description: 'User display name',
         example: 'Ahmad Sutanto',
       }),
-      school: z.string().nullable().openapi({
+      school: z.string().nullable().optional().openapi({
         description: 'School/institution name',
         example: 'SDN 123 Jakarta',
       }),
-      cohort: z.string().nullable().openapi({
-        description: 'Training cohort identifier',
-        example: 'Cohort-2024-A',
-      }),
-      avatar_url: z.string().url().nullable().openapi({
+      avatarUrl: z.string().url().nullable().optional().openapi({
         description: 'Profile picture URL',
         example: 'https://images.clerk.dev/abc123',
       }),
-      _sum: z.object({
-        points: z.number().int().openapi({
-          description: 'Total points earned',
-          example: 95,
-        }),
-        learn_points: z.number().int().openapi({
-          description: 'Points from Learn activities',
-          example: 20,
-        }),
-        explore_points: z.number().int().openapi({
-          description: 'Points from Explore activities',
-          example: 50,
-        }),
-        amplify_points: z.number().int().openapi({
-          description: 'Points from Amplify activities',
-          example: 15,
-        }),
-        present_points: z.number().int().openapi({
-          description: 'Points from Present activities',
-          example: 10,
-        }),
-        shine_points: z.number().int().openapi({
-          description: 'Points from Shine activities',
-          example: 0,
-        }),
-        submission_count: z.number().int().openapi({
-          description: 'Total approved submissions',
-          example: 7,
-        }),
-      }).openapi({
-        title: 'User Points Summary',
-        description: 'Breakdown of user points by category',
+      totalPoints: z.number().int().openapi({
+        description: 'Total points earned',
+        example: 95,
       }),
-      earned_badges: z.array(z.object({
+      earnedBadges: z.array(z.object({
         badge: z.object({
           code: z.string().openapi({
             description: 'Badge identifier',
@@ -243,12 +217,12 @@ export const LeaderboardEntrySchema = z
             description: 'Badge display name',
             example: 'Early Adopter',
           }),
-          icon_url: z.string().url().nullable().openapi({
+          iconUrl: z.string().url().nullable().optional().openapi({
             description: 'Badge icon URL',
             example: 'https://storage.supabase.co/badges/early_adopter.svg',
           }),
         }),
-      })).openapi({
+      })).optional().openapi({
         description: 'Badges earned by the user',
       }),
     }),
@@ -364,20 +338,25 @@ export const StageMetricsResponseSchema = z.object({
 
 export const ProfileSubmissionSchema = z.object({
   id: z.string(),
-  activity_code: ActivityCodeSchema,
+  activityCode: ActivityCodeSchema,
   activity: z.object({ name: z.string(), code: ActivityCodeSchema }),
   status: SubmissionStatusSchema,
   visibility: VisibilitySchema,
-  payload: SubmissionPayloadSchema.transform(p => p.data).openapi({
+  payload: z.record(z.unknown()).openapi({
     description: 'Submission payload data specific to each activity type'
   }),
-  created_at: z.string().datetime(),
-  updated_at: z.string().datetime().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
 })
 
 export const ProfileBadgeSchema = z.object({
-  badge: z.object({ code: z.string(), name: z.string(), description: z.string().optional(), icon_url: z.string().nullable().optional() }),
-  earned_at: z.string().datetime(),
+  badge: z.object({ 
+    code: z.string(), 
+    name: z.string(), 
+    description: z.string().nullable().optional(), 
+    iconUrl: z.string().nullable().optional() 
+  }),
+  earnedAt: z.string().datetime(),
 })
 
 export const ProfileResponseSchema = z.object({
@@ -386,11 +365,13 @@ export const ProfileResponseSchema = z.object({
     id: z.string(),
     handle: z.string(),
     name: z.string(),
+    email: z.string(),
+    avatarUrl: z.string().nullable().optional(),
     school: z.string().nullable().optional(),
     cohort: z.string().nullable().optional(),
-    created_at: z.string().datetime(),
-    _sum: z.object({ points: z.number().int() }),
-    earned_badges: z.array(ProfileBadgeSchema),
+    createdAt: z.string().datetime(),
+    totalPoints: z.number().int(),
+    earnedBadges: z.array(ProfileBadgeSchema),
     submissions: z.array(ProfileSubmissionSchema),
   })
 }).openapi({ title: 'Profile Response' })
@@ -655,9 +636,7 @@ export const AdminKajabiResponseSchema = z.object({
       received_at: z.string().datetime(),
       processed_at: z.string().datetime().nullable(),
       user_match: z.string().nullable(),
-      payload: KajabiTagEventSchema.openapi({
-        description: 'Kajabi webhook event payload'
-      }),
+      payload: KajabiTagEventSchema,
     })),
     stats: z.object({
       total_events: z.number(),
@@ -672,7 +651,7 @@ export const AdminKajabiResponseSchema = z.object({
   example: {
     success: true,
     data: {
-      events: [ { id: 'test_123', received_at: '2024-02-01T10:00:00Z', processed_at: '2024-02-01T10:01:00Z', user_match: 'user_123', payload: { event_type: 'contact.tagged', data: { tag: { name: 'LEARN_COMPLETED' } } } } ],
+      events: [ { id: 'test_123', received_at: '2024-02-01T10:00:00Z', processed_at: '2024-02-01T10:01:00Z', user_match: 'user_123', payload: { event_type: 'contact.tagged', contact: { id: 12345, email: 'user@example.com' }, tag: { name: 'LEARN_COMPLETED' } } } ],
       stats: { total_events: 10, processed_events: 8, matched_users: 7, unmatched_events: 3, points_awarded: 160 }
     }
   }

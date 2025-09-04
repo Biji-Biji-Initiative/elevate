@@ -1,2 +1,4 @@
-export * from './scoring.js'
-export * from './badges.js'
+export * from './scoring'
+export * from './badges'
+export * from './analytics'
+export * from './admin-analytics'

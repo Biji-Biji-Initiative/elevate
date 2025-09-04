@@ -14,11 +14,11 @@ import crypto from 'crypto'
 import { TestDatabase } from '../../packages/db/tests/helpers'
 import { TestData, executeApiRoute, createWebhookRequest, waitForOperation } from '../helpers/test-server'
 
-let webhookHandler: any
+let webhookHandler: (req: Request) => Promise<Response>
 
 describe('Integration: Kajabi Webhook Integration', () => {
   let testDb: TestDatabase
-  let testUser: any
+  let testUser: { id: string; email: string; handle: string }
 
   beforeEach(async () => {
     // Setup isolated test database
@@ -289,7 +289,7 @@ describe('Integration: Kajabi Webhook Integration', () => {
         'Content-Type': 'application/json'
         // No signature header
       }
-    }) as any
+    })
 
     const response = await executeApiRoute(webhookHandler, request)
 
@@ -427,7 +427,7 @@ describe('Integration: Kajabi Webhook Integration', () => {
           .update('invalid json{')
           .digest('hex')
       }
-    }) as any
+    })
 
     const response = await executeApiRoute(webhookHandler, request)
 

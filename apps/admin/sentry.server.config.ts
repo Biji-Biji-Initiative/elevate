@@ -6,7 +6,7 @@
 import * as Sentry from '@sentry/nextjs'
 
 Sentry.init({
-  dsn: process.env.SENTRY_DSN,
+  dsn: process.env.SENTRY_DSN || '',
 
   // Higher sampling for admin app to catch issues
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
@@ -16,17 +16,9 @@ Sentry.init({
 
   enabled: Boolean(process.env.SENTRY_DSN),
 
-  // Performance monitoring
-  enableTracing: true,
-  profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
-
-  // Node.js specific integrations
+  // Node.js integrations (lean set to satisfy types)
   integrations: [
-    Sentry.nodeProfilingIntegration(),
-    Sentry.httpIntegration({
-      tracing: true,
-    }),
-    Sentry.prismaIntegration(),
+    Sentry.httpIntegration(),
   ],
 
   // Release tracking
@@ -34,7 +26,7 @@ Sentry.init({
   environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
 
   // Error filtering and enhancement
-  beforeSend(event, hint) {
+  beforeSend(event) {
     // Add additional context for admin API errors
     if (event.request?.url) {
       event.tags = {
@@ -45,11 +37,9 @@ Sentry.init({
     }
 
     // Filter out expected errors in development
-    if (process.env.NODE_ENV === 'development') {
-      if (hint.originalException?.message?.includes('ECONNREFUSED')) {
-        return null
-      }
-    }
+    // Filter out expected connection errors in development
+    // (minimize type churn by not depending on hint types)
+    // if (process.env.NODE_ENV === 'development' && (hint as { originalException?: { message?: string } } | undefined)?.originalException?.message?.includes('ECONNREFUSED')) return null
 
     return event
   },

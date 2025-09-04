@@ -11,8 +11,8 @@ import {
   formatDuration,
   formatMemory,
   createLogMeta,
-} from '../utils.js'
-import type { LogContext } from '../types.js'
+} from '../utils'
+import type { LogContext } from '../types'
 
 describe('Utils', () => {
   describe('ID generation', () => {
@@ -95,7 +95,7 @@ describe('Utils', () => {
     })
 
     it('should serialize Error objects with code and cause', () => {
-      const error = new Error('Test error') as any
+      const error = new Error('Test error') as unknown as Error & { code?: string; cause?: unknown }
       error.code = 'ENOENT'
       error.cause = 'File not found'
       

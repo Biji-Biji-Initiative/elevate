@@ -1,10 +1,12 @@
-import ElevateAPIClient from '@elevate/openapi/sdk'
+// Re-export from consolidated package
+import { ElevateAPIClient } from '@elevate/openapi'
 
-// Factory returning a preconfigured API client for same-origin calls
-export function getApiClient() {
-  const baseUrl = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SITE_URL || '')
-  return new ElevateAPIClient({ baseUrl })
+export function getApiClient(token?: string) {
+  return new ElevateAPIClient({ 
+    baseUrl: typeof window !== 'undefined' ? '' : process.env.NEXT_PUBLIC_SITE_URL,
+    token 
+  })
 }
 
-export type APIClient = ReturnType<typeof getApiClient>
+export type APIClient = ElevateAPIClient
 

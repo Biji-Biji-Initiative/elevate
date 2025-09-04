@@ -1,14 +1,6 @@
-import { defineConfig } from 'tsup'
+import baseTsup from '../../tsup.base.mjs'
 
-export default defineConfig({
+export default baseTsup({
   entry: ['src/index.ts'],
-  format: ['esm'],
-  outDir: 'dist/js',
-  dts: false,
-  sourcemap: true,
-  clean: true,
-  external: [
-    '@supabase/supabase-js',
-    '@elevate/config'
-  ],
+  external: ['@supabase/supabase-js', 'crypto'],
 })

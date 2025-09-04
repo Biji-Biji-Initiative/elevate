@@ -1,11 +1,26 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { requireRole, hasRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { roleToRoleName } from '@elevate/auth'
-import type { Role } from '@elevate/db'
-import { prisma, type Prisma } from '@elevate/db'
-import { parseRole, toPrismaJson, UpdateUserSchema, BulkUpdateUsersSchema, AdminUsersQuerySchema, buildAuditMeta } from '@elevate/types'
+import { requireRole, hasRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import { 
+  findUserById,
+  findAllUsers,
+  updateUser,
+  findUserByHandle,
+  createAuditLogEntry,
+  type Role,
+  type User,
+  prisma // Still need for complex queries and transactions
+} from '@elevate/db'
+import { createSuccessResponse, createErrorResponse as createHttpError } from '@elevate/http'
+
+// Use database service layer instead of direct Prisma
+
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { parseRole, toPrismaJson, UpdateUserSchema, BulkUpdateUsersSchema, AdminUsersQuerySchema, buildAuditMeta, AdminUserDTOSchema, mapRawAdminUserToDTO } from '@elevate/types'
+
+import type { Prisma } from '@prisma/client'
+
 
 export const runtime = 'nodejs';
 
@@ -92,21 +107,18 @@ export async function GET(request: NextRequest) {
       return acc
     }, {})
     
-    const usersWithPoints = users.map(user => ({
-      ...user,
-      totalPoints: pointsMap[user.id] || 0
-    }))
-    
-    return NextResponse.json({
-      success: true,
-      data: {
-        users: usersWithPoints,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit)
-        }
+    const usersDTO = users.map(user => mapRawAdminUserToDTO(user, pointsMap[user.id] || 0))
+
+    // Runtime validation to prevent ORM leakage
+    const parsedUsers = AdminUserDTOSchema.array().parse(usersDTO)
+
+    return createSuccessResponse({
+      users: parsedUsers,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
       }
     })
   } catch (error) {
@@ -122,26 +134,18 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const parsed = UpdateUserSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
+      return createHttpError(new Error('Invalid request body'), 400)
     }
     const { userId, role, school, cohort, name, handle } = parsed.data
     
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'userId is required' },
-        { status: 400 }
-      )
+      return createHttpError(new Error('userId is required'), 400)
     }
     
-    const targetUser = await prisma.user.findUnique({
-      where: { id: userId }
-    })
+    const targetUser = await findUserById(userId)
     
     if (!targetUser) {
-      return NextResponse.json(
-        { success: false, error: 'User not found' },
-        { status: 404 }
-      )
+      return createHttpError(new Error('User not found'), 404)
     }
     
     // Role change validation
@@ -150,20 +154,14 @@ export async function PATCH(request: NextRequest) {
       if (currentUser.role !== 'superadmin') {
         const restrictedRoles = ['ADMIN', 'SUPERADMIN']
         if (restrictedRoles.includes(role) || restrictedRoles.includes(targetUser.role)) {
-          return NextResponse.json(
-            { success: false, error: 'Insufficient permissions to modify admin roles' },
-            { status: 403 }
-          )
+          return createHttpError(new Error('Insufficient permissions to modify admin roles'), 403)
         }
       }
       
       // Prevent self-demotion  
       const parsedNewRole = parseRole(role)
       if (currentUser.userId === userId && parsedNewRole && !hasRole(currentUser.role, roleToRoleName(parsedNewRole))) {
-        return NextResponse.json(
-          { success: false, error: 'Cannot demote your own role' },
-          { status: 403 }
-        )
+        return createHttpError(new Error('Cannot demote your own role'), 403)
       }
     }
     
@@ -177,15 +175,10 @@ export async function PATCH(request: NextRequest) {
     
     if (handle !== undefined && handle !== targetUser.handle) {
       // Check if handle is already taken
-      const existingHandle = await prisma.user.findUnique({
-        where: { handle }
-      })
+      const existingHandle = await findUserByHandle(handle)
       
       if (existingHandle && existingHandle.id !== userId) {
-        return NextResponse.json(
-          { success: false, error: 'Handle is already taken' },
-          { status: 400 }
-        )
+        return createHttpError(new Error('Handle is already taken'), 400)
       }
       
       updateData.handle = handle
@@ -213,11 +206,13 @@ export async function PATCH(request: NextRequest) {
         actor_id: currentUser.userId,
         action: 'UPDATE_USER',
         target_id: userId,
-        meta: buildAuditMeta({ entityType: 'user', entityId: userId }, {
-          changes: updateData,
-          originalRole: targetUser.role,
-          newRole: role
-        }) as Prisma.InputJsonValue
+        meta: toPrismaJson(
+          buildAuditMeta({ entityType: 'user', entityId: userId }, {
+            changes: updateData,
+            originalRole: targetUser.role,
+            newRole: role
+          })
+        )
       }
     })
     
@@ -237,50 +232,35 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const parsed = BulkUpdateUsersSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
+      return createHttpError(new Error('Invalid request body'), 400)
     }
     const { userIds, role } = parsed.data
     
     if (!Array.isArray(userIds) || userIds.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'userIds array is required' },
-        { status: 400 }
-      )
+      return createHttpError(new Error('userIds array is required'), 400)
     }
     
     if (!role) {
-      return NextResponse.json(
-        { success: false, error: 'role is required' },
-        { status: 400 }
-      )
+      return createHttpError(new Error('role is required'), 400)
     }
     
     // Limit bulk operations
     if (userIds.length > 100) {
-      return NextResponse.json(
-        { success: false, error: 'Maximum 100 users per bulk operation' },
-        { status: 400 }
-      )
+      return createHttpError(new Error('Maximum 100 users per bulk operation'), 400)
     }
     
     // Role validation
     if (currentUser.role !== 'superadmin') {
       const restrictedRoles = ['ADMIN', 'SUPERADMIN']
       if (restrictedRoles.includes(role)) {
-        return NextResponse.json(
-          { success: false, error: 'Insufficient permissions to assign admin roles' },
-          { status: 403 }
-        )
+        return createHttpError(new Error('Insufficient permissions to assign admin roles'), 403)
       }
     }
     
     // Prevent self-demotion in bulk
     const parsedBulkRole = parseRole(role)
     if (userIds.includes(currentUser.userId) && parsedBulkRole && !hasRole(currentUser.role, roleToRoleName(parsedBulkRole))) {
-      return NextResponse.json(
-        { success: false, error: 'Cannot demote your own role in bulk operation' },
-        { status: 403 }
-      )
+      return createHttpError(new Error('Cannot demote your own role in bulk operation'), 403)
     }
     
     const users = await prisma.user.findMany({
@@ -294,10 +274,7 @@ export async function POST(request: NextRequest) {
     })
     
     if (users.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'No users found' },
-        { status: 404 }
-      )
+      return createHttpError(new Error('No users found'), 404)
     }
     
     // Additional validation for existing admin users
@@ -307,10 +284,7 @@ export async function POST(request: NextRequest) {
       )
       
       if (hasRestrictedUsers) {
-        return NextResponse.json(
-          { success: false, error: 'Cannot modify admin users without superadmin role' },
-          { status: 403 }
-        )
+        return createHttpError(new Error('Cannot modify admin users without superadmin role'), 403)
       }
     }
     
@@ -337,11 +311,13 @@ export async function POST(request: NextRequest) {
               actor_id: currentUser.userId,
               action: 'UPDATE_USER_ROLE',
               target_id: user.id,
-              meta: buildAuditMeta({ entityType: 'user', entityId: user.id }, {
-                originalRole: user.role,
-                newRole: role,
-                bulkOperation: true
-              }) as Prisma.InputJsonValue
+              meta: toPrismaJson(
+                buildAuditMeta({ entityType: 'user', entityId: user.id }, {
+                  originalRole: user.role,
+                  newRole: role,
+                  bulkOperation: true
+                })
+              )
             }
           })
           

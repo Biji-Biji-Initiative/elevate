@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
           name: string;
           email: string;
           avatar_url: string | null;
-          role: any;
+          role: Role;
           handle?: string;
         } = {
           name,

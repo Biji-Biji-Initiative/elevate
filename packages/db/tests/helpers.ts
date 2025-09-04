@@ -4,7 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { DatabaseFixtures } from './fixtures.js';
+import { DatabaseFixtures } from './fixtures';
 
 // Test database configuration
 const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL;
@@ -45,8 +45,9 @@ export class TestDatabase {
       await this.seedBadges();
       this.isSetup = true;
     } catch (error) {
-      console.error('Failed to setup test database:', error);
-      throw error;
+      const err = error instanceof Error ? error : new Error(String(error))
+      console.error('Failed to setup test database:', err.message)
+      throw err;
     }
   }
 
@@ -61,8 +62,9 @@ export class TestDatabase {
       await this.prisma.$disconnect();
       this.isSetup = false;
     } catch (error) {
-      console.error('Failed to cleanup test database:', error);
-      throw error;
+      const err = error instanceof Error ? error : new Error(String(error))
+      console.error('Failed to cleanup test database:', err.message)
+      throw err;
     }
   }
 
@@ -157,8 +159,8 @@ export class TestDatabase {
       }
       
       return result;
-    }).catch((error) => {
-      if (error.message === 'TEST_ROLLBACK') {
+    }).catch((error: unknown) => {
+      if (error instanceof Error && error.message === 'TEST_ROLLBACK') {
         // This is expected in tests
         return null as T;
       }
@@ -274,13 +276,13 @@ export function createTestDatabase(): TestDatabase {
 /**
  * Test suite wrapper that handles setup/cleanup
  */
-export function withTestDatabase(testFn: (db: TestDatabase) => Promise<void>) {
+export function withTestDatabase(testFn: (db: TestDatabase) => Promise<void> | void) {
   return async () => {
     const db = createTestDatabase();
     
     try {
       await db.setup();
-      await testFn(db);
+      await Promise.resolve(testFn(db));
     } finally {
       await db.cleanup();
     }

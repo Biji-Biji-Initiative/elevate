@@ -181,6 +181,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: 🔍 Validate environment configuration
+        run: pnpm run env:validate:ci
+
       - name: 🗄️ Setup database
         run: |
           pnpm db:push

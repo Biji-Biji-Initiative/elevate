@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { LogContext } from './types.js'
-import { generateRequestId, generateTraceId, extractRequestInfo } from './utils.js'
+
+import { generateRequestId, generateTraceId, extractRequestInfo } from './utils'
+
+import type { LogContext } from './types'
 
 // Extend NextRequest to include our log data
 interface NextRequestWithLogData extends NextRequest {

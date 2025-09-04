@@ -4,7 +4,7 @@ import { CSRFManager, CSRFError, csrfManager, withCSRFProtection } from '../csrf
 
 // Mock crypto for consistent testing
 vi.mock('crypto', async () => {
-  const actual = await vi.importActual('crypto') as any
+  const actual = (await vi.importActual('crypto')) as typeof import('crypto')
   return {
     default: {
       ...actual.default,

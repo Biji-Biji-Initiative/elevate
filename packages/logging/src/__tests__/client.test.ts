@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { ClientLogger, getClientLogger, createClientLogger } from '../client.js'
-import type { LoggerConfig, LogContext } from '../types.js'
+import { ClientLogger, getClientLogger, createClientLogger } from '../client'
+import type { LoggerConfig, LogContext } from '../types'
 
 // Mock console methods
 const mockConsole = {

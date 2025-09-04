@@ -2,11 +2,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Bypass CSRF and rate limiting wrappers
 vi.mock('@elevate/security/csrf', async () => ({
-  withCSRFProtection: (handler: any) => handler,
+  withCSRFProtection: (handler: (req: Request) => Promise<Response> | Response) => handler,
 }))
 vi.mock('@elevate/security/rate-limiter', async () => ({
   submissionRateLimiter: {},
-  withRateLimit: async (_req: any, _limiter: any, handler: any) => handler(),
+  withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
 }))
 
 // Mock Clerk auth
@@ -44,15 +44,14 @@ describe('Web submissions API - relational attachments creation', () => {
     activityFindUniqueMock.mockResolvedValueOnce({ code: 'LEARN', default_points: 20 })
     createSubmissionMock.mockResolvedValueOnce({ id: 'sub_1', activity: { name: 'Learn' }, visibility: 'PRIVATE', status: 'PENDING', created_at: new Date().toISOString() })
 
-    const req = {
-      json: async () => ({
-        activityCode: 'LEARN',
-        payload: { provider: 'SPL', course: 'AI 101', completedAt: new Date().toISOString() },
-        attachments: ['evidence/learn/user_1/cert.pdf']
-      })
-    } as any
+    const body = JSON.stringify({
+      activityCode: 'LEARN',
+      payload: { provider: 'SPL', course: 'AI 101', completedAt: new Date().toISOString() },
+      attachments: ['evidence/learn/user_1/cert.pdf']
+    })
+    const req = new Request('http://localhost/api/submissions', { method: 'POST', body, headers: { 'content-type': 'application/json' } })
 
-    const res = await POST(req as any)
+    const res = await POST(req)
     expect(res.status).toBe(201)
     expect(createManyAttachmentsMock).toHaveBeenCalledTimes(1)
     const arg = createManyAttachmentsMock.mock.calls[0]?.[0]
@@ -60,4 +59,3 @@ describe('Web submissions API - relational attachments creation', () => {
     expect(arg.data[0]).toMatchObject({ path: 'evidence/learn/user_1/cert.pdf' })
   })
 })
-

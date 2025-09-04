@@ -11,7 +11,7 @@ vi.mock('@elevate/auth/server-helpers', async () => {
 // Stub computePoints to a fixed value for deterministic testing
 const computePointsMock = vi.fn(() => 42)
 vi.mock('@elevate/logic', async () => ({
-  computePoints: (...args: any[]) => computePointsMock(...args),
+  computePoints: (...args: unknown[]) => computePointsMock(...args as never),
 }))
 
 // Prisma mocks
@@ -19,7 +19,7 @@ const findUniqueMock = vi.fn()
 const transactionMock = vi.fn()
 
 // Transaction nested mocks
-const txSubmissionUpdateMock = vi.fn(async (args: any) => ({ ...args?.data, id: args?.where?.id }))
+const txSubmissionUpdateMock = vi.fn(async (args: { data?: Record<string, unknown>; where?: { id?: string } }) => ({ ...(args?.data || {}), id: args?.where?.id }))
 const txAuditCreateMock = vi.fn(async () => ({}))
 const txLedgerCreateMock = vi.fn(async () => ({}))
 
@@ -57,22 +57,21 @@ describe('Admin submissions API - PATCH approve awards points', () => {
     })
 
     // Arrange: $transaction invokes callback with tx-like object
-    transactionMock.mockImplementation(async (cb: any) => {
-      const tx = {
-        submission: { update: txSubmissionUpdateMock },
-        auditLog: { create: txAuditCreateMock },
-        pointsLedger: { create: txLedgerCreateMock },
-      }
-      const result = await cb(tx)
-      return result
-    })
+transactionMock.mockImplementation(async (cb: (tx: { submission: { update: typeof txSubmissionUpdateMock }, auditLog: { create: typeof txAuditCreateMock }, pointsLedger: { create: typeof txLedgerCreateMock } }) => unknown) => {
+  const tx = {
+    submission: { update: txSubmissionUpdateMock },
+    auditLog: { create: txAuditCreateMock },
+    pointsLedger: { create: txLedgerCreateMock },
+  }
+  const result = await cb(tx)
+  return result
+})
 
-    const req = {
-      json: async () => ({ submissionId: 'sub_123', action: 'approve' }),
-    } as any
+    const body = JSON.stringify({ submissionId: 'sub_123', action: 'approve' })
+    const req = new Request('http://localhost/api/admin/submissions', { method: 'PATCH', body, headers: { 'content-type': 'application/json' } })
 
     // Act
-    const res = await PATCH(req as any)
+    const res = await PATCH(req)
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.success).toBe(true)
@@ -93,4 +92,3 @@ describe('Admin submissions API - PATCH approve awards points', () => {
     })
   })
 })
-

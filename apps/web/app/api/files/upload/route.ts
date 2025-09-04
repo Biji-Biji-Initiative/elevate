@@ -1,19 +1,21 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 import { auth } from '@clerk/nextjs/server'
-
-import { saveEvidenceFile, FileValidationError } from '@elevate/storage'
-import { fileUploadRateLimiter, withRateLimit } from '@elevate/security/rate-limiter'
 import { z } from 'zod'
+
+import { fileUploadRateLimiter, withRateLimit } from '@elevate/security/rate-limiter'
+import { saveEvidenceFile, FileValidationError } from '@elevate/storage'
 import { 
   parseActivityCode,
   createSuccessResponse,
   withApiErrorHandling,
-  AuthenticationError,
-  ValidationError,
-  ElevateApiError,
   badRequest
 } from '@elevate/types'
+import {
+  AuthenticationError,
+  ValidationError,
+  ElevateApiError
+} from '@elevate/types/errors'
 
 export const runtime = 'nodejs';
 

@@ -1,21 +1,31 @@
-export type ApiSuccess<T> = {
+export type HttpSuccess<T> = {
   success: true
   data: T
 }
 
-export type ApiError = {
+export type HttpError = {
   success: false
   error: string
   details?: unknown
 }
 
-export function apiSuccess<T>(data: T): ApiSuccess<T> {
+export function httpSuccess<T>(data: T): HttpSuccess<T> {
   return { success: true, data }
 }
 
-export function apiError(message: string, details?: unknown): ApiError {
+export function httpError(message: string, details?: unknown): HttpError {
   return { success: false, error: message, ...(details !== undefined ? { details } : {}) }
 }
+
+// Legacy aliases for backward compatibility - deprecated
+/** @deprecated Use HttpSuccess instead */
+export type ApiSuccess<T> = HttpSuccess<T>
+/** @deprecated Use HttpError instead */  
+export type ApiError = HttpError
+/** @deprecated Use httpSuccess instead */
+export const apiSuccess = httpSuccess
+/** @deprecated Use httpError instead */
+export const apiError = httpError
 
 /**
  * Type-safe utility for creating headers that can be used with fetch()

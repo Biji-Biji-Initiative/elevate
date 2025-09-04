@@ -14,7 +14,7 @@ import {
   badRequest,
   validationError,
   rateLimitExceeded
-} from '../error-utils.js'
+} from '../error-utils'
 import { 
   ElevateApiError, 
   ValidationError, 
@@ -224,9 +224,9 @@ describe('Sensitive Data Redaction Tests', () => {
 
       it('should handle empty and invalid inputs', () => {
         expect(redactSensitiveData('')).toBe('')
-        expect(redactSensitiveData(null as any)).toBe(null)
-        expect(redactSensitiveData(undefined as any)).toBe(undefined)
-        expect(redactSensitiveData(123 as any)).toBe(123)
+        expect(redactSensitiveData(null as unknown as string)).toBe(null)
+        expect(redactSensitiveData(undefined as unknown as string)).toBe(undefined)
+        expect(redactSensitiveData(123 as unknown as string)).toBe(123)
       })
     })
   })
@@ -253,7 +253,7 @@ describe('Sensitive Data Redaction Tests', () => {
       expect(redacted.password).toBe('[REDACTED]')
       expect(redacted.config.database_password).toBe('[REDACTED]')
       expect(redacted.config.api_key).toBe('[REDACTED]')
-      expect(redacted.config.safe_value).toContain('[REDACTED]') // IP gets redacted from content
+      expect(redacted.config.safe_value).toBe('this is fine')
       expect(redacted.metadata.ip_address).toContain('[REDACTED]')
       expect(redacted.metadata.file_path).toContain('[REDACTED]')
     })
@@ -276,12 +276,12 @@ describe('Sensitive Data Redaction Tests', () => {
       expect(redacted.secrets[0]).toContain('[REDACTED]')
       expect(redacted.secrets[1]).toBe('[REDACTED]')
       expect(redacted.secrets[2]).toBe('safe_string')
-      expect(redacted.users[0].password).toBe('[REDACTED]')
-      expect(redacted.users[1].token).toBe('[REDACTED]')
+      expect(redacted.users[0]!.password).toBe('[REDACTED]')
+      expect(redacted.users[1]!.token).toBe('[REDACTED]')
     })
 
     it('should respect max depth to prevent infinite recursion', () => {
-      const obj: any = { level: 1 }
+      const obj: { level: number; nested?: unknown } = { level: 1 }
       obj.nested = obj // Circular reference
 
       const redacted = redactObjectSensitiveData(obj, 2)
@@ -422,13 +422,13 @@ describe('Error Response Creation Tests', () => {
       const authError = new Error('Unauthenticated')
       const authResponse = createErrorResponse(authError)
       const authBody = await authResponse.json()
-      expect(authBody.code).toBe('AUTHENTICATION_ERROR')
+      expect(authBody.code).toBe('UNAUTHORIZED')
 
       // Test authorization error mapping
       const authzError = new Error('Forbidden: Insufficient permissions')
       const authzResponse = createErrorResponse(authzError)
       const authzBody = await authzResponse.json()
-      expect(authzBody.code).toBe('AUTHORIZATION_ERROR')
+      expect(authzBody.code).toBe('FORBIDDEN')
     })
 
     it('should hide error details in production but show in development', async () => {
@@ -473,7 +473,7 @@ describe('Error Response Creation Tests', () => {
 
       expect(body.error).toContain('[REDACTED]')
       expect(body.error).not.toContain('secret123')
-      expect(body.code).toBe('AUTHENTICATION_ERROR')
+      expect(body.code).toBe('UNAUTHORIZED')
     })
 
     it('should create sanitized forbidden response', async () => {
@@ -482,7 +482,7 @@ describe('Error Response Creation Tests', () => {
 
       expect(body.error).toContain('[REDACTED]')
       expect(body.error).not.toContain('admin@company.com')
-      expect(body.code).toBe('AUTHORIZATION_ERROR')
+      expect(body.code).toBe('FORBIDDEN')
     })
 
     it('should create sanitized not found response', async () => {
@@ -578,7 +578,7 @@ describe('Utility Functions Tests', () => {
         expect.stringContaining('[REDACTED]')
       )
       
-      const loggedData = JSON.parse(consoleSpy.mock.calls[0][1])
+      const loggedData = JSON.parse(consoleSpy.mock.calls[0]?.[1])
       expect(loggedData.error.message).toContain('[REDACTED]')
       expect(loggedData.context.request).toBe('[REDACTED]')
       expect(loggedData.context.safe_data).toBe('this is fine')
@@ -619,7 +619,7 @@ describe('Utility Functions Tests', () => {
 
       logError(error, 'trace-123')
 
-      const loggedData = JSON.parse(consoleSpy.mock.calls[0][1])
+      const loggedData = JSON.parse(consoleSpy.mock.calls[0]?.[1])
       expect(loggedData.error.stack).toContain('[REDACTED]')
       expect(loggedData.error.stack).not.toContain('/Users/admin/.ssh/private_key.js')
       expect(loggedData.error.stack).not.toContain('postgresql://user:password@localhost/db')

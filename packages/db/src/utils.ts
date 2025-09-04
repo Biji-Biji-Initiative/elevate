@@ -1,13 +1,13 @@
-import { Prisma } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 
 /**
  * Converts a JavaScript value to Prisma JSON format
  * Returns the value as-is for Prisma to handle
  */
-export function toPrismaJson(value: unknown): any {
+export function toPrismaJson(value: unknown): Prisma.InputJsonValue {
   // Prisma handles JSON conversion internally
   // Just return the value as-is
-  return value
+  return value as Prisma.InputJsonValue
 }
 
 /**

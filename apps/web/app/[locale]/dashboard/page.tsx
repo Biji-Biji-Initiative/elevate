@@ -2,14 +2,15 @@
 
 import React, { useState, useEffect } from 'react'
 
-import Link from 'next/link'
 import Image from 'next/image'
+import Link from 'next/link'
 
 import { useAuth } from '@clerk/nextjs'
 
-import { z } from 'zod'
 import { getProfilePath, type SafeDashboardData } from '@elevate/types'
-import { Button, Card, LoadingSpinner, Alert, AlertTitle, AlertDescription } from '@elevate/ui'
+import { Button, Card, Alert, AlertTitle, AlertDescription } from '@elevate/ui'
+import { LoadingSpinner } from '@elevate/ui/blocks'
+
 import { getApiClient } from '../../../lib/api-client'
 
 // Using SafeDashboardData from @elevate/types for better type safety
@@ -56,31 +57,9 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      const SubmissionCountsZ = z.object({ total: z.number(), approved: z.number(), pending: z.number(), rejected: z.number() })
-      const ProgressZ = z.object({
-        activityCode: z.string(),
-        activityName: z.string(),
-        defaultPoints: z.number(),
-        pointsEarned: z.number(),
-        submissionCounts: SubmissionCountsZ,
-        latestSubmission: z.unknown().nullable(),
-        hasCompleted: z.boolean()
-      })
-      const BadgeZ = z.object({ code: z.string(), name: z.string(), icon_url: z.string().nullable().optional(), earned_at: z.string().optional() })
-      const ActivityZ = z.object({ id: z.string(), activityName: z.string(), status: z.string(), created_at: z.string() })
-      const StatsZ = z.object({ totalSubmissions: z.number(), approvedSubmissions: z.number(), pendingSubmissions: z.number(), completedStages: z.number() })
-      const DataZ = z.object({
-        user: z.object({ name: z.string(), handle: z.string(), school: z.string().nullable().optional(), cohort: z.string().nullable().optional() }),
-        points: z.object({ total: z.number() }),
-        progress: z.array(ProgressZ),
-        badges: z.array(BadgeZ),
-        recentActivity: z.array(ActivityZ).optional(),
-        stats: StatsZ
-      })
       const api = getApiClient()
-      const result = await api.getDashboard()
-      const data = (result as unknown as { data?: unknown }).data as DashboardData
-      setData(data)
+      const result = await api.getDashboardDTO()
+      setData(result.data)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load dashboard'
       setError(errorMessage)

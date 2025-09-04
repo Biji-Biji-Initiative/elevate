@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
 import { prisma, type Prisma } from '@elevate/db';
+import { createSuccessResponse, createErrorResponse as createHttpError } from '@elevate/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import { toPrismaJson, parseKajabiWebhook, KajabiReprocessSchema, type KajabiTagEvent, buildAuditMeta } from '@elevate/types';
 
@@ -20,12 +21,12 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json();
     const parsed = KajabiReprocessSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 })
+      return createHttpError(new Error('Invalid request body'), 400)
     }
     const { event_id } = parsed.data;
 
     if (!event_id) {
-      return NextResponse.json({ success: false, error: 'event_id is required' }, { status: 400 });
+      return createErrorResponse(new Error('event_id is required'), 400)
     }
 
     // Find the Kajabi event
@@ -34,23 +35,23 @@ export async function POST(request: NextRequest) {
     });
 
     if (!kajabiEvent) {
-      return NextResponse.json({ success: false, error: 'Event not found' }, { status: 404 });
+      return createErrorResponse(new Error('Event not found'), 404)
     }
 
     if (kajabiEvent.processed_at) {
-      return NextResponse.json({ success: false, error: 'Event already processed' }, { status: 400 });
+      return createErrorResponse(new Error('Event already processed'), 400)
     }
 
     // Parse and validate the event payload
     const eventData = parseKajabiWebhook(kajabiEvent.payload);
     
     if (!eventData) {
-      return NextResponse.json({ success: false, error: 'Invalid event payload format' }, { status: 400 });
+      return createErrorResponse(new Error('Invalid event payload format'), 400)
     }
 
     // Process tag-based events only (same logic as webhook)
     if (eventData.event_type !== 'contact.tagged') {
-      return NextResponse.json({ success: false, error: 'Only contact.tagged events can be reprocessed' }, { status: 400 });
+      return createErrorResponse(new Error('Only contact.tagged events can be reprocessed'), 400)
     }
 
     const { contact, tag } = eventData;
@@ -61,12 +62,12 @@ export async function POST(request: NextRequest) {
     const tagName = tag.name;
 
     if (!email || !tagName) {
-      return NextResponse.json({ success: false, error: 'Required fields missing: email and tag name' }, { status: 400 });
+      return createErrorResponse(new Error('Required fields missing: email and tag name'), 400)
     }
 
     // Only process LEARN_COMPLETED tags
     if (tagName !== 'LEARN_COMPLETED') {
-      return NextResponse.json({ success: false, error: 'Only LEARN_COMPLETED tags can be reprocessed' }, { status: 400 });
+      return createErrorResponse(new Error('Only LEARN_COMPLETED tags can be reprocessed'), 400)
     }
 
     // Find user by email
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ success: false, error: 'User not found for email: ' + email }, { status: 404 });
+      return createErrorResponse(new Error('User not found for email: ' + email), 404)
     }
 
     // Update user with Kajabi contact ID if not already set
@@ -104,12 +105,11 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      return NextResponse.json({
-        success: true,
+      return createSuccessResponse({
         message: 'Event marked as processed (points already awarded)',
         user_id: user.id,
         existing_points: existingLedgerEntry.delta_points
-      });
+      })
     }
 
     // Award points for LEARN activity
@@ -118,10 +118,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!learnActivity) {
-      return NextResponse.json(
-        { error: 'LEARN activity not found in database' },
-        { status: 500 }
-      );
+      return createErrorResponse(new Error('LEARN activity not found in database'), 500)
     }
 
     // Start transaction for atomic operation
@@ -189,11 +186,10 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse({
       message: 'Event reprocessed successfully',
       ...result
-    });
+    })
 
   } catch (error) {
     return createErrorResponse(error, 500);

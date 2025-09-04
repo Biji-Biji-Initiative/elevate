@@ -1,38 +1,33 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, type NextResponse } from 'next/server'
 
-import { auth } from '@clerk/nextjs/server';
 
-import { sendRejectionNotificationEmail } from '@elevate/emails';
-import { RejectionEmailSchema } from '@elevate/types';
+import { auth } from '@clerk/nextjs/server'
 
-export const runtime = 'nodejs';
+import { sendRejectionNotificationEmail } from '@elevate/emails'
+import { createSuccessResponse, createErrorResponse, unauthorized, validationError } from '@elevate/http'
+import { RejectionEmailSchema } from '@elevate/types'
 
-export async function POST(request: NextRequest) {
+export const runtime = 'nodejs'
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const { userId } = await auth()
 
-    const body: unknown = await request.json();
-    const parsed = RejectionEmailSchema.safeParse(body);
-    
-    if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid request body', details: parsed.error.issues },
-        { status: 400 }
-      );
-    }
+    if (!userId) return unauthorized()
 
-    const { 
-      email, 
-      name, 
-      activityName, 
+    const body: unknown = await request.json()
+    const parsed = RejectionEmailSchema.safeParse(body)
+
+    if (!parsed.success) return validationError(parsed.error, 'Invalid request body')
+
+    const {
+      email,
+      name,
+      activityName,
       reviewerNote,
       dashboardUrl,
-      supportUrl 
-    } = parsed.data;
+      supportUrl,
+    } = parsed.data
 
     // Send rejection notification email
     const result = await sendRejectionNotificationEmail(
@@ -41,18 +36,11 @@ export async function POST(request: NextRequest) {
       activityName,
       reviewerNote,
       dashboardUrl,
-      supportUrl
-    );
+      supportUrl,
+    )
 
-    return NextResponse.json({ 
-      success: true, 
-      messageId: result?.id 
-    });
-
+    return createSuccessResponse({ messageId: result?.id })
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to send email' },
-      { status: 500 }
-    );
+    return createErrorResponse(new Error('Failed to send email'), 500)
   }
 }

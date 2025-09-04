@@ -3,34 +3,46 @@
   "remoteCache": {
     "signature": true
   },
+  "daemon": true,
   "tasks": {
-    "typecheck": {
+    "type-check": {
       "outputs": ["**/*.tsbuildinfo"],
-      "cache": true
+      "cache": true,
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json", "tsconfig.*.json"]
     },
     "build:types": {
-      "dependsOn": ["^typecheck"],
+      "dependsOn": ["^type-check"],
       "outputs": ["packages/*/dist/types/**", "dist/types/**"],
-      "cache": true
+      "cache": true,
+      "inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json", "tsconfig.*.json"]
     },
     "build:js": {
       "dependsOn": ["build:types"],
       "outputs": ["packages/*/dist/js/**", "dist/js/**"],
-      "cache": true
+      "cache": true,
+      "inputs": ["src/**/*", "tsup.config.ts", "package.json"]
     },
     "build": {
       "dependsOn": ["build:js"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "cache": true
+      "cache": true,
+      "persistent": true,
+      "inputs": ["src/**/*", "public/**/*", "next.config.*", "package.json", "tailwind.config.*", "postcss.config.*"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
     },
     "lint": {
       "outputs": [],
-      "cache": true
+      "cache": true,
+      "inputs": ["src/**/*", ".eslintrc.*", "eslint.config.*", "package.json"]
     },
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"],
-      "cache": true
+      "cache": true,
+      "inputs": ["src/**/*", "tests/**/*", "*.config.*", "package.json"]
     },
     "api:extract": {
       "dependsOn": ["build:types"],
@@ -45,15 +57,71 @@
   },
   "globalEnv": [
     "NODE_ENV",
-    "VERCEL_ENV",
+    "VERCEL_ENV", 
     "VERCEL_GIT_COMMIT_SHA",
+    "NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA",
+    "VERCEL_URL",
+    "VERCEL",
+    "NEXT_PUBLIC_VERCEL_ENV",
     "ANALYZE",
-    "SUPABASE_URL",
-    "SUPABASE_ANON_KEY",
+    "CI",
+    "DATABASE_URL",
+    "DIRECT_URL",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+    "CLERK_SECRET_KEY",
+    "CLERK_WEBHOOK_SECRET",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "KAJABI_WEBHOOK_SECRET",
+    "KAJABI_API_KEY",
+    "KAJABI_CLIENT_SECRET",
     "NEXT_PUBLIC_SITE_URL",
+    "RESEND_API_KEY",
+    "FROM_EMAIL",
+    "REPLY_TO_EMAIL",
+    "CRON_SECRET",
+    "NEXT_RUNTIME",
+    "ENABLE_INTERNAL_ENDPOINTS",
+    "INTERNAL_METRICS_TOKEN",
+    "RATE_LIMIT_RPM",
+    "WEBHOOK_RATE_LIMIT_RPM",
+    "DEBUG",
+    "OPENAI_API_KEY",
+    "SENTRY_DSN",
+    "ANALYTICS_API_KEY",
     "TURBO_TOKEN",
     "TURBO_TEAM",
-    "CI"
+    "TEST_DATABASE_URL",
+    "SEED_ADMIN_ID",
+    "SEED_ADMIN_EMAIL",
+    "SEED_ADMIN_NAME",
+    "SEED_ADMIN_HANDLE",
+    "DATABASE_POOL_MAX",
+    "DATABASE_POOL_TIMEOUT",
+    "DB_LOG_LEVEL",
+    "LOG_LEVEL",
+    "LOG_PRETTY",
+    "LOG_REDACT",
+    "LOG_NAME",
+    "DB_LOG_QUERY_PARAMS",
+    "DB_LOG_DURATION",
+    "DB_LOG_PERFORMANCE",
+    "DB_MAX_QUERY_LOG_LENGTH",
+    "DB_LOGGING",
+    "USER",
+    "VAULT_MASTER_PASSWORD",
+    "VAULT_OLD_PASSWORD",
+    "VAULT_NEW_PASSWORD",
+    "UPSTASH_REDIS_REST_URL",
+    "UPSTASH_REDIS_REST_TOKEN",
+    "AWS_LAMBDA_FUNCTION_NAME",
+    "FUNCTIONS_RUNTIME",
+    "RATE_LIMIT_LOG_ENABLED",
+    "ADMIN_RATE_LIMIT_RPM",
+    "FILE_UPLOAD_RATE_LIMIT_RPM",
+    "SUBMISSION_RATE_LIMIT_RPM",
+    "AUTH_RATE_LIMIT_PER_15MIN",
+    "PUBLIC_API_RATE_LIMIT_RPM"
   ]
 }

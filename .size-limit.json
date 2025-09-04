@@ -1,0 +1,37 @@
+[
+  {
+    "name": "@elevate/ui",
+    "path": "packages/ui/dist/js/index.js",
+    "limit": "50 KB",
+    "webpack": false,
+    "running": false
+  },
+  {
+    "name": "@elevate/types",
+    "path": "packages/types/dist/js/index.js", 
+    "limit": "20 KB",
+    "webpack": false,
+    "running": false
+  },
+  {
+    "name": "@elevate/auth",
+    "path": "packages/auth/dist/js/index.js",
+    "limit": "30 KB",
+    "webpack": false,
+    "running": false
+  },
+  {
+    "name": "@elevate/logic",
+    "path": "packages/logic/dist/js/index.js",
+    "limit": "40 KB", 
+    "webpack": false,
+    "running": false
+  },
+  {
+    "name": "@elevate/utils",
+    "path": "packages/utils/dist/js/index.js",
+    "limit": "15 KB",
+    "webpack": false,
+    "running": false
+  }
+]

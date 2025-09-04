@@ -2,7 +2,7 @@
  * Type guards and validation utilities for runtime type safety
  */
 
-import type { SubmissionStatus, Role, ActivityCode } from './common.js'
+import type { SubmissionStatus, Role, ActivityCode } from './common'
 
 /**
  * Type guard for SubmissionStatus
@@ -104,7 +104,7 @@ export function safeJsonParse<T>(
   guard: (value: unknown) => value is T
 ): T | undefined {
   try {
-    const parsed = JSON.parse(json)
+    const parsed: unknown = JSON.parse(json)
     return guard(parsed) ? parsed : undefined
   } catch {
     return undefined

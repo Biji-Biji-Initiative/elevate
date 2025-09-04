@@ -39,6 +39,7 @@
     { "path": "../../packages/security/tsconfig.build.json" },
     { "path": "../../packages/storage/tsconfig.build.json" },
     { "path": "../../packages/config/tsconfig.build.json" },
-    { "path": "../../packages/logic/tsconfig.build.json" }
+    { "path": "../../packages/logic/tsconfig.build.json" },
+    { "path": "../../packages/admin-core/tsconfig.build.json" }
   ]
 }

@@ -2,15 +2,16 @@
 
 import React, { useEffect, useState } from 'react'
 
-import { withRoleGuard } from '@elevate/auth/context'
 import { adminClient, AdminClientError } from '@/lib/admin-client'
+import { ACTIVITY_CODES, SUBMISSION_STATUSES } from '@elevate/types'
+import { withRoleGuard } from '@elevate/auth/context'
 import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Alert } from '@elevate/ui'
 
 interface ExportFilters {
   startDate: string
   endDate: string
-  activity: 'ALL' | 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-  status: 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
+  activity: 'ALL' | typeof ACTIVITY_CODES[number]
+  status: 'ALL' | typeof SUBMISSION_STATUSES[number]
   cohort: string
 }
 
@@ -40,7 +41,7 @@ function ExportsPage() {
     void fetchCohorts()
   }, [])
 
-  const handleExport = async (type: string) => {
+  const handleExport = async (type: 'submissions' | 'users' | 'leaderboard' | 'points') => {
     setLoading(prev => ({ ...prev, [type]: true }))
     setError(null)
     
@@ -64,7 +65,8 @@ function ExportsPage() {
         
         // Get filename from response headers
         const contentDisposition = response.headers.get('content-disposition')
-        const filename = contentDisposition?.match(/filename="(.+)"/)?.[1] || `${type}-export.csv`
+        const match = contentDisposition?.match(/filename="(.+)"/)
+        const filename = match?.[1] || `${type}-export.csv`
         a.download = filename
         
         document.body.appendChild(a)

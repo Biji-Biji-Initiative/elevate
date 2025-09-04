@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock rate limiter passthrough
 vi.mock('@elevate/security', async () => ({
-  withRateLimit: async (_req: any, _limiter: any, handler: any) => handler(),
+  withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
   apiRateLimiter: {},
 }))
 
@@ -45,8 +45,9 @@ describe('Files API', () => {
   it('requires auth on GET', async () => {
     const { GET } = await import('../app/api/files/[...path]/route')
     currentUserId = null
-    const req = {} as any
-    const res = await GET(req, { params: Promise.resolve({ path: ['evidence', 'learn', 'user_1', 'file.pdf'] }) })
+    const req = new Request('http://localhost/api/files/evidence/learn/user_1/file.pdf')
+    const ctx: { params: Promise<{ path: string[] }> } = { params: Promise.resolve({ path: ['evidence', 'learn', 'user_1', 'file.pdf'] }) }
+    const res = await GET(req, ctx)
     expect(res.status).toBe(401)
   })
 
@@ -58,12 +59,12 @@ describe('Files API', () => {
     submissionFindFirstMock.mockResolvedValueOnce({ id: 'sub_1' })
     getSignedUrlMock.mockResolvedValueOnce('https://signed.url/test')
 
-    const req = {} as any
-    const res = await GET(req, { params: Promise.resolve({ path: ['evidence', 'learn', 'user_1', 'file.pdf'] }) })
+    const req = new Request('http://localhost/api/files/evidence/learn/user_1/file.pdf')
+    const ctx: { params: Promise<{ path: string[] }> } = { params: Promise.resolve({ path: ['evidence', 'learn', 'user_1', 'file.pdf'] }) }
+    const res = await GET(req, ctx)
     expect(res.status).toBe(200)
     const json = await res.json()
     expect(json.success).toBe(true)
     expect(json.data.url).toContain('https://signed.url/test')
   })
 })
-

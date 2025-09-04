@@ -1,41 +1,36 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, type NextResponse } from 'next/server'
 
-import { auth } from '@clerk/nextjs/server';
 
-import { sendApprovalNotificationEmail } from '@elevate/emails';
-import { ApprovalEmailSchema } from '@elevate/types';
+import { auth } from '@clerk/nextjs/server'
 
-export const runtime = 'nodejs';
+import { sendApprovalNotificationEmail } from '@elevate/emails'
+import { createSuccessResponse, createErrorResponse, unauthorized, validationError } from '@elevate/http'
+import { ApprovalEmailSchema } from '@elevate/types'
 
-export async function POST(request: NextRequest) {
+export const runtime = 'nodejs'
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const { userId } = await auth()
 
-    const body: unknown = await request.json();
-    const parsed = ApprovalEmailSchema.safeParse(body);
-    
-    if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid request body', details: parsed.error.issues },
-        { status: 400 }
-      );
-    }
+    if (!userId) return unauthorized()
 
-    const { 
-      email, 
-      name, 
-      activityName, 
-      pointsAwarded, 
-      reviewerNote, 
+    const body: unknown = await request.json()
+    const parsed = ApprovalEmailSchema.safeParse(body)
+
+    if (!parsed.success) return validationError(parsed.error, 'Invalid request body')
+
+    const {
+      email,
+      name,
+      activityName,
+      pointsAwarded,
+      reviewerNote,
       totalPoints,
       leaderboardPosition,
       dashboardUrl,
-      leaderboardUrl 
-    } = parsed.data;
+      leaderboardUrl,
+    } = parsed.data
 
     // Send approval notification email
     const result = await sendApprovalNotificationEmail(
@@ -47,18 +42,11 @@ export async function POST(request: NextRequest) {
       totalPoints,
       leaderboardPosition,
       dashboardUrl,
-      leaderboardUrl
-    );
+      leaderboardUrl,
+    )
 
-    return NextResponse.json({ 
-      success: true, 
-      messageId: result?.id 
-    });
-
+    return createSuccessResponse({ messageId: result?.id })
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: 'Failed to send email' },
-      { status: 500 }
-    );
+    return createErrorResponse(new Error('Failed to send email'), 500)
   }
 }

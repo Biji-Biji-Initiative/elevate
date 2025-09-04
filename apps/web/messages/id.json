@@ -25,7 +25,7 @@
   },
   "leaps": {
     "learn": "Pelajari",
-    "explore": "Eksplorasi", 
+    "explore": "Eksplorasi",
     "amplify": "Perbesar",
     "present": "Presentasi",
     "shine": "Bersinar"
@@ -33,14 +33,113 @@
   "homepage": {
     "title": "MS Elevate LEAPS Tracker",
     "subtitle": "Memberdayakan pendidik Indonesia untuk mengadopsi AI di kelas melalui perjalanan pembelajaran terstruktur",
-    "hero_title": "Transformasikan Pengajaran Anda dengan AI",
-    "hero_subtitle": "Bergabung dengan ribuan pendidik Indonesia dalam perjalanan LEAPS untuk mengintegrasikan alat AI di kelas Anda",
-    "get_started": "Mulai Sekarang",
-    "learn_more": "Pelajari Lebih Lanjut",
-    "stats": {
-      "educators": "Pendidik",
-      "completed": "Aktivitas Selesai",
-      "points": "Total Poin Diberikan"
+    "hero": {
+      "h1": "Kuasa AI. Ubah Kelas. Melaju Bersama.",
+      "subcopy": "Gerakan nasional di mana guru belajar, menerapkan, menyebarkan, berbagi, dan bersinar—dengan poin, lencana, dan pengakuan nyata.",
+      "cta_primary": "Gabung Perjalanan LEAPS",
+      "cta_secondary": "Lihat Progres Langsung",
+      "counters": {
+        "educators_learning": "Guru belajar",
+        "peers_students_reached": "Rekan & siswa dijangkau",
+        "stories_shared": "Kisah dibagikan",
+        "micro_credentials": "Mikro-kredensial",
+        "mce_certified": "MCE tersertifikasi"
+      }
+    },
+    "leaps": {
+      "intro": "Jalur menuju dampak—kumpulkan poin, buka lencana, naik peringkat.",
+      "learn": {
+        "title": "Belajar (20 poin)",
+        "body": "Ambil jalur 1 jam atau 4 jam AI for Educators, atau \"AI Agent in a Day.\" Unggah sertifikat Anda. Anda sudah memulai.",
+        "cta": "Mulai jalur 1 jam",
+        "secondary": "Saya punya sertifikat → Unggah",
+        "success": "Sertifikat terverifikasi. +20 poin. Lencana Starter."
+      },
+      "explore": {
+        "title": "Eksplorasi (50 poin)",
+        "body": "Jalankan pembelajaran berbasis AI di kelas Anda. Unggah foto/dokumen dan refleksi singkat.",
+        "cta": "Kirim bukti kelas",
+        "success": "Bukti diterima. +50 poin. Lencana: In-Class Innovator."
+      },
+      "amplify": {
+        "title": "Perbesar (2 poin/rekan, 1 poin/siswa)",
+        "body": "Latih rekan/siswa. Kirim daftar hadir. Poin Anda naik.",
+        "cta": "Catat sesi pelatihan",
+        "success": "Sesi tercatat. Poin ditambahkan otomatis."
+      },
+      "present": {
+        "title": "Presentasi (20 poin)",
+        "body": "Bagikan kisah dampak Anda di LinkedIn. Tempel tautannya untuk klaim poin.",
+        "cta": "Kirim tautan LinkedIn",
+        "success": "Kisah terverifikasi. +20 poin. Lencana: Community Voice."
+      },
+      "shine": {
+        "title": "Bersinar (Pengakuan)",
+        "body": "Sumbangkan ide Anda untuk kebijakan pendidikan. 10–15 guru terbaik akan diundang ke pertemuan di Jakarta.",
+        "cta": "Kirim ide kebijakan",
+        "success": "Ide diterima. Anda masuk proses seleksi pertemuan."
+      }
+    },
+    "ripple": {
+      "title": "Dari satu guru menuju dampak nasional",
+      "body": "150 Master Trainer → 15.000 Guru → 150.000 rekan & siswa → 25.000 mikro-kredensial → 5.000 MCE tersertifikasi."
+    },
+    "flow": {
+      "title": "Cara kerja Elevate",
+      "bullets": [
+        "MOE mengidentifikasi sekolah yang berpartisipasi; database menjadi jangkar penjangkauan.",
+        "Pendaftaran melalui formulir mengarahkan pendidik ke pelacak LEAPS (Masuk & Daftar → Pelacak).",
+        "Train-the-Trainer (online/offline). Master Trainer dipasangkan dengan sekolah.",
+        "Setiap Master Trainer melatih ≥100 pendidik; setiap pendidik menyebar ke rekan/siswa.",
+        "Inklusi pedesaan: materi offline untuk guru di daerah pedesaan."
+      ]
+    },
+    "stories": {
+      "title": "Kelas nyata. Perubahan nyata.",
+      "subcopy": "Lihat guru yang menerapkan AI hari ini—dan bagikan kisah Anda untuk menginspirasi.",
+      "cta": "Publikasikan kisah Anda",
+      "empty_state": "Jadilah yang pertama memulai gerakan ini."
+    },
+    "paths": {
+      "educator": {
+        "title": "Mulai dalam satu jam",
+        "body": "Ambil AI for Educators 1 jam, unggah sertifikat, dan klaim 20 poin.",
+        "cta": "Mulai sekarang"
+      },
+      "trainer": {
+        "title": "Pimpin 100 guru",
+        "body": "Bergabung dengan kelompok Master Trainer (150–200). Dipasangkan dengan sekolah dan jalankan sesi online/offline.",
+        "cta": "Jadi Master Trainer"
+      }
+    },
+    "convening": {
+      "title": "Bersinar di Jakarta",
+      "body": "10–15 guru terbaik—berdasarkan poin LEAPS dan ide kebijakan—akan diundang ke Pertemuan Pendidik di Jakarta untuk pengakuan nasional.",
+      "cta": "Lihat kriteria seleksi"
+    },
+    "faq": {
+      "footer": "Kami akan memperbarui jawaban ini saat konfirmasi diterima."
+    },
+    "partners": {
+      "list": ["Microsoft", "MOE", "Biji-biji", "Mata Garuda", "MIEE"]
+    },
+    "contact": {
+      "emails": ["rashvin@biji-biji.com", "fabsya@biji-biji.com"],
+      "phones": ["+60 122 916 662 (Rashvin)", "+62 821 3747 0028 (Fabsya)"]
+    },
+    "footer": {
+      "privacy": "Unggahan bukti digunakan semata-mata untuk verifikasi dan pelaporan dampak.",
+      "credits": "Mekanika program dan target sesuai dokumentasi Microsoft Elevate 2026."
+    },
+    "validation": {
+      "missing_file": "Mohon unggah bukti yang diperlukan.",
+      "bad_url": "Masukkan URL posting LinkedIn yang valid.",
+      "min_length": "Tambahkan minimal {n} karakter."
+    },
+    "empty_states": {
+      "no_counters": "Jadilah yang pertama memulai gerakan ini.",
+      "leaderboard_empty": "Nama Anda bisa ada di sini minggu ini.",
+      "evidence_rejected": "Bukti belum terverifikasi. Mohon periksa dan unggah ulang."
     }
   },
   "dashboard": {
@@ -62,7 +161,7 @@
       "certificate_required": "Sertifikat valid dari penyedia yang disetujui diperlukan"
     },
     "explore": {
-      "title": "Eksplorasi - Implementasi Kelas", 
+      "title": "Eksplorasi - Implementasi Kelas",
       "description": "Terapkan alat AI di kelas Anda dan dokumentasikan pengalamannya",
       "points": "50 poin",
       "add_reflection": "Tambah Refleksi",

@@ -1,4 +1,17 @@
 import pino from 'pino'
+
+import {
+  createLoggerConfig,
+  getDefaultPinoConfig,
+} from './config'
+import {
+  mergeContexts,
+  serializeError,
+  createTimer,
+  endTimer,
+  createLogMeta,
+} from './utils'
+
 import type {
   LogContext,
   LoggerConfig,
@@ -12,18 +25,7 @@ import type {
   SecurityLogData,
   AuditLogData,
   PerformanceLogData,
-} from './types.js'
-import {
-  createLoggerConfig,
-  getDefaultPinoConfig,
-} from './config.js'
-import {
-  mergeContexts,
-  serializeError,
-  createTimer,
-  endTimer,
-  createLogMeta,
-} from './utils.js'
+} from './types'
 
 export class Logger {
   private pino: pino.Logger

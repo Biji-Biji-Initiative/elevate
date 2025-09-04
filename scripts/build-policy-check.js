@@ -8,9 +8,10 @@
 // 4. Hash verification ensures source and compiled artifacts match
 
 const { execSync } = require('child_process')
+const { createHash } = require('crypto')
 const { existsSync, rmSync, readFileSync, writeFileSync } = require('fs')
 const { join, dirname } = require('path')
-const { createHash } = require('crypto')
+
 const { glob } = require('glob')
 
 const rootDir = join(__dirname, '..')
@@ -123,7 +124,8 @@ class BuildArtifactPolicyEnforcer {
       if (existsSync(tsupConfigPath)) {
         const config = readFileSync(tsupConfigPath, 'utf-8')
         
-        if (!config.includes('clean: true')) {
+        const usesBase = config.includes('tsup.base') || config.includes('baseTsup') || config.includes('baseTsupClient')
+        if (!config.includes('clean: true') && !usesBase) {
           this.error(`${tsupConfigPath} should have 'clean: true' to prevent stale artifacts`)
         }
       }
@@ -222,8 +224,8 @@ class BuildArtifactPolicyEnforcer {
 
       if (options.build) {
         // Step 6: Build all packages
-        this.log('Building all packages...')
-        execSync('pnpm run build', { 
+        this.log('Building all packages (excluding apps)...')
+        execSync('pnpm -r --filter "@elevate/*" --filter "!@elevate/admin-core" run build', { 
           cwd: rootDir,
           stdio: 'inherit'
         })

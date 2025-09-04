@@ -3,8 +3,11 @@
 import React, { useState, useEffect, useCallback } from 'react'
 
 import { adminClient, type UsersQuery } from '@/lib/admin-client'
+import type { UserRole } from '@elevate/types'
+import { ROLE_FILTER_OPTIONS } from '@elevate/types'
 import { withRoleGuard } from '@elevate/auth/context'
-import { Button , Input, DataTable, StatusBadge, Modal, ConfirmModal, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, createColumns, Alert } from '@elevate/ui'
+import { Button , Input, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
+import { DataTable, StatusBadge, Modal, ConfirmModal, createColumns } from '@elevate/ui/blocks'
 
 type User = {
   readonly id: string
@@ -26,9 +29,9 @@ type User = {
 
 interface Filters {
   search: string
-  role: string
+  role: typeof ROLE_FILTER_OPTIONS[number]
   cohort: string
-  sortBy: string
+  sortBy: 'created_at' | 'name' | 'email'
   sortOrder: 'asc' | 'desc'
 }
 
@@ -62,7 +65,7 @@ function UsersPage() {
 
   const [bulkRoleModal, setBulkRoleModal] = useState<{
     isOpen: boolean
-    targetRole: string
+    targetRole: UserRole
   }>({
     isOpen: false,
     targetRole: 'PARTICIPANT'
@@ -176,35 +179,23 @@ function UsersPage() {
   const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder
-      })
-
-      if (filters.role !== 'ALL') params.set('role', filters.role)
-      if (filters.search) params.set('search', filters.search)
-      if (filters.cohort !== 'ALL') params.set('cohort', filters.cohort)
-
-      const result = await adminClient.getUsers(Object.fromEntries(params) as UsersQuery)
-      
-      // Type guard for result structure
-      if (result && typeof result === 'object') {
-        const users = Array.isArray((result as { users?: User[] }).users) 
-          ? (result as { users: User[] }).users 
-          : []
-        setUsers(users)
-        
-        const pagination = (result as { pagination?: { total: number; pages: number } }).pagination
-        if (pagination && typeof pagination === 'object') {
-          setPagination(prev => ({ 
-            ...prev, 
-            total: typeof pagination.total === 'number' ? pagination.total : 0,
-            pages: typeof pagination.pages === 'number' ? pagination.pages : 0
-          }))
-        }
+      const params: UsersQuery = {
+        page: pagination.page,
+        limit: pagination.limit,
+        sortBy: filters.sortBy as UsersQuery['sortBy'],
+        sortOrder: filters.sortOrder,
+        role: filters.role !== 'ALL' ? (filters.role as UsersQuery['role']) : undefined,
+        search: filters.search || undefined,
+        cohort: filters.cohort !== 'ALL' ? filters.cohort : undefined,
       }
+
+      const result = await adminClient.getUsers(params)
+      setUsers(result.users as unknown as User[])
+      setPagination(prev => ({
+        ...prev,
+        total: result.pagination.total,
+        pages: result.pagination.pages ?? Math.ceil(result.pagination.total / prev.limit),
+      }))
     } catch (_error) {
       setError('Failed to fetch users')
     } finally {
@@ -291,7 +282,7 @@ function UsersPage() {
 
     setProcessing(true)
     try {
-      await adminClient.bulkUpdateUsers({ userIds: Array.from(selectedRows), role: bulkRoleModal.targetRole as 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN' })
+      await adminClient.bulkUpdateUsers({ userIds: Array.from(selectedRows), role: bulkRoleModal.targetRole })
       setSelectedRows(new Set())
       await fetchUsers()
       setBulkRoleModal({ isOpen: false, targetRole: 'PARTICIPANT' })

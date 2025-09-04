@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { LearnSchema, ExploreSchema, AmplifySchema, PresentSchema, ShineSchema } from './schemas.js'
+
+import { LearnSchema, ExploreSchema, AmplifySchema, PresentSchema, ShineSchema } from './schemas'
 
 // Discriminated union for submission payloads by activity_code
 export const SubmissionPayloadSchema = z.discriminatedUnion('activityCode', [
@@ -58,6 +59,8 @@ export type ExplorePayload = z.infer<typeof ExplorePayloadSchema>
 export type AmplifyPayload = z.infer<typeof AmplifyPayloadSchema>
 export type PresentPayload = z.infer<typeof PresentPayloadSchema>
 export type ShinePayload = z.infer<typeof ShinePayloadSchema>
+
+// DB-facing input shapes (snake_case), used by API transformers
 
 // Helper function to parse submission payload safely
 export function parseSubmissionPayload(payload: unknown): SubmissionPayload | null {

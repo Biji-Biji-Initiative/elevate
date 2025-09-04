@@ -1,49 +1,55 @@
 /**
  * Content Security Policy (CSP) utilities for the MS Elevate LEAPS Tracker
- * 
+ *
  * This module provides comprehensive CSP generation and management for secure
  * operation with Clerk authentication, Supabase storage, and Next.js requirements.
  */
 
-import { randomBytes } from 'node:crypto';
-import type { NextRequest } from 'next/server';
+// Use Web Crypto API for edge runtime compatibility
+
+import type { NextRequest } from 'next/server'
 
 export interface CSPOptions {
-  nonce?: string;
-  isDevelopment?: boolean;
-  reportOnly?: boolean;
-  reportUri?: string;
+  nonce?: string
+  isDevelopment?: boolean
+  reportOnly?: boolean
+  reportUri?: string
+  applyToApiRoutes?: boolean
   allowedDomains?: {
-    clerk?: string[];
-    supabase?: string[];
-    fonts?: string[];
-    images?: string[];
-    analytics?: string[];
-    external?: string[];
-  };
+    clerk?: string[]
+    supabase?: string[]
+    fonts?: string[]
+    images?: string[]
+    analytics?: string[]
+    external?: string[]
+  }
 }
 
 export interface SecurityHeaders {
-  'Content-Security-Policy'?: string;
-  'Content-Security-Policy-Report-Only'?: string;
-  'X-Frame-Options': string;
-  'X-Content-Type-Options': string;
-  'Referrer-Policy': string;
-  'Permissions-Policy': string;
-  'Strict-Transport-Security'?: string;
-  'X-XSS-Protection': string;
-  'X-DNS-Prefetch-Control': string;
-  'X-Permitted-Cross-Domain-Policies'?: string;
-  'Cross-Origin-Embedder-Policy'?: string;
-  'Cross-Origin-Opener-Policy'?: string;
-  'Cross-Origin-Resource-Policy'?: string;
+  'Content-Security-Policy'?: string
+  'Content-Security-Policy-Report-Only'?: string
+  'X-Frame-Options': string
+  'X-Content-Type-Options': string
+  'Referrer-Policy': string
+  'Permissions-Policy': string
+  'Strict-Transport-Security'?: string
+  'X-XSS-Protection': string
+  'X-DNS-Prefetch-Control': string
+  'X-Permitted-Cross-Domain-Policies'?: string
+  'Cross-Origin-Embedder-Policy'?: string
+  'Cross-Origin-Opener-Policy'?: string
+  'Cross-Origin-Resource-Policy'?: string
 }
 
 /**
  * Generate a cryptographically secure nonce for CSP
+ * Uses Web Crypto API for edge runtime compatibility
  */
 export function generateNonce(): string {
-  return randomBytes(16).toString('base64');
+  // Use Web Crypto API which is available in both Node.js and edge runtime
+  const array = new Uint8Array(16)
+  crypto.getRandomValues(array)
+  return btoa(String.fromCharCode(...array))
 }
 
 /**
@@ -53,8 +59,8 @@ export function buildCSPDirectives(options: CSPOptions = {}): string {
   const {
     nonce,
     isDevelopment = process.env.NODE_ENV === 'development',
-    allowedDomains = {}
-  } = options;
+    allowedDomains = {},
+  } = options
 
   // Base domains for different services
   const clerkDomains = [
@@ -64,168 +70,145 @@ export function buildCSPDirectives(options: CSPOptions = {}): string {
     'https://img.clerk.com',
     'https://api.clerk.dev',
     'https://*.clerk.com',
-    ...(allowedDomains.clerk || [])
-  ];
+    ...(allowedDomains.clerk || []),
+  ]
 
   const supabaseDomains = [
     'https://*.supabase.co',
     'https://*.supabase.in',
-    ...(allowedDomains.supabase || [])
-  ];
+    ...(allowedDomains.supabase || []),
+  ]
 
   const fontDomains = [
     'https://fonts.googleapis.com',
     'https://fonts.gstatic.com',
-    ...(allowedDomains.fonts || [])
-  ];
+    ...(allowedDomains.fonts || []),
+  ]
 
   const imageDomains = [
     'data:',
     'https://res.cloudinary.com',
     ...clerkDomains,
     ...supabaseDomains,
-    ...(allowedDomains.images || [])
-  ];
+    ...(allowedDomains.images || []),
+  ]
 
   const analyticsDomains = [
     'https://vitals.vercel-analytics.com',
     'https://vercel-insights.com',
     'https://*.sentry.io',
-    ...(allowedDomains.analytics || [])
-  ];
+    ...(allowedDomains.analytics || []),
+  ]
 
-  const externalDomains = allowedDomains.external || [];
+  const externalDomains = allowedDomains.external || []
 
   // Build CSP directives
   const directives: Record<string, string[]> = {
     // Default source - restrict to self and essential domains
-    'default-src': ['\'self\''],
+    'default-src': ["'self'"],
 
     // Script sources - includes Next.js requirements and nonce
     'script-src': [
-      '\'self\'',
+      "'self'",
       ...(nonce ? [`'nonce-${nonce}'`] : []),
-      '\'unsafe-eval\'', // Required for Next.js development
-      '\'unsafe-inline\'', // Required for some Next.js inline scripts
+      "'unsafe-eval'", // Required for Next.js development
+      "'unsafe-inline'", // Required for some Next.js inline scripts
       'https://vercel.live',
       ...clerkDomains,
       ...analyticsDomains,
-      ...(isDevelopment ? ['\'unsafe-eval\'', 'webpack:'] : [])
+      ...(isDevelopment ? ["'unsafe-eval'", 'webpack:'] : []),
     ],
 
     // Style sources - includes inline styles and font providers
     'style-src': [
-      '\'self\'',
-      '\'unsafe-inline\'', // Required for CSS-in-JS libraries like styled-components
+      "'self'",
+      "'unsafe-inline'", // Required for CSS-in-JS libraries like styled-components
       ...fontDomains,
-      ...clerkDomains
+      ...clerkDomains,
     ],
 
     // Image sources - comprehensive list for all image providers
-    'img-src': [
-      '\'self\'',
-      'blob:',
-      'data:',
-      ...imageDomains
-    ],
+    'img-src': ["'self'", 'blob:', 'data:', ...imageDomains],
 
     // Font sources - web fonts and icon fonts
-    'font-src': [
-      '\'self\'',
-      'data:',
-      ...fontDomains
-    ],
+    'font-src': ["'self'", 'data:', ...fontDomains],
 
     // Connect sources - APIs and WebSockets
     'connect-src': [
-      '\'self\'',
+      "'self'",
       ...clerkDomains,
       ...supabaseDomains,
       ...analyticsDomains,
       'https://vitals.vercel-analytics.com',
       'wss://*.supabase.co', // Supabase realtime
       ...(isDevelopment ? ['ws://localhost:*', 'http://localhost:*'] : []),
-      ...externalDomains
+      ...externalDomains,
     ],
 
     // Media sources - for audio/video content
-    'media-src': [
-      '\'self\'',
-      'blob:',
-      'data:',
-      ...supabaseDomains
-    ],
+    'media-src': ["'self'", 'blob:', 'data:', ...supabaseDomains],
 
     // Object sources - plugins and embeds (restricted)
-    'object-src': ['\'none\''],
+    'object-src': ["'none'"],
 
     // Frame sources - iframes (restricted to essential services)
     'frame-src': [
-      '\'self\'',
+      "'self'",
       ...clerkDomains,
-      'https://vercel.live' // Vercel preview comments
+      'https://vercel.live', // Vercel preview comments
     ],
 
     // Child sources - web workers and frames
-    'child-src': [
-      '\'self\'',
-      'blob:'
-    ],
+    'child-src': ["'self'", 'blob:'],
 
     // Worker sources - service workers and web workers
-    'worker-src': [
-      '\'self\'',
-      'blob:'
-    ],
+    'worker-src': ["'self'", 'blob:'],
 
     // Manifest sources - web app manifest
-    'manifest-src': ['\'self\''],
+    'manifest-src': ["'self'"],
 
     // Base URI - restrict base tag
-    'base-uri': ['\'self\''],
+    'base-uri': ["'self'"],
 
     // Form action - restrict form submissions
-    'form-action': [
-      '\'self\'',
-      ...clerkDomains,
-      ...supabaseDomains
-    ],
+    'form-action': ["'self'", ...clerkDomains, ...supabaseDomains],
 
     // Frame ancestors - prevent clickjacking
-    'frame-ancestors': ['\'none\''],
+    'frame-ancestors': ["'none'"],
 
     // Upgrade insecure requests in production
-    ...(isDevelopment ? {} : { 'upgrade-insecure-requests': [] })
-  };
+    ...(isDevelopment ? {} : { 'upgrade-insecure-requests': [] }),
+  }
 
   // Convert directives object to CSP string
   return Object.entries(directives)
     .map(([directive, sources]) => {
-      const sourceList = sources.length > 0 ? ` ${sources.join(' ')}` : '';
-      return `${directive}${sourceList}`;
+      const sourceList = sources.length > 0 ? ` ${sources.join(' ')}` : ''
+      return `${directive}${sourceList}`
     })
-    .join('; ');
+    .join('; ')
 }
 
 /**
  * Generate all security headers
  */
-export function generateSecurityHeaders(options: CSPOptions = {}): SecurityHeaders {
+export function generateSecurityHeaders(
+  options: CSPOptions = {},
+): SecurityHeaders {
   const {
     reportOnly = false,
     reportUri,
-    isDevelopment = process.env.NODE_ENV === 'development'
-  } = options;
+    isDevelopment = process.env.NODE_ENV === 'development',
+  } = options
 
-  const cspValue = buildCSPDirectives(options) + 
-    (reportUri ? `; report-uri ${reportUri}` : '');
+  const cspValue =
+    buildCSPDirectives(options) + (reportUri ? `; report-uri ${reportUri}` : '')
 
   const headers: SecurityHeaders = {
     // CSP header (either enforcing or report-only)
-    ...(reportOnly 
+    ...(reportOnly
       ? { 'Content-Security-Policy-Report-Only': cspValue }
-      : { 'Content-Security-Policy': cspValue }
-    ),
+      : { 'Content-Security-Policy': cspValue }),
 
     // Prevent framing attacks
     'X-Frame-Options': 'DENY',
@@ -267,106 +250,123 @@ export function generateSecurityHeaders(options: CSPOptions = {}): SecurityHeade
       'serial=()',
       'storage-access=()',
       'window-management=()',
-      'xr-spatial-tracking=()'
+      'xr-spatial-tracking=()',
     ].join(', '),
 
     // Legacy XSS protection (still useful for older browsers)
     'X-XSS-Protection': '1; mode=block',
 
     // Control DNS prefetching
-    'X-DNS-Prefetch-Control': 'on'
-  };
+    'X-DNS-Prefetch-Control': 'on',
+  }
 
   // Add HSTS in production with longer max-age and security optimizations
   if (!isDevelopment) {
-    headers['Strict-Transport-Security'] = 'max-age=63072000; includeSubDomains; preload';
+    headers['Strict-Transport-Security'] =
+      'max-age=63072000; includeSubDomains; preload'
   }
 
   // Additional modern security headers
-  headers['X-Permitted-Cross-Domain-Policies'] = 'none';
-  headers['Cross-Origin-Embedder-Policy'] = 'credentialless';
-  headers['Cross-Origin-Opener-Policy'] = 'same-origin';
-  headers['Cross-Origin-Resource-Policy'] = 'same-origin';
+  headers['X-Permitted-Cross-Domain-Policies'] = 'none'
+  headers['Cross-Origin-Embedder-Policy'] = 'credentialless'
+  headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+  headers['Cross-Origin-Resource-Policy'] = 'same-origin'
 
-  return headers;
+  return headers
 }
 
 /**
  * Apply security headers to a Response object
  */
-export function applySecurityHeaders(response: Response, options: CSPOptions = {}): Response {
-  const headers = generateSecurityHeaders(options);
-  
+export function applySecurityHeaders(
+  response: Response,
+  options: CSPOptions = {},
+): Response {
+  const headers = generateSecurityHeaders(options)
+
   Object.entries(headers).forEach(([name, value]) => {
     if (value) {
-      response.headers.set(name, value);
+      response.headers.set(name, String(value))
     }
-  });
+  })
 
-  return response;
+  return response
 }
 
 /**
  * Create CSP middleware for Next.js
  */
 export function createCSPMiddleware(options: Omit<CSPOptions, 'nonce'> = {}) {
-  return function cspMiddleware(request: NextRequest, response: Response): Response {
+  return function cspMiddleware(
+    request: NextRequest,
+    response: Response,
+  ): Response {
+    // Skip CSP headers for API routes unless specifically requested
+    const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
+    if (isApiRoute && !options.applyToApiRoutes) {
+      return response
+    }
+
     // Generate a unique nonce for each request
-    const nonce = generateNonce();
-    
-    // Store nonce in request headers for use in components
-    const modifiedRequest = new Request(request, {
-      headers: {
-        ...request.headers,
-        'x-csp-nonce': nonce
-      }
-    });
+    const nonce = generateNonce()
+
+    // Store nonce in response headers for downstream usage
+    response.headers.set('x-csp-nonce', nonce)
 
     // Apply security headers with nonce
     const securedResponse = applySecurityHeaders(response, {
       ...options,
-      nonce
-    });
+      nonce,
+    })
 
-    return securedResponse;
-  };
+    return securedResponse
+  }
 }
 
 /**
  * Extract nonce from request headers (for use in React components)
  */
-export function getNonceFromRequest(request: NextRequest | Request): string | undefined {
-  return request.headers.get('x-csp-nonce') || undefined;
+export function getNonceFromRequest(
+  request: NextRequest | Request,
+): string | undefined {
+  return request.headers.get('x-csp-nonce') || undefined
 }
 
 /**
  * Validate CSP configuration
  */
-export function validateCSPConfig(options: CSPOptions): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
+export function validateCSPConfig(options: CSPOptions): {
+  isValid: boolean
+  errors: string[]
+} {
+  const errors: string[] = []
 
   // Check for common misconfigurations
   if (options.allowedDomains?.external) {
-    const external = options.allowedDomains.external;
+    const external = options.allowedDomains.external
     for (const domain of external) {
       if (!domain.startsWith('https://') && !domain.startsWith('http://')) {
-        errors.push(`External domain "${domain}" should include protocol (https:// or http://)`);
+        errors.push(
+          `External domain "${domain}" should include protocol (https:// or http://)`,
+        )
       }
       if (domain.includes('*') && !domain.startsWith('https://*.')) {
-        errors.push(`Wildcard domain "${domain}" should be properly formatted (e.g., https://*.example.com)`);
+        errors.push(
+          `Wildcard domain "${domain}" should be properly formatted (e.g., https://*.example.com)`,
+        )
       }
     }
   }
 
   // Validate report URI
   if (options.reportUri && !options.reportUri.startsWith('http')) {
-    errors.push('Report URI must be a valid HTTP(S) URL');
+    errors.push('Report URI must be a valid HTTP(S) URL')
   }
 
   return {
     isValid: errors.length === 0,
-    errors
-  };
+    errors,
+  }
 }
 
 /**
@@ -374,67 +374,67 @@ export function validateCSPConfig(options: CSPOptions): { isValid: boolean; erro
  */
 export interface CSPViolationReport {
   'csp-report': {
-    'document-uri': string;
-    'referrer': string;
-    'violated-directive': string;
-    'effective-directive': string;
-    'original-policy': string;
-    'blocked-uri': string;
-    'line-number'?: number;
-    'column-number'?: number;
-    'source-file'?: string;
-    'status-code'?: number;
-  };
+    'document-uri': string
+    referrer: string
+    'violated-directive': string
+    'effective-directive': string
+    'original-policy': string
+    'blocked-uri': string
+    'line-number'?: number
+    'column-number'?: number
+    'source-file'?: string
+    'status-code'?: number
+  }
 }
 
 /**
  * Process CSP violation reports
  */
 export function processCSPViolation(report: CSPViolationReport): {
-  severity: 'low' | 'medium' | 'high';
-  action: 'ignore' | 'log' | 'alert';
-  reason: string;
+  severity: 'low' | 'medium' | 'high'
+  action: 'ignore' | 'log' | 'alert'
+  reason: string
 } {
-  const violation = report['csp-report'];
-  const directive = violation['violated-directive'];
-  const blockedUri = violation['blocked-uri'];
+  const violation = report['csp-report']
+  const directive = violation['violated-directive']
+  const blockedUri = violation['blocked-uri']
 
   // Classify violation severity
   if (directive.includes('script-src') && blockedUri.includes('javascript:')) {
     return {
       severity: 'high',
       action: 'alert',
-      reason: 'Potential XSS attempt blocked'
-    };
+      reason: 'Potential XSS attempt blocked',
+    }
   }
 
   if (directive.includes('frame-ancestors')) {
     return {
       severity: 'high',
       action: 'alert',
-      reason: 'Clickjacking attempt blocked'
-    };
+      reason: 'Clickjacking attempt blocked',
+    }
   }
 
   if (directive.includes('object-src') || directive.includes('frame-src')) {
     return {
       severity: 'medium',
       action: 'log',
-      reason: 'Potentially malicious content blocked'
-    };
+      reason: 'Potentially malicious content blocked',
+    }
   }
 
   if (blockedUri === 'eval' || blockedUri.includes('unsafe-eval')) {
     return {
       severity: 'low',
       action: 'log',
-      reason: 'Dynamic code execution attempted'
-    };
+      reason: 'Dynamic code execution attempted',
+    }
   }
 
   return {
     severity: 'low',
     action: 'log',
-    reason: 'Standard CSP violation'
-  };
+    reason: 'Standard CSP violation',
+  }
 }

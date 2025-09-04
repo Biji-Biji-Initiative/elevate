@@ -1,4 +1,4 @@
-import type { LogContext } from './types.js'
+import type { LogContext } from './types'
 
 /**
  * Internal metrics collection for monitoring key business operations
@@ -89,16 +89,18 @@ export class MetricsCollector {
       })
     }
 
-    const counter = this.counters.get(name)!
-    counter.values.push({
-      value,
-      timestamp: Date.now(),
-      labels,
-    })
+    const counter = this.counters.get(name)
+    if (counter) {
+      counter.values.push({
+        value,
+        timestamp: Date.now(),
+        labels,
+      })
 
-    // Keep only last 1000 values to prevent memory leaks
-    if (counter.values.length > 1000) {
-      counter.values = counter.values.slice(-1000)
+      // Keep only last 1000 values to prevent memory leaks
+      if (counter.values.length > 1000) {
+        counter.values = counter.values.slice(-1000)
+      }
     }
   }
 
@@ -120,16 +122,18 @@ export class MetricsCollector {
       })
     }
 
-    const histogram = this.histograms.get(name)!
-    histogram.values.push({
-      value,
-      timestamp: Date.now(),
-      labels,
-    })
+    const histogram = this.histograms.get(name)
+    if (histogram) {
+      histogram.values.push({
+        value,
+        timestamp: Date.now(),
+        labels,
+      })
 
-    // Keep only last 1000 values
-    if (histogram.values.length > 1000) {
-      histogram.values = histogram.values.slice(-1000)
+      // Keep only last 1000 values
+      if (histogram.values.length > 1000) {
+        histogram.values = histogram.values.slice(-1000)
+      }
     }
   }
 
@@ -325,9 +329,11 @@ export class MetricsCollector {
           bucketMap.set(baseKey, { count: 0, sum: 0 })
         }
         
-        const bucket = bucketMap.get(baseKey)!
-        bucket.count++
-        bucket.sum += value.value
+        const bucket = bucketMap.get(baseKey)
+        if (bucket) {
+          bucket.count++
+          bucket.sum += value.value
+        }
       })
 
       for (const [labels, bucket] of bucketMap) {

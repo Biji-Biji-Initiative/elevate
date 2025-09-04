@@ -9,12 +9,20 @@ out/
 build/
 dist/
 
-# Environment variables
-.env
+# Environment variables - Three-layer strategy
+# Layer 1: Repository defaults - COMMITTED (.env.defaults)
+# Layer 2: Environment specific - COMMITTED (.env.development, .env.staging, .env.production)
+# Layer 3: Local overrides - GITIGNORED (below)
+
+# Local environment overrides (gitignored)
 .env.local
 .env.development.local
-.env.test.local
+.env.staging.local
 .env.production.local
+.env.test.local
+
+# Legacy single .env files (gitignored for security)
+.env
 
 # Logs
 npm-debug.log*
@@ -125,6 +133,21 @@ prisma/migrations/dev.db*
 # Local development
 apps/*/.env.local
 packages/*/.env.local
+# Prevent accidental .env commits inside packages/apps
+apps/**/.env
+packages/**/.env
+apps/**/.env.*
+packages/**/.env.*
+
+# Secrets Management - Exclude sensitive files
+.secrets/rotation.log
+.incidents/
+.env-local/
+secrets-scan-report.json
+
+# Allow encrypted vault files to be committed (they're encrypted)
+!.secrets/*.vault
+!.secrets-allowlist.json
 
 # Supabase
 supabase/.branches/
@@ -141,3 +164,10 @@ coverage/
 
 # Build artifact policy
 .build-hashes.json
+
+# API Extractor temp files
+packages/**/temp/
+
+# TypeScript declaration maps and build artifacts in src
+**/*.d.ts.map
+**/src/**/*.d.ts

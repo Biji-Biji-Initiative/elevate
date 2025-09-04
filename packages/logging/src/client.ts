@@ -1,5 +1,6 @@
-import type { LogContext, LoggerConfig, LogLevel, ErrorInfo } from './types.js'
-import { serializeError, generateTraceId, mergeContexts } from './utils.js'
+import { serializeError, mergeContexts } from './utils'
+
+import type { LogContext, LoggerConfig, LogLevel, ErrorInfo } from './types'
 
 /**
  * Client-side logger for browser environments
@@ -59,7 +60,13 @@ export class ClientLogger {
     message: string,
     error?: ErrorInfo,
     context?: LogContext
-  ): [string, any] {
+  ): [string, {
+    level: string;
+    timestamp: string;
+    message: string;
+    context?: LogContext;
+    error?: Error;
+  }] {
     const timestamp = new Date().toISOString()
     const ctx = mergeContexts(this.baseContext, context)
     
@@ -269,4 +276,4 @@ export function createClientLogger(config?: Partial<LoggerConfig>, context?: Log
 }
 
 // Re-export types
-export type * from './types.js'
+export type * from './types'

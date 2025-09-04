@@ -3,21 +3,23 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 
-import { prisma } from '@elevate/db/client'
+// Use database service layer instead of direct Prisma
 import { 
-  parseActivityCode, 
-  parseSubmissionStatus, 
-  parseAmplifyPayload, 
-  parseSubmissionPayload, 
-  SubmissionPayloadSchema,
-  toJsonValue, 
-  toPrismaJson, 
-  type SubmissionWhereClause,
-  AuthenticationError,
-  NotFoundError,
-  ValidationError,
-  SubmissionLimitError,
-} from '@elevate/types'
+  findUserById,
+  findActivityByCode,
+  findSubmissionsByUserId,
+  findSubmissionsByUserAndActivity,
+  countSubmissionsByUserAndActivity,
+  findSubmissionsWithPagination,
+  createSubmission,
+  createSubmissionAttachment,
+  type SubmissionWithRelations,
+  type Submission,
+  type Activity
+} from '@elevate/db'
+
+// Import DTO transformers
+
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -31,9 +33,34 @@ import {
 import { withCSRFProtection } from '@elevate/security/csrf'
 import { submissionRateLimiter, withRateLimit } from '@elevate/security/rate-limiter'
 import { sanitizeSubmissionPayload } from '@elevate/security/sanitizer'
+import { SubmissionCreateRequestSchema } from '@elevate/types'
+import { 
+  parseActivityCode, 
+  parseSubmissionStatus, 
+  parseAmplifyPayload, 
+  parseSubmissionPayload, 
+  SubmissionPayloadSchema,
+  toJsonValue, 
+  toPrismaJson, 
+  type SubmissionWhereClause,
+  AuthenticationError,
+  NotFoundError,
+  ValidationError,
+  SubmissionLimitError,
+  ACTIVITY_CODES,
+  LEARN,
+  AMPLIFY,
+  VISIBILITY_OPTIONS,
+  SUBMISSION_STATUSES
+} from '@elevate/types'
+import {
+  transformPayloadAPIToDB,
+  transformPayloadDBToAPI,
+  type SubmissionDTO
+} from '@elevate/types/dto-mappers'
 
 // Local wrapper to ensure type safety for object inputs to Prisma JSON fields
-function toPrismaJsonObject(obj: any): Exclude<ReturnType<typeof toPrismaJson>, null> {
+function toPrismaJsonObject(obj: object): Exclude<ReturnType<typeof toPrismaJson>, null> {
   const result = toPrismaJson(obj);
   if (result === null) {
     throw new Error('Unexpected null result from non-null object');
@@ -41,21 +68,10 @@ function toPrismaJsonObject(obj: any): Exclude<ReturnType<typeof toPrismaJson>, 
   return result;
 }
 
-import type { Submission, Activity } from '@prisma/client'
-
-type SubmissionWithActivity = Submission & {
-  activity: Activity
-}
-
 export const runtime = 'nodejs';
 
-// Submission request schema
-const SubmissionRequestSchema = z.object({
-  activityCode: z.enum(['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']),
-  payload: SubmissionPayloadSchema.transform(p => p.data),
-  attachments: z.array(z.string()).optional(),
-  visibility: z.enum(['PUBLIC', 'PRIVATE']).optional()
-})
+// Use shared request schema from @elevate/types
+const SubmissionRequestSchema = SubmissionCreateRequestSchema
 
 export const POST = withCSRFProtection(withApiErrorHandling(async (request: NextRequest, context) => {
   // Apply rate limiting for submissions
@@ -67,9 +83,7 @@ export const POST = withCSRFProtection(withApiErrorHandling(async (request: Next
   }
 
   // Verify user exists in database
-  const user = await prisma.user.findUnique({
-    where: { id: userId }
-  })
+  const user = await findUserById(userId)
 
   if (!user) {
     throw new NotFoundError('User', userId, context.traceId)
@@ -87,14 +101,21 @@ export const POST = withCSRFProtection(withApiErrorHandling(async (request: Next
     throw error
   }
 
-  // Sanitize and validate payload structure
-  const sanitizedPayload = sanitizeSubmissionPayload(validatedData.activityCode, validatedData.payload)
-  
-  const payloadValidation = parseSubmissionPayload({
+  // Sanitize client payload (camelCase) then transform to DB shape (snake_case)
+  const sanitizedApiPayload = sanitizeSubmissionPayload(
+    validatedData.activityCode,
+    validatedData.payload as Record<string, unknown>
+  )
+
+  // Transform payload from API format (camelCase) to DB format (snake_case)
+  const dbPayload = transformPayloadAPIToDB(validatedData.activityCode, sanitizedApiPayload)
+
+  // Validate the DB payload against canonical schemas for the selected activity
+  const dbPayloadValidation = parseSubmissionPayload({
     activityCode: validatedData.activityCode,
-    data: sanitizedPayload,
+    data: dbPayload,
   })
-  if (!payloadValidation) {
+  if (!dbPayloadValidation) {
     throw new ValidationError(
       new z.ZodError([{ code: 'custom', message: 'Invalid payload structure', path: ['payload'] }]),
       'Invalid payload for selected activity',
@@ -103,25 +124,22 @@ export const POST = withCSRFProtection(withApiErrorHandling(async (request: Next
   }
 
   // Verify activity exists
-  const activity = await prisma.activity.findUnique({
-    where: { code: validatedData.activityCode }
-  })
+  const activity = await findActivityByCode(validatedData.activityCode)
 
   if (!activity) {
     throw new NotFoundError('Activity', validatedData.activityCode, context.traceId)
   }
 
   // Check for existing pending/approved submissions for certain activities
-  if (['LEARN'].includes(validatedData.activityCode)) {
-    const existingSubmission = await prisma.submission.findFirst({
-      where: {
-        user_id: userId,
-        activity_code: validatedData.activityCode,
-        status: { in: ['PENDING', 'APPROVED'] }
-      }
-    })
+  if ([LEARN].includes(validatedData.activityCode)) {
+    const existingSubmissions = await findSubmissionsByUserAndActivity(
+      userId,
+      validatedData.activityCode,
+      [SUBMISSION_STATUSES[0], SUBMISSION_STATUSES[1]]
+    )
 
-    if (existingSubmission) {
+    if (existingSubmissions.length > 0) {
+      const existingSubmission = existingSubmissions[0]
       throw new ValidationError(
         new z.ZodError([{ 
           code: 'custom', 
@@ -135,33 +153,29 @@ export const POST = withCSRFProtection(withApiErrorHandling(async (request: Next
   }
 
     // For Amplify submissions, check 7-day rolling limits
-    if (validatedData.activityCode === 'AMPLIFY') {
+    if (validatedData.activityCode === AMPLIFY) {
       const sevenDaysAgo = new Date()
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-      const recentSubmissions = await prisma.submission.findMany({
-        where: {
-          user_id: userId,
-          activity_code: 'AMPLIFY',
-          created_at: {
-            gte: sevenDaysAgo
-          }
-        }
-      })
+      const recentSubmissions = await countSubmissionsByUserAndActivity(
+        userId,
+        AMPLIFY,
+        { gte: sevenDaysAgo }
+      )
 
       // Calculate total peers and students trained in last 7 days
       const totalPeers = recentSubmissions.reduce((sum: number, sub: Submission) => {
-        const parsedPayload = parseAmplifyPayload({ activityCode: 'AMPLIFY', data: sub.payload })
+        const parsedPayload = parseAmplifyPayload({ activityCode: AMPLIFY, data: sub.payload })
         return sum + (parsedPayload?.data.peersTrained || 0)
       }, 0)
 
       const totalStudents = recentSubmissions.reduce((sum: number, sub: Submission) => {
-        const parsedPayload = parseAmplifyPayload({ activityCode: 'AMPLIFY', data: sub.payload })
+        const parsedPayload = parseAmplifyPayload({ activityCode: AMPLIFY, data: sub.payload })
         return sum + (parsedPayload?.data.studentsTrained || 0)
       }, 0)
 
     // Parse the new submission payload
-    const newPayload = parseAmplifyPayload({ activityCode: 'AMPLIFY', data: validatedData.payload })
+    const newPayload = parseAmplifyPayload({ activityCode: AMPLIFY, data: validatedData.payload })
     if (!newPayload) {
       throw new ValidationError(
         new z.ZodError([{ code: 'custom', message: 'Invalid AMPLIFY payload format', path: ['payload'] }]),
@@ -193,31 +207,31 @@ export const POST = withCSRFProtection(withApiErrorHandling(async (request: Next
   }
 
     // Create submission
-    const submission = await prisma.submission.create({
-      data: {
-        user_id: userId,
-        activity_code: validatedData.activityCode,
-        payload: toPrismaJsonObject(sanitizedPayload),
-        visibility: validatedData.visibility || 'PRIVATE'
-      },
-      include: {
-        activity: true,
-        user: {
-          select: {
-            name: true,
-            handle: true
-          }
-        }
-      }
+    const submission = await createSubmission({
+      user_id: userId,
+      activity_code: validatedData.activityCode,
+      payload: dbPayload,
+      visibility: validatedData.visibility || VISIBILITY_OPTIONS[0] // PRIVATE
     })
 
-    // Persist attachments as relational rows (in addition to JSON for backward compatibility)
+    // Persist attachments as relational rows
     if (Array.isArray(validatedData.attachments) && validatedData.attachments.length > 0) {
-      const values = validatedData.attachments
+      const validAttachments = validatedData.attachments
         .filter((p): p is string => typeof p === 'string' && p.length > 0)
-        .map((p) => ({ submission_id: submission.id, path: p }))
-      if (values.length > 0) {
-        await prisma.submissionAttachment.createMany({ data: values, skipDuplicates: true })
+      
+      for (const path of validAttachments) {
+        try {
+          await createSubmissionAttachment({
+            submission_id: submission.id,
+            filename: path.split('/').pop() || path,
+            path: path,
+            mime_type: 'application/octet-stream', // Default, should be determined from file
+            size_bytes: 0 // Would need to be determined from actual file
+          })
+        } catch (error) {
+          // Skip duplicates silently
+          console.warn(`Failed to create attachment ${path}:`, error)
+        }
       }
     }
 
@@ -264,26 +278,14 @@ export const GET = withApiErrorHandling(async (request: NextRequest, context) =>
       }
     }
 
-    const [submissions, totalCount] = await Promise.all([
-      prisma.submission.findMany({
-        where: whereClause,
-        include: {
-          activity: true,
-          attachments_rel: true
-        },
-        orderBy: {
-          created_at: 'desc'
-        },
-        take: limit,
-        skip: offset
-      }),
-      prisma.submission.count({
-        where: whereClause
-      })
-    ])
+    const { submissions, totalCount } = await findSubmissionsWithPagination(
+      whereClause,
+      limit,
+      offset
+    )
 
   return createSuccessResponse({
-    data: submissions.map((submission: SubmissionWithActivity) => ({
+    data: submissions.map((submission) => ({
       id: submission.id,
       activityCode: submission.activity_code,
       activityName: submission.activity.name,
@@ -292,7 +294,9 @@ export const GET = withApiErrorHandling(async (request: NextRequest, context) =>
       createdAt: submission.created_at,
       updatedAt: submission.updated_at,
       reviewNote: submission.review_note,
-      attachmentCount: submission.attachments_rel.length
+      attachmentCount: submission.attachments_rel.length,
+      // Transform payload from DB format (snake_case) to API format (camelCase)
+      payload: transformPayloadDBToAPI(submission.activity_code, submission.payload)
     })),
     pagination: {
       total: totalCount,

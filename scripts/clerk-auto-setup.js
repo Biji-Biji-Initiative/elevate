@@ -7,8 +7,8 @@
  * You'll need a Clerk account and access token.
  */
 
-const https = require('https');
 const fs = require('fs');
+const https = require('https');
 const path = require('path');
 const readline = require('readline');
 

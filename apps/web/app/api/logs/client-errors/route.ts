@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { z } from 'zod'
+import { ClientErrorReportSchema } from '@elevate/types'
 
 // Initialize logger
-let logger: any = null
+type ServerLogger = import('@elevate/logging/server').ServerLogger
+let logger: ServerLogger | null = null
 const initializeLogger = async () => {
   try {
     const { getServerLogger } = await import('@elevate/logging/server')
@@ -14,26 +17,8 @@ const initializeLogger = async () => {
 
 initializeLogger()
 
-// Schema for client error reports
-const ClientErrorSchema = z.object({
-  level: z.enum(['error', 'warn', 'info']),
-  message: z.string(),
-  error: z.object({
-    name: z.string(),
-    message: z.string(),
-    stack: z.string().optional(),
-  }).optional(),
-  context: z.object({
-    url: z.string().optional(),
-    userId: z.string().optional(),
-    userAgent: z.string().optional(),
-    timestamp: z.string().optional(),
-    component: z.string().optional(),
-    action: z.string().optional(),
-    sessionId: z.string().optional(),
-    buildId: z.string().optional()
-  }).optional(),
-})
+// Schema for client error reports (shared)
+const ClientErrorSchema = ClientErrorReportSchema
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,10 +32,7 @@ export async function POST(request: NextRequest) {
     const parsed = ClientErrorSchema.safeParse(body)
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid error report format' },
-        { status: 400 }
-      )
+      return createErrorResponse(new Error('Invalid error report format'), 400)
     }
 
     const { level, message, error, context } = parsed.data
@@ -81,7 +63,7 @@ export async function POST(request: NextRequest) {
       console.log(`[CLIENT-${level.toUpperCase()}]`, message, { error, context: logContext })
     }
 
-    return NextResponse.json({ success: true })
+    return createSuccessResponse({ received: true })
   } catch (error) {
     // Log server error
     if (logger) {
@@ -93,17 +75,11 @@ export async function POST(request: NextRequest) {
       console.error('Failed to process client error report:', error)
     }
 
-    return NextResponse.json(
-      { success: false, error: 'Failed to process error report' },
-      { status: 500 }
-    )
+    return createErrorResponse(new Error('Failed to process error report'), 500)
   }
 }
 
 // Reject other methods
 export async function GET() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  )
+  return createErrorResponse(new Error('Method not allowed'), 405)
 }

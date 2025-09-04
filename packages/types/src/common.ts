@@ -1,40 +1,34 @@
 import { z } from 'zod'
-import type { LearnInput, ExploreInput, AmplifyInput, PresentInput, ShineInput } from './schemas.js'
 
-// Import all domain constants from single source of truth
+// Import schemas and types from single source of truth first
 import {
-  // Types
-  type ActivityCode,
-  type UserRole,
-  type SubmissionStatus,
-  type Visibility,
-  type PaginationParams,
-  type ApiError,
-  
-  // Schemas
   ActivityCodeSchema,
-  UserRoleSchema,
   SubmissionStatusSchema,
   VisibilitySchema,
+  RoleSchema,
   EmailSchema,
   UrlSchema,
   HandleSchema,
   CohortSchema,
   SchoolSchema,
   DateStringSchema,
-  PaginationParamsSchema,
-  
-  // Legacy aliases for backward compatibility
+  PaginationSchema,
+  type ActivityCode,
+  type SubmissionStatus,
+  type Visibility,
   type Role,
-  type ActivityCodeType,
-  type RoleType,
-  type SubmissionStatusType,
-  type VisibilityType,
   type PaginationType,
-  type ApiErrorType,
-  RoleSchema,
-  PaginationSchema
-} from './domain-constants.js'
+} from './domain-constants'
+
+// Schemas re-exported below directly from domain-constants
+
+import type {
+  LearnInput,
+  ExploreInput,
+  AmplifyInput,
+  PresentInput,
+  ShineInput,
+} from './schemas'
 
 // Re-export domain types for backward compatibility
 export type {
@@ -50,8 +44,7 @@ export type {
   SubmissionStatusType,
   VisibilityType,
   PaginationType,
-  ApiErrorType
-} from './domain-constants.js'
+} from './domain-constants'
 
 // Re-export schemas
 export {
@@ -67,18 +60,22 @@ export {
   DateStringSchema,
   PaginationParamsSchema,
   RoleSchema,
-  PaginationSchema
-} from './domain-constants.js'
+  PaginationSchema,
+} from './domain-constants'
 
 // API Response schemas - imported from domain constants
-export { ApiSuccessSchema, ApiErrorSchema, ApiResponseSchema } from './domain-constants.js'
+export {
+  ApiSuccessSchema,
+  ApiErrorSchema,
+  ApiResponseSchema,
+} from './domain-constants'
 
 // Helper types for API responses - using types from http.ts to avoid conflicts
 
 // Payload union type based on activity
-export type ActivityPayload = 
+export type ActivityPayload =
   | LearnInput
-  | ExploreInput  
+  | ExploreInput
   | AmplifyInput
   | PresentInput
   | ShineInput
@@ -143,7 +140,9 @@ export interface AnalyticsCohortFilter {
   }
 }
 
-export interface AnalyticsSubmissionFilter extends AnalyticsDateFilter, AnalyticsCohortFilter {}
+export interface AnalyticsSubmissionFilter
+  extends AnalyticsDateFilter,
+    AnalyticsCohortFilter {}
 
 export interface AnalyticsUserFilter {
   cohort?: string
@@ -354,20 +353,22 @@ export interface AuditMeta {
   [key: string]: unknown
 }
 
-// Badge criteria schema and types  
-export const BadgeConditionsSchema = z.record(z.union([
-  z.string(),
-  z.number(),
-  z.boolean(),
-  z.array(z.string()),
-  z.array(z.number())
-]))
+// Badge criteria schema and types
+export const BadgeConditionsSchema = z.record(
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.array(z.string()),
+    z.array(z.number()),
+  ]),
+)
 
 export const BadgeCriteriaSchema = z.object({
   type: z.enum(['points', 'submissions', 'activities', 'streak']),
   threshold: z.number().positive(),
   activity_codes: z.array(z.string()).optional(),
-  conditions: BadgeConditionsSchema.optional()
+  conditions: BadgeConditionsSchema.optional(),
 })
 
 export const BadgeSchema = z.object({
@@ -375,7 +376,7 @@ export const BadgeSchema = z.object({
   name: z.string().min(2).max(100),
   description: z.string().min(10).max(500),
   criteria: BadgeCriteriaSchema,
-  icon_url: z.string().url().optional()
+  icon_url: z.string().url().optional(),
 })
 
 export type BadgeCriteria = z.infer<typeof BadgeCriteriaSchema>
@@ -386,7 +387,7 @@ export const BadgeAuditMetaSchema = z.object({
   badgeName: z.string().optional(),
   criteria: BadgeCriteriaSchema.optional(),
   updates: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
-  original: z.record(z.union([z.string(), z.number(), z.boolean()])).optional()
+  original: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
 })
 
 export type BadgeAuditMeta = z.infer<typeof BadgeAuditMetaSchema>
@@ -403,34 +404,38 @@ export const SubmissionAuditMetaSchema = z.object({
   bulkOperation: z.boolean().optional(),
   basePoints: z.number().optional(),
   adjustedPoints: z.number().optional(),
-  reason: z.string().optional()
+  reason: z.string().optional(),
 })
 
 export const UserAuditMetaSchema = z.object({
-  changes: z.object({
-    name: z.string().optional(),
-    email: z.string().email().optional(),
-    handle: z.string().optional(),
-    school: z.string().optional(),
-    cohort: z.string().optional(),
-    role: RoleSchema.optional(),
-    profileVisible: z.boolean().optional()
-  }).optional(),
+  changes: z
+    .object({
+      name: z.string().optional(),
+      email: z.string().email().optional(),
+      handle: z.string().optional(),
+      school: z.string().optional(),
+      cohort: z.string().optional(),
+      role: RoleSchema.optional(),
+      profileVisible: z.boolean().optional(),
+    })
+    .optional(),
   originalRole: RoleSchema.optional(),
   newRole: RoleSchema.optional(),
-  bulkOperation: z.boolean().optional()
+  bulkOperation: z.boolean().optional(),
 })
 
 export const ExportAuditMetaSchema = z.object({
   type: z.string().optional(),
   format: z.string().optional(),
-  filters: z.object({
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
-    activity: z.string().optional(),
-    status: z.string().optional(),
-    cohort: z.string().optional()
-  }).optional()
+  filters: z
+    .object({
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+      activity: z.string().optional(),
+      status: z.string().optional(),
+      cohort: z.string().optional(),
+    })
+    .optional(),
 })
 
 export const KajabiAuditMetaSchema = z.object({
@@ -441,7 +446,7 @@ export const KajabiAuditMetaSchema = z.object({
   reprocessed_at: z.string().optional(),
   processed_at: z.string().optional(),
   user_id: z.string().optional(),
-  email: z.string().optional()
+  email: z.string().optional(),
 })
 
 // Union type for all possible audit metadata
@@ -457,8 +462,8 @@ export const AuditMetaUnionSchema = z.union([
     entityId: z.string().optional(),
     entityType: z.string().optional(),
     timestamp: z.string().optional(),
-    additionalInfo: z.string().optional()
-  })
+    additionalInfo: z.string().optional(),
+  }),
 ])
 
 export type SubmissionAuditMeta = z.infer<typeof SubmissionAuditMetaSchema>
@@ -595,28 +600,47 @@ export function parsePagination(value: unknown): PaginationType | null {
 
 // API Response helper functions - use apiSuccess and apiError from http.ts to avoid conflicts
 
-export function parseApiResponse<T>(value: unknown, dataSchema: z.ZodType<T>): unknown {
-  const result = z.union([
-    z.object({ success: z.literal(true), data: dataSchema, message: z.string().optional() }),
-    z.object({ success: z.literal(false), error: z.string(), details: z.object({
-      code: z.string().optional(),
-      field: z.string().optional(),
-      traceId: z.string().optional(),
-      timestamp: z.string().optional(),
-      validationErrors: z.array(z.object({
-        path: z.array(z.union([z.string(), z.number()])),
-        message: z.string(),
-        code: z.string()
-      })).optional()
-    }).optional() })
-  ]).safeParse(value)
+export function parseApiResponse<T>(
+  value: unknown,
+  dataSchema: z.ZodType<T>,
+): unknown {
+  const result = z
+    .union([
+      z.object({
+        success: z.literal(true),
+        data: dataSchema,
+        message: z.string().optional(),
+      }),
+      z.object({
+        success: z.literal(false),
+        error: z.string(),
+        details: z
+          .object({
+            code: z.string().optional(),
+            field: z.string().optional(),
+            traceId: z.string().optional(),
+            timestamp: z.string().optional(),
+            validationErrors: z
+              .array(
+                z.object({
+                  path: z.array(z.union([z.string(), z.number()])),
+                  message: z.string(),
+                  code: z.string(),
+                }),
+              )
+              .optional(),
+          })
+          .optional(),
+      }),
+    ])
+    .safeParse(value)
   return result.success ? result.data : null
 }
 
 // Safe JSON parsing functions
 export function safeParseJSON<T>(json: string, schema: z.ZodType<T>): T | null {
   try {
-    const parsed = JSON.parse(json)
+    const parsed: unknown = JSON.parse(json)
     const result = schema.safeParse(parsed)
     return result.success ? result.data : null
   } catch {
@@ -624,32 +648,45 @@ export function safeParseJSON<T>(json: string, schema: z.ZodType<T>): T | null {
   }
 }
 
-export function safeParseUnknown<T>(value: unknown, schema: z.ZodType<T>): T | null {
+export function safeParseUnknown<T>(
+  value: unknown,
+  schema: z.ZodType<T>,
+): T | null {
   const result = schema.safeParse(value)
   return result.success ? result.data : null
 }
 
 // Utility functions for safe parsing with error details
-export function parseWithErrors<T>(value: unknown, schema: z.ZodType<T>): { data: T | null; errors: z.ZodIssue[] } {
+export function parseWithErrors<T>(
+  value: unknown,
+  schema: z.ZodType<T>,
+): { data: T | null; errors: z.ZodIssue[] } {
   const result = schema.safeParse(value)
   return {
     data: result.success ? result.data : null,
-    errors: result.success ? [] : result.error.issues
+    errors: result.success ? [] : result.error.issues,
   }
 }
 
-export function parseJSONWithErrors<T>(json: string, schema: z.ZodType<T>): { data: T | null; errors: z.ZodIssue[] } {
+export function parseJSONWithErrors<T>(
+  json: string,
+  schema: z.ZodType<T>,
+): { data: T | null; errors: z.ZodIssue[] } {
   try {
-    const parsed = JSON.parse(json)
+    const parsed: unknown = JSON.parse(json)
     return parseWithErrors(parsed, schema)
   } catch (parseError) {
     return {
       data: null,
-      errors: [{
-        code: 'custom',
-        message: `Invalid JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`,
-        path: []
-      }]
+      errors: [
+        {
+          code: 'custom',
+          message: `Invalid JSON: ${
+            parseError instanceof Error ? parseError.message : 'Unknown error'
+          }`,
+          path: [],
+        },
+      ],
     }
   }
 }
@@ -671,7 +708,9 @@ export function parseBadgeAuditMeta(value: unknown): BadgeAuditMeta | null {
 }
 
 // Audit metadata parser functions
-export function parseSubmissionAuditMeta(value: unknown): SubmissionAuditMeta | null {
+export function parseSubmissionAuditMeta(
+  value: unknown,
+): SubmissionAuditMeta | null {
   const result = SubmissionAuditMetaSchema.safeParse(value)
   return result.success ? result.data : null
 }
@@ -697,13 +736,24 @@ export function parseAuditMeta(value: unknown): AuditMetaUnion | null {
 }
 
 // JSON helpers for domain usage (no Prisma types)
-export type JsonValue = string | number | boolean | null | JsonObject | JsonArray
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonObject
+  | JsonArray
 export type JsonObject = { [k: string]: JsonValue }
 export type JsonArray = JsonValue[]
 
 export function toJsonValue(value: unknown): JsonValue {
   if (value === undefined || value === null) return null
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  )
+    return value
   if (Array.isArray(value)) return value.map(toJsonValue)
   if (typeof value === 'object') {
     const obj: JsonObject = {}
@@ -723,11 +773,18 @@ export function toPrismaJson(value: unknown): JsonValue {
 }
 
 // Audit meta helper to standardize envelope keys
-export type AuditEntityType = 'submission' | 'user' | 'badge' | 'export' | 'kajabi' | 'points' | 'cohort'
+export type AuditEntityType =
+  | 'submission'
+  | 'user'
+  | 'badge'
+  | 'export'
+  | 'kajabi'
+  | 'points'
+  | 'cohort'
 
 export function buildAuditMeta(
   envelope: { entityType: AuditEntityType; entityId: string },
-  meta?: Record<string, unknown>
+  meta?: Record<string, unknown>,
 ): JsonValue {
   return toPrismaJson({ ...envelope, ...(meta ?? {}) })
 }

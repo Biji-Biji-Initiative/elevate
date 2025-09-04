@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
 // Optional Redis client (Upstash) for multi-instance rate limiting
 type RedisLike = {
@@ -18,10 +18,15 @@ async function getRedis(): Promise<RedisLike | null> {
   }
   try {
     // Dynamically import to keep it optional
-    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     const mod = await import('@upstash/redis');
     const client = new mod.Redis({ url, token });
-    redis = client as unknown as RedisLike;
+    const maybeRedis: unknown = client;
+    const isRedisLike = (v: unknown): v is RedisLike =>
+      !!v && typeof v === 'object' &&
+      'incr' in (v as Record<string, unknown>) &&
+      'pexpire' in (v as Record<string, unknown>) &&
+      'pttl' in (v as Record<string, unknown>);
+    redis = isRedisLike(maybeRedis) ? maybeRedis : null;
     return redis;
   } catch {
     redis = null;
@@ -253,7 +258,6 @@ export class RateLimiter {
       if (allowed) counter.allowed++; else counter.blocked++;
       if (!allowed && process.env.RATE_LIMIT_LOG_ENABLED === '1') {
         // Lightweight JSON line for ingestion by log drains
-        // eslint-disable-next-line no-console
         console.warn(JSON.stringify({
           level: 'warn',
           event: 'rate_limit_block',
@@ -279,7 +283,6 @@ export class RateLimiter {
     const counter = getCounter(this.name);
     if (allowed) counter.allowed++; else counter.blocked++;
     if (!allowed && process.env.RATE_LIMIT_LOG_ENABLED === '1') {
-      // eslint-disable-next-line no-console
       console.warn(JSON.stringify({
         level: 'warn',
         event: 'rate_limit_block',

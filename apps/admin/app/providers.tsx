@@ -1,10 +1,11 @@
 'use client'
 
-import { useUser, SignOutButton } from '@clerk/nextjs'
-import { ClerkProvider } from '@clerk/nextjs'
-import { AuthProvider } from '@elevate/auth/context'
-import { AdminLayout } from '@elevate/ui'
 import { usePathname } from 'next/navigation'
+
+import { useUser, SignOutButton , ClerkProvider } from '@clerk/nextjs'
+
+import { AuthProvider } from '@elevate/auth/context'
+import { AdminLayout } from '@elevate/ui/next'
 
 interface ProvidersProps {
   children: React.ReactNode

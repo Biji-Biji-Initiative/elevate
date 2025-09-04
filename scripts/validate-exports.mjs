@@ -7,6 +7,7 @@
 import { readFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+
 import { glob } from 'glob'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -24,20 +25,38 @@ function getTsupEntries(packagePath) {
   }
   
   const content = readFileSync(tsupConfigPath, 'utf-8')
-  
-  // Extract entry array from tsup config
-  const entryMatch = content.match(/entry:\s*\[(.*?)\]/s)
-  if (!entryMatch) return []
-  
-  // Parse entries
-  const entries = entryMatch[1]
-    .split(',')
-    .map(e => e.trim())
-    .filter(e => e)
-    .map(e => e.replace(/['"`]/g, ''))
-    .map(e => e.replace('src/', '').replace('.tsx', '').replace('.ts', ''))
-  
-  return entries
+
+  // Try extract entry array e.g. entry: ['src/index.ts', ...]
+  const arrayMatch = content.match(/entry:\s*\[(.*?)\]/s)
+  if (arrayMatch) {
+    const arrBody = arrayMatch[1]
+    const entries = []
+    const re = /['"`]([^'"`]+)['"`]/g
+    let m
+    while ((m = re.exec(arrBody)) !== null) {
+      entries.push(m[1])
+    }
+    return entries
+      .map(e => e.replace(/^src\//, '').replace(/\.tsx?$/, ''))
+  }
+
+  // Try extract entry object e.g. entry: { 'blocks/index': 'src/blocks/index.ts', ... }
+  const objectMatch = content.match(/entry:\s*{([\s\S]*?)}/m)
+  if (objectMatch) {
+    const lines = objectMatch[1].split('\n')
+    const entries = []
+    for (const line of lines) {
+      const m = line.match(/(?:['\"]?)([A-Za-z0-9_\-\/]+)(?:['\"]?)\s*:\s*['\"]([^'\"]+)['\"]/)
+      if (m) {
+        const out = m[1]
+        // Normalize to export-like path (index at root => index)
+        entries.push(out)
+      }
+    }
+    return entries
+  }
+
+  return []
 }
 
 /**
@@ -62,7 +81,7 @@ function getPackageExports(packagePath) {
     if (key === './package.json') continue
     
     // Extract export name
-    let exportName = key === '.' ? 'index' : key.replace('./', '')
+    const exportName = key === '.' ? 'index' : key.replace('./', '')
     
     // Check if this export points to JS files (not just types)
     if (typeof value === 'object' && (value.default || value.import)) {
@@ -93,11 +112,16 @@ function validatePackage(packagePath) {
   }
   
   // Compare entries and exports
-  const entriesSet = new Set(tsupEntries)
-  const exportsSet = new Set(packageExports)
+  const normalize = (s) => s.replace(/\/index$/, '')
+  const entriesSet = new Set(tsupEntries.map(normalize))
+  const exportsSet = new Set(packageExports.map(normalize))
   
-  const missingInExports = tsupEntries.filter(e => !exportsSet.has(e))
-  const missingInEntries = packageExports.filter(e => !entriesSet.has(e))
+  const missingInExports = tsupEntries
+    .map(normalize)
+    .filter(e => !exportsSet.has(e))
+  const missingInEntries = packageExports
+    .map(normalize)
+    .filter(e => !entriesSet.has(e))
   
   if (missingInExports.length > 0 || missingInEntries.length > 0) {
     hasErrors = true

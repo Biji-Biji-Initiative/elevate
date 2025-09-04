@@ -1,81 +1,80 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerLogger } from '@elevate/logging/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { sloMonitor } from '@elevate/logging'
+import { getServerLogger } from '@elevate/logging/server'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   const logger = getServerLogger().forRequestWithHeaders(request)
-  
+
   try {
+    // Gate internal endpoint via env
+    if (process.env.ENABLE_INTERNAL_ENDPOINTS !== '1') {
+      return new Response(null, { status: 404 })
+    }
     // Check for authorization - only internal monitoring should access this
     const authHeader = request.headers.get('authorization')
-    const expectedAuth = `Bearer ${process.env.INTERNAL_METRICS_TOKEN || 'dev-token'}`
-    
+    const token = process.env.INTERNAL_METRICS_TOKEN
+    // In production, fail closed if token missing
+    if (!token && process.env.NODE_ENV === 'production') {
+      return createErrorResponse(new Error('SLO token not configured'), 403)
+    }
+    const expectedAuth = `Bearer ${token || 'dev-token'}`
+
     if (authHeader !== expectedAuth) {
       logger.warn('Unauthorized SLO access attempt', {
         operation: 'slo_access',
         ip: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
       })
-      
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+
+      return createErrorResponse(new Error('Unauthorized'), 401)
     }
 
     const sloName = request.nextUrl.searchParams.get('slo')
-    
+
     if (sloName) {
       // Get specific SLO status
       const status = sloMonitor.getSLOStatus(sloName)
-      
+
       if (!status) {
-        return NextResponse.json(
-          { error: 'SLO not found' },
-          { status: 404 }
-        )
+        return createErrorResponse(new Error('SLO not found'), 404)
       }
-      
+
       logger.info('SLO status accessed', {
         operation: 'slo_status_access',
         slo_name: sloName,
       })
-      
-      return NextResponse.json(status, {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-        },
-      })
+
+      const res = createSuccessResponse(status)
+      res.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+      return res
     }
-    
+
     // Get all SLO summary
     const sloSummary = sloMonitor.getSLOSummary()
-    
+
     logger.info('SLO summary accessed', {
       operation: 'slo_summary_access',
       total_slos: sloSummary.total_slos,
       breaching_slos: sloSummary.breaching_slos,
     })
-    
-    return NextResponse.json(sloSummary, {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-      },
-    })
-    
+
+    const res = createSuccessResponse(sloSummary)
+    res.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    return res
   } catch (error) {
-    logger.error('Failed to retrieve SLO data', error instanceof Error ? error : new Error(String(error)), {
-      operation: 'slo_access_error',
-    })
-    
-    return NextResponse.json(
-      { 
-        error: 'Internal Server Error',
-        timestamp: new Date().toISOString(),
+    logger.error(
+      'Failed to retrieve SLO data',
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operation: 'slo_access_error',
       },
-      { status: 500 }
     )
+
+    return createErrorResponse(new Error('Internal Server Error'), 500)
   }
 }

@@ -4,8 +4,10 @@
 
 import * as Sentry from '@sentry/nextjs'
 
+import { getClerkUserFromWindow } from '@elevate/auth/window-clerk'
+
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || '',
   
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
@@ -15,32 +17,10 @@ Sentry.init({
 
   enabled: Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN),
 
-  // Capture unhandled promise rejections
-  captureUnhandledRejections: true,
-  
-  // Performance monitoring
-  enableTracing: true,
-  
-  // Session tracking for release health
-  autoSessionTracking: true,
-  
   // Capture interaction events
   integrations: [
-    Sentry.browserTracingIntegration({
-      // Set sample rates for performance monitoring
-      tracePropagationTargets: [
-        'localhost',
-        /^https:\/\/admin\.leaps\.mereka\.org/,
-        /^https:\/\/.*\.vercel\.app/,
-      ],
-    }),
-    Sentry.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-      // Higher sample rates for admin app to catch issues
-      sessionSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 0.2,
-      errorSampleRate: 1.0,
-    }),
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
   ],
 
   // Release tracking
@@ -48,7 +28,7 @@ Sentry.init({
   environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV,
 
   // Error filtering
-  beforeSend(event, hint) {
+  beforeSend(event) {
     // Filter out development and localhost errors in production
     if (process.env.NODE_ENV === 'production') {
       if (event.request?.url?.includes('localhost')) {
@@ -62,8 +42,8 @@ Sentry.init({
     }
 
     // Add admin user context from Clerk if available
-    if (typeof window !== 'undefined' && window.Clerk?.user) {
-      const user = window.Clerk.user
+    const user = getClerkUserFromWindow()
+    if (user) {
       Sentry.setUser({
         id: user.id,
         email: user.primaryEmailAddress?.emailAddress,

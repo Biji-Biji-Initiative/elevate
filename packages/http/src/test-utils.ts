@@ -1,4 +1,6 @@
+import { expect } from 'vitest'
 import { z } from 'zod'
+
 import {
   ElevateApiError,
   ValidationError,
@@ -10,9 +12,8 @@ import {
   SubmissionLimitError,
   FileValidationError,
   ExternalServiceError,
-  ErrorCodes,
   type ErrorCode,
-} from '@elevate/types/errors.js'
+} from '@elevate/types'
 
 // Test utilities for error handling scenarios
 
@@ -42,40 +43,40 @@ export class ErrorTestFactory {
   }
 
   static createNotFoundError(
-    resource: string = 'TestResource',
+    resource = 'TestResource',
     id?: string,
   ): NotFoundError {
     return new NotFoundError(resource, id)
   }
 
-  static createConflictError(message: string = 'Test conflict'): ConflictError {
+  static createConflictError(message = 'Test conflict'): ConflictError {
     return new ConflictError(message)
   }
 
   static createRateLimitError(
-    limit: number = 100,
-    windowMs: number = 60000,
+    limit = 100,
+    windowMs = 60000,
   ): RateLimitError {
     return new RateLimitError(limit, windowMs, 30)
   }
 
   static createSubmissionLimitError(
-    activityType: string = 'Test',
-    currentCount: number = 51,
-    maxAllowed: number = 50,
+    activityType = 'Test',
+    currentCount = 51,
+    maxAllowed = 50,
   ): SubmissionLimitError {
     return new SubmissionLimitError(activityType, currentCount, maxAllowed)
   }
 
   static createFileValidationError(
-    message: string = 'Invalid file type',
+    message = 'Invalid file type',
   ): FileValidationError {
     return new FileValidationError(message)
   }
 
   static createExternalServiceError(
-    service: string = 'TestService',
-    operation: string = 'test_operation',
+    service = 'TestService',
+    operation = 'test_operation',
   ): ExternalServiceError {
     return new ExternalServiceError(
       service,
@@ -105,33 +106,36 @@ export class MockResponseHelper {
   }
 
   static errorResponse(error: string, code?: string, details?: unknown) {
-    return {
+    const response: Record<string, unknown> = {
       success: false,
       error,
-      ...(code && { code }),
-      ...(details && { details }),
-      // Use string matcher signatures but keep them typed as unknown to satisfy TS without test globals
-      timestamp: (globalThis as any).expect?.any?.(String) ?? ('' as unknown),
-      traceId: (globalThis as any).expect?.any?.(String) ?? ('' as unknown),
     }
+    if (code) response.code = code
+    if (details) response.details = details
+    
+    // Use string matcher signatures but keep them typed as unknown to satisfy TS without test globals
+    response.timestamp = expect.any(String) as unknown
+    response.traceId = expect.any(String) as unknown
+    
+    return response
   }
 
-  static validationErrorResponse(fields: string[]) {
+  static validationErrorResponse(fields: string[]): Record<string, unknown> {
     return {
       success: false,
       error: 'Validation failed',
       code: 'VALIDATION_ERROR',
-      details:
-        (globalThis as any).expect?.arrayContaining?.(
-          fields.map((field) =>
-            (globalThis as any).expect?.objectContaining?.({
-              path: [field],
-              message: (globalThis as any).expect?.any?.(String),
-            }),
-          ),
-        ) ?? ([] as unknown),
-      timestamp: (globalThis as any).expect?.any?.(String) ?? ('' as unknown),
-      traceId: (globalThis as any).expect?.any?.(String) ?? ('' as unknown),
+      // Type assertion for test matcher functions
+      details: expect.arrayContaining(
+        fields.map((field) =>
+          expect.objectContaining({
+            path: [field],
+            message: expect.any(String) as unknown,
+          }) as unknown,
+        ),
+      ) as unknown,
+      timestamp: expect.any(String) as unknown,
+      traceId: expect.any(String) as unknown,
     }
   }
 }
@@ -260,10 +264,10 @@ export const ErrorTestScenarios = {
     expectedStatus: 500,
     expectedResponse: {
       success: false,
-      error: expect.any(String),
+      error: expect.any(String) as unknown,
       code: 'INTERNAL_ERROR',
-      timestamp: expect.any(String),
-      traceId: expect.any(String),
+      timestamp: expect.any(String) as unknown,
+      traceId: expect.any(String) as unknown,
     },
   },
 }
@@ -283,12 +287,10 @@ export const ErrorTestScenarios = {
  */
 export function testErrorScenario(
   scenario: (typeof ErrorTestScenarios)[keyof typeof ErrorTestScenarios],
-  response: { status: number; body: any },
+  response: { status: number; body: unknown },
 ) {
-  ;(globalThis as any).expect?.(response.status).toBe(scenario.expectedStatus)
-  ;(globalThis as any)
-    .expect?.(response.body)
-    .toMatchObject(scenario.expectedResponse)
+  expect(response.status).toBe(scenario.expectedStatus)
+  expect(response.body).toMatchObject(scenario.expectedResponse)
 }
 
 /**
@@ -311,7 +313,7 @@ export const TestDataGenerators = {
     return formData
   },
 
-  largePayload: (sizeInMB: number = 10) => {
+  largePayload: (sizeInMB = 10) => {
     const size = sizeInMB * 1024 * 1024
     return 'x'.repeat(size)
   },

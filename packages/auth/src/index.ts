@@ -4,7 +4,7 @@ export {
   requireRole,
   withRoleProtection,
   RoleError,
-} from './withRole.js'
+} from './withRole'
 
 export {
   parseClerkPublicMetadata,
@@ -21,14 +21,14 @@ export {
   type RoleName,
   type AuthUser,
   type Permission,
-} from './types.js'
+} from './types'
 
 export {
   createProtectedApiHandler,
   createProtectedAction,
   validateAuth,
   createErrorResponse,
-} from './server-helpers.js'
+} from './server-helpers'
 
-// Note: Client-side auth utilities are now exported from './context.js' 
+// Note: Client-side auth utilities are now exported from './context' 
 // Import them using: import { AuthProvider, useAuth, ... } from '@elevate/auth/context'

@@ -1,6 +1,6 @@
-import type { ActivityCode, ActivityPayload, AmplifyInput } from '@elevate/types'
+import type { ActivityCode, AmplifyInput } from '@elevate/types'
 
-export function computePoints(activity: ActivityCode, payload: ActivityPayload): number {
+export function computePoints(activity: ActivityCode, payload: unknown): number {
   switch (activity) {
     case 'LEARN':
       return 20
@@ -8,8 +8,8 @@ export function computePoints(activity: ActivityCode, payload: ActivityPayload):
       return 50
     case 'AMPLIFY': {
       const amplifyPayload = payload as AmplifyInput
-      const peers = Number(amplifyPayload?.peersTrained ?? 0)
-      const students = Number(amplifyPayload?.studentsTrained ?? 0)
+      const peers = Number((amplifyPayload as { peers_trained?: unknown })?.peers_trained ?? 0)
+      const students = Number((amplifyPayload as { students_trained?: unknown })?.students_trained ?? 0)
       // Caps (proposal) — enforce upstream in validation too
       const capPeers = Math.min(peers, 50)
       const capStudents = Math.min(students, 200)
@@ -23,4 +23,3 @@ export function computePoints(activity: ActivityCode, payload: ActivityPayload):
       return 0
   }
 }
-

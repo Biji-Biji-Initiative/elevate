@@ -8,7 +8,7 @@ import { vi } from 'vitest'
 
 export interface MockRequestInit {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
-  body?: any
+  body?: unknown
   headers?: Record<string, string>
   searchParams?: Record<string, string>
   user?: {
@@ -97,12 +97,12 @@ export function clearAuthenticationMock() {
  * Execute an API route handler and return parsed response
  */
 export async function executeApiRoute(
-  handler: (request: NextRequest, context?: any) => Promise<NextResponse>,
+  handler: (request: NextRequest, context?: { traceId?: string; params?: Record<string, unknown> }) => Promise<NextResponse>,
   request: NextRequest
 ): Promise<{
   status: number
   headers: Headers
-  json: () => Promise<any>
+  json: () => Promise<unknown>
   text: () => Promise<string>
 }> {
   const response = await handler(request, { 
@@ -131,7 +131,7 @@ export async function executeApiRoute(
  */
 export function createWebhookRequest(
   url: string,
-  payload: any,
+  payload: Record<string, unknown>,
   secret: string = 'test-webhook-secret-123'
 ): NextRequest {
   const crypto = require('crypto')

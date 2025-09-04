@@ -1,13 +1,6 @@
-import { defineConfig } from 'tsup'
+import baseTsup from '../../tsup.base.mjs'
 
-export default defineConfig({
-  entry: ['src/index.ts', 'src/client.ts'],
-  format: ['esm'],
-  outDir: 'dist/js',
-  dts: false,
-  sourcemap: true,
-  clean: true,
-  external: [
-    '@prisma/client',
-  ],
+export default baseTsup({
+  entry: ['src/index.ts', 'src/client.ts', 'src/utils.ts'],
+  external: ['@prisma/client'],
 })

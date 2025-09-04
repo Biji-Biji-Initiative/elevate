@@ -4,6 +4,279 @@
  */
 
 export interface paths {
+    "/api/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Platform Stats
+         * @description Get platform-wide statistics
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                totalEducators: number;
+                                totalSubmissions: number;
+                                totalPoints: number;
+                                studentsImpacted: number;
+                                byStage: {
+                                    [key: string]: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stage Metrics
+         * @description Get metrics for a LEAPS stage
+         */
+        get: {
+            parameters: {
+                query: {
+                    stage: "learn" | "explore" | "amplify" | "present" | "shine";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                stage: string;
+                                totalSubmissions: number;
+                                approvedSubmissions: number;
+                                pendingSubmissions: number;
+                                rejectedSubmissions: number;
+                                avgPointsEarned: number;
+                                uniqueEducators: number;
+                                topSchools: {
+                                    name: string;
+                                    count: number;
+                                }[];
+                                cohortBreakdown: {
+                                    cohort: string;
+                                    count: number;
+                                }[];
+                                monthlyTrend: {
+                                    month: string;
+                                    submissions: number;
+                                    approvals: number;
+                                }[];
+                                completionRate: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid query */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
+                             * @description Error message
+                             * @example Invalid submission data
+                             */
+                            error: string;
+                            /** @description Additional error details (validation errors) */
+                            details?: unknown[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/{handle}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Public Profile
+         * @description Get public profile data by handle
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    handle: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                id: string;
+                                handle: string;
+                                name: string;
+                                email: string;
+                                avatarUrl?: string | null;
+                                school?: string | null;
+                                cohort?: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                totalPoints: number;
+                                earnedBadges: {
+                                    badge: {
+                                        code: string;
+                                        name: string;
+                                        description?: string | null;
+                                        iconUrl?: string | null;
+                                    };
+                                    /** Format: date-time */
+                                    earnedAt: string;
+                                }[];
+                                submissions: {
+                                    id: string;
+                                    /**
+                                     * @description LEAPS activity codes
+                                     * @example LEARN
+                                     * @enum {string}
+                                     */
+                                    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                                    activity: {
+                                        name: string;
+                                        /**
+                                         * @description LEAPS activity codes
+                                         * @example LEARN
+                                         * @enum {string}
+                                         */
+                                        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                                    };
+                                    /**
+                                     * @description Submission review status
+                                     * @example PENDING
+                                     * @enum {string}
+                                     */
+                                    status: "PENDING" | "APPROVED" | "REJECTED";
+                                    /**
+                                     * @description Submission visibility setting
+                                     * @example PRIVATE
+                                     * @enum {string}
+                                     */
+                                    visibility: "PUBLIC" | "PRIVATE";
+                                    /** @description Submission payload data specific to each activity type */
+                                    payload: {
+                                        [key: string]: unknown;
+                                    };
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
+                             * @description Error message
+                             * @example Invalid submission data
+                             */
+                            error: string;
+                            /** @description Additional error details (validation errors) */
+                            details?: unknown[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/submissions": {
         parameters: {
             query?: never;
@@ -103,6 +376,12 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
                             /**
                              * @description Error message
                              * @example Invalid submission data
@@ -205,6 +484,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
                              * @description Error message
                              * @example Invalid submission data
                              */
@@ -222,6 +507,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
                              * @description Error message
                              * @example Invalid submission data
                              */
@@ -238,6 +529,12 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
                             /**
                              * @description Error message
                              * @example Invalid submission data
@@ -345,6 +642,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
                              * @description Error message
                              * @example Invalid submission data
                              */
@@ -362,6 +665,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
                              * @description Error message
                              * @example Invalid submission data
                              */
@@ -378,6 +687,12 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
                             /**
                              * @description Error message
                              * @example Invalid submission data
@@ -462,61 +777,20 @@ export interface paths {
                                      * @description School/institution name
                                      * @example SDN 123 Jakarta
                                      */
-                                    school: string | null;
-                                    /**
-                                     * @description Training cohort identifier
-                                     * @example Cohort-2024-A
-                                     */
-                                    cohort: string | null;
+                                    school?: string | null;
                                     /**
                                      * Format: uri
                                      * @description Profile picture URL
                                      * @example https://images.clerk.dev/abc123
                                      */
-                                    avatar_url: string | null;
+                                    avatarUrl?: string | null;
                                     /**
-                                     * User Points Summary
-                                     * @description Breakdown of user points by category
+                                     * @description Total points earned
+                                     * @example 95
                                      */
-                                    _sum: {
-                                        /**
-                                         * @description Total points earned
-                                         * @example 95
-                                         */
-                                        points: number;
-                                        /**
-                                         * @description Points from Learn activities
-                                         * @example 20
-                                         */
-                                        learn_points: number;
-                                        /**
-                                         * @description Points from Explore activities
-                                         * @example 50
-                                         */
-                                        explore_points: number;
-                                        /**
-                                         * @description Points from Amplify activities
-                                         * @example 15
-                                         */
-                                        amplify_points: number;
-                                        /**
-                                         * @description Points from Present activities
-                                         * @example 10
-                                         */
-                                        present_points: number;
-                                        /**
-                                         * @description Points from Shine activities
-                                         * @example 0
-                                         */
-                                        shine_points: number;
-                                        /**
-                                         * @description Total approved submissions
-                                         * @example 7
-                                         */
-                                        submission_count: number;
-                                    };
+                                    totalPoints: number;
                                     /** @description Badges earned by the user */
-                                    earned_badges: {
+                                    earnedBadges?: {
                                         badge: {
                                             /**
                                              * @description Badge identifier
@@ -533,7 +807,7 @@ export interface paths {
                                              * @description Badge icon URL
                                              * @example https://storage.supabase.co/badges/early_adopter.svg
                                              */
-                                            icon_url: string | null;
+                                            iconUrl?: string | null;
                                         };
                                     }[];
                                 };
@@ -568,6 +842,110 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
+                             * @description Error message
+                             * @example Invalid submission data
+                             */
+                            error: string;
+                            /** @description Additional error details (validation errors) */
+                            details?: unknown[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User Badges
+         * @description Get current user's earned badges
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description User badges retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                badges: {
+                                    /** @example EARLY_ADOPTER */
+                                    code: string;
+                                    /** @example Early Adopter */
+                                    name: string;
+                                    /** @example One of the first educators to join the program */
+                                    description: string;
+                                    /**
+                                     * Format: uri
+                                     * @example https://example.com/badge.png
+                                     */
+                                    iconUrl: string | null;
+                                    /** @example {
+                                     *       "type": "submissions",
+                                     *       "threshold": 1
+                                     *     } */
+                                    criteria: {
+                                        /** @enum {string} */
+                                        type: "points" | "submissions" | "activities" | "streak";
+                                        threshold: number;
+                                        activity_codes?: string[];
+                                        conditions?: {
+                                            [key: string]: string | number | boolean | string[] | number[];
+                                        };
+                                    };
+                                    /**
+                                     * Format: date-time
+                                     * @example 2024-01-15T10:00:00Z
+                                     */
+                                    earnedAt: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
                             /**
                              * @description Error message
                              * @example Invalid submission data
@@ -746,6 +1124,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
                              * @description Error message
                              * @example Invalid submission data
                              */
@@ -885,6 +1269,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
                              * @description Error message
                              * @example Invalid submission data
                              */
@@ -901,6 +1291,12 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
                             /**
                              * @description Error message
                              * @example Invalid submission data
@@ -978,6 +1374,8 @@ export interface paths {
                                     visibility: "PUBLIC" | "PRIVATE";
                                     review_note?: string | null;
                                     attachments?: unknown[];
+                                    /** @example 2 */
+                                    attachmentCount?: number;
                                     user: {
                                         /** @example user_123 */
                                         id: string;
@@ -1025,6 +1423,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
                              * @description Error message
                              * @example Invalid submission data
                              */
@@ -1041,6 +1445,12 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
                             /**
                              * @description Error message
                              * @example Invalid submission data
@@ -1100,6 +1510,12 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
                             /**
                              * @description Error message
                              * @example Invalid submission data
@@ -1162,6 +1578,12 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
                             /**
                              * @description Error message
                              * @example Invalid submission data
@@ -1232,6 +1654,8 @@ export interface paths {
                                     visibility: "PUBLIC" | "PRIVATE";
                                     review_note?: string | null;
                                     attachments?: unknown[];
+                                    /** @example 2 */
+                                    attachmentCount?: number;
                                     user: {
                                         /** @example user_123 */
                                         id: string;
@@ -1268,6 +1692,12 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
                             /**
                              * @description Error message
                              * @example Invalid submission data
@@ -1367,6 +1797,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
                              * @description Error message
                              * @example Invalid submission data
                              */
@@ -1423,6 +1859,12 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
                             /**
                              * @description Error message
                              * @example Invalid submission data
@@ -1482,6 +1924,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
                              * @description Error message
                              * @example Invalid submission data
                              */
@@ -1531,13 +1979,14 @@ export interface paths {
                                     code: string;
                                     name: string;
                                     description: string;
+                                    /** @description Badge criteria configuration */
                                     criteria: {
                                         /** @enum {string} */
                                         type: "points" | "submissions" | "activities" | "streak";
                                         threshold: number;
                                         activity_codes?: string[];
                                         conditions?: {
-                                            [key: string]: unknown;
+                                            [key: string]: string | number | boolean | string[] | number[];
                                         };
                                     };
                                     /** Format: uri */
@@ -2000,6 +2449,12 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
+                             * @description Operation failed
+                             * @example false
+                             * @enum {boolean}
+                             */
+                            success: false;
+                            /**
                              * @description Error message
                              * @example Invalid submission data
                              */
@@ -2057,7 +2512,20 @@ export interface paths {
                                     processed_at: string | null;
                                     user_match: string | null;
                                     payload: {
-                                        [key: string]: unknown;
+                                        event_id?: string;
+                                        /** @enum {string} */
+                                        event_type: "contact.tagged" | "tag.added" | "tag.removed";
+                                        contact: {
+                                            id: number;
+                                            /** Format: email */
+                                            email: string;
+                                            first_name?: string;
+                                            last_name?: string;
+                                            tags?: string[];
+                                        };
+                                        tag: {
+                                            name: string;
+                                        };
                                     };
                                 }[];
                                 stats: {
@@ -2470,61 +2938,20 @@ export interface components {
                      * @description School/institution name
                      * @example SDN 123 Jakarta
                      */
-                    school: string | null;
-                    /**
-                     * @description Training cohort identifier
-                     * @example Cohort-2024-A
-                     */
-                    cohort: string | null;
+                    school?: string | null;
                     /**
                      * Format: uri
                      * @description Profile picture URL
                      * @example https://images.clerk.dev/abc123
                      */
-                    avatar_url: string | null;
+                    avatarUrl?: string | null;
                     /**
-                     * User Points Summary
-                     * @description Breakdown of user points by category
+                     * @description Total points earned
+                     * @example 95
                      */
-                    _sum: {
-                        /**
-                         * @description Total points earned
-                         * @example 95
-                         */
-                        points: number;
-                        /**
-                         * @description Points from Learn activities
-                         * @example 20
-                         */
-                        learn_points: number;
-                        /**
-                         * @description Points from Explore activities
-                         * @example 50
-                         */
-                        explore_points: number;
-                        /**
-                         * @description Points from Amplify activities
-                         * @example 15
-                         */
-                        amplify_points: number;
-                        /**
-                         * @description Points from Present activities
-                         * @example 10
-                         */
-                        present_points: number;
-                        /**
-                         * @description Points from Shine activities
-                         * @example 0
-                         */
-                        shine_points: number;
-                        /**
-                         * @description Total approved submissions
-                         * @example 7
-                         */
-                        submission_count: number;
-                    };
+                    totalPoints: number;
                     /** @description Badges earned by the user */
-                    earned_badges: {
+                    earnedBadges?: {
                         badge: {
                             /**
                              * @description Badge identifier
@@ -2541,7 +2968,7 @@ export interface components {
                              * @description Badge icon URL
                              * @example https://storage.supabase.co/badges/early_adopter.svg
                              */
-                            icon_url: string | null;
+                            iconUrl?: string | null;
                         };
                     }[];
                 };
@@ -2611,6 +3038,12 @@ export interface components {
          */
         ErrorResponse: {
             /**
+             * @description Operation failed
+             * @example false
+             * @enum {boolean}
+             */
+            success: false;
+            /**
              * @description Error message
              * @example Invalid submission data
              */
@@ -2642,7 +3075,18 @@ export type $defs = Record<string, never>;
 export type operations = Record<string, never>;
 
 
-import { mergeHeaders, addAuthHeader } from '@elevate/types';
+import { mergeHeaders, addAuthHeader, type ApiSuccess } from '@elevate/types';
+import { APIError } from '@elevate/types/errors';
+// Import DTO types for request/response convenience
+import type {
+  LearnApiInput,
+  ExploreApiInput,
+  AmplifyApiInput,
+  PresentApiInput,
+  ShineApiInput,
+} from '@elevate/types/submission-payloads.api';
+import { StatsResponseDTOSchema, StageMetricsDTOSchema, AdminAnalyticsDTOSchema, type StatsResponseDTO, type StageMetricsDTO, type AdminAnalyticsDTO } from '@elevate/types/dto-mappers';
+import { SafeDashboardDataSchema, type SafeDashboardData } from '@elevate/types/ui-types';
 
 // API Client SDK
 export class ElevateAPIClient {
@@ -2650,8 +3094,10 @@ export class ElevateAPIClient {
   private token?: string;
 
   constructor(config: { baseUrl?: string; token?: string } = {}) {
-    this.baseUrl = config.baseUrl || 'https://leaps.mereka.org';
-    this.token = config.token ?? undefined;
+    this.baseUrl = config.baseUrl ?? 'https://leaps.mereka.org';
+    if (config.token) {
+      this.token = config.token;
+    }
   }
 
   private async request<T>(
@@ -2676,17 +3122,27 @@ export class ElevateAPIClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ 
-        error: 'Request failed' 
-      }));
-      throw new APIError(error.error || 'Request failed', response.status, error.details);
+      const fallback = { error: 'Request failed' } as const;
+      const parsed = await response
+        .json()
+        .catch(() => fallback) as { error?: string; details?: unknown };
+      throw new APIError(parsed.error ?? 'Request failed', response.status, parsed.details !== undefined ? (Array.isArray(parsed.details) ? parsed.details : [parsed.details]) : undefined);
     }
 
-    return response.json();
+    return response.json() as Promise<T>;
   }
 
   // Submissions API
-  async createSubmission(data: NonNullable<paths['/api/submissions']['post']['requestBody']>['content']['application/json']) {
+  // DTO-friendly body type for submission creation
+  // Matches API shape: { activityCode, payload, attachments?, visibility? }
+  async createSubmission(
+    data: {
+      activityCode: ActivityCode;
+      payload: LearnApiInput | ExploreApiInput | AmplifyApiInput | PresentApiInput | ShineApiInput;
+      attachments?: string[];
+      visibility?: 'PUBLIC' | 'PRIVATE';
+    }
+  ) {
     return this.request<paths['/api/submissions']['post']['responses']['201']['content']['application/json']>(
       '/api/submissions',
       {
@@ -2706,9 +3162,22 @@ export class ElevateAPIClient {
       });
     }
     
-    const endpoint = `/api/submissions${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    const queryString = searchParams.toString();
+    const endpoint = '/api/submissions' + (queryString ? '?' + queryString : '');
     return this.request<paths['/api/submissions']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
+
+  // Submissions summary convenience method (since current /api/submissions doesn't match full DTO shape)
+  async getSubmissionsSummary(
+    params?: paths['/api/submissions']['get']['parameters']['query']
+  ): Promise<paths['/api/submissions']['get']['responses']['200']['content']['application/json']> {
+    // Call the regular method to get submissions summary
+    return this.getSubmissions(params);
+  }
+
+  // Convenience typed return for submissions list (DTO mapping)
+  // Consumers can import SubmissionDTO for stronger typing on mapped results
+  // Note: The API response envelope still follows OpenAPI types.
 
   // File Upload API
   async uploadFile(file: File, activityCode: string) {
@@ -2744,6 +3213,73 @@ export class ElevateAPIClient {
   // Dashboard API
   async getDashboard() {
     return this.request<paths['/api/dashboard']['get']['responses']['200']['content']['application/json']>('/api/dashboard');
+  }
+  // Typed DTO convenience for dashboard
+  async getDashboardDTO(): Promise<ApiSuccess<SafeDashboardData>> {
+    const res = await this.request<ApiSuccess<unknown>>('/api/dashboard');
+    const parsed = SafeDashboardDataSchema.safeParse(res.data);
+    if (!parsed.success) {
+      throw new APIError('Invalid dashboard response shape', 500, parsed.error.issues);
+    }
+    return {
+      success: res.success,
+      data: parsed.data as SafeDashboardData
+    };
+  }
+
+  // Public Stats API
+  async getStats() {
+    return this.request<paths['/api/stats']['get']['responses']['200']['content']['application/json']>('/api/stats');
+  }
+
+  // Typed DTO convenience for public stats
+  async getStatsDTO(): Promise<ApiSuccess<StatsResponseDTO>> {
+    // Call the regular method to get the legacy snake_case response
+    const res = await this.getStats();
+    
+    // Validate and transform the response to DTO format
+    const parsed = StatsResponseDTOSchema.safeParse(res.data);
+    if (!parsed.success) {
+      throw new APIError('Invalid stats response shape', 500, parsed.error.issues);
+    }
+    
+    // Return only the typed success envelope with validated DTO data
+    const out: ApiSuccess<StatsResponseDTO> = { success: true, data: parsed.data };
+    return out;
+  }
+
+  // Public Metrics API
+  async getMetrics(params: paths['/api/metrics']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value !== undefined) searchParams.append(key, String(value));
+    });
+    const endpoint = `/api/metrics${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    return this.request<paths['/api/metrics']['get']['responses']['200']['content']['application/json']>(endpoint);
+  }
+  // Typed DTO convenience for metrics (stage view)
+  async getMetricsDTO(
+    params: paths['/api/metrics']['get']['parameters']['query']
+  ): Promise<ApiSuccess<StageMetricsDTO>> {
+    // Call the regular method to get the legacy snake_case response
+    const res = await this.getMetrics(params);
+    
+    // Validate and transform the response to DTO format
+    const parsed = StageMetricsDTOSchema.safeParse(res.data);
+    if (!parsed.success) {
+      throw new APIError('Invalid metrics response shape', 500, parsed.error.issues);
+    }
+    
+    // Return only the typed success envelope with validated DTO data
+    const out: ApiSuccess<StageMetricsDTO> = { success: true, data: parsed.data };
+    return out;
+  }
+
+  // Public Profile API
+  async getProfile(handle: string) {
+    return this.request<paths['/api/profile/{handle}']['get']['responses']['200']['content']['application/json']>(
+      `/api/profile/${encodeURIComponent(handle)}`
+    );
   }
 
   // Health Check API
@@ -2866,6 +3402,27 @@ export class ElevateAPIClient {
     const endpoint = `/api/admin/analytics${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
     return this.request<paths['/api/admin/analytics']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
+  // Typed DTO convenience for admin analytics
+  async getAdminAnalyticsDTO(
+    params?: paths['/api/admin/analytics']['get']['parameters']['query']
+  ): Promise<ApiSuccess<AdminAnalyticsDTO>> {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) searchParams.append(key, String(value));
+      });
+    }
+    const endpoint = `/api/admin/analytics${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    const res = await this.request<ApiSuccess<unknown>>(endpoint);
+    const parsed = AdminAnalyticsDTOSchema.safeParse(res.data);
+    if (!parsed.success) {
+      throw new APIError('Invalid admin analytics response shape', 500, parsed.error.issues);
+    }
+    return {
+      success: res.success,
+      data: parsed.data
+    };
+  }
 
   async getAdminCohorts() {
     return this.request<paths['/api/admin/meta/cohorts']['get']['responses']['200']['content']['application/json']>(
@@ -2899,7 +3456,7 @@ export class ElevateAPIClient {
   }
 
   clearToken() {
-    this.token = undefined as string | undefined;
+    delete this.token;
   }
 
   setBaseUrl(baseUrl: string) {
@@ -2907,45 +3464,15 @@ export class ElevateAPIClient {
   }
 }
 
-// Error classes
-export class APIError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public details?: unknown[]
-  ) {
-    super(message);
-    this.name = 'APIError';
-  }
-}
-
-export class ValidationError extends APIError {
-  constructor(message: string, details?: unknown[], traceId?: string) {
-    super(message, 400, details);
-    this.name = 'ValidationError';
-  }
-}
-
-export class AuthenticationError extends APIError {
-  constructor(message = 'Unauthorized') {
-    super(message, 401);
-    this.name = 'AuthenticationError';
-  }
-}
-
-export class ForbiddenError extends APIError {
-  constructor(message = 'Forbidden') {
-    super(message, 403);
-    this.name = 'ForbiddenError';
-  }
-}
-
-export class RateLimitError extends APIError {
-  constructor(message = 'Rate limit exceeded') {
-    super(message, 429);
-    this.name = 'RateLimitError';
-  }
-}
+// Error classes are imported from @elevate/types/errors - no local definitions needed
+// Export them for backwards compatibility
+export {
+  APIError,
+  ValidationError,
+  AuthenticationError,
+  ForbiddenError,
+  RateLimitError
+} from '@elevate/types/errors';
 
 // Type helpers
 export type SubmissionPayload = 
@@ -2961,3 +3488,5 @@ export type Visibility = components['schemas']['Visibility'];
 
 // Default export
 export default ElevateAPIClient;
+// Re-export common DTOs for convenience
+// Types re-export intentionally omitted in generated SDK

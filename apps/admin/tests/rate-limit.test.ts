@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 // Force rate limiter to block
 vi.mock('@elevate/security', async () => ({
   adminRateLimiter: {},
-  withRateLimit: async (_req: any, _limiter: any, _handler: any) => {
+  withRateLimit: async (_req: unknown, _limiter: unknown, _handler: () => unknown) => {
     return new Response(JSON.stringify({ success: false, error: 'Rate limit exceeded', retryAfter: 10 }), {
       status: 429,
       headers: {
@@ -25,7 +25,7 @@ vi.mock('@elevate/auth/server-helpers', async () => ({
 describe('Admin rate limit envelope', () => {
   it('returns a 429 with standard envelope and headers', async () => {
     const { GET } = await import('../app/api/admin/meta/cohorts/route')
-    const req = { url: 'http://localhost/api/admin/meta/cohorts' } as any
+    const req = new Request('http://localhost/api/admin/meta/cohorts')
     const res = await GET(req)
     expect(res.status).toBe(429)
     const json = await res.json()
@@ -35,4 +35,3 @@ describe('Admin rate limit envelope', () => {
     expect(res.headers.get('X-RateLimit-Limit')).toBe('40')
   })
 })
-

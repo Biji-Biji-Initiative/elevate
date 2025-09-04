@@ -5,10 +5,12 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@elevate/db/client'
 import { 
   createSuccessResponse,
-  withApiErrorHandling,
+  withApiErrorHandling
+} from '@elevate/types'
+import {
   AuthenticationError,
   NotFoundError
-} from '@elevate/types'
+} from '@elevate/types/errors'
 
 export const runtime = 'nodejs';
 

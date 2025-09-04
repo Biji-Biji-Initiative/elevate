@@ -1,9 +1,12 @@
 import { type NextRequest, NextResponse } from 'next/server'
+
 import { auth } from '@clerk/nextjs/server'
 import { Prisma } from '@prisma/client'
 
-import { prisma } from '@elevate/db/client'
 import { withRole } from '@elevate/auth'
+import { prisma } from '@elevate/db/client'
+import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { getServerLogger } from '@elevate/logging'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -15,7 +18,7 @@ type TestResult = {
   expected?: number | string
   actual?: number | string
   duration_ms: number
-  details?: any
+  details?: Record<string, unknown>
 }
 
 type TestSuite = {
@@ -437,23 +440,29 @@ async function testRefreshFunctionality(): Promise<TestSuite> {
 }
 
 export async function GET(request: NextRequest) {
+  if (process.env.ENABLE_INTERNAL_ENDPOINTS !== '1') {
+    return new Response(null, { status: 404 })
+  }
   try {
     // Verify admin role
     const { userId } = await auth()
     if (!userId) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      return createErrorResponse(new Error('Unauthorized'), 401)
     }
 
     const hasPermission = await withRole(['ADMIN'])(userId)
     if (!hasPermission) {
-      return NextResponse.json({ success: false, error: 'Insufficient permissions' }, { status: 403 })
+      return createErrorResponse(new Error('Insufficient permissions'), 403)
     }
 
     const { searchParams } = new URL(request.url)
     const suiteParam = searchParams.get('suite')
     const suitesToRun = suiteParam ? [suiteParam] : ['consistency', 'performance', 'refresh']
 
-    console.log(`Running materialized view tests: ${suitesToRun.join(', ')}`)
+    getServerLogger().info('Running materialized view tests', {
+      operation: 'admin_test_materialized_views',
+      suites: suitesToRun,
+    })
 
     const testStartTime = Date.now()
     const testSuites: TestSuite[] = []
@@ -496,21 +505,14 @@ export async function GET(request: NextRequest) {
       test_suites: testSuites
     }
 
-    return NextResponse.json(response, {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    })
+    const res = createSuccessResponse(response)
+    res.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    return res
 
   } catch (error) {
-    console.error('Materialized view testing failed:', error)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to run tests',
-        timestamp: new Date().toISOString()
-      }, 
-      { status: 500 }
-    )
+    getServerLogger().error('Materialized view testing failed', error as Error, {
+      operation: 'admin_test_materialized_views',
+    })
+    return createErrorResponse(new Error('Failed to run tests'), 500)
   }
 }

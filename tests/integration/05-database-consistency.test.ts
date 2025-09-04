@@ -14,8 +14,8 @@ import { TestDatabase } from '../../packages/db/tests/helpers'
 
 describe('Integration: Database Consistency and Integrity', () => {
   let testDb: TestDatabase
-  let testUser: any
-  let testActivity: any
+  let testUser: { id: string; email: string; handle: string }
+  let testActivity: { code: string; name: string }
 
   beforeEach(async () => {
     // Setup isolated test database
@@ -604,7 +604,8 @@ describe('Integration: Database Consistency and Integrity', () => {
           data: {
             user_id: testUser.id,
             activity_code: 'LEARN',
-            status: 'INVALID_STATUS' as any,
+            // @ts-expect-error intentionally invalid to test enum constraint
+            status: 'INVALID_STATUS',
             visibility: 'PRIVATE',
             payload: { test: 'data' }
           }
@@ -616,7 +617,8 @@ describe('Integration: Database Consistency and Integrity', () => {
         testDb.fixtures.createTestUser({
           handle: 'invalid-role-user',
           email: 'invalid@example.com',
-          role: 'INVALID_ROLE' as any
+          // @ts-expect-error intentionally invalid to test enum constraint
+          role: 'INVALID_ROLE'
         })
       ).rejects.toThrow()
     })
@@ -630,7 +632,8 @@ describe('Integration: Database Consistency and Integrity', () => {
             status: 'PENDING',
             visibility: 'PRIVATE',
             payload: { test: 'data' }
-          } as any
+          // @ts-expect-error intentionally incomplete input to test required field constraints
+          } as import('@prisma/client').Prisma.SubmissionCreateInput
         })
       ).rejects.toThrow()
 
@@ -640,7 +643,8 @@ describe('Integration: Database Consistency and Integrity', () => {
           data: {
             // Missing handle, name, email
             role: 'PARTICIPANT'
-          } as any
+          // @ts-expect-error intentionally incomplete input to test required field constraints
+          } as import('@prisma/client').Prisma.UserCreateInput
         })
       ).rejects.toThrow()
     })
@@ -713,7 +717,7 @@ describe('Integration: Database Consistency and Integrity', () => {
       for (let i = 0; i < 15; i++) {
         await testDb.fixtures.createTestSubmission({
           user_id: testUser.id,
-          status: statuses[i % 3] as any
+          status: statuses[i % 3] as string
         })
       }
 

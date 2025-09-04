@@ -1,9 +1,22 @@
 import { type NextRequest, NextResponse } from 'next/server'
+
 import { z } from 'zod'
 
 import { requireRole } from '@elevate/auth/server-helpers'
-import type { SubmissionStatus } from '@elevate/db'
-import { prisma, type Prisma } from '@elevate/db'
+// Use database service layer instead of direct Prisma
+import { 
+  findSubmissionById,
+  updateSubmission,
+  findSubmissionsWithFilters,
+  countSubmissionsWithFilters,
+  findSubmissionsByIds,
+  createPointsEntry,
+  createAuditLogEntry,
+  type SubmissionStatus,
+  type Submission,
+  type Activity,
+  prisma // Still need for transactions and raw queries
+} from '@elevate/db'
 import { computePoints } from '@elevate/logic'
 // TODO: Re-enable when @elevate/security package is available
 // import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -25,8 +38,12 @@ import {
   ValidationError,
   NotFoundError,
   ElevateApiError,
-  validationError
+  validationError,
+  SUBMISSION_STATUSES,
+  LEDGER_SOURCES
 } from '@elevate/types'
+
+import type { Prisma } from '@prisma/client'
 
 export const runtime = 'nodejs';
 
@@ -63,7 +80,7 @@ export const GET = withApiErrorHandling(async (request: NextRequest, context) =>
     }
     
     const [submissions, total] = await Promise.all([
-      prisma.submission.findMany({
+      findSubmissionsWithFilters({
         where,
         include: {
           user: {
@@ -85,7 +102,7 @@ export const GET = withApiErrorHandling(async (request: NextRequest, context) =>
         skip: offset,
         take: limit
       }),
-      prisma.submission.count({ where })
+      countSubmissionsWithFilters(where)
     ])
     
     // Map to include attachmentCount sourced from relation
@@ -130,16 +147,13 @@ export const PATCH = withApiErrorHandling(async (request: NextRequest, context) 
     )
   }
   
-  const submission = await prisma.submission.findUnique({
-    where: { id: submissionId },
-    include: { activity: true }
-  })
+  const submission = await findSubmissionById(submissionId)
   
   if (!submission) {
     throw new NotFoundError('Submission', submissionId, context.traceId)
   }
   
-  if (submission.status !== 'PENDING') {
+  if (submission.status !== SUBMISSION_STATUSES[0]) { // PENDING
     throw new ElevateApiError(
       'Submission has already been reviewed',
       'INVALID_SUBMISSION_STATUS',
@@ -148,7 +162,7 @@ export const PATCH = withApiErrorHandling(async (request: NextRequest, context) 
     )
   }
     
-    const newStatus = action === 'approve' ? 'APPROVED' : 'REJECTED'
+    const newStatus = action === 'approve' ? SUBMISSION_STATUSES[1] : SUBMISSION_STATUSES[2] // APPROVED : REJECTED
     
     // Start transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -206,7 +220,7 @@ export const PATCH = withApiErrorHandling(async (request: NextRequest, context) 
           data: {
             user_id: submission.user_id,
             activity_code: submission.activity_code,
-            source: 'MANUAL',
+            source: LEDGER_SOURCES[0], // MANUAL
             delta_points: finalPoints,
             external_source: 'admin_approval',
             external_event_id: `submission_${submissionId}`
@@ -279,10 +293,10 @@ export const POST = withApiErrorHandling(async (request: NextRequest, context) =
     )
   }
   
-  const submissions = await prisma.submission.findMany({
+  const submissions = await findSubmissionsWithFilters({
     where: {
       id: { in: submissionIds },
-      status: 'PENDING'
+      status: SUBMISSION_STATUSES[0] // PENDING
     },
     include: { activity: true }
   })
@@ -291,7 +305,7 @@ export const POST = withApiErrorHandling(async (request: NextRequest, context) =
     throw new NotFoundError('Pending submissions', undefined, context.traceId)
   }
     
-    const newStatus = action === 'approve' ? 'APPROVED' : 'REJECTED'
+    const newStatus = action === 'approve' ? SUBMISSION_STATUSES[1] : SUBMISSION_STATUSES[2] // APPROVED : REJECTED
     const results = []
     
     // Process in transaction
@@ -337,7 +351,7 @@ export const POST = withApiErrorHandling(async (request: NextRequest, context) =
             data: {
               user_id: submission.user_id,
               activity_code: submission.activity_code,
-              source: 'MANUAL',
+              source: LEDGER_SOURCES[0], // MANUAL
               delta_points: points,
               external_source: 'admin_approval',
               external_event_id: `submission_${submission.id}`
