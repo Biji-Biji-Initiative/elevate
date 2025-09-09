@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '20.11.1'
   PNPM_VERSION: '9'
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/elevate_test
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
