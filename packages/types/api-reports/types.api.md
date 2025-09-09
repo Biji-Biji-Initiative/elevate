@@ -55,16 +55,16 @@ export const ActivityLeaderboardEntrySchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     name: string;
     handle: string;
-    user_id: string;
     avatar_url: string | null;
+    user_id: string;
     total_points: number;
     latest_submission_at: Date | null;
     submission_count: number;
 }, {
     name: string;
     handle: string;
-    user_id: string;
     avatar_url: string | null;
+    user_id: string;
     total_points: number;
     latest_submission_at: Date | null;
     submission_count: number;
@@ -226,11 +226,6 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             avgReviewTimeHours: number;
         }>;
     }, "strip", z.ZodTypeAny, {
-        points: {
-            totalAwarded: number;
-            totalEntries: number;
-            avgPerEntry: number;
-        };
         submissions: {
             total: number;
             pending: number;
@@ -244,6 +239,11 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             withSubmissions: number;
             withBadges: number;
             activationRate: number;
+        };
+        points: {
+            totalAwarded: number;
+            totalEntries: number;
+            avgPerEntry: number;
         };
         badges: {
             totalBadges: number;
@@ -255,11 +255,6 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             avgReviewTimeHours: number;
         };
     }, {
-        points: {
-            totalAwarded: number;
-            totalEntries: number;
-            avgPerEntry: number;
-        };
         submissions: {
             total: number;
             pending: number;
@@ -273,6 +268,11 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             withSubmissions: number;
             withBadges: number;
             activationRate: number;
+        };
+        points: {
+            totalAwarded: number;
+            totalEntries: number;
+            avgPerEntry: number;
         };
         badges: {
             totalBadges: number;
@@ -300,33 +300,33 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             activityName: z.ZodOptional<z.ZodString>;
             count: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
-            activity: string;
             count: number;
+            activity: string;
             activityName?: string | undefined;
         }, {
-            activity: string;
             count: number;
+            activity: string;
             activityName?: string | undefined;
         }>, "many">;
         usersByRole: z.ZodArray<z.ZodObject<{
             role: z.ZodString;
             count: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
-            role: string;
             count: number;
+            role: string;
         }, {
-            role: string;
             count: number;
+            role: string;
         }>, "many">;
         usersByCohort: z.ZodOptional<z.ZodArray<z.ZodObject<{
             cohort: z.ZodNullable<z.ZodString>;
             count: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
-            cohort: string | null;
             count: number;
+            cohort: string | null;
         }, {
-            cohort: string | null;
             count: number;
+            cohort: string | null;
         }>, "many">>;
         pointsByActivity: z.ZodArray<z.ZodObject<{
             activity: z.ZodString;
@@ -384,13 +384,13 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             count: number;
         }[];
         submissionsByActivity: {
-            activity: string;
             count: number;
+            activity: string;
             activityName?: string | undefined;
         }[];
         usersByRole: {
-            role: string;
             count: number;
+            role: string;
         }[];
         pointsByActivity: {
             entries: number;
@@ -399,8 +399,8 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             activityName?: string | undefined;
         }[];
         usersByCohort?: {
-            cohort: string | null;
             count: number;
+            cohort: string | null;
         }[] | undefined;
         pointsDistribution?: {
             totalUsers: number;
@@ -418,13 +418,13 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             count: number;
         }[];
         submissionsByActivity: {
-            activity: string;
             count: number;
+            activity: string;
             activityName?: string | undefined;
         }[];
         usersByRole: {
-            role: string;
             count: number;
+            role: string;
         }[];
         pointsByActivity: {
             entries: number;
@@ -433,8 +433,8 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             activityName?: string | undefined;
         }[];
         usersByCohort?: {
-            cohort: string | null;
             count: number;
+            cohort: string | null;
         }[] | undefined;
         pointsDistribution?: {
             totalUsers: number;
@@ -526,26 +526,26 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             created_at: z.ZodString;
         }, "strip", z.ZodTypeAny, {
             status: string;
-            created_at: string;
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
+            created_at: string;
         }, {
             status: string;
-            created_at: string;
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
+            created_at: string;
         }>, "many">;
         approvals: z.ZodArray<z.ZodObject<{
             id: z.ZodString;
@@ -571,21 +571,21 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
             updated_at: string;
         }, {
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
             updated_at: string;
         }>, "many">;
         users: z.ZodArray<z.ZodObject<{
@@ -596,82 +596,82 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             role: z.ZodString;
             created_at: z.ZodString;
         }, "strip", z.ZodTypeAny, {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
             role: string;
             id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
         }, {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
             role: string;
             id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         submissions: {
             status: string;
-            created_at: string;
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
+            created_at: string;
         }[];
         users: {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
             role: string;
             id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
         }[];
         approvals: {
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
             updated_at: string;
         }[];
     }, {
         submissions: {
             status: string;
-            created_at: string;
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
+            created_at: string;
         }[];
         users: {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
             role: string;
             id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
         }[];
         approvals: {
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
             updated_at: string;
         }[];
     }>;
@@ -686,20 +686,20 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             total: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             total: number;
-            name: string;
-            handle: string;
-            role: string;
-            id: string;
             approved: number;
             rejected: number;
+            role: string;
+            id: string;
+            name: string;
+            handle: string;
         }, {
             total: number;
-            name: string;
-            handle: string;
-            role: string;
-            id: string;
             approved: number;
             rejected: number;
+            role: string;
+            id: string;
+            name: string;
+            handle: string;
         }>, "many">;
         topBadges: z.ZodArray<z.ZodObject<{
             badge: z.ZodObject<{
@@ -738,12 +738,12 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         reviewers: {
             total: number;
-            name: string;
-            handle: string;
-            role: string;
-            id: string;
             approved: number;
             rejected: number;
+            role: string;
+            id: string;
+            name: string;
+            handle: string;
         }[];
         topBadges: {
             badge: {
@@ -758,12 +758,12 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
     }, {
         reviewers: {
             total: number;
-            name: string;
-            handle: string;
-            role: string;
-            id: string;
             approved: number;
             rejected: number;
+            role: string;
+            id: string;
+            name: string;
+            handle: string;
         }[];
         topBadges: {
             badge: {
@@ -778,11 +778,6 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
     }>;
 }, "strip", z.ZodTypeAny, {
     overview: {
-        points: {
-            totalAwarded: number;
-            totalEntries: number;
-            avgPerEntry: number;
-        };
         submissions: {
             total: number;
             pending: number;
@@ -796,6 +791,11 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             withSubmissions: number;
             withBadges: number;
             activationRate: number;
+        };
+        points: {
+            totalAwarded: number;
+            totalEntries: number;
+            avgPerEntry: number;
         };
         badges: {
             totalBadges: number;
@@ -813,13 +813,13 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             count: number;
         }[];
         submissionsByActivity: {
-            activity: string;
             count: number;
+            activity: string;
             activityName?: string | undefined;
         }[];
         usersByRole: {
-            role: string;
             count: number;
+            role: string;
         }[];
         pointsByActivity: {
             entries: number;
@@ -828,8 +828,8 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             activityName?: string | undefined;
         }[];
         usersByCohort?: {
-            cohort: string | null;
             count: number;
+            cohort: string | null;
         }[] | undefined;
         pointsDistribution?: {
             totalUsers: number;
@@ -858,45 +858,45 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
     recentActivity: {
         submissions: {
             status: string;
-            created_at: string;
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
+            created_at: string;
         }[];
         users: {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
             role: string;
             id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
         }[];
         approvals: {
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
             updated_at: string;
         }[];
     };
     performance: {
         reviewers: {
             total: number;
-            name: string;
-            handle: string;
-            role: string;
-            id: string;
             approved: number;
             rejected: number;
+            role: string;
+            id: string;
+            name: string;
+            handle: string;
         }[];
         topBadges: {
             badge: {
@@ -911,11 +911,6 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
     };
 }, {
     overview: {
-        points: {
-            totalAwarded: number;
-            totalEntries: number;
-            avgPerEntry: number;
-        };
         submissions: {
             total: number;
             pending: number;
@@ -929,6 +924,11 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             withSubmissions: number;
             withBadges: number;
             activationRate: number;
+        };
+        points: {
+            totalAwarded: number;
+            totalEntries: number;
+            avgPerEntry: number;
         };
         badges: {
             totalBadges: number;
@@ -946,13 +946,13 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             count: number;
         }[];
         submissionsByActivity: {
-            activity: string;
             count: number;
+            activity: string;
             activityName?: string | undefined;
         }[];
         usersByRole: {
-            role: string;
             count: number;
+            role: string;
         }[];
         pointsByActivity: {
             entries: number;
@@ -961,8 +961,8 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
             activityName?: string | undefined;
         }[];
         usersByCohort?: {
-            cohort: string | null;
             count: number;
+            cohort: string | null;
         }[] | undefined;
         pointsDistribution?: {
             totalUsers: number;
@@ -991,45 +991,45 @@ export const AdminAnalyticsDTOSchema: z.ZodObject<{
     recentActivity: {
         submissions: {
             status: string;
-            created_at: string;
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
+            created_at: string;
         }[];
         users: {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
             role: string;
             id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
         }[];
         approvals: {
             activity: {
                 name: string;
             };
+            id: string;
             user: {
                 name: string;
                 handle: string;
             };
-            id: string;
             updated_at: string;
         }[];
     };
     performance: {
         reviewers: {
             total: number;
-            name: string;
-            handle: string;
-            role: string;
-            id: string;
             approved: number;
             rejected: number;
+            role: string;
+            id: string;
+            name: string;
+            handle: string;
         }[];
         topBadges: {
             badge: {
@@ -1055,12 +1055,12 @@ export const AdminBadgeSchema: z.ZodObject<{
         activity_codes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         conditions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>>>;
     }, "strip", z.ZodTypeAny, {
-        type: "points" | "submissions" | "activities" | "streak";
+        type: "submissions" | "points" | "activities" | "streak";
         threshold: number;
         activity_codes?: string[] | undefined;
         conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
     }, {
-        type: "points" | "submissions" | "activities" | "streak";
+        type: "submissions" | "points" | "activities" | "streak";
         threshold: number;
         activity_codes?: string[] | undefined;
         conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -1080,30 +1080,30 @@ export const AdminBadgeSchema: z.ZodObject<{
             name: z.ZodString;
             handle: z.ZodString;
         }, "strip", z.ZodTypeAny, {
+            id: string;
             name: string;
             handle: string;
-            id: string;
         }, {
+            id: string;
             name: string;
             handle: string;
-            id: string;
         }>;
         earned_at: z.ZodString;
     }, "strip", z.ZodTypeAny, {
+        id: string;
         user: {
+            id: string;
             name: string;
             handle: string;
-            id: string;
         };
-        id: string;
         earned_at: string;
     }, {
+        id: string;
         user: {
+            id: string;
             name: string;
             handle: string;
-            id: string;
         };
-        id: string;
         earned_at: string;
     }>, "many">>;
 }, "strip", z.ZodTypeAny, {
@@ -1111,7 +1111,7 @@ export const AdminBadgeSchema: z.ZodObject<{
     name: string;
     description: string;
     criteria: {
-        type: "points" | "submissions" | "activities" | "streak";
+        type: "submissions" | "points" | "activities" | "streak";
         threshold: number;
         activity_codes?: string[] | undefined;
         conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -1121,12 +1121,12 @@ export const AdminBadgeSchema: z.ZodObject<{
         earned_badges: number;
     } | undefined;
     earned_badges?: {
+        id: string;
         user: {
+            id: string;
             name: string;
             handle: string;
-            id: string;
         };
-        id: string;
         earned_at: string;
     }[] | undefined;
 }, {
@@ -1134,7 +1134,7 @@ export const AdminBadgeSchema: z.ZodObject<{
     name: string;
     description: string;
     criteria: {
-        type: "points" | "submissions" | "activities" | "streak";
+        type: "submissions" | "points" | "activities" | "streak";
         threshold: number;
         activity_codes?: string[] | undefined;
         conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -1144,12 +1144,12 @@ export const AdminBadgeSchema: z.ZodObject<{
         earned_badges: number;
     } | undefined;
     earned_badges?: {
+        id: string;
         user: {
+            id: string;
             name: string;
             handle: string;
-            id: string;
         };
-        id: string;
         earned_at: string;
     }[] | undefined;
 }>;
@@ -1159,7 +1159,7 @@ export const AdminSubmissionSchema: z.ZodObject<{
     id: z.ZodString;
     created_at: z.ZodString;
     updated_at: z.ZodOptional<z.ZodString>;
-    status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+    status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
     visibility: z.ZodEnum<["PRIVATE", "PUBLIC"]>;
     review_note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     points_awarded: z.ZodOptional<z.ZodNumber>;
@@ -1492,19 +1492,19 @@ export const AdminSubmissionSchema: z.ZodObject<{
         school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     }, "strip", z.ZodTypeAny, {
+        id: string;
         name: string;
         handle: string;
-        id: string;
         school?: string | null | undefined;
-        email?: string | undefined;
         cohort?: string | null | undefined;
+        email?: string | undefined;
     }, {
+        id: string;
         name: string;
         handle: string;
-        id: string;
         school?: string | null | undefined;
-        email?: string | undefined;
         cohort?: string | null | undefined;
+        email?: string | undefined;
     }>;
     activity: z.ZodObject<{
         code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
@@ -1527,38 +1527,38 @@ export const AdminSubmissionSchema: z.ZodObject<{
         school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     }, "strip", z.ZodTypeAny, {
+        id: string;
         name: string;
         handle: string;
-        id: string;
         school?: string | null | undefined;
-        email?: string | undefined;
         cohort?: string | null | undefined;
+        email?: string | undefined;
     }, {
+        id: string;
         name: string;
         handle: string;
-        id: string;
         school?: string | null | undefined;
-        email?: string | undefined;
         cohort?: string | null | undefined;
+        email?: string | undefined;
     }>>>;
     reviewed_at: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    status: "PENDING" | "APPROVED" | "REJECTED";
-    created_at: string;
+    status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
     activity: {
         code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         name: string;
         default_points?: number | undefined;
     };
+    id: string;
     user: {
+        id: string;
         name: string;
         handle: string;
-        id: string;
         school?: string | null | undefined;
-        email?: string | undefined;
         cohort?: string | null | undefined;
+        email?: string | undefined;
     };
-    id: string;
+    created_at: string;
     visibility: "PRIVATE" | "PUBLIC";
     payload: {
         provider: "SPL" | "ILS";
@@ -1601,35 +1601,35 @@ export const AdminSubmissionSchema: z.ZodObject<{
         id: string;
         submission_id: string;
     }[];
-    points_awarded?: number | undefined;
     updated_at?: string | undefined;
+    points_awarded?: number | undefined;
     review_note?: string | null | undefined;
     reviewer?: {
+        id: string;
         name: string;
         handle: string;
-        id: string;
         school?: string | null | undefined;
-        email?: string | undefined;
         cohort?: string | null | undefined;
+        email?: string | undefined;
     } | null | undefined;
     reviewed_at?: string | null | undefined;
 }, {
-    status: "PENDING" | "APPROVED" | "REJECTED";
-    created_at: string;
+    status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
     activity: {
         code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         name: string;
         default_points?: number | undefined;
     };
+    id: string;
     user: {
+        id: string;
         name: string;
         handle: string;
-        id: string;
         school?: string | null | undefined;
-        email?: string | undefined;
         cohort?: string | null | undefined;
+        email?: string | undefined;
     };
-    id: string;
+    created_at: string;
     visibility: "PRIVATE" | "PUBLIC";
     payload: {
         data: {
@@ -1681,8 +1681,8 @@ export const AdminSubmissionSchema: z.ZodObject<{
         };
         activityCode: "SHINE";
     };
-    points_awarded?: number | undefined;
     updated_at?: string | undefined;
+    points_awarded?: number | undefined;
     review_note?: string | null | undefined;
     attachmentCount?: number | undefined;
     attachments_rel?: {
@@ -1691,12 +1691,12 @@ export const AdminSubmissionSchema: z.ZodObject<{
         submission_id: string;
     }[] | undefined;
     reviewer?: {
+        id: string;
         name: string;
         handle: string;
-        id: string;
         school?: string | null | undefined;
-        email?: string | undefined;
         cohort?: string | null | undefined;
+        email?: string | undefined;
     } | null | undefined;
     reviewed_at?: string | null | undefined;
 }>;
@@ -1706,7 +1706,7 @@ export type AdminSubmissionsQuery = z.infer<typeof AdminSubmissionsQuerySchema>;
 
 // @public (undocumented)
 export const AdminSubmissionsQuerySchema: z.ZodObject<{
-    status: z.ZodDefault<z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED"]>>;
+    status: z.ZodDefault<z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED", "REVOKED"]>>;
     activity: z.ZodDefault<z.ZodEnum<["ALL", "LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>>;
     userId: z.ZodOptional<z.ZodString>;
     page: z.ZodDefault<z.ZodNumber>;
@@ -1716,7 +1716,7 @@ export const AdminSubmissionsQuerySchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     limit: number;
-    status: "PENDING" | "APPROVED" | "REJECTED" | "ALL";
+    status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED" | "ALL";
     activity: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL";
     sortBy: "status" | "created_at" | "updated_at";
     sortOrder: "desc" | "asc";
@@ -1724,7 +1724,7 @@ export const AdminSubmissionsQuerySchema: z.ZodObject<{
 }, {
     page?: number | undefined;
     limit?: number | undefined;
-    status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined;
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED" | "ALL" | undefined;
     activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
     userId?: string | undefined;
     sortBy?: "status" | "created_at" | "updated_at" | undefined;
@@ -1787,12 +1787,12 @@ export const AdminUserDTOSchema: z.ZodObject<{
     }>;
     totalPoints: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    name: string;
-    email: string;
-    handle: string;
     role: string;
-    id: string;
     totalPoints: number;
+    id: string;
+    name: string;
+    handle: string;
+    email: string;
     createdAt: string;
     counts: {
         submissions: number;
@@ -1803,12 +1803,12 @@ export const AdminUserDTOSchema: z.ZodObject<{
     cohort?: string | null | undefined;
     avatarUrl?: string | null | undefined;
 }, {
-    name: string;
-    email: string;
-    handle: string;
     role: string;
-    id: string;
     totalPoints: number;
+    id: string;
+    name: string;
+    handle: string;
+    email: string;
     createdAt: string;
     counts: {
         submissions: number;
@@ -1846,34 +1846,34 @@ export const AdminUserSchema: z.ZodObject<{
     }>;
     totalPoints: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
-    created_at: string;
-    name: string;
-    email: string;
-    handle: string;
     role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+    totalPoints: number;
     id: string;
+    name: string;
+    handle: string;
+    created_at: string;
+    email: string;
     _count: {
         submissions: number;
         ledger: number;
         earned_badges: number;
     };
-    totalPoints: number;
     school?: string | null | undefined;
     cohort?: string | null | undefined;
     avatar_url?: string | null | undefined;
 }, {
-    created_at: string;
-    name: string;
-    email: string;
-    handle: string;
     role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+    totalPoints: number;
     id: string;
+    name: string;
+    handle: string;
+    created_at: string;
+    email: string;
     _count: {
         submissions: number;
         ledger: number;
         earned_badges: number;
     };
-    totalPoints: number;
     school?: string | null | undefined;
     cohort?: string | null | undefined;
     avatar_url?: string | null | undefined;
@@ -1894,17 +1894,17 @@ export const AdminUsersQuerySchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     limit: number;
-    cohort: string;
     role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL";
-    sortBy: "created_at" | "name" | "email";
+    cohort: string;
+    sortBy: "name" | "created_at" | "email";
     sortOrder: "desc" | "asc";
     search: string;
 }, {
     page?: number | undefined;
     limit?: number | undefined;
-    cohort?: string | undefined;
     role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
-    sortBy?: "created_at" | "name" | "email" | undefined;
+    cohort?: string | undefined;
+    sortBy?: "name" | "created_at" | "email" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
     search?: string | undefined;
 }>;
@@ -2167,21 +2167,21 @@ export const AnalyticsFiltersSchema: z.ZodObject<{
     limit: z.ZodOptional<z.ZodNumber>;
     offset: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    offset?: number | undefined;
     limit?: number | undefined;
+    offset?: number | undefined;
     school?: string | undefined;
-    cohort?: string | undefined;
     activityCode?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
+    cohort?: string | undefined;
     dateRange?: {
         startDate?: Date | undefined;
         endDate?: Date | undefined;
     } | undefined;
 }, {
-    offset?: number | undefined;
     limit?: number | undefined;
+    offset?: number | undefined;
     school?: string | undefined;
-    cohort?: string | undefined;
     activityCode?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | undefined;
+    cohort?: string | undefined;
     dateRange?: {
         startDate?: Date | undefined;
         endDate?: Date | undefined;
@@ -2295,11 +2295,6 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 avgReviewTimeHours: number;
             }>;
         }, "strip", z.ZodTypeAny, {
-            points: {
-                totalAwarded: number;
-                totalEntries: number;
-                avgPerEntry: number;
-            };
             submissions: {
                 total: number;
                 pending: number;
@@ -2313,6 +2308,11 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 withSubmissions: number;
                 withBadges: number;
                 activationRate: number;
+            };
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
             };
             badges: {
                 totalBadges: number;
@@ -2324,11 +2324,6 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 avgReviewTimeHours: number;
             };
         }, {
-            points: {
-                totalAwarded: number;
-                totalEntries: number;
-                avgPerEntry: number;
-            };
             submissions: {
                 total: number;
                 pending: number;
@@ -2342,6 +2337,11 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 withSubmissions: number;
                 withBadges: number;
                 activationRate: number;
+            };
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
             };
             badges: {
                 totalBadges: number;
@@ -2369,33 +2369,33 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 activityName: z.ZodOptional<z.ZodString>;
                 count: z.ZodNumber;
             }, "strip", z.ZodTypeAny, {
-                activity: string;
                 count: number;
+                activity: string;
                 activityName?: string | undefined;
             }, {
-                activity: string;
                 count: number;
+                activity: string;
                 activityName?: string | undefined;
             }>, "many">;
             usersByRole: z.ZodArray<z.ZodObject<{
                 role: z.ZodString;
                 count: z.ZodNumber;
             }, "strip", z.ZodTypeAny, {
-                role: string;
                 count: number;
+                role: string;
             }, {
-                role: string;
                 count: number;
+                role: string;
             }>, "many">;
             usersByCohort: z.ZodOptional<z.ZodArray<z.ZodObject<{
                 cohort: z.ZodNullable<z.ZodString>;
                 count: z.ZodNumber;
             }, "strip", z.ZodTypeAny, {
-                cohort: string | null;
                 count: number;
+                cohort: string | null;
             }, {
-                cohort: string | null;
                 count: number;
+                cohort: string | null;
             }>, "many">>;
             pointsByActivity: z.ZodArray<z.ZodObject<{
                 activity: z.ZodString;
@@ -2429,13 +2429,13 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 count: number;
             }[];
             submissionsByActivity: {
-                activity: string;
                 count: number;
+                activity: string;
                 activityName?: string | undefined;
             }[];
             usersByRole: {
-                role: string;
                 count: number;
+                role: string;
             }[];
             pointsByActivity: {
                 entries: number;
@@ -2444,8 +2444,8 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 activityName?: string | undefined;
             }[];
             usersByCohort?: {
-                cohort: string | null;
                 count: number;
+                cohort: string | null;
             }[] | undefined;
             pointsDistribution?: {
                 count: number;
@@ -2457,13 +2457,13 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 count: number;
             }[];
             submissionsByActivity: {
-                activity: string;
                 count: number;
+                activity: string;
                 activityName?: string | undefined;
             }[];
             usersByRole: {
-                role: string;
                 count: number;
+                role: string;
             }[];
             pointsByActivity: {
                 entries: number;
@@ -2472,8 +2472,8 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 activityName?: string | undefined;
             }[];
             usersByCohort?: {
-                cohort: string | null;
                 count: number;
+                cohort: string | null;
             }[] | undefined;
             pointsDistribution?: {
                 count: number;
@@ -2541,17 +2541,17 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 activity_code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
                 user_name: z.ZodString;
                 created_at: z.ZodString;
-                status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+                status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
             }, "strip", z.ZodTypeAny, {
-                status: "PENDING" | "APPROVED" | "REJECTED";
-                created_at: string;
+                status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
                 id: string;
+                created_at: string;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
             }, {
-                status: "PENDING" | "APPROVED" | "REJECTED";
-                created_at: string;
+                status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
                 id: string;
+                created_at: string;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
             }>, "many">;
@@ -2563,15 +2563,15 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 approved_at: z.ZodString;
                 points_awarded: z.ZodNumber;
             }, "strip", z.ZodTypeAny, {
-                points_awarded: number;
                 id: string;
+                points_awarded: number;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
                 reviewer_name: string;
                 approved_at: string;
             }, {
-                points_awarded: number;
                 id: string;
+                points_awarded: number;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
                 reviewer_name: string;
@@ -2583,33 +2583,33 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 created_at: z.ZodString;
                 cohort: z.ZodNullable<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
-                created_at: string;
-                name: string;
                 cohort: string | null;
                 id: string;
+                name: string;
+                created_at: string;
             }, {
-                created_at: string;
-                name: string;
                 cohort: string | null;
                 id: string;
+                name: string;
+                created_at: string;
             }>, "many">;
         }, "strip", z.ZodTypeAny, {
             submissions: {
-                status: "PENDING" | "APPROVED" | "REJECTED";
-                created_at: string;
+                status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
                 id: string;
+                created_at: string;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
             }[];
             users: {
-                created_at: string;
-                name: string;
                 cohort: string | null;
                 id: string;
+                name: string;
+                created_at: string;
             }[];
             approvals: {
-                points_awarded: number;
                 id: string;
+                points_awarded: number;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
                 reviewer_name: string;
@@ -2617,21 +2617,21 @@ export const AnalyticsResponseSchema: z.ZodObject<{
             }[];
         }, {
             submissions: {
-                status: "PENDING" | "APPROVED" | "REJECTED";
-                created_at: string;
+                status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
                 id: string;
+                created_at: string;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
             }[];
             users: {
-                created_at: string;
-                name: string;
                 cohort: string | null;
                 id: string;
+                name: string;
+                created_at: string;
             }[];
             approvals: {
-                points_awarded: number;
                 id: string;
+                points_awarded: number;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
                 reviewer_name: string;
@@ -2646,16 +2646,16 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 avgReviewTimeHours: z.ZodNumber;
                 approvalRate: z.ZodNumber;
             }, "strip", z.ZodTypeAny, {
-                name: string;
-                id: string;
                 approvalRate: number;
                 avgReviewTimeHours: number;
+                id: string;
+                name: string;
                 reviewCount: number;
             }, {
-                name: string;
-                id: string;
                 approvalRate: number;
                 avgReviewTimeHours: number;
+                id: string;
+                name: string;
                 reviewCount: number;
             }>, "many">;
             topBadges: z.ZodArray<z.ZodObject<{
@@ -2665,51 +2665,46 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 uniqueEarners: z.ZodNumber;
             }, "strip", z.ZodTypeAny, {
                 code: string;
-                name: string;
                 uniqueEarners: number;
+                name: string;
                 earnedCount: number;
             }, {
                 code: string;
-                name: string;
                 uniqueEarners: number;
+                name: string;
                 earnedCount: number;
             }>, "many">;
         }, "strip", z.ZodTypeAny, {
             reviewers: {
-                name: string;
-                id: string;
                 approvalRate: number;
                 avgReviewTimeHours: number;
+                id: string;
+                name: string;
                 reviewCount: number;
             }[];
             topBadges: {
                 code: string;
-                name: string;
                 uniqueEarners: number;
+                name: string;
                 earnedCount: number;
             }[];
         }, {
             reviewers: {
-                name: string;
-                id: string;
                 approvalRate: number;
                 avgReviewTimeHours: number;
+                id: string;
+                name: string;
                 reviewCount: number;
             }[];
             topBadges: {
                 code: string;
-                name: string;
                 uniqueEarners: number;
+                name: string;
                 earnedCount: number;
             }[];
         }>;
     }, "strip", z.ZodTypeAny, {
         overview: {
-            points: {
-                totalAwarded: number;
-                totalEntries: number;
-                avgPerEntry: number;
-            };
             submissions: {
                 total: number;
                 pending: number;
@@ -2723,6 +2718,11 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 withSubmissions: number;
                 withBadges: number;
                 activationRate: number;
+            };
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
             };
             badges: {
                 totalBadges: number;
@@ -2740,13 +2740,13 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 count: number;
             }[];
             submissionsByActivity: {
-                activity: string;
                 count: number;
+                activity: string;
                 activityName?: string | undefined;
             }[];
             usersByRole: {
-                role: string;
                 count: number;
+                role: string;
             }[];
             pointsByActivity: {
                 entries: number;
@@ -2755,8 +2755,8 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 activityName?: string | undefined;
             }[];
             usersByCohort?: {
-                cohort: string | null;
                 count: number;
+                cohort: string | null;
             }[] | undefined;
             pointsDistribution?: {
                 count: number;
@@ -2778,21 +2778,21 @@ export const AnalyticsResponseSchema: z.ZodObject<{
         };
         recentActivity: {
             submissions: {
-                status: "PENDING" | "APPROVED" | "REJECTED";
-                created_at: string;
+                status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
                 id: string;
+                created_at: string;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
             }[];
             users: {
-                created_at: string;
-                name: string;
                 cohort: string | null;
                 id: string;
+                name: string;
+                created_at: string;
             }[];
             approvals: {
-                points_awarded: number;
                 id: string;
+                points_awarded: number;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
                 reviewer_name: string;
@@ -2801,26 +2801,21 @@ export const AnalyticsResponseSchema: z.ZodObject<{
         };
         performance: {
             reviewers: {
-                name: string;
-                id: string;
                 approvalRate: number;
                 avgReviewTimeHours: number;
+                id: string;
+                name: string;
                 reviewCount: number;
             }[];
             topBadges: {
                 code: string;
-                name: string;
                 uniqueEarners: number;
+                name: string;
                 earnedCount: number;
             }[];
         };
     }, {
         overview: {
-            points: {
-                totalAwarded: number;
-                totalEntries: number;
-                avgPerEntry: number;
-            };
             submissions: {
                 total: number;
                 pending: number;
@@ -2834,6 +2829,11 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 withSubmissions: number;
                 withBadges: number;
                 activationRate: number;
+            };
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
             };
             badges: {
                 totalBadges: number;
@@ -2851,13 +2851,13 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 count: number;
             }[];
             submissionsByActivity: {
-                activity: string;
                 count: number;
+                activity: string;
                 activityName?: string | undefined;
             }[];
             usersByRole: {
-                role: string;
                 count: number;
+                role: string;
             }[];
             pointsByActivity: {
                 entries: number;
@@ -2866,8 +2866,8 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 activityName?: string | undefined;
             }[];
             usersByCohort?: {
-                cohort: string | null;
                 count: number;
+                cohort: string | null;
             }[] | undefined;
             pointsDistribution?: {
                 count: number;
@@ -2889,21 +2889,21 @@ export const AnalyticsResponseSchema: z.ZodObject<{
         };
         recentActivity: {
             submissions: {
-                status: "PENDING" | "APPROVED" | "REJECTED";
-                created_at: string;
+                status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
                 id: string;
+                created_at: string;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
             }[];
             users: {
-                created_at: string;
-                name: string;
                 cohort: string | null;
                 id: string;
+                name: string;
+                created_at: string;
             }[];
             approvals: {
-                points_awarded: number;
                 id: string;
+                points_awarded: number;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
                 reviewer_name: string;
@@ -2912,29 +2912,23 @@ export const AnalyticsResponseSchema: z.ZodObject<{
         };
         performance: {
             reviewers: {
-                name: string;
-                id: string;
                 approvalRate: number;
                 avgReviewTimeHours: number;
+                id: string;
+                name: string;
                 reviewCount: number;
             }[];
             topBadges: {
                 code: string;
-                name: string;
                 uniqueEarners: number;
+                name: string;
                 earnedCount: number;
             }[];
         };
     }>;
 }, "strip", z.ZodTypeAny, {
-    success: true;
     data: {
         overview: {
-            points: {
-                totalAwarded: number;
-                totalEntries: number;
-                avgPerEntry: number;
-            };
             submissions: {
                 total: number;
                 pending: number;
@@ -2948,6 +2942,11 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 withSubmissions: number;
                 withBadges: number;
                 activationRate: number;
+            };
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
             };
             badges: {
                 totalBadges: number;
@@ -2965,13 +2964,13 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 count: number;
             }[];
             submissionsByActivity: {
-                activity: string;
                 count: number;
+                activity: string;
                 activityName?: string | undefined;
             }[];
             usersByRole: {
-                role: string;
                 count: number;
+                role: string;
             }[];
             pointsByActivity: {
                 entries: number;
@@ -2980,8 +2979,8 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 activityName?: string | undefined;
             }[];
             usersByCohort?: {
-                cohort: string | null;
                 count: number;
+                cohort: string | null;
             }[] | undefined;
             pointsDistribution?: {
                 count: number;
@@ -3003,21 +3002,21 @@ export const AnalyticsResponseSchema: z.ZodObject<{
         };
         recentActivity: {
             submissions: {
-                status: "PENDING" | "APPROVED" | "REJECTED";
-                created_at: string;
+                status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
                 id: string;
+                created_at: string;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
             }[];
             users: {
-                created_at: string;
-                name: string;
                 cohort: string | null;
                 id: string;
+                name: string;
+                created_at: string;
             }[];
             approvals: {
-                points_awarded: number;
                 id: string;
+                points_awarded: number;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
                 reviewer_name: string;
@@ -3026,29 +3025,24 @@ export const AnalyticsResponseSchema: z.ZodObject<{
         };
         performance: {
             reviewers: {
-                name: string;
-                id: string;
                 approvalRate: number;
                 avgReviewTimeHours: number;
+                id: string;
+                name: string;
                 reviewCount: number;
             }[];
             topBadges: {
                 code: string;
-                name: string;
                 uniqueEarners: number;
+                name: string;
                 earnedCount: number;
             }[];
         };
     };
+    success: true;
 }, {
-    success: true;
     data: {
         overview: {
-            points: {
-                totalAwarded: number;
-                totalEntries: number;
-                avgPerEntry: number;
-            };
             submissions: {
                 total: number;
                 pending: number;
@@ -3062,6 +3056,11 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 withSubmissions: number;
                 withBadges: number;
                 activationRate: number;
+            };
+            points: {
+                totalAwarded: number;
+                totalEntries: number;
+                avgPerEntry: number;
             };
             badges: {
                 totalBadges: number;
@@ -3079,13 +3078,13 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 count: number;
             }[];
             submissionsByActivity: {
-                activity: string;
                 count: number;
+                activity: string;
                 activityName?: string | undefined;
             }[];
             usersByRole: {
-                role: string;
                 count: number;
+                role: string;
             }[];
             pointsByActivity: {
                 entries: number;
@@ -3094,8 +3093,8 @@ export const AnalyticsResponseSchema: z.ZodObject<{
                 activityName?: string | undefined;
             }[];
             usersByCohort?: {
-                cohort: string | null;
                 count: number;
+                cohort: string | null;
             }[] | undefined;
             pointsDistribution?: {
                 count: number;
@@ -3117,21 +3116,21 @@ export const AnalyticsResponseSchema: z.ZodObject<{
         };
         recentActivity: {
             submissions: {
-                status: "PENDING" | "APPROVED" | "REJECTED";
-                created_at: string;
+                status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
                 id: string;
+                created_at: string;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
             }[];
             users: {
-                created_at: string;
-                name: string;
                 cohort: string | null;
                 id: string;
+                name: string;
+                created_at: string;
             }[];
             approvals: {
-                points_awarded: number;
                 id: string;
+                points_awarded: number;
                 activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 user_name: string;
                 reviewer_name: string;
@@ -3140,20 +3139,21 @@ export const AnalyticsResponseSchema: z.ZodObject<{
         };
         performance: {
             reviewers: {
-                name: string;
-                id: string;
                 approvalRate: number;
                 avgReviewTimeHours: number;
+                id: string;
+                name: string;
                 reviewCount: number;
             }[];
             topBadges: {
                 code: string;
-                name: string;
                 uniqueEarners: number;
+                name: string;
                 earnedCount: number;
             }[];
         };
     };
+    success: true;
 }>;
 
 // @public (undocumented)
@@ -3232,11 +3232,11 @@ export const AnalyticsSummarySchema: z.ZodObject<{
         first_points_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
     }, "strip", z.ZodTypeAny, {
         school: string | null;
+        cohort: string | null;
         name: string;
         handle: string;
-        cohort: string | null;
-        user_id: string;
         avatar_url: string | null;
+        user_id: string;
         total_points: number;
         public_submissions: number;
         total_approved_submissions: number;
@@ -3245,11 +3245,11 @@ export const AnalyticsSummarySchema: z.ZodObject<{
         first_points_at?: Date | null | undefined;
     }, {
         school: string | null;
+        cohort: string | null;
         name: string;
         handle: string;
-        cohort: string | null;
-        user_id: string;
         avatar_url: string | null;
+        user_id: string;
         total_points: number;
         public_submissions: number;
         total_approved_submissions: number;
@@ -3272,11 +3272,11 @@ export const AnalyticsSummarySchema: z.ZodObject<{
         first_points_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
     }, "first_points_at">, "strip", z.ZodTypeAny, {
         school: string | null;
+        cohort: string | null;
         name: string;
         handle: string;
-        cohort: string | null;
-        user_id: string;
         avatar_url: string | null;
+        user_id: string;
         total_points: number;
         public_submissions: number;
         total_approved_submissions: number;
@@ -3284,11 +3284,11 @@ export const AnalyticsSummarySchema: z.ZodObject<{
         last_activity_at: Date | null;
     }, {
         school: string | null;
+        cohort: string | null;
         name: string;
         handle: string;
-        cohort: string | null;
-        user_id: string;
         avatar_url: string | null;
+        user_id: string;
         total_points: number;
         public_submissions: number;
         total_approved_submissions: number;
@@ -3448,8 +3448,8 @@ export const AnalyticsSummarySchema: z.ZodObject<{
     }>;
 }, "strip", z.ZodTypeAny, {
     totalUsers: number;
-    activeUsers: number;
     totalSubmissions: number;
+    activeUsers: number;
     totalPointsAwarded: number;
     activityBreakdown: {
         code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
@@ -3471,11 +3471,11 @@ export const AnalyticsSummarySchema: z.ZodObject<{
     }[];
     topPerformersAllTime: ({
         school: string | null;
+        cohort: string | null;
         name: string;
         handle: string;
-        cohort: string | null;
-        user_id: string;
         avatar_url: string | null;
+        user_id: string;
         total_points: number;
         public_submissions: number;
         total_approved_submissions: number;
@@ -3485,11 +3485,11 @@ export const AnalyticsSummarySchema: z.ZodObject<{
     } | undefined)[];
     topPerformers30d: ({
         school: string | null;
+        cohort: string | null;
         name: string;
         handle: string;
-        cohort: string | null;
-        user_id: string;
         avatar_url: string | null;
+        user_id: string;
         total_points: number;
         public_submissions: number;
         total_approved_submissions: number;
@@ -3551,8 +3551,8 @@ export const AnalyticsSummarySchema: z.ZodObject<{
     };
 }, {
     totalUsers: number;
-    activeUsers: number;
     totalSubmissions: number;
+    activeUsers: number;
     totalPointsAwarded: number;
     activityBreakdown: {
         code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
@@ -3574,11 +3574,11 @@ export const AnalyticsSummarySchema: z.ZodObject<{
     }[];
     topPerformersAllTime: ({
         school: string | null;
+        cohort: string | null;
         name: string;
         handle: string;
-        cohort: string | null;
-        user_id: string;
         avatar_url: string | null;
+        user_id: string;
         total_points: number;
         public_submissions: number;
         total_approved_submissions: number;
@@ -3588,11 +3588,11 @@ export const AnalyticsSummarySchema: z.ZodObject<{
     } | undefined)[];
     topPerformers30d: ({
         school: string | null;
+        cohort: string | null;
         name: string;
         handle: string;
-        cohort: string | null;
-        user_id: string;
         avatar_url: string | null;
+        user_id: string;
         total_points: number;
         public_submissions: number;
         total_approved_submissions: number;
@@ -3881,21 +3881,21 @@ export const ApprovalEmailSchema: z.ZodObject<{
     dashboardUrl: z.ZodString;
     leaderboardUrl: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    pointsAwarded: number;
+    activityName: string;
+    totalPoints: number;
     name: string;
     email: string;
-    totalPoints: number;
-    activityName: string;
+    pointsAwarded: number;
     leaderboardPosition: number;
     dashboardUrl: string;
     leaderboardUrl: string;
     reviewerNote?: string | undefined;
 }, {
-    pointsAwarded: number;
+    activityName: string;
+    totalPoints: number;
     name: string;
     email: string;
-    totalPoints: number;
-    activityName: string;
+    pointsAwarded: number;
     leaderboardPosition: number;
     dashboardUrl: string;
     leaderboardUrl: string;
@@ -3954,12 +3954,12 @@ export const BadgeCriteriaSchema: z.ZodObject<{
     activity_codes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     conditions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>>>;
 }, "strip", z.ZodTypeAny, {
-    type: "points" | "submissions" | "activities" | "streak";
+    type: "submissions" | "points" | "activities" | "streak";
     threshold: number;
     activity_codes?: string[] | undefined;
     conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
 }, {
-    type: "points" | "submissions" | "activities" | "streak";
+    type: "submissions" | "points" | "activities" | "streak";
     threshold: number;
     activity_codes?: string[] | undefined;
     conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -3979,12 +3979,12 @@ export const BadgesListResponseSchema: z.ZodObject<{
                 activity_codes: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
                 conditions: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean, z.ZodArray<z.ZodString, "many">, z.ZodArray<z.ZodNumber, "many">]>>>;
             }, "strip", z.ZodTypeAny, {
-                type: "points" | "submissions" | "activities" | "streak";
+                type: "submissions" | "points" | "activities" | "streak";
                 threshold: number;
                 activity_codes?: string[] | undefined;
                 conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
             }, {
-                type: "points" | "submissions" | "activities" | "streak";
+                type: "submissions" | "points" | "activities" | "streak";
                 threshold: number;
                 activity_codes?: string[] | undefined;
                 conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -4004,30 +4004,30 @@ export const BadgesListResponseSchema: z.ZodObject<{
                     name: z.ZodString;
                     handle: z.ZodString;
                 }, "strip", z.ZodTypeAny, {
+                    id: string;
                     name: string;
                     handle: string;
-                    id: string;
                 }, {
+                    id: string;
                     name: string;
                     handle: string;
-                    id: string;
                 }>;
                 earned_at: z.ZodString;
             }, "strip", z.ZodTypeAny, {
+                id: string;
                 user: {
+                    id: string;
                     name: string;
                     handle: string;
-                    id: string;
                 };
-                id: string;
                 earned_at: string;
             }, {
+                id: string;
                 user: {
+                    id: string;
                     name: string;
                     handle: string;
-                    id: string;
                 };
-                id: string;
                 earned_at: string;
             }>, "many">>;
         }, "strip", z.ZodTypeAny, {
@@ -4035,7 +4035,7 @@ export const BadgesListResponseSchema: z.ZodObject<{
             name: string;
             description: string;
             criteria: {
-                type: "points" | "submissions" | "activities" | "streak";
+                type: "submissions" | "points" | "activities" | "streak";
                 threshold: number;
                 activity_codes?: string[] | undefined;
                 conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -4045,12 +4045,12 @@ export const BadgesListResponseSchema: z.ZodObject<{
                 earned_badges: number;
             } | undefined;
             earned_badges?: {
+                id: string;
                 user: {
+                    id: string;
                     name: string;
                     handle: string;
-                    id: string;
                 };
-                id: string;
                 earned_at: string;
             }[] | undefined;
         }, {
@@ -4058,7 +4058,7 @@ export const BadgesListResponseSchema: z.ZodObject<{
             name: string;
             description: string;
             criteria: {
-                type: "points" | "submissions" | "activities" | "streak";
+                type: "submissions" | "points" | "activities" | "streak";
                 threshold: number;
                 activity_codes?: string[] | undefined;
                 conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -4068,12 +4068,12 @@ export const BadgesListResponseSchema: z.ZodObject<{
                 earned_badges: number;
             } | undefined;
             earned_badges?: {
+                id: string;
                 user: {
+                    id: string;
                     name: string;
                     handle: string;
-                    id: string;
                 };
-                id: string;
                 earned_at: string;
             }[] | undefined;
         }>, "many">;
@@ -4083,7 +4083,7 @@ export const BadgesListResponseSchema: z.ZodObject<{
             name: string;
             description: string;
             criteria: {
-                type: "points" | "submissions" | "activities" | "streak";
+                type: "submissions" | "points" | "activities" | "streak";
                 threshold: number;
                 activity_codes?: string[] | undefined;
                 conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -4093,12 +4093,12 @@ export const BadgesListResponseSchema: z.ZodObject<{
                 earned_badges: number;
             } | undefined;
             earned_badges?: {
+                id: string;
                 user: {
+                    id: string;
                     name: string;
                     handle: string;
-                    id: string;
                 };
-                id: string;
                 earned_at: string;
             }[] | undefined;
         }[];
@@ -4108,7 +4108,7 @@ export const BadgesListResponseSchema: z.ZodObject<{
             name: string;
             description: string;
             criteria: {
-                type: "points" | "submissions" | "activities" | "streak";
+                type: "submissions" | "points" | "activities" | "streak";
                 threshold: number;
                 activity_codes?: string[] | undefined;
                 conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -4118,25 +4118,24 @@ export const BadgesListResponseSchema: z.ZodObject<{
                 earned_badges: number;
             } | undefined;
             earned_badges?: {
+                id: string;
                 user: {
+                    id: string;
                     name: string;
                     handle: string;
-                    id: string;
                 };
-                id: string;
                 earned_at: string;
             }[] | undefined;
         }[];
     }>;
 }, "strip", z.ZodTypeAny, {
-    success: true;
     data: {
         badges: {
             code: string;
             name: string;
             description: string;
             criteria: {
-                type: "points" | "submissions" | "activities" | "streak";
+                type: "submissions" | "points" | "activities" | "streak";
                 threshold: number;
                 activity_codes?: string[] | undefined;
                 conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -4146,25 +4145,25 @@ export const BadgesListResponseSchema: z.ZodObject<{
                 earned_badges: number;
             } | undefined;
             earned_badges?: {
+                id: string;
                 user: {
+                    id: string;
                     name: string;
                     handle: string;
-                    id: string;
                 };
-                id: string;
                 earned_at: string;
             }[] | undefined;
         }[];
     };
+    success: true;
 }, {
-    success: true;
     data: {
         badges: {
             code: string;
             name: string;
             description: string;
             criteria: {
-                type: "points" | "submissions" | "activities" | "streak";
+                type: "submissions" | "points" | "activities" | "streak";
                 threshold: number;
                 activity_codes?: string[] | undefined;
                 conditions?: Record<string, string | number | boolean | string[] | number[]> | undefined;
@@ -4174,16 +4173,17 @@ export const BadgesListResponseSchema: z.ZodObject<{
                 earned_badges: number;
             } | undefined;
             earned_badges?: {
+                id: string;
                 user: {
+                    id: string;
                     name: string;
                     handle: string;
-                    id: string;
                 };
-                id: string;
                 earned_at: string;
             }[] | undefined;
         }[];
     };
+    success: true;
 }>;
 
 // Warning: (ae-forgotten-export) The symbol "JsonValue" needs to be exported by the entry point index.d.ts
@@ -4333,8 +4333,8 @@ export const ClerkUserDataSchema: z.ZodObject<{
         }>>;
     }, "strip", z.ZodTypeAny, {
         object: "external_account";
-        provider: string;
         id: string;
+        provider: string;
         first_name: string;
         last_name: string;
         username: string | null;
@@ -4358,8 +4358,8 @@ export const ClerkUserDataSchema: z.ZodObject<{
         } | undefined;
     }, {
         object: "external_account";
-        provider: string;
         id: string;
+        provider: string;
         first_name: string;
         last_name: string;
         username: string | null;
@@ -4424,8 +4424,9 @@ export const ClerkUserDataSchema: z.ZodObject<{
     }>>;
 }, "strip", z.ZodTypeAny, {
     object: "user";
-    created_at: number;
     id: string;
+    created_at: number;
+    updated_at: number;
     first_name: string | null;
     last_name: string | null;
     username: string | null;
@@ -4454,8 +4455,8 @@ export const ClerkUserDataSchema: z.ZodObject<{
     web3_wallets: unknown[];
     external_accounts: {
         object: "external_account";
-        provider: string;
         id: string;
+        provider: string;
         first_name: string;
         last_name: string;
         username: string | null;
@@ -4478,7 +4479,6 @@ export const ClerkUserDataSchema: z.ZodObject<{
             lastName?: string | undefined;
         } | undefined;
     }[];
-    updated_at: number;
     gender: string;
     birthday: string;
     profile_image_url: string;
@@ -4501,8 +4501,9 @@ export const ClerkUserDataSchema: z.ZodObject<{
     } | undefined;
 }, {
     object: "user";
-    created_at: number;
     id: string;
+    created_at: number;
+    updated_at: number;
     first_name: string | null;
     last_name: string | null;
     username: string | null;
@@ -4531,8 +4532,8 @@ export const ClerkUserDataSchema: z.ZodObject<{
     web3_wallets: unknown[];
     external_accounts: {
         object: "external_account";
-        provider: string;
         id: string;
+        provider: string;
         first_name: string;
         last_name: string;
         username: string | null;
@@ -4555,7 +4556,6 @@ export const ClerkUserDataSchema: z.ZodObject<{
             lastName?: string | undefined;
         } | undefined;
     }[];
-    updated_at: number;
     gender: string;
     birthday: string;
     profile_image_url: string;
@@ -4691,8 +4691,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
             }>>;
         }, "strip", z.ZodTypeAny, {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -4716,8 +4716,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
             } | undefined;
         }, {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -4782,8 +4782,9 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         }>>;
     }, "strip", z.ZodTypeAny, {
         object: "user";
-        created_at: number;
         id: string;
+        created_at: number;
+        updated_at: number;
         first_name: string | null;
         last_name: string | null;
         username: string | null;
@@ -4812,8 +4813,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         web3_wallets: unknown[];
         external_accounts: {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -4836,7 +4837,6 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
                 lastName?: string | undefined;
             } | undefined;
         }[];
-        updated_at: number;
         gender: string;
         birthday: string;
         profile_image_url: string;
@@ -4859,8 +4859,9 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         } | undefined;
     }, {
         object: "user";
-        created_at: number;
         id: string;
+        created_at: number;
+        updated_at: number;
         first_name: string | null;
         last_name: string | null;
         username: string | null;
@@ -4889,8 +4890,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         web3_wallets: unknown[];
         external_accounts: {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -4913,7 +4914,6 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
                 lastName?: string | undefined;
             } | undefined;
         }[];
-        updated_at: number;
         gender: string;
         birthday: string;
         profile_image_url: string;
@@ -4942,8 +4942,9 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
     type: "user.created" | "user.updated" | "user.deleted" | "session.created" | "session.ended" | "session.removed" | "session.revoked";
     data: {
         object: "user";
-        created_at: number;
         id: string;
+        created_at: number;
+        updated_at: number;
         first_name: string | null;
         last_name: string | null;
         username: string | null;
@@ -4972,8 +4973,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         web3_wallets: unknown[];
         external_accounts: {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -4996,7 +4997,6 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
                 lastName?: string | undefined;
             } | undefined;
         }[];
-        updated_at: number;
         gender: string;
         birthday: string;
         profile_image_url: string;
@@ -5023,8 +5023,9 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
     type: "user.created" | "user.updated" | "user.deleted" | "session.created" | "session.ended" | "session.removed" | "session.revoked";
     data: {
         object: "user";
-        created_at: number;
         id: string;
+        created_at: number;
+        updated_at: number;
         first_name: string | null;
         last_name: string | null;
         username: string | null;
@@ -5053,8 +5054,8 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
         web3_wallets: unknown[];
         external_accounts: {
             object: "external_account";
-            provider: string;
             id: string;
+            provider: string;
             first_name: string;
             last_name: string;
             username: string | null;
@@ -5077,7 +5078,6 @@ export const ClerkWebhookEventSchema: z.ZodObject<{
                 lastName?: string | undefined;
             } | undefined;
         }[];
-        updated_at: number;
         gender: string;
         birthday: string;
         profile_image_url: string;
@@ -5279,14 +5279,14 @@ export const ComparisonMetricsSchema: z.ZodObject<{
         approvalRate: z.ZodNumber;
         avgPointsPerParticipant: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        totalPoints: number;
         approvalRate: number;
+        totalPoints: number;
         totalSubmissions: number;
         activeParticipants: number;
         avgPointsPerParticipant: number;
     }, {
-        totalPoints: number;
         approvalRate: number;
+        totalPoints: number;
         totalSubmissions: number;
         activeParticipants: number;
         avgPointsPerParticipant: number;
@@ -5305,11 +5305,11 @@ export const ComparisonMetricsSchema: z.ZodObject<{
         approvalRateRank: number;
     }>>;
 }, "strip", z.ZodTypeAny, {
-    entityType: "school" | "cohort" | "activity";
+    entityType: "school" | "activity" | "cohort";
     entity: string;
     metrics: {
-        totalPoints: number;
         approvalRate: number;
+        totalPoints: number;
         totalSubmissions: number;
         activeParticipants: number;
         avgPointsPerParticipant: number;
@@ -5320,11 +5320,11 @@ export const ComparisonMetricsSchema: z.ZodObject<{
         approvalRateRank: number;
     } | undefined;
 }, {
-    entityType: "school" | "cohort" | "activity";
+    entityType: "school" | "activity" | "cohort";
     entity: string;
     metrics: {
-        totalPoints: number;
         approvalRate: number;
+        totalPoints: number;
         totalSubmissions: number;
         activeParticipants: number;
         avgPointsPerParticipant: number;
@@ -5428,33 +5428,33 @@ export const DistributionsSchema: z.ZodObject<{
         activityName: z.ZodOptional<z.ZodString>;
         count: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        activity: string;
         count: number;
+        activity: string;
         activityName?: string | undefined;
     }, {
-        activity: string;
         count: number;
+        activity: string;
         activityName?: string | undefined;
     }>, "many">;
     usersByRole: z.ZodArray<z.ZodObject<{
         role: z.ZodString;
         count: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        role: string;
         count: number;
+        role: string;
     }, {
-        role: string;
         count: number;
+        role: string;
     }>, "many">;
     usersByCohort: z.ZodOptional<z.ZodArray<z.ZodObject<{
         cohort: z.ZodNullable<z.ZodString>;
         count: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        cohort: string | null;
         count: number;
+        cohort: string | null;
     }, {
-        cohort: string | null;
         count: number;
+        cohort: string | null;
     }>, "many">>;
     pointsByActivity: z.ZodArray<z.ZodObject<{
         activity: z.ZodString;
@@ -5488,13 +5488,13 @@ export const DistributionsSchema: z.ZodObject<{
         count: number;
     }[];
     submissionsByActivity: {
-        activity: string;
         count: number;
+        activity: string;
         activityName?: string | undefined;
     }[];
     usersByRole: {
-        role: string;
         count: number;
+        role: string;
     }[];
     pointsByActivity: {
         entries: number;
@@ -5503,8 +5503,8 @@ export const DistributionsSchema: z.ZodObject<{
         activityName?: string | undefined;
     }[];
     usersByCohort?: {
-        cohort: string | null;
         count: number;
+        cohort: string | null;
     }[] | undefined;
     pointsDistribution?: {
         count: number;
@@ -5516,13 +5516,13 @@ export const DistributionsSchema: z.ZodObject<{
         count: number;
     }[];
     submissionsByActivity: {
-        activity: string;
         count: number;
+        activity: string;
         activityName?: string | undefined;
     }[];
     usersByRole: {
-        role: string;
         count: number;
+        role: string;
     }[];
     pointsByActivity: {
         entries: number;
@@ -5531,8 +5531,8 @@ export const DistributionsSchema: z.ZodObject<{
         activityName?: string | undefined;
     }[];
     usersByCohort?: {
-        cohort: string | null;
         count: number;
+        cohort: string | null;
     }[] | undefined;
     pointsDistribution?: {
         count: number;
@@ -5544,7 +5544,8 @@ export const DistributionsSchema: z.ZodObject<{
 export const DomainSchemas: {
     readonly ActivityCode: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
     readonly UserRole: z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
-    readonly SubmissionStatus: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+    readonly UserType: z.ZodEnum<["EDUCATOR", "STUDENT"]>;
+    readonly SubmissionStatus: z.ZodEnum<["PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
     readonly Visibility: z.ZodEnum<["PRIVATE", "PUBLIC"]>;
     readonly LedgerSource: z.ZodEnum<["MANUAL", "WEBHOOK", "FORM"]>;
     readonly Handle: z.ZodString;
@@ -5563,12 +5564,12 @@ export const DomainSchemas: {
         limit: number;
         offset?: number | undefined;
     }, {
-        offset?: number | undefined;
         page?: number | undefined;
         limit?: number | undefined;
+        offset?: number | undefined;
     }>;
     readonly ActivityFilter: z.ZodEnum<["ALL", "LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
-    readonly StatusFilter: z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED"]>;
+    readonly StatusFilter: z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
     readonly RoleFilter: z.ZodEnum<["ALL", "PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
     readonly ApiSuccess: <T extends z.ZodTypeAny>(dataSchema: T) => z.ZodObject<{
         success: z.ZodLiteral<true>;
@@ -5787,6 +5788,8 @@ export const ErrorCodes: {
     readonly SUBMISSION_LIMIT_EXCEEDED: "SUBMISSION_LIMIT_EXCEEDED";
     readonly INVALID_SUBMISSION_STATUS: "INVALID_SUBMISSION_STATUS";
     readonly POINT_ADJUSTMENT_OUT_OF_BOUNDS: "POINT_ADJUSTMENT_OUT_OF_BOUNDS";
+    readonly SELF_REFERRAL: "SELF_REFERRAL";
+    readonly CIRCULAR_REFERRAL: "CIRCULAR_REFERRAL";
     readonly FILE_TOO_LARGE: "FILE_TOO_LARGE";
     readonly INVALID_FILE_TYPE: "INVALID_FILE_TYPE";
     readonly FILE_UPLOAD_FAILED: "FILE_UPLOAD_FAILED";
@@ -5929,24 +5932,24 @@ export const ExportsQuerySchema: z.ZodObject<{
     startDate: z.ZodOptional<z.ZodString>;
     endDate: z.ZodOptional<z.ZodString>;
     activity: z.ZodOptional<z.ZodEnum<["ALL", "LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>>;
-    status: z.ZodOptional<z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED"]>>;
+    status: z.ZodOptional<z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED", "REVOKED"]>>;
     cohort: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    type: "points" | "submissions" | "users" | "leaderboard";
+    type: "submissions" | "users" | "points" | "leaderboard";
     format: "csv";
-    status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined;
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED" | "ALL" | undefined;
+    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
     cohort?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
-    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
 }, {
-    type: "points" | "submissions" | "users" | "leaderboard";
+    type: "submissions" | "users" | "points" | "leaderboard";
     format: "csv";
-    status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined;
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED" | "ALL" | undefined;
+    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
     cohort?: string | undefined;
     startDate?: string | undefined;
     endDate?: string | undefined;
-    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
 }>;
 
 // @public (undocumented)
@@ -6096,14 +6099,14 @@ export const KajabiContactSchema: z.ZodObject<{
     last_name: z.ZodOptional<z.ZodString>;
     tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
 }, "strip", z.ZodTypeAny, {
-    email: string;
     id: number;
+    email: string;
     first_name?: string | undefined;
     last_name?: string | undefined;
     tags?: string[] | undefined;
 }, {
-    email: string;
     id: number;
+    email: string;
     first_name?: string | undefined;
     last_name?: string | undefined;
     tags?: string[] | undefined;
@@ -6125,14 +6128,14 @@ export const KajabiEventSchema: z.ZodObject<{
             last_name: z.ZodOptional<z.ZodString>;
             tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
         }, "strip", z.ZodTypeAny, {
-            email: string;
             id: number;
+            email: string;
             first_name?: string | undefined;
             last_name?: string | undefined;
             tags?: string[] | undefined;
         }, {
-            email: string;
             id: number;
+            email: string;
             first_name?: string | undefined;
             last_name?: string | undefined;
             tags?: string[] | undefined;
@@ -6147,8 +6150,8 @@ export const KajabiEventSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         event_type: "contact.tagged" | "tag.added" | "tag.removed";
         contact: {
-            email: string;
             id: number;
+            email: string;
             first_name?: string | undefined;
             last_name?: string | undefined;
             tags?: string[] | undefined;
@@ -6160,8 +6163,8 @@ export const KajabiEventSchema: z.ZodObject<{
     }, {
         event_type: "contact.tagged" | "tag.added" | "tag.removed";
         contact: {
-            email: string;
             id: number;
+            email: string;
             first_name?: string | undefined;
             last_name?: string | undefined;
             tags?: string[] | undefined;
@@ -6172,13 +6175,12 @@ export const KajabiEventSchema: z.ZodObject<{
         event_id?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    processed_at: string | null;
     id: string;
     payload: {
         event_type: "contact.tagged" | "tag.added" | "tag.removed";
         contact: {
-            email: string;
             id: number;
+            email: string;
             first_name?: string | undefined;
             last_name?: string | undefined;
             tags?: string[] | undefined;
@@ -6188,16 +6190,16 @@ export const KajabiEventSchema: z.ZodObject<{
         };
         event_id?: string | undefined;
     };
+    processed_at: string | null;
     received_at: string;
     user_match: string | null;
 }, {
-    processed_at: string | null;
     id: string;
     payload: {
         event_type: "contact.tagged" | "tag.added" | "tag.removed";
         contact: {
-            email: string;
             id: number;
+            email: string;
             first_name?: string | undefined;
             last_name?: string | undefined;
             tags?: string[] | undefined;
@@ -6207,6 +6209,7 @@ export const KajabiEventSchema: z.ZodObject<{
         };
         event_id?: string | undefined;
     };
+    processed_at: string | null;
     received_at: string;
     user_match: string | null;
 }>;
@@ -6239,14 +6242,14 @@ export const KajabiResponseSchema: z.ZodObject<{
                     last_name: z.ZodOptional<z.ZodString>;
                     tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
                 }, "strip", z.ZodTypeAny, {
-                    email: string;
                     id: number;
+                    email: string;
                     first_name?: string | undefined;
                     last_name?: string | undefined;
                     tags?: string[] | undefined;
                 }, {
-                    email: string;
                     id: number;
+                    email: string;
                     first_name?: string | undefined;
                     last_name?: string | undefined;
                     tags?: string[] | undefined;
@@ -6261,8 +6264,8 @@ export const KajabiResponseSchema: z.ZodObject<{
             }, "strip", z.ZodTypeAny, {
                 event_type: "contact.tagged" | "tag.added" | "tag.removed";
                 contact: {
-                    email: string;
                     id: number;
+                    email: string;
                     first_name?: string | undefined;
                     last_name?: string | undefined;
                     tags?: string[] | undefined;
@@ -6274,8 +6277,8 @@ export const KajabiResponseSchema: z.ZodObject<{
             }, {
                 event_type: "contact.tagged" | "tag.added" | "tag.removed";
                 contact: {
-                    email: string;
                     id: number;
+                    email: string;
                     first_name?: string | undefined;
                     last_name?: string | undefined;
                     tags?: string[] | undefined;
@@ -6286,13 +6289,12 @@ export const KajabiResponseSchema: z.ZodObject<{
                 event_id?: string | undefined;
             }>;
         }, "strip", z.ZodTypeAny, {
-            processed_at: string | null;
             id: string;
             payload: {
                 event_type: "contact.tagged" | "tag.added" | "tag.removed";
                 contact: {
-                    email: string;
                     id: number;
+                    email: string;
                     first_name?: string | undefined;
                     last_name?: string | undefined;
                     tags?: string[] | undefined;
@@ -6302,16 +6304,16 @@ export const KajabiResponseSchema: z.ZodObject<{
                 };
                 event_id?: string | undefined;
             };
+            processed_at: string | null;
             received_at: string;
             user_match: string | null;
         }, {
-            processed_at: string | null;
             id: string;
             payload: {
                 event_type: "contact.tagged" | "tag.added" | "tag.removed";
                 contact: {
-                    email: string;
                     id: number;
+                    email: string;
                     first_name?: string | undefined;
                     last_name?: string | undefined;
                     tags?: string[] | undefined;
@@ -6321,6 +6323,7 @@ export const KajabiResponseSchema: z.ZodObject<{
                 };
                 event_id?: string | undefined;
             };
+            processed_at: string | null;
             received_at: string;
             user_match: string | null;
         }>, "many">;
@@ -6344,14 +6347,20 @@ export const KajabiResponseSchema: z.ZodObject<{
             unmatched_events: number;
         }>;
     }, "strip", z.ZodTypeAny, {
+        stats: {
+            points_awarded: number;
+            total_events: number;
+            processed_events: number;
+            matched_users: number;
+            unmatched_events: number;
+        };
         events: {
-            processed_at: string | null;
             id: string;
             payload: {
                 event_type: "contact.tagged" | "tag.added" | "tag.removed";
                 contact: {
-                    email: string;
                     id: number;
+                    email: string;
                     first_name?: string | undefined;
                     last_name?: string | undefined;
                     tags?: string[] | undefined;
@@ -6361,25 +6370,25 @@ export const KajabiResponseSchema: z.ZodObject<{
                 };
                 event_id?: string | undefined;
             };
+            processed_at: string | null;
             received_at: string;
             user_match: string | null;
         }[];
-        stats: {
-            points_awarded: number;
-            total_events: number;
-            processed_events: number;
-            matched_users: number;
-            unmatched_events: number;
-        };
     }, {
+        stats: {
+            points_awarded: number;
+            total_events: number;
+            processed_events: number;
+            matched_users: number;
+            unmatched_events: number;
+        };
         events: {
-            processed_at: string | null;
             id: string;
             payload: {
                 event_type: "contact.tagged" | "tag.added" | "tag.removed";
                 contact: {
-                    email: string;
                     id: number;
+                    email: string;
                     first_name?: string | undefined;
                     last_name?: string | undefined;
                     tags?: string[] | undefined;
@@ -6389,28 +6398,27 @@ export const KajabiResponseSchema: z.ZodObject<{
                 };
                 event_id?: string | undefined;
             };
+            processed_at: string | null;
             received_at: string;
             user_match: string | null;
         }[];
-        stats: {
-            points_awarded: number;
-            total_events: number;
-            processed_events: number;
-            matched_users: number;
-            unmatched_events: number;
-        };
     }>;
 }, "strip", z.ZodTypeAny, {
-    success: true;
     data: {
+        stats: {
+            points_awarded: number;
+            total_events: number;
+            processed_events: number;
+            matched_users: number;
+            unmatched_events: number;
+        };
         events: {
-            processed_at: string | null;
             id: string;
             payload: {
                 event_type: "contact.tagged" | "tag.added" | "tag.removed";
                 contact: {
-                    email: string;
                     id: number;
+                    email: string;
                     first_name?: string | undefined;
                     last_name?: string | undefined;
                     tags?: string[] | undefined;
@@ -6420,28 +6428,28 @@ export const KajabiResponseSchema: z.ZodObject<{
                 };
                 event_id?: string | undefined;
             };
+            processed_at: string | null;
             received_at: string;
             user_match: string | null;
         }[];
-        stats: {
-            points_awarded: number;
-            total_events: number;
-            processed_events: number;
-            matched_users: number;
-            unmatched_events: number;
-        };
     };
+    success: true;
 }, {
-    success: true;
     data: {
+        stats: {
+            points_awarded: number;
+            total_events: number;
+            processed_events: number;
+            matched_users: number;
+            unmatched_events: number;
+        };
         events: {
-            processed_at: string | null;
             id: string;
             payload: {
                 event_type: "contact.tagged" | "tag.added" | "tag.removed";
                 contact: {
-                    email: string;
                     id: number;
+                    email: string;
                     first_name?: string | undefined;
                     last_name?: string | undefined;
                     tags?: string[] | undefined;
@@ -6451,17 +6459,12 @@ export const KajabiResponseSchema: z.ZodObject<{
                 };
                 event_id?: string | undefined;
             };
+            processed_at: string | null;
             received_at: string;
             user_match: string | null;
         }[];
-        stats: {
-            points_awarded: number;
-            total_events: number;
-            processed_events: number;
-            matched_users: number;
-            unmatched_events: number;
-        };
     };
+    success: true;
 }>;
 
 // @public (undocumented)
@@ -6502,14 +6505,14 @@ export const KajabiTagEventSchema: z.ZodObject<{
         last_name: z.ZodOptional<z.ZodString>;
         tags: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        email: string;
         id: number;
+        email: string;
         first_name?: string | undefined;
         last_name?: string | undefined;
         tags?: string[] | undefined;
     }, {
-        email: string;
         id: number;
+        email: string;
         first_name?: string | undefined;
         last_name?: string | undefined;
         tags?: string[] | undefined;
@@ -6524,8 +6527,8 @@ export const KajabiTagEventSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     event_type: "contact.tagged" | "tag.added" | "tag.removed";
     contact: {
-        email: string;
         id: number;
+        email: string;
         first_name?: string | undefined;
         last_name?: string | undefined;
         tags?: string[] | undefined;
@@ -6537,8 +6540,8 @@ export const KajabiTagEventSchema: z.ZodObject<{
 }, {
     event_type: "contact.tagged" | "tag.added" | "tag.removed";
     contact: {
-        email: string;
         id: number;
+        email: string;
         first_name?: string | undefined;
         last_name?: string | undefined;
         tags?: string[] | undefined;
@@ -6589,11 +6592,11 @@ export const Leaderboard30dSchema: z.ZodObject<Omit<{
     first_points_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
 }, "first_points_at">, "strip", z.ZodTypeAny, {
     school: string | null;
+    cohort: string | null;
     name: string;
     handle: string;
-    cohort: string | null;
-    user_id: string;
     avatar_url: string | null;
+    user_id: string;
     total_points: number;
     public_submissions: number;
     total_approved_submissions: number;
@@ -6601,11 +6604,11 @@ export const Leaderboard30dSchema: z.ZodObject<Omit<{
     last_activity_at: Date | null;
 }, {
     school: string | null;
+    cohort: string | null;
     name: string;
     handle: string;
-    cohort: string | null;
-    user_id: string;
     avatar_url: string | null;
+    user_id: string;
     total_points: number;
     public_submissions: number;
     total_approved_submissions: number;
@@ -6678,10 +6681,10 @@ export const LeaderboardEntryDTOSchema: z.ZodObject<{
         }>, "many">>;
         totalPoints: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
+        totalPoints: number;
+        id: string;
         name: string;
         handle: string;
-        id: string;
-        totalPoints: number;
         school?: string | null | undefined;
         avatarUrl?: string | null | undefined;
         earnedBadges?: {
@@ -6694,10 +6697,10 @@ export const LeaderboardEntryDTOSchema: z.ZodObject<{
             earnedAt?: string | undefined;
         }[] | undefined;
     }, {
+        totalPoints: number;
+        id: string;
         name: string;
         handle: string;
-        id: string;
-        totalPoints: number;
         school?: string | null | undefined;
         avatarUrl?: string | null | undefined;
         earnedBadges?: {
@@ -6712,10 +6715,10 @@ export const LeaderboardEntryDTOSchema: z.ZodObject<{
     }>;
 }, "strip", z.ZodTypeAny, {
     user: {
+        totalPoints: number;
+        id: string;
         name: string;
         handle: string;
-        id: string;
-        totalPoints: number;
         school?: string | null | undefined;
         avatarUrl?: string | null | undefined;
         earnedBadges?: {
@@ -6731,10 +6734,10 @@ export const LeaderboardEntryDTOSchema: z.ZodObject<{
     rank: number;
 }, {
     user: {
+        totalPoints: number;
+        id: string;
         name: string;
         handle: string;
-        id: string;
-        totalPoints: number;
         school?: string | null | undefined;
         avatarUrl?: string | null | undefined;
         earnedBadges?: {
@@ -6766,11 +6769,11 @@ export const LeaderboardEntrySchema: z.ZodObject<{
     first_points_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
 }, "strip", z.ZodTypeAny, {
     school: string | null;
+    cohort: string | null;
     name: string;
     handle: string;
-    cohort: string | null;
-    user_id: string;
     avatar_url: string | null;
+    user_id: string;
     total_points: number;
     public_submissions: number;
     total_approved_submissions: number;
@@ -6779,11 +6782,11 @@ export const LeaderboardEntrySchema: z.ZodObject<{
     first_points_at?: Date | null | undefined;
 }, {
     school: string | null;
+    cohort: string | null;
     name: string;
     handle: string;
-    cohort: string | null;
-    user_id: string;
     avatar_url: string | null;
+    user_id: string;
     total_points: number;
     public_submissions: number;
     total_approved_submissions: number;
@@ -6802,13 +6805,13 @@ export const LeaderboardQuerySchema: z.ZodObject<{
     offset: z.ZodDefault<z.ZodNumber>;
     search: z.ZodDefault<z.ZodOptional<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
-    offset: number;
     limit: number;
+    offset: number;
     search: string;
     period: "all" | "30d";
 }, {
-    offset?: number | undefined;
     limit?: number | undefined;
+    offset?: number | undefined;
     search?: string | undefined;
     period?: "all" | "30d" | undefined;
 }>;
@@ -6832,11 +6835,11 @@ export const LeaderboardTotalsSchema: z.ZodObject<{
     first_points_at: z.ZodOptional<z.ZodNullable<z.ZodDate>>;
 }, "strip", z.ZodTypeAny, {
     school: string | null;
+    cohort: string | null;
     name: string;
     handle: string;
-    cohort: string | null;
-    user_id: string;
     avatar_url: string | null;
+    user_id: string;
     total_points: number;
     public_submissions: number;
     total_approved_submissions: number;
@@ -6845,11 +6848,11 @@ export const LeaderboardTotalsSchema: z.ZodObject<{
     first_points_at?: Date | null | undefined;
 }, {
     school: string | null;
+    cohort: string | null;
     name: string;
     handle: string;
-    cohort: string | null;
-    user_id: string;
     avatar_url: string | null;
+    user_id: string;
     total_points: number;
     public_submissions: number;
     total_approved_submissions: number;
@@ -7243,11 +7246,6 @@ export const OverviewStatsSchema: z.ZodObject<{
         avgReviewTimeHours: number;
     }>;
 }, "strip", z.ZodTypeAny, {
-    points: {
-        totalAwarded: number;
-        totalEntries: number;
-        avgPerEntry: number;
-    };
     submissions: {
         total: number;
         pending: number;
@@ -7261,6 +7259,11 @@ export const OverviewStatsSchema: z.ZodObject<{
         withSubmissions: number;
         withBadges: number;
         activationRate: number;
+    };
+    points: {
+        totalAwarded: number;
+        totalEntries: number;
+        avgPerEntry: number;
     };
     badges: {
         totalBadges: number;
@@ -7272,11 +7275,6 @@ export const OverviewStatsSchema: z.ZodObject<{
         avgReviewTimeHours: number;
     };
 }, {
-    points: {
-        totalAwarded: number;
-        totalEntries: number;
-        avgPerEntry: number;
-    };
     submissions: {
         total: number;
         pending: number;
@@ -7290,6 +7288,11 @@ export const OverviewStatsSchema: z.ZodObject<{
         withSubmissions: number;
         withBadges: number;
         activationRate: number;
+    };
+    points: {
+        totalAwarded: number;
+        totalEntries: number;
+        avgPerEntry: number;
     };
     badges: {
         totalBadges: number;
@@ -7376,9 +7379,9 @@ export const PaginationParamsSchema: z.ZodObject<{
     limit: number;
     offset?: number | undefined;
 }, {
-    offset?: number | undefined;
     page?: number | undefined;
     limit?: number | undefined;
+    offset?: number | undefined;
 }>;
 
 // @public (undocumented)
@@ -7391,9 +7394,9 @@ export const PaginationSchema: z.ZodObject<{
     limit: number;
     offset?: number | undefined;
 }, {
-    offset?: number | undefined;
     page?: number | undefined;
     limit?: number | undefined;
+    offset?: number | undefined;
 }>;
 
 // @public (undocumented)
@@ -7486,16 +7489,16 @@ export const PerformanceSchema: z.ZodObject<{
         avgReviewTimeHours: z.ZodNumber;
         approvalRate: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        name: string;
-        id: string;
         approvalRate: number;
         avgReviewTimeHours: number;
+        id: string;
+        name: string;
         reviewCount: number;
     }, {
-        name: string;
-        id: string;
         approvalRate: number;
         avgReviewTimeHours: number;
+        id: string;
+        name: string;
         reviewCount: number;
     }>, "many">;
     topBadges: z.ZodArray<z.ZodObject<{
@@ -7505,41 +7508,41 @@ export const PerformanceSchema: z.ZodObject<{
         uniqueEarners: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
         code: string;
-        name: string;
         uniqueEarners: number;
+        name: string;
         earnedCount: number;
     }, {
         code: string;
-        name: string;
         uniqueEarners: number;
+        name: string;
         earnedCount: number;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     reviewers: {
-        name: string;
-        id: string;
         approvalRate: number;
         avgReviewTimeHours: number;
+        id: string;
+        name: string;
         reviewCount: number;
     }[];
     topBadges: {
         code: string;
-        name: string;
         uniqueEarners: number;
+        name: string;
         earnedCount: number;
     }[];
 }, {
     reviewers: {
-        name: string;
-        id: string;
         approvalRate: number;
         avgReviewTimeHours: number;
+        id: string;
+        name: string;
         reviewCount: number;
     }[];
     topBadges: {
         code: string;
-        name: string;
         uniqueEarners: number;
+        name: string;
         earnedCount: number;
     }[];
 }>;
@@ -8039,17 +8042,17 @@ export const RecentActivitySchema: z.ZodObject<{
         activity_code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
         user_name: z.ZodString;
         created_at: z.ZodString;
-        status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+        status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
     }, "strip", z.ZodTypeAny, {
-        status: "PENDING" | "APPROVED" | "REJECTED";
-        created_at: string;
+        status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
         id: string;
+        created_at: string;
         activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         user_name: string;
     }, {
-        status: "PENDING" | "APPROVED" | "REJECTED";
-        created_at: string;
+        status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
         id: string;
+        created_at: string;
         activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         user_name: string;
     }>, "many">;
@@ -8061,15 +8064,15 @@ export const RecentActivitySchema: z.ZodObject<{
         approved_at: z.ZodString;
         points_awarded: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        points_awarded: number;
         id: string;
+        points_awarded: number;
         activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         user_name: string;
         reviewer_name: string;
         approved_at: string;
     }, {
-        points_awarded: number;
         id: string;
+        points_awarded: number;
         activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         user_name: string;
         reviewer_name: string;
@@ -8081,33 +8084,33 @@ export const RecentActivitySchema: z.ZodObject<{
         created_at: z.ZodString;
         cohort: z.ZodNullable<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        created_at: string;
-        name: string;
         cohort: string | null;
         id: string;
+        name: string;
+        created_at: string;
     }, {
-        created_at: string;
-        name: string;
         cohort: string | null;
         id: string;
+        name: string;
+        created_at: string;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     submissions: {
-        status: "PENDING" | "APPROVED" | "REJECTED";
-        created_at: string;
+        status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
         id: string;
+        created_at: string;
         activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         user_name: string;
     }[];
     users: {
-        created_at: string;
-        name: string;
         cohort: string | null;
         id: string;
+        name: string;
+        created_at: string;
     }[];
     approvals: {
-        points_awarded: number;
         id: string;
+        points_awarded: number;
         activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         user_name: string;
         reviewer_name: string;
@@ -8115,27 +8118,32 @@ export const RecentActivitySchema: z.ZodObject<{
     }[];
 }, {
     submissions: {
-        status: "PENDING" | "APPROVED" | "REJECTED";
-        created_at: string;
+        status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
         id: string;
+        created_at: string;
         activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         user_name: string;
     }[];
     users: {
-        created_at: string;
-        name: string;
         cohort: string | null;
         id: string;
+        name: string;
+        created_at: string;
     }[];
     approvals: {
-        points_awarded: number;
         id: string;
+        points_awarded: number;
         activity_code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         user_name: string;
         reviewer_name: string;
         approved_at: string;
     }[];
 }>;
+
+// @public (undocumented)
+export class ReferralError extends ElevateApiError {
+    constructor(code: 'SELF_REFERRAL' | 'CIRCULAR_REFERRAL', details?: unknown, traceId?: string);
+}
 
 // @public (undocumented)
 export const RejectionEmailSchema: z.ZodObject<{
@@ -8146,16 +8154,16 @@ export const RejectionEmailSchema: z.ZodObject<{
     dashboardUrl: z.ZodString;
     supportUrl: z.ZodString;
 }, "strip", z.ZodTypeAny, {
+    activityName: string;
     name: string;
     email: string;
-    activityName: string;
     reviewerNote: string;
     dashboardUrl: string;
     supportUrl: string;
 }, {
+    activityName: string;
     name: string;
     email: string;
-    activityName: string;
     reviewerNote: string;
     dashboardUrl: string;
     supportUrl: string;
@@ -8239,14 +8247,14 @@ export const SafeBadgeSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     code: string;
     name: string;
-    description?: string | undefined;
     icon_url?: string | null | undefined;
+    description?: string | undefined;
     earned_at?: string | undefined;
 }, {
     code: string;
     name: string;
-    description?: string | undefined;
     icon_url?: string | null | undefined;
+    description?: string | undefined;
     earned_at?: string | undefined;
 }>;
 
@@ -8288,22 +8296,22 @@ export const SafeDashboardDataSchema: z.ZodObject<{
         avatar_url: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         role: z.ZodOptional<z.ZodEnum<["SUPERADMIN", "ADMIN", "REVIEWER", "PARTICIPANT"]>>;
     }, "strip", z.ZodTypeAny, {
+        id: string;
         name: string;
         handle: string;
-        id: string;
         school?: string | null | undefined;
-        email?: string | undefined;
-        cohort?: string | null | undefined;
         role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+        cohort?: string | null | undefined;
+        email?: string | undefined;
         avatar_url?: string | null | undefined;
     }, {
+        id: string;
         name: string;
         handle: string;
-        id: string;
         school?: string | null | undefined;
-        email?: string | undefined;
-        cohort?: string | null | undefined;
         role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+        cohort?: string | null | undefined;
+        email?: string | undefined;
         avatar_url?: string | null | undefined;
     }>;
     points: z.ZodObject<{
@@ -8696,14 +8704,14 @@ export const SafeDashboardDataSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         code: string;
         name: string;
-        description?: string | undefined;
         icon_url?: string | null | undefined;
+        description?: string | undefined;
         earned_at?: string | undefined;
     }, {
         code: string;
         name: string;
-        description?: string | undefined;
         icon_url?: string | null | undefined;
+        description?: string | undefined;
         earned_at?: string | undefined;
     }>, "many">;
     recentActivity: z.ZodArray<z.ZodObject<{
@@ -8715,18 +8723,18 @@ export const SafeDashboardDataSchema: z.ZodObject<{
         updated_at: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         status: string;
-        created_at: string;
         activityCode: string;
-        id: string;
-        updated_at: string;
         activityName: string;
+        id: string;
+        created_at: string;
+        updated_at: string;
     }, {
         status: string;
-        created_at: string;
         activityCode: string;
-        id: string;
-        updated_at: string;
         activityName: string;
+        id: string;
+        created_at: string;
+        updated_at: string;
     }>, "many">;
     stats: z.ZodObject<{
         totalSubmissions: z.ZodNumber;
@@ -8749,36 +8757,30 @@ export const SafeDashboardDataSchema: z.ZodObject<{
         total: number;
         breakdown: Record<string, number>;
     };
-    user: {
-        name: string;
-        handle: string;
-        id: string;
-        school?: string | null | undefined;
-        email?: string | undefined;
-        cohort?: string | null | undefined;
-        role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-        avatar_url?: string | null | undefined;
-    };
     badges: {
         code: string;
         name: string;
-        description?: string | undefined;
         icon_url?: string | null | undefined;
+        description?: string | undefined;
         earned_at?: string | undefined;
     }[];
     recentActivity: {
         status: string;
-        created_at: string;
         activityCode: string;
-        id: string;
-        updated_at: string;
         activityName: string;
+        id: string;
+        created_at: string;
+        updated_at: string;
     }[];
-    stats: {
-        totalSubmissions: number;
-        approvedSubmissions: number;
-        pendingSubmissions: number;
-        completedStages: number;
+    user: {
+        id: string;
+        name: string;
+        handle: string;
+        school?: string | null | undefined;
+        role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+        cohort?: string | null | undefined;
+        email?: string | undefined;
+        avatar_url?: string | null | undefined;
     };
     progress: {
         activityCode: string;
@@ -8843,41 +8845,41 @@ export const SafeDashboardDataSchema: z.ZodObject<{
         } | null;
         hasCompleted: boolean;
     }[];
+    stats: {
+        totalSubmissions: number;
+        approvedSubmissions: number;
+        pendingSubmissions: number;
+        completedStages: number;
+    };
 }, {
     points: {
         total: number;
         breakdown: Record<string, number>;
     };
-    user: {
-        name: string;
-        handle: string;
-        id: string;
-        school?: string | null | undefined;
-        email?: string | undefined;
-        cohort?: string | null | undefined;
-        role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
-        avatar_url?: string | null | undefined;
-    };
     badges: {
         code: string;
         name: string;
-        description?: string | undefined;
         icon_url?: string | null | undefined;
+        description?: string | undefined;
         earned_at?: string | undefined;
     }[];
     recentActivity: {
         status: string;
-        created_at: string;
         activityCode: string;
-        id: string;
-        updated_at: string;
         activityName: string;
+        id: string;
+        created_at: string;
+        updated_at: string;
     }[];
-    stats: {
-        totalSubmissions: number;
-        approvedSubmissions: number;
-        pendingSubmissions: number;
-        completedStages: number;
+    user: {
+        id: string;
+        name: string;
+        handle: string;
+        school?: string | null | undefined;
+        role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+        cohort?: string | null | undefined;
+        email?: string | undefined;
+        avatar_url?: string | null | undefined;
     };
     progress: {
         activityCode: string;
@@ -8942,6 +8944,12 @@ export const SafeDashboardDataSchema: z.ZodObject<{
         } | null;
         hasCompleted: boolean;
     }[];
+    stats: {
+        totalSubmissions: number;
+        approvedSubmissions: number;
+        pendingSubmissions: number;
+        completedStages: number;
+    };
 }>;
 
 // @public (undocumented)
@@ -9040,22 +9048,22 @@ export const SafeUserSchema: z.ZodObject<{
     avatar_url: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     role: z.ZodOptional<z.ZodEnum<["SUPERADMIN", "ADMIN", "REVIEWER", "PARTICIPANT"]>>;
 }, "strip", z.ZodTypeAny, {
+    id: string;
     name: string;
     handle: string;
-    id: string;
     school?: string | null | undefined;
-    email?: string | undefined;
-    cohort?: string | null | undefined;
     role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+    cohort?: string | null | undefined;
+    email?: string | undefined;
     avatar_url?: string | null | undefined;
 }, {
+    id: string;
     name: string;
     handle: string;
-    id: string;
     school?: string | null | undefined;
-    email?: string | undefined;
-    cohort?: string | null | undefined;
     role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+    cohort?: string | null | undefined;
+    email?: string | undefined;
     avatar_url?: string | null | undefined;
 }>;
 
@@ -9284,21 +9292,21 @@ export const StageMetricsDTOSchema: z.ZodObject<{
         name: z.ZodString;
         count: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         count: number;
+        name: string;
     }, {
-        name: string;
         count: number;
+        name: string;
     }>, "many">;
     cohortBreakdown: z.ZodArray<z.ZodObject<{
         cohort: z.ZodString;
         count: z.ZodNumber;
     }, "strip", z.ZodTypeAny, {
-        cohort: string;
         count: number;
+        cohort: string;
     }, {
-        cohort: string;
         count: number;
+        cohort: string;
     }>, "many">;
     monthlyTrend: z.ZodArray<z.ZodObject<{
         month: z.ZodString;
@@ -9323,12 +9331,12 @@ export const StageMetricsDTOSchema: z.ZodObject<{
     avgPointsEarned: number;
     uniqueEducators: number;
     topSchools: {
-        name: string;
         count: number;
+        name: string;
     }[];
     cohortBreakdown: {
-        cohort: string;
         count: number;
+        cohort: string;
     }[];
     monthlyTrend: {
         submissions: number;
@@ -9345,12 +9353,12 @@ export const StageMetricsDTOSchema: z.ZodObject<{
     avgPointsEarned: number;
     uniqueEducators: number;
     topSchools: {
-        name: string;
         count: number;
+        name: string;
     }[];
     cohortBreakdown: {
-        cohort: string;
         count: number;
+        cohort: string;
     }[];
     monthlyTrend: {
         submissions: number;
@@ -9518,12 +9526,12 @@ export const StatsResponseDTOSchema: z.ZodObject<{
         count: z.ZodNumber;
         avgPoints: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         count: number;
+        name: string;
         avgPoints?: number | undefined;
     }, {
-        name: string;
         count: number;
+        name: string;
         avgPoints?: number | undefined;
     }>, "many">;
     monthlyGrowth: z.ZodArray<z.ZodObject<{
@@ -9548,43 +9556,43 @@ export const StatsResponseDTOSchema: z.ZodObject<{
             count: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
             code: string;
-            name: string;
             count: number;
+            name: string;
         }, {
             code: string;
-            name: string;
             count: number;
+            name: string;
         }>, "many">;
     }, "strip", z.ZodTypeAny, {
         totalAwarded: number;
         uniqueBadges: number;
         mostPopular: {
             code: string;
-            name: string;
             count: number;
+            name: string;
         }[];
     }, {
         totalAwarded: number;
         uniqueBadges: number;
         mostPopular: {
             code: string;
-            name: string;
             count: number;
+            name: string;
         }[];
     }>;
 }, "strip", z.ZodTypeAny, {
-    totalPoints: number;
     badges: {
         totalAwarded: number;
         uniqueBadges: number;
         mostPopular: {
             code: string;
-            name: string;
             count: number;
+            name: string;
         }[];
     };
-    totalSubmissions: number;
+    totalPoints: number;
     totalEducators: number;
+    totalSubmissions: number;
     studentsImpacted: number;
     byStage: {
         learn: {
@@ -9619,8 +9627,8 @@ export const StatsResponseDTOSchema: z.ZodObject<{
         };
     };
     topCohorts: {
-        name: string;
         count: number;
+        name: string;
         avgPoints?: number | undefined;
     }[];
     monthlyGrowth: {
@@ -9629,18 +9637,18 @@ export const StatsResponseDTOSchema: z.ZodObject<{
         educators: number;
     }[];
 }, {
-    totalPoints: number;
     badges: {
         totalAwarded: number;
         uniqueBadges: number;
         mostPopular: {
             code: string;
-            name: string;
             count: number;
+            name: string;
         }[];
     };
-    totalSubmissions: number;
+    totalPoints: number;
     totalEducators: number;
+    totalSubmissions: number;
     studentsImpacted: number;
     byStage: {
         learn: {
@@ -9675,8 +9683,8 @@ export const StatsResponseDTOSchema: z.ZodObject<{
         };
     };
     topCohorts: {
-        name: string;
         count: number;
+        name: string;
         avgPoints?: number | undefined;
     }[];
     monthlyGrowth: {
@@ -9687,16 +9695,16 @@ export const StatsResponseDTOSchema: z.ZodObject<{
 }>;
 
 // @public
-export const STATUS_FILTER_OPTIONS: readonly ["ALL", "PENDING", "APPROVED", "REJECTED"];
+export const STATUS_FILTER_OPTIONS: readonly ["ALL", "PENDING", "APPROVED", "REJECTED", "REVOKED"];
 
 // @public (undocumented)
-export const STATUS_VALUES: readonly ["PENDING", "APPROVED", "REJECTED", "PUBLIC", "PRIVATE"];
+export const STATUS_VALUES: readonly ["PENDING", "APPROVED", "REJECTED", "REVOKED", "PUBLIC", "PRIVATE"];
 
 // @public (undocumented)
 export type StatusFilterOption = typeof STATUS_FILTER_OPTIONS[number];
 
 // @public (undocumented)
-export const StatusFilterSchema: z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED"]>;
+export const StatusFilterSchema: z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
 
 // @public (undocumented)
 export type StatusValue = typeof STATUS_VALUES[number];
@@ -9726,7 +9734,7 @@ export interface Submission {
 }
 
 // @public
-export const SUBMISSION_STATUSES: readonly ["PENDING", "APPROVED", "REJECTED"];
+export const SUBMISSION_STATUSES: readonly ["PENDING", "APPROVED", "REJECTED", "REVOKED"];
 
 // @public (undocumented)
 export const SubmissionAttachmentSchema: z.ZodObject<{
@@ -9751,15 +9759,15 @@ export const SubmissionConfirmationEmailSchema: z.ZodObject<{
     submissionDate: z.ZodString;
     dashboardUrl: z.ZodString;
 }, "strip", z.ZodTypeAny, {
+    activityName: string;
     name: string;
     email: string;
-    activityName: string;
     dashboardUrl: string;
     submissionDate: string;
 }, {
+    activityName: string;
     name: string;
     email: string;
-    activityName: string;
     dashboardUrl: string;
     submissionDate: string;
 }>;
@@ -9793,7 +9801,7 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
             id: z.ZodString;
             created_at: z.ZodString;
             updated_at: z.ZodOptional<z.ZodString>;
-            status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+            status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
             visibility: z.ZodEnum<["PRIVATE", "PUBLIC"]>;
             review_note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             points_awarded: z.ZodOptional<z.ZodNumber>;
@@ -10126,19 +10134,19 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             }, "strip", z.ZodTypeAny, {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             }, {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             }>;
             activity: z.ZodObject<{
                 code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
@@ -10161,38 +10169,38 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             }, "strip", z.ZodTypeAny, {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             }, {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             }>>>;
             reviewed_at: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 provider: "SPL" | "ILS";
@@ -10235,35 +10243,35 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 id: string;
                 submission_id: string;
             }[];
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         }, {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 data: {
@@ -10315,8 +10323,8 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 };
                 activityCode: "SHINE";
             };
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             attachmentCount?: number | undefined;
             attachments_rel?: {
@@ -10325,34 +10333,34 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 submission_id: string;
             }[] | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         }>;
         evidence: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         submission: {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 provider: "SPL" | "ILS";
@@ -10395,38 +10403,38 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 id: string;
                 submission_id: string;
             }[];
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         };
         evidence?: string | undefined;
     }, {
         submission: {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 data: {
@@ -10478,8 +10486,8 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 };
                 activityCode: "SHINE";
             };
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             attachmentCount?: number | undefined;
             attachments_rel?: {
@@ -10488,37 +10496,36 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 submission_id: string;
             }[] | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         };
         evidence?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
-    success: true;
     data: {
         submission: {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 provider: "SPL" | "ILS";
@@ -10561,41 +10568,41 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 id: string;
                 submission_id: string;
             }[];
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         };
         evidence?: string | undefined;
     };
-}, {
     success: true;
+}, {
     data: {
         submission: {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 data: {
@@ -10647,8 +10654,8 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 };
                 activityCode: "SHINE";
             };
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             attachmentCount?: number | undefined;
             attachments_rel?: {
@@ -10657,17 +10664,18 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 submission_id: string;
             }[] | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         };
         evidence?: string | undefined;
     };
+    success: true;
 }>;
 
 // @public (undocumented)
@@ -10686,7 +10694,7 @@ export interface SubmissionDTO {
     // (undocumented)
     payload: Record<string, unknown>;
     // (undocumented)
-    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'REVOKED';
     // (undocumented)
     updatedAt: string;
     // (undocumented)
@@ -10707,34 +10715,34 @@ export const SubmissionDTOSchema: z.ZodObject<{
         code: string;
         name: string;
     }>;
-    status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+    status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
     visibility: z.ZodEnum<["PUBLIC", "PRIVATE"]>;
     payload: z.ZodRecord<z.ZodString, z.ZodUnknown>;
     createdAt: z.ZodString;
     updatedAt: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    status: "PENDING" | "APPROVED" | "REJECTED";
+    status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
+    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
     activity: {
         code: string;
         name: string;
     };
-    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
     id: string;
+    createdAt: string;
     visibility: "PRIVATE" | "PUBLIC";
     payload: Record<string, unknown>;
-    createdAt: string;
     updatedAt: string;
 }, {
-    status: "PENDING" | "APPROVED" | "REJECTED";
+    status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
+    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
     activity: {
         code: string;
         name: string;
     };
-    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
     id: string;
+    createdAt: string;
     visibility: "PRIVATE" | "PUBLIC";
     payload: Record<string, unknown>;
-    createdAt: string;
     updatedAt: string;
 }>;
 
@@ -10980,7 +10988,7 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
             id: z.ZodString;
             created_at: z.ZodString;
             updated_at: z.ZodOptional<z.ZodString>;
-            status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+            status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
             visibility: z.ZodEnum<["PRIVATE", "PUBLIC"]>;
             review_note: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             points_awarded: z.ZodOptional<z.ZodNumber>;
@@ -11313,19 +11321,19 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             }, "strip", z.ZodTypeAny, {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             }, {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             }>;
             activity: z.ZodObject<{
                 code: z.ZodEnum<["LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>;
@@ -11348,38 +11356,38 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
                 cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             }, "strip", z.ZodTypeAny, {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             }, {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             }>>>;
             reviewed_at: z.ZodOptional<z.ZodNullable<z.ZodString>>;
         }, "strip", z.ZodTypeAny, {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 provider: "SPL" | "ILS";
@@ -11422,35 +11430,35 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 id: string;
                 submission_id: string;
             }[];
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         }, {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 data: {
@@ -11502,8 +11510,8 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 };
                 activityCode: "SHINE";
             };
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             attachmentCount?: number | undefined;
             attachments_rel?: {
@@ -11512,12 +11520,12 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 submission_id: string;
             }[] | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         }>, "many">;
@@ -11530,28 +11538,28 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
             limit: number;
             offset?: number | undefined;
         }, {
-            offset?: number | undefined;
             page?: number | undefined;
             limit?: number | undefined;
+            offset?: number | undefined;
         }>;
     }, "strip", z.ZodTypeAny, {
         submissions: {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 provider: "SPL" | "ILS";
@@ -11594,16 +11602,16 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 id: string;
                 submission_id: string;
             }[];
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         }[];
@@ -11614,22 +11622,22 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
         };
     }, {
         submissions: {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 data: {
@@ -11681,8 +11689,8 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 };
                 activityCode: "SHINE";
             };
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             attachmentCount?: number | undefined;
             attachments_rel?: {
@@ -11691,41 +11699,40 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 submission_id: string;
             }[] | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         }[];
         pagination: {
-            offset?: number | undefined;
             page?: number | undefined;
             limit?: number | undefined;
+            offset?: number | undefined;
         };
     }>;
 }, "strip", z.ZodTypeAny, {
-    success: true;
     data: {
         submissions: {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 provider: "SPL" | "ILS";
@@ -11768,16 +11775,16 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 id: string;
                 submission_id: string;
             }[];
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         }[];
@@ -11787,26 +11794,26 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
             offset?: number | undefined;
         };
     };
-}, {
     success: true;
+}, {
     data: {
         submissions: {
-            status: "PENDING" | "APPROVED" | "REJECTED";
-            created_at: string;
+            status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
             activity: {
                 code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
                 name: string;
                 default_points?: number | undefined;
             };
+            id: string;
             user: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             };
-            id: string;
+            created_at: string;
             visibility: "PRIVATE" | "PUBLIC";
             payload: {
                 data: {
@@ -11858,8 +11865,8 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 };
                 activityCode: "SHINE";
             };
-            points_awarded?: number | undefined;
             updated_at?: string | undefined;
+            points_awarded?: number | undefined;
             review_note?: string | null | undefined;
             attachmentCount?: number | undefined;
             attachments_rel?: {
@@ -11868,26 +11875,27 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 submission_id: string;
             }[] | undefined;
             reviewer?: {
+                id: string;
                 name: string;
                 handle: string;
-                id: string;
                 school?: string | null | undefined;
-                email?: string | undefined;
                 cohort?: string | null | undefined;
+                email?: string | undefined;
             } | null | undefined;
             reviewed_at?: string | null | undefined;
         }[];
         pagination: {
-            offset?: number | undefined;
             page?: number | undefined;
             limit?: number | undefined;
+            offset?: number | undefined;
         };
     };
+    success: true;
 }>;
 
 // @public (undocumented)
 export const SubmissionsQuerySchema: z.ZodObject<{
-    status: z.ZodOptional<z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED"]>>;
+    status: z.ZodOptional<z.ZodEnum<["ALL", "PENDING", "APPROVED", "REJECTED", "REVOKED"]>>;
     activity: z.ZodOptional<z.ZodEnum<["ALL", "LEARN", "EXPLORE", "AMPLIFY", "PRESENT", "SHINE"]>>;
     userId: z.ZodOptional<z.ZodString>;
     page: z.ZodOptional<z.ZodNumber>;
@@ -11899,9 +11907,9 @@ export const SubmissionsQuerySchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page?: number | undefined;
     limit?: number | undefined;
-    status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined;
-    cohort?: string | undefined;
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED" | "ALL" | undefined;
     activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
+    cohort?: string | undefined;
     userId?: string | undefined;
     sortBy?: "status" | "created_at" | "updated_at" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
@@ -11909,9 +11917,9 @@ export const SubmissionsQuerySchema: z.ZodObject<{
 }, {
     page?: number | undefined;
     limit?: number | undefined;
-    status?: "PENDING" | "APPROVED" | "REJECTED" | "ALL" | undefined;
-    cohort?: string | undefined;
+    status?: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED" | "ALL" | undefined;
     activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
+    cohort?: string | undefined;
     userId?: string | undefined;
     sortBy?: "status" | "created_at" | "updated_at" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
@@ -11922,10 +11930,10 @@ export const SubmissionsQuerySchema: z.ZodObject<{
 export type SubmissionStatus = typeof SUBMISSION_STATUSES[number];
 
 // @public (undocumented)
-export const SubmissionStatusEnum: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+export const SubmissionStatusEnum: z.ZodEnum<["PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
 
 // @public (undocumented)
-export const SubmissionStatusSchema: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+export const SubmissionStatusSchema: z.ZodEnum<["PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
 
 // @public (undocumented)
 export type SubmissionStatusType = SubmissionStatus;
@@ -12093,7 +12101,7 @@ export const TrendAnalysisSchema: z.ZodObject<{
         label?: string | undefined;
     }[];
     period: "7d" | "30d" | "90d";
-    metric: "points" | "submissions" | "users" | "approvals";
+    metric: "submissions" | "users" | "points" | "approvals";
     summary: {
         total: number;
         average: number;
@@ -12107,7 +12115,7 @@ export const TrendAnalysisSchema: z.ZodObject<{
         label?: string | undefined;
     }[];
     period: "7d" | "30d" | "90d";
-    metric: "points" | "submissions" | "users" | "approvals";
+    metric: "submissions" | "users" | "points" | "approvals";
     summary: {
         total: number;
         average: number;
@@ -12212,17 +12220,17 @@ export const UpdateUserSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     userId: string;
     school?: string | undefined;
+    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+    cohort?: string | undefined;
     name?: string | undefined;
     handle?: string | undefined;
-    cohort?: string | undefined;
-    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
 }, {
     userId: string;
     school?: string | undefined;
+    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
+    cohort?: string | undefined;
     name?: string | undefined;
     handle?: string | undefined;
-    cohort?: string | undefined;
-    role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | undefined;
 }>;
 
 // @public
@@ -12255,6 +12263,9 @@ export interface User {
 // @public
 export const USER_ROLES: readonly ["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"];
 
+// @public
+export const USER_TYPES: readonly ["EDUCATOR", "STUDENT"];
+
 // @public (undocumented)
 export interface UserActivityBreakdown {
     // (undocumented)
@@ -12280,19 +12291,19 @@ export const UserMiniSchema: z.ZodObject<{
     school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
 }, "strip", z.ZodTypeAny, {
+    id: string;
     name: string;
     handle: string;
-    id: string;
     school?: string | null | undefined;
-    email?: string | undefined;
     cohort?: string | null | undefined;
+    email?: string | undefined;
 }, {
+    id: string;
     name: string;
     handle: string;
-    id: string;
     school?: string | null | undefined;
-    email?: string | undefined;
     cohort?: string | null | undefined;
+    email?: string | undefined;
 }>;
 
 // @public (undocumented)
@@ -12427,34 +12438,34 @@ export const UserProfileDTOSchema: z.ZodObject<{
             code: string;
             name: string;
         }>;
-        status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED"]>;
+        status: z.ZodEnum<["PENDING", "APPROVED", "REJECTED", "REVOKED"]>;
         visibility: z.ZodEnum<["PUBLIC", "PRIVATE"]>;
         payload: z.ZodRecord<z.ZodString, z.ZodUnknown>;
         createdAt: z.ZodString;
         updatedAt: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        status: "PENDING" | "APPROVED" | "REJECTED";
+        status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
+        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         activity: {
             code: string;
             name: string;
         };
-        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         id: string;
+        createdAt: string;
         visibility: "PRIVATE" | "PUBLIC";
         payload: Record<string, unknown>;
-        createdAt: string;
         updatedAt: string;
     }, {
-        status: "PENDING" | "APPROVED" | "REJECTED";
+        status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
+        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         activity: {
             code: string;
             name: string;
         };
-        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         id: string;
+        createdAt: string;
         visibility: "PRIVATE" | "PUBLIC";
         payload: Record<string, unknown>;
-        createdAt: string;
         updatedAt: string;
     }>, "many">;
     earnedBadges: z.ZodArray<z.ZodObject<{
@@ -12495,23 +12506,23 @@ export const UserProfileDTOSchema: z.ZodObject<{
     totalPoints: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
     submissions: {
-        status: "PENDING" | "APPROVED" | "REJECTED";
+        status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
+        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         activity: {
             code: string;
             name: string;
         };
-        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         id: string;
+        createdAt: string;
         visibility: "PRIVATE" | "PUBLIC";
         payload: Record<string, unknown>;
-        createdAt: string;
         updatedAt: string;
     }[];
-    name: string;
-    email: string;
-    handle: string;
-    id: string;
     totalPoints: number;
+    id: string;
+    name: string;
+    handle: string;
+    email: string;
     earnedBadges: {
         badge: {
             code: string;
@@ -12527,23 +12538,23 @@ export const UserProfileDTOSchema: z.ZodObject<{
     avatarUrl?: string | null | undefined;
 }, {
     submissions: {
-        status: "PENDING" | "APPROVED" | "REJECTED";
+        status: "PENDING" | "APPROVED" | "REJECTED" | "REVOKED";
+        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         activity: {
             code: string;
             name: string;
         };
-        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
         id: string;
+        createdAt: string;
         visibility: "PRIVATE" | "PUBLIC";
         payload: Record<string, unknown>;
-        createdAt: string;
         updatedAt: string;
     }[];
-    name: string;
-    email: string;
-    handle: string;
-    id: string;
     totalPoints: number;
+    id: string;
+    name: string;
+    handle: string;
+    email: string;
     earnedBadges: {
         badge: {
             code: string;
@@ -12594,34 +12605,34 @@ export const UsersListResponseSchema: z.ZodObject<{
             }>;
             totalPoints: z.ZodNumber;
         }, "strip", z.ZodTypeAny, {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
             role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            totalPoints: number;
             id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
             _count: {
                 submissions: number;
                 ledger: number;
                 earned_badges: number;
             };
-            totalPoints: number;
             school?: string | null | undefined;
             cohort?: string | null | undefined;
             avatar_url?: string | null | undefined;
         }, {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
             role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            totalPoints: number;
             id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
             _count: {
                 submissions: number;
                 ledger: number;
                 earned_badges: number;
             };
-            totalPoints: number;
             school?: string | null | undefined;
             cohort?: string | null | undefined;
             avatar_url?: string | null | undefined;
@@ -12635,109 +12646,109 @@ export const UsersListResponseSchema: z.ZodObject<{
             limit: number;
             offset?: number | undefined;
         }, {
-            offset?: number | undefined;
             page?: number | undefined;
             limit?: number | undefined;
+            offset?: number | undefined;
         }>;
     }, "strip", z.ZodTypeAny, {
+        users: {
+            role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            totalPoints: number;
+            id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
+            _count: {
+                submissions: number;
+                ledger: number;
+                earned_badges: number;
+            };
+            school?: string | null | undefined;
+            cohort?: string | null | undefined;
+            avatar_url?: string | null | undefined;
+        }[];
         pagination: {
             page: number;
             limit: number;
             offset?: number | undefined;
         };
+    }, {
         users: {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
             role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            totalPoints: number;
             id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
             _count: {
                 submissions: number;
                 ledger: number;
                 earned_badges: number;
             };
-            totalPoints: number;
             school?: string | null | undefined;
             cohort?: string | null | undefined;
             avatar_url?: string | null | undefined;
         }[];
-    }, {
         pagination: {
-            offset?: number | undefined;
             page?: number | undefined;
             limit?: number | undefined;
+            offset?: number | undefined;
         };
-        users: {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
-            role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
-            id: string;
-            _count: {
-                submissions: number;
-                ledger: number;
-                earned_badges: number;
-            };
-            totalPoints: number;
-            school?: string | null | undefined;
-            cohort?: string | null | undefined;
-            avatar_url?: string | null | undefined;
-        }[];
     }>;
 }, "strip", z.ZodTypeAny, {
-    success: true;
     data: {
+        users: {
+            role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            totalPoints: number;
+            id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
+            _count: {
+                submissions: number;
+                ledger: number;
+                earned_badges: number;
+            };
+            school?: string | null | undefined;
+            cohort?: string | null | undefined;
+            avatar_url?: string | null | undefined;
+        }[];
         pagination: {
             page: number;
             limit: number;
             offset?: number | undefined;
         };
+    };
+    success: true;
+}, {
+    data: {
         users: {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
             role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+            totalPoints: number;
             id: string;
+            name: string;
+            handle: string;
+            created_at: string;
+            email: string;
             _count: {
                 submissions: number;
                 ledger: number;
                 earned_badges: number;
             };
-            totalPoints: number;
             school?: string | null | undefined;
             cohort?: string | null | undefined;
             avatar_url?: string | null | undefined;
         }[];
-    };
-}, {
-    success: true;
-    data: {
         pagination: {
-            offset?: number | undefined;
             page?: number | undefined;
             limit?: number | undefined;
+            offset?: number | undefined;
         };
-        users: {
-            created_at: string;
-            name: string;
-            email: string;
-            handle: string;
-            role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
-            id: string;
-            _count: {
-                submissions: number;
-                ledger: number;
-                earned_badges: number;
-            };
-            totalPoints: number;
-            school?: string | null | undefined;
-            cohort?: string | null | undefined;
-            avatar_url?: string | null | undefined;
-        }[];
     };
+    success: true;
 }>;
 
 // @public (undocumented)
@@ -12752,20 +12763,32 @@ export const UsersQuerySchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page?: number | undefined;
     limit?: number | undefined;
-    cohort?: string | undefined;
     role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
-    sortBy?: "created_at" | "name" | "email" | undefined;
+    cohort?: string | undefined;
+    sortBy?: "name" | "created_at" | "email" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
     search?: string | undefined;
 }, {
     page?: number | undefined;
     limit?: number | undefined;
-    cohort?: string | undefined;
     role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
-    sortBy?: "created_at" | "name" | "email" | undefined;
+    cohort?: string | undefined;
+    sortBy?: "name" | "created_at" | "email" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
     search?: string | undefined;
 }>;
+
+// @public (undocumented)
+export type UserType = typeof USER_TYPES[number];
+
+// @public (undocumented)
+export const UserTypeEnum: z.ZodEnum<["EDUCATOR", "STUDENT"]>;
+
+// @public (undocumented)
+export const UserTypeSchema: z.ZodEnum<["EDUCATOR", "STUDENT"]>;
+
+// @public (undocumented)
+export type UserTypeType = UserType;
 
 // @public
 export function validate<T>(value: unknown, guard: (value: unknown) => value is T, errorMessage?: string): T;

@@ -144,7 +144,7 @@
     "@asteasolutions/zod-to-openapi": "^7.3.4",
     "@changesets/cli": "^2.29.6",
     "@eslint/js": "^9.34.0",
-    "@microsoft/api-extractor": "^7.45.1",
+    "@microsoft/api-extractor": "7.45.1",
     "@neshca/cache-handler": "^1.9.0",
     "@next/eslint-plugin-next": "^15.5.2",
     "@playwright/test": "^1.40.0",

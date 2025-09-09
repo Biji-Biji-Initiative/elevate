@@ -15,15 +15,11 @@
     "tsBuildInfoFile": "dist/.tsbuildinfo",
     "paths": {}
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules"
-  ],
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"],
   "references": [
     { "path": "../types/tsconfig.build.json" },
-    { "path": "../logging/tsconfig.build.json" }
+    { "path": "../logging/tsconfig.build.json" },
+    { "path": "../forms/tsconfig.build.json" }
   ]
 }

@@ -98,6 +98,8 @@ export interface CSPOptions {
         external?: string[];
     };
     // (undocumented)
+    applyToApiRoutes?: boolean;
+    // (undocumented)
     isDevelopment?: boolean;
     // (undocumented)
     nonce?: string;
@@ -112,7 +114,7 @@ export interface CSPViolationReport {
     // (undocumented)
     'csp-report': {
         'document-uri': string;
-        'referrer': string;
+        referrer: string;
         'violated-directive': string;
         'effective-directive': string;
         'original-policy': string;
@@ -386,7 +388,7 @@ export function useCSRFProtectedForm<T extends Record<string, unknown>>(): {
         data?: never;
     } | {
         success: boolean;
-        data: any;
+        data: unknown;
         error?: never;
     }>;
     isSubmitting: boolean;
@@ -429,7 +431,7 @@ export function withSecurity(middleware: NextMiddleware, securityOptions?: Secur
 
 // Warnings were encountered during analysis:
 //
-// src/rate-limiter.ts:458:5 - (ae-forgotten-export) The symbol "cleanupManager" needs to be exported by the entry point index.d.ts
+// src/rate-limiter.ts:456:5 - (ae-forgotten-export) The symbol "cleanupManager" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

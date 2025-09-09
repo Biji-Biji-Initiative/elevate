@@ -293,22 +293,29 @@ export function LeaderboardTable({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex space-x-1">
-                          {entry.user.earnedBadges?.slice(0, 3).map((earnedBadge) => (
-                            <div
-                              key={earnedBadge.badge.code}
-                              className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center"
-                              title={earnedBadge.badge.name}
-                            >
-                              <span className="text-xs">🏆</span>
-                            </div>
-                          ))}
-                          {entry.user.earnedBadges && entry.user.earnedBadges.length > 3 && (
-                            <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
-                              <span className="text-xs text-gray-600">
-                                +{entry.user.earnedBadges.length - 3}
-                              </span>
-                            </div>
-                          )}
+                          {entry.user.earnedBadges
+                            ?.slice(0, 3)
+                            .map(
+                              (earnedBadge: {
+                                badge: { code: string; name: string }
+                              }) => (
+                                <div
+                                  key={earnedBadge.badge.code}
+                                  className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center"
+                                  title={earnedBadge.badge.name}
+                                >
+                                  <span className="text-xs">🏆</span>
+                                </div>
+                              ),
+                            )}
+                          {entry.user.earnedBadges &&
+                            entry.user.earnedBadges.length > 3 && (
+                              <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
+                                <span className="text-xs text-gray-600">
+                                  +{entry.user.earnedBadges.length - 3}
+                                </span>
+                              </div>
+                            )}
                         </div>
                       </td>
                     </tr>
