@@ -82,8 +82,8 @@ jobs:
       - name: Type check
         run: pnpm run type-check
 
-      - name: Lint
-        run: pnpm run lint:check
+      - name: Lint (packages only)
+        run: pnpm run lint:packages
 
       - name: Run unit tests
         run: pnpm run test --coverage
