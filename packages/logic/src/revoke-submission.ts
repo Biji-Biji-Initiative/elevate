@@ -27,12 +27,12 @@ export async function revokeSubmission(
   const approvedId = `submission:${opts.submissionId}:approved:v1`
   const revokeId = `submission:${opts.submissionId}:revoked:v1`
 
-  const existingRevoke = await tx.pointsLedger.findUnique({
+  const existingRevoke = await tx.pointsLedger.findFirst({
     where: { external_event_id: revokeId },
   })
   if (existingRevoke) return
 
-  const entry = await tx.pointsLedger.findUnique({
+  const entry = await tx.pointsLedger.findFirst({
     where: { external_event_id: approvedId },
   })
   if (!entry) {
@@ -61,7 +61,7 @@ export async function revokeSubmission(
       actor_id: opts.actorId,
       action: 'submission.revoked',
       target_id: opts.submissionId,
-      meta: opts.reason ? { reason: opts.reason } : undefined,
+      ...(opts.reason ? { meta: { reason: opts.reason } } : {}),
     },
   })
 

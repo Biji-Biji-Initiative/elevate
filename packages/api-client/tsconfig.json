@@ -5,10 +5,10 @@
     "composite": true,
     "rootDir": "."
   },
-  "include": ["src/**/*", "tsup.config.ts"],
+  "include": ["src/**/*"],
   "references": [
-    { "path": "../openapi" },
+    { "path": "../openapi/tsconfig.build.json" },
     { "path": "../types" },
-    { "path": "../http" }
+    { "path": "../http/tsconfig.build.json" }
   ]
 }

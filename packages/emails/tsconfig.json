@@ -6,12 +6,6 @@
     "jsx": "preserve",
     "composite": true
   },
-  "include": [
-    "src/**/*",
-    ".react-email/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", ".react-email/**"]
 }

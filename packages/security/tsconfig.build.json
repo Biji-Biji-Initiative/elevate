@@ -7,12 +7,17 @@
     "declarationMap": true,
     "emitDeclarationOnly": true,
     "declarationDir": "dist/types",
+    "rootDir": "src",
     "stripInternal": true,
     "sourceMap": true,
     "inlineSources": true,
-    "rootDir": "src",
     "tsBuildInfoFile": "dist/.tsbuildinfo"
   },
   "include": ["src/**/*"],
-  "exclude": ["src/__tests__/**/*"]
+  "exclude": [
+    "src/__tests__/**",
+    "src/**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ]
 }

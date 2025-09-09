@@ -41,7 +41,9 @@ function toUtc(date: string, time: string | undefined, tz: string): Date {
   const parts = fmt.formatToParts(dt)
   const tzName = parts.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT'
   const match = tzName.match(/GMT([+-])(\d{1,2})/)
-  const offset = match ? parseInt(match[2], 10) * (match[1] === '-' ? -1 : 1) : 0
+  const offset = match
+    ? parseInt(match[2]!, 10) * (match[1] === '-' ? -1 : 1)
+    : 0
   return new Date(dt.getTime() - offset * 60 * 60 * 1000)
 }
 
@@ -76,7 +78,7 @@ export async function approveAmplifySubmission(
   let duplicateFlag = false
 
   for (const sub of existing) {
-    const data = sub.payload as AmplifyPayload
+    const data = sub.payload as unknown as AmplifyPayload
     const otherStart = toUtc(
       data.session_date,
       data.session_start_time ?? undefined,
@@ -91,9 +93,11 @@ export async function approveAmplifySubmission(
       data.session_start_time &&
       opts.payload.location?.city &&
       data.location?.city &&
-      data.location.city.toLowerCase() === opts.payload.location.city.toLowerCase()
+      data.location.city.toLowerCase() ===
+        opts.payload.location.city.toLowerCase()
     ) {
-      const diff = Math.abs(otherStart.getTime() - sessionStart.getTime()) / 60000
+      const diff =
+        Math.abs(otherStart.getTime() - sessionStart.getTime()) / 60000
       if (diff <= dupWindow) {
         duplicateFlag = true
       }
@@ -127,8 +131,10 @@ export async function approveAmplifySubmission(
     where: { id: opts.submissionId },
     data: {
       status: 'APPROVED',
-      reviewer_id: opts.reviewerId,
       approval_org_timezone: opts.orgTimezone,
+      ...(opts.reviewerId !== undefined
+        ? { reviewer_id: opts.reviewerId }
+        : {}),
     },
   })
 

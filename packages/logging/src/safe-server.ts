@@ -16,9 +16,14 @@ type SafeLogger = Pick<ServerLogger, 'info' | 'warn' | 'error'> & {
 export async function getSafeServerLogger(name?: string): Promise<SafeLogger> {
   try {
     const mod = await import('./server')
-    return mod.getServerLogger({ pretty: false, name }) as SafeLogger
+    return mod.getServerLogger({
+      pretty: false,
+      ...(name ? { name } : {}),
+    }) as SafeLogger
   } catch {
-    const noop = (_?: unknown, __?: unknown, ___?: unknown) => { /* intentional no-op */ }
+    const noop = (_?: unknown, __?: unknown, ___?: unknown) => {
+      /* intentional no-op */
+    }
     const fallback: SafeLogger = {
       info: noop,
       warn: noop,

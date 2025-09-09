@@ -11,8 +11,18 @@
     "sourceMap": true,
     "inlineSources": true,
     "rootDir": "src",
-    "tsBuildInfoFile": "dist/.tsbuildinfo"
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "paths": {
+      "@elevate/db": ["../db/dist/types/index.d.ts"],
+      "@elevate/db/*": ["../db/dist/types/*"],
+      "@elevate/logging": ["../logging/dist/types/index.d.ts"],
+      "@elevate/logging/*": ["../logging/dist/types/*"]
+    }
   },
   "include": ["src/**/*"],
-  "references": [{ "path": "../types/tsconfig.build.json" }]
+  "references": [
+    { "path": "../types/tsconfig.build.json" },
+    { "path": "../db/tsconfig.build.json" },
+    { "path": "../logging/tsconfig.build.json" }
+  ]
 }

@@ -5,11 +5,10 @@
     "rootDir": "src",
     "composite": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"],
+  "references": [
+    { "path": "../types/tsconfig.build.json" },
+    { "path": "../http/tsconfig.build.json" }
   ]
 }
