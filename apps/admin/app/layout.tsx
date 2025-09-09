@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import '@elevate/ui/styles/globals.css'
 import type { Metadata } from 'next'
 import { Providers } from './providers'
+
 const inter = Inter({ subsets: ['latin'] })
 
 // Force dynamic rendering for the entire admin app

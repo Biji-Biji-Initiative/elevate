@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import type { AnalyticsQuery } from '@elevate/types'
-import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
-import { StatusBadge } from '@elevate/ui/blocks'
 import { withRoleGuard } from '@elevate/auth/context'
 import { adminClient, type OverviewStats, type Distributions, type Trends, type RecentActivity, type Performance } from '@/lib/admin-client'
 import { handleApiError } from '@/lib/error-utils'
+import type { AnalyticsQuery } from '@elevate/types'
+import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 
 interface AnalyticsData {
   overview: OverviewStats

@@ -3,7 +3,10 @@
  * Ensures sensitive data is never logged in production environments
  */
 
-import type { ServerLogger, LogLevel as LoggingLogLevel } from '@elevate/logging/server'
+import type {
+  ServerLogger,
+  LogLevel as LoggingLogLevel,
+} from '@elevate/logging/server'
 
 export interface LogLevel {
   ERROR: 'error'
@@ -66,7 +69,7 @@ export class PIIRedactor {
       .replace(this.BASE64_PATTERN, '[BASE64_REDACTED]')
       // Tokens, keys, passwords
       .replace(this.TOKEN_PATTERN, (match, captured) =>
-        typeof captured === 'string' 
+        typeof captured === 'string'
           ? match.replace(captured, '[SENSITIVE_REDACTED]')
           : match,
       )
@@ -215,7 +218,11 @@ export class SecureDatabaseLogger {
 
     try {
       type LoggingModule = {
-        getServerLogger: (config: { name?: string; level?: LoggingLogLevel; pretty?: boolean }) => ServerLogger
+        getServerLogger: (config: {
+          name?: string
+          level?: LoggingLogLevel
+          pretty?: boolean
+        }) => ServerLogger
       }
       const mod: unknown = await import('@elevate/logging/server')
       const { getServerLogger } = mod as LoggingModule
@@ -278,7 +285,7 @@ export class SecureDatabaseLogger {
       // Remove any potential PII from context
       userId: context.userId ? `${context.userId.slice(0, 4)}****` : undefined,
       // Ensure error messages are redacted
-      error: context.error ? (PIIRedactor.redactPII(context.error) ?? '') : '',
+      error: context.error ? PIIRedactor.redactPII(context.error) ?? '' : '',
       duration: context.duration ?? 0,
       recordCount: context.recordCount ?? 0,
     }
@@ -422,5 +429,8 @@ export const LOG_CONFIG = {
   MAX_QUERY_LOG_LENGTH: parseInt(process.env.DB_MAX_QUERY_LOG_LENGTH || '200'),
 
   // Enable detailed database logging
-  ENABLE_DB_LOGGING: process.env.DB_LOGGING !== 'false',
+  ENABLE_DB_LOGGING: process.env.DB_LOGGING === 'true',
+
+  // Only log queries slower than this threshold (ms). Set 0 to disable.
+  SLOW_QUERY_MS: 750,
 }

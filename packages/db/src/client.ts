@@ -1,18 +1,17 @@
 import { PrismaClient, type Prisma } from '@prisma/client'
 
-import { 
-  getSecureLogger, 
-  logSecureDatabaseQuery, 
-  PIIRedactor, 
+import {
+  getSecureLogger,
+  logSecureDatabaseQuery,
+  PIIRedactor,
   LOG_CONFIG,
-  type SecureLogContext
+  type SecureLogContext,
 } from './logger'
 
 // Local fallback type for logging context to avoid missing optional logging package
 export type LogContext = Record<string, unknown>
 
 declare global {
-   
   var prisma: PrismaClient | undefined
 }
 
@@ -20,17 +19,17 @@ declare global {
 const createPrismaClient = () => {
   // Configure Prisma logging based on environment and security requirements
   const logConfig = []
-  
+
   // Always log errors for debugging
   logConfig.push({ emit: 'event' as const, level: 'error' as const })
-  
+
   // Only log queries in development with explicit flag
   if (LOG_CONFIG.ENABLE_DB_LOGGING && process.env.NODE_ENV === 'development') {
     logConfig.push({ emit: 'event' as const, level: 'query' as const })
     logConfig.push({ emit: 'event' as const, level: 'info' as const })
     logConfig.push({ emit: 'event' as const, level: 'warn' as const })
   }
-  
+
   const client = new PrismaClient({
     log: logConfig,
   })
@@ -39,27 +38,43 @@ const createPrismaClient = () => {
 
   // Set up secure logging event handlers
   client.$on('query', (e) => {
+    // Only emit detailed query logs when explicitly enabled, and only for slow queries if threshold set
     if (!LOG_CONFIG.ENABLE_DB_LOGGING) return
-    
+
     // Extract operation and table info safely without exposing PII
-    const operation = e.query.match(/^(SELECT|INSERT|UPDATE|DELETE|WITH)/i)?.[1] || 'QUERY'
-    const table = e.query.match(/FROM\s+(\w+)/i)?.[1] || 
-                 e.query.match(/UPDATE\s+(\w+)/i)?.[1] ||
-                 e.query.match(/INSERT\s+INTO\s+(\w+)/i)?.[1] || 
-                 'unknown_table'
-    
+    const operation =
+      e.query.match(/^(SELECT|INSERT|UPDATE|DELETE|WITH)/i)?.[1] || 'QUERY'
+    const table =
+      e.query.match(/FROM\s+(\w+)/i)?.[1] ||
+      e.query.match(/UPDATE\s+(\w+)/i)?.[1] ||
+      e.query.match(/INSERT\s+INTO\s+(\w+)/i)?.[1] ||
+      'unknown_table'
+
+    // Respect slow-query threshold
+    const isSlow =
+      typeof LOG_CONFIG.SLOW_QUERY_MS === 'number' &&
+      LOG_CONFIG.SLOW_QUERY_MS > 0
+        ? e.duration >= LOG_CONFIG.SLOW_QUERY_MS
+        : true
+
+    if (!isSlow) return
+
     const context: SecureLogContext = {
       operation: operation.toUpperCase(),
       table,
       duration: e.duration,
     }
-    
+
     secureLogger.database(context, {
       target: e.target,
       // Never log actual query or params in production
-      queryPreview: process.env.NODE_ENV === 'development' 
-        ? PIIRedactor.sanitizeSQLQuery(e.query).slice(0, LOG_CONFIG.MAX_QUERY_LOG_LENGTH)
-        : undefined
+      queryPreview:
+        process.env.NODE_ENV === 'development'
+          ? PIIRedactor.sanitizeSQLQuery(e.query).slice(
+              0,
+              LOG_CONFIG.MAX_QUERY_LOG_LENGTH,
+            )
+          : undefined,
     })
   })
 
@@ -112,7 +127,7 @@ export function withDatabaseLogging<T>(
     try {
       const result = await dbOperation()
       const duration = Date.now() - startTime
-      
+
       // Determine record count if result is an array (common for SELECT queries)
       let recordCount: number | undefined
       if (Array.isArray(result)) {
@@ -126,7 +141,7 @@ export function withDatabaseLogging<T>(
         table,
         duration,
         true, // success
-        recordCount
+        recordCount,
       )
 
       return result
@@ -139,7 +154,7 @@ export function withDatabaseLogging<T>(
         duration,
         false, // failed
         undefined,
-        error
+        error,
       )
 
       // Re-throw the original error without modification
@@ -154,29 +169,29 @@ export function withDatabaseLogging<T>(
  */
 export async function withDatabaseTransaction<T>(
   operation: string,
-  transactionFn: (tx: Prisma.TransactionClient) => Promise<T>
+  transactionFn: (tx: Prisma.TransactionClient) => Promise<T>,
 ): Promise<T> {
   const startTime = Date.now()
   const secureLogger = getSecureLogger()
-  
+
   try {
     const result = await prisma.$transaction(transactionFn)
     const duration = Date.now() - startTime
-    
+
     secureLogger.database({
       operation: `TRANSACTION:${operation}`,
       duration,
     })
-    
+
     return result
   } catch (error) {
     const duration = Date.now() - startTime
-    
+
     secureLogger.error(`Database transaction failed: ${operation}`, error, {
       operation: `TRANSACTION:${operation}`,
       duration,
     })
-    
+
     throw error
   }
 }

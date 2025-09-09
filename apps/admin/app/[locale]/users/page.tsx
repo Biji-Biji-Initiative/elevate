@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 
-import type { UserRole } from '@elevate/types'
-import { Button, Input, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
-import { DataTable, StatusBadge, Modal, ConfirmModal, createColumns } from '@elevate/ui/blocks'
 import { withRoleGuard } from '@elevate/auth/context'
 import { adminClient, type UsersQuery, type AdminUser } from '@/lib/admin-client'
 import { handleApiError } from '@/lib/error-utils'
+import type { UserRole } from '@elevate/types'
+import { Button, Input, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
+import { DataTable, StatusBadge, Modal, ConfirmModal, createColumns } from '@elevate/ui/blocks'
 
 type User = AdminUser
 
