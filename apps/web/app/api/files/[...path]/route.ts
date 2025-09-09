@@ -61,7 +61,7 @@ function sanitizePath(filePath: string): {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } },
+  context: { params: Promise<{ path: string[] }> },
 ): Promise<NextResponse> {
   return withRateLimit(request, apiRateLimiter, async () => {
     try {
@@ -69,7 +69,7 @@ export async function GET(
 
       if (!userId) return unauthorized()
 
-      const { path: pathSegments } = params
+      const { path: pathSegments } = await context.params
 
       // Validate and sanitize each path segment
       const sanitizedSegments = pathSegments.map((segment) => {
@@ -134,6 +134,7 @@ export async function GET(
       response.headers.set('X-Content-Type-Options', 'nosniff')
       response.headers.set('X-Frame-Options', 'DENY')
       response.headers.set('Referrer-Policy', 'no-referrer')
+      response.headers.set('X-Download-Options', 'noopen')
 
       return response
     } catch (error) {
@@ -144,7 +145,7 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path: string[] } },
+  context: { params: Promise<{ path: string[] }> },
 ): Promise<NextResponse> {
   return withRateLimit(request, apiRateLimiter, async () => {
     try {
@@ -152,7 +153,7 @@ export async function DELETE(
 
       if (!userId) return unauthorized()
 
-      const { path: pathSegments } = params
+      const { path: pathSegments } = await context.params
 
       // Validate and sanitize each path segment
       const sanitizedSegments = pathSegments.map((segment) => {
