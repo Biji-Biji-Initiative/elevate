@@ -292,6 +292,7 @@ export async function updateSubmission(
     review_note?: string | null
     visibility?: Visibility
     payload?: Prisma.InputJsonValue
+    approval_org_timezone?: string | null
   },
 ): Promise<Submission> {
   const updateData: Prisma.SubmissionUncheckedUpdateInput = {
@@ -304,6 +305,9 @@ export async function updateSubmission(
       : {}),
     ...(data.visibility !== undefined ? { visibility: data.visibility } : {}),
     ...(data.payload !== undefined ? { payload: data.payload } : {}),
+    ...(data.approval_org_timezone !== undefined
+      ? { approval_org_timezone: data.approval_org_timezone }
+      : {}),
   }
   return await prisma.submission.update({ where: { id }, data: updateData })
 }
@@ -774,6 +778,7 @@ export async function updateSubmissionStatusWithTransaction(data: {
     reviewer_id: string
     review_note?: string
     visibility?: Visibility
+    approval_org_timezone?: string | null
   }
   points?: {
     delta_points: number
