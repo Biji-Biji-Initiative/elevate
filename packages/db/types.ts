@@ -150,55 +150,99 @@ export type Database = {
       kajabi_events: {
         Row: {
           id: string
-          payload: Json
-          processed_at: string | null
-          received_at: string
-          user_match: string | null
+          event_id: string
+          tag_name_raw: string
+          tag_name_norm: string
+          contact_id: string
+          email: string | null
+          created_at_utc: string
+          status: string
+          raw: Json
         }
         Insert: {
           id: string
-          payload: Json
-          processed_at?: string | null
-          received_at?: string
-          user_match?: string | null
+          event_id: string
+          tag_name_raw: string
+          tag_name_norm: string
+          contact_id: string
+          email?: string | null
+          created_at_utc?: string
+          status: string
+          raw: Json
         }
         Update: {
           id?: string
-          payload?: Json
-          processed_at?: string | null
-          received_at?: string
-          user_match?: string | null
+          event_id?: string
+          tag_name_raw?: string
+          tag_name_norm?: string
+          contact_id?: string
+          email?: string | null
+          created_at_utc?: string
+          status?: string
+          raw?: Json
         }
         Relationships: []
+      }
+      learn_tag_grants: {
+        Row: {
+          user_id: string
+          tag_name: string
+          granted_at: string
+        }
+        Insert: {
+          user_id: string
+          tag_name: string
+          granted_at?: string
+        }
+        Update: {
+          user_id?: string
+          tag_name?: string
+          granted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learn_tag_grants_user_id_fkey",
+            columns: ["user_id"],
+            isOneToOne: false,
+            referencedRelation: "users",
+            referencedColumns: ["id"],
+          },
+        ]
       }
       points_ledger: {
         Row: {
           activity_code: string
           created_at: string
+          event_time: string
           delta_points: number
           external_event_id: string | null
           external_source: string | null
           id: string
+          meta: Json
           source: Database["public"]["Enums"]["LedgerSource"]
           user_id: string
         }
         Insert: {
           activity_code: string
           created_at?: string
+          event_time: string
           delta_points: number
           external_event_id?: string | null
           external_source?: string | null
           id: string
+          meta?: Json
           source: Database["public"]["Enums"]["LedgerSource"]
           user_id: string
         }
         Update: {
           activity_code?: string
           created_at?: string
+          event_time?: string
           delta_points?: number
           external_event_id?: string | null
           external_source?: string | null
           id?: string
+          meta?: Json
           source?: Database["public"]["Enums"]["LedgerSource"]
           user_id?: string
         }
@@ -249,6 +293,7 @@ export type Database = {
           review_note: string | null
           reviewer_id: string | null
           status: Database["public"]["Enums"]["SubmissionStatus"]
+          approval_org_timezone: string | null
           updated_at: string
           user_id: string
           visibility: Database["public"]["Enums"]["Visibility"]
@@ -261,6 +306,7 @@ export type Database = {
           review_note?: string | null
           reviewer_id?: string | null
           status?: Database["public"]["Enums"]["SubmissionStatus"]
+          approval_org_timezone?: string | null
           updated_at: string
           user_id: string
           visibility?: Database["public"]["Enums"]["Visibility"]
@@ -273,6 +319,7 @@ export type Database = {
           review_note?: string | null
           reviewer_id?: string | null
           status?: Database["public"]["Enums"]["SubmissionStatus"]
+          approval_org_timezone?: string | null
           updated_at?: string
           user_id?: string
           visibility?: Database["public"]["Enums"]["Visibility"]
@@ -326,6 +373,7 @@ export type Database = {
           kajabi_contact_id: string | null
           name: string
           role: Database["public"]["Enums"]["Role"]
+          user_type: Database["public"]["Enums"]["UserType"]
           school: string | null
         }
         Insert: {
@@ -338,6 +386,7 @@ export type Database = {
           kajabi_contact_id?: string | null
           name: string
           role?: Database["public"]["Enums"]["Role"]
+          user_type?: Database["public"]["Enums"]["UserType"]
           school?: string | null
         }
         Update: {
@@ -350,6 +399,7 @@ export type Database = {
           kajabi_contact_id?: string | null
           name?: string
           role?: Database["public"]["Enums"]["Role"]
+          user_type?: Database["public"]["Enums"]["UserType"]
           school?: string | null
         }
         Relationships: []
@@ -427,6 +477,7 @@ export type Database = {
       Role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN"
       SubmissionStatus: "PENDING" | "APPROVED" | "REJECTED"
       Visibility: "PUBLIC" | "PRIVATE"
+      UserType: "EDUCATOR" | "STUDENT"
     }
     CompositeTypes: {
       [_ in never]: never

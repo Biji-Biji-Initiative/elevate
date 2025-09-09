@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { AdminUsersQuerySchema, AdminSubmissionsQuerySchema } from '../src/query-schemas'
+import { AdminUsersQuerySchema, AdminSubmissionsQuerySchema } from '../query-schemas'
 
 describe('Admin query schemas', () => {
   it('parses valid users query with defaults', () => {

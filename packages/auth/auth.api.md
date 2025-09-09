@@ -51,6 +51,7 @@ export function parseClerkEmailAddress(emailAddress: unknown): string | undefine
 // @public
 export function parseClerkPublicMetadata(metadata: unknown): {
     role?: string;
+    user_type?: "EDUCATOR" | "STUDENT";
 };
 
 // @public (undocumented)

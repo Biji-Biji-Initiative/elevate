@@ -35,9 +35,16 @@ export type UserRole = typeof USER_ROLES[number]
 export const UserRoleSchema = z.enum(USER_ROLES)
 
 /**
+ * User types distinguish educators from students
+ */
+export const USER_TYPES = ['EDUCATOR', 'STUDENT'] as const
+export type UserType = typeof USER_TYPES[number]
+export const UserTypeSchema = z.enum(USER_TYPES)
+
+/**
  * Submission review statuses
  */
-export const SUBMISSION_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'] as const
+export const SUBMISSION_STATUSES = ['PENDING', 'APPROVED', 'REJECTED', 'REVOKED'] as const
 export type SubmissionStatus = typeof SUBMISSION_STATUSES[number]
 export const SubmissionStatusSchema = z.enum(SUBMISSION_STATUSES)
 
@@ -276,6 +283,7 @@ export const DomainSchemas = {
   // Core enums
   ActivityCode: ActivityCodeSchema,
   UserRole: UserRoleSchema,
+  UserType: UserTypeSchema,
   SubmissionStatus: SubmissionStatusSchema,
   Visibility: VisibilitySchema,
   LedgerSource: LedgerSourceSchema,
@@ -312,6 +320,7 @@ export const DomainSchemas = {
 export type Role = UserRole
 export type ActivityCodeType = ActivityCode
 export type RoleType = UserRole
+export type UserTypeType = UserType
 export type SubmissionStatusType = SubmissionStatus
 export type VisibilityType = Visibility
 export type PaginationType = PaginationParams
@@ -320,6 +329,7 @@ export type PaginationType = PaginationParams
 export const RoleSchema = UserRoleSchema
 export const ActivityCodeEnum = ActivityCodeSchema
 export const RoleEnum = UserRoleSchema
+export const UserTypeEnum = UserTypeSchema
 export const SubmissionStatusEnum = SubmissionStatusSchema
 export const VisibilityEnum = VisibilitySchema
 export const PaginationSchema = PaginationParamsSchema
@@ -345,6 +355,13 @@ export const isValidActivityCode = (value: string): value is ActivityCode => {
  */
 export const isValidUserRole = (value: string): value is UserRole => {
   return USER_ROLES.includes(value as UserRole)
+}
+
+/**
+ * Check if a value is a valid user type
+ */
+export const isValidUserType = (value: string): value is UserType => {
+  return USER_TYPES.includes(value as UserType)
 }
 
 /**
@@ -377,6 +394,11 @@ export const getAllActivityCodes = (): readonly ActivityCode[] => ACTIVITY_CODES
  * Get all user roles as readonly array
  */
 export const getAllUserRoles = (): readonly UserRole[] => USER_ROLES
+
+/**
+ * Get all user types as readonly array
+ */
+export const getAllUserTypes = (): readonly UserType[] => USER_TYPES
 
 /**
  * Get all submission statuses as readonly array

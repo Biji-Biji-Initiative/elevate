@@ -289,7 +289,7 @@ export interface SubmissionDTO {
   id: string
   activityCode: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
   activity: { name: string; code: string }
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'REVOKED'
   visibility: 'PUBLIC' | 'PRIVATE'
   payload: Record<string, unknown>
   createdAt: string
@@ -512,7 +512,7 @@ export const SubmissionDTOSchema = z.object({
   id: z.string(),
   activityCode: z.enum(['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']),
   activity: z.object({ name: z.string(), code: z.string() }),
-  status: z.enum(['PENDING', 'APPROVED', 'REJECTED']),
+  status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'REVOKED']),
   visibility: z.enum(['PUBLIC', 'PRIVATE']),
   payload: z.record(z.unknown()),
   createdAt: z.string(),
@@ -683,7 +683,7 @@ export function mapRawUserProfileToDTO(rawUser: {
         | 'PRESENT'
         | 'SHINE',
       activity: sub.activity,
-      status: sub.status as 'PENDING' | 'APPROVED' | 'REJECTED',
+      status: sub.status as 'PENDING' | 'APPROVED' | 'REJECTED' | 'REVOKED',
       visibility: sub.visibility as 'PUBLIC' | 'PRIVATE',
       payload: sub.payload as Record<string, unknown>,
       createdAt:

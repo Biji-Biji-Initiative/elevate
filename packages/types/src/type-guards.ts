@@ -8,7 +8,10 @@ import type { SubmissionStatus, Role, ActivityCode } from './common'
  * Type guard for SubmissionStatus
  */
 export function isSubmissionStatus(value: unknown): value is SubmissionStatus {
-  return typeof value === 'string' && ['PENDING', 'APPROVED', 'REJECTED'].includes(value)
+  return (
+    typeof value === 'string' &&
+    ['PENDING', 'APPROVED', 'REJECTED', 'REVOKED'].includes(value)
+  )
 }
 
 /**

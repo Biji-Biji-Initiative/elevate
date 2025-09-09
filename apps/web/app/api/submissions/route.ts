@@ -24,10 +24,11 @@ import {
   SubmissionCreateRequestSchema,
   parseActivityCode, 
   parseSubmissionStatus, 
-  parseAmplifyPayload, 
-  parseSubmissionPayload, 
+  parseAmplifyPayload,
+  parseSubmissionPayload,
   type SubmissionWhereClause,
   AuthenticationError,
+  AuthorizationError,
   NotFoundError,
   ValidationError,
   SubmissionLimitError,
@@ -57,6 +58,10 @@ export const POST = withCSRFProtection(withApiErrorHandling(async (request: Next
 
   if (!user) {
     throw new NotFoundError('User', userId, context.traceId)
+  }
+
+  if (user.user_type === 'STUDENT') {
+    throw new AuthorizationError('Student accounts are not eligible to submit', context.traceId)
   }
 
   const body: unknown = await request.json()

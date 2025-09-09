@@ -1,5 +1,5 @@
 // Shared types that can be used in both client and server contexts
-import { parseRole, type Role } from '@elevate/types'
+import { parseRole, UserTypeSchema, type Role, type UserType } from '@elevate/types'
 
 // Map Prisma Role enum to lowercase for UI
 const ROLE_MAPPING: Record<Role, 'participant' | 'reviewer' | 'admin' | 'superadmin'> = {
@@ -111,17 +111,25 @@ export function hasPermission(userRole: RoleName, permission: Permission): boole
 /**
  * Safely parse Clerk publicMetadata
  */
-export function parseClerkPublicMetadata(metadata: unknown): { role?: string } {
+export function parseClerkPublicMetadata(metadata: unknown): {
+  role?: string
+  user_type?: UserType
+} {
   if (!metadata || typeof metadata !== 'object' || metadata === null) {
     return {}
   }
-  
-  // Type-safe property access
+
+  const out: { role?: string; user_type?: UserType } = {}
   if ('role' in metadata && typeof metadata.role === 'string') {
-    return { role: metadata.role }
+    out.role = metadata.role
   }
-  
-  return {}
+  if ('user_type' in metadata && typeof metadata.user_type === 'string') {
+    const parsed = UserTypeSchema.safeParse(metadata.user_type)
+    if (parsed.success) {
+      out.user_type = parsed.data
+    }
+  }
+  return out
 }
 
 /**

@@ -793,7 +793,7 @@ describe('DTO Mappers - ORM Leakage Prevention', () => {
       if (dto.submissions.length > 0) {
         const submissionDto: SubmissionDTO = dto.submissions[0]
         expect(['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']).toContain(submissionDto.activityCode)
-        expect(['PENDING', 'APPROVED', 'REJECTED']).toContain(submissionDto.status)
+        expect(['PENDING', 'APPROVED', 'REJECTED', 'REVOKED']).toContain(submissionDto.status)
         expect(['PUBLIC', 'PRIVATE']).toContain(submissionDto.visibility)
       }
     })

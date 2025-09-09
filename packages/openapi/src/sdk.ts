@@ -34,17 +34,12 @@ export interface paths {
                             /** @enum {boolean} */
                             success: true;
                             data: {
-                                totalEducators: number;
-                                totalSubmissions: number;
-                                totalPoints: number;
-                                studentsImpacted: number;
-                                byStage: {
-                                    [key: string]: {
-                                        total: number;
-                                        approved: number;
-                                        pending: number;
-                                        rejected: number;
-                                    };
+                                counters: {
+                                    educators_learning: number;
+                                    peers_students_reached: number;
+                                    stories_shared: number;
+                                    micro_credentials: number;
+                                    mce_certified: number;
                                 };
                             };
                         };
@@ -125,18 +120,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -252,18 +250,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -377,18 +378,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -484,18 +488,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -507,18 +514,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -530,18 +540,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -642,18 +655,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -665,18 +681,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -688,18 +707,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -843,18 +865,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -941,18 +966,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1124,18 +1152,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1269,18 +1300,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1292,18 +1326,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1423,18 +1460,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1446,18 +1486,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1511,18 +1554,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1579,18 +1625,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1693,18 +1742,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1797,18 +1849,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1860,18 +1915,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -1924,18 +1982,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -2449,18 +2510,21 @@ export interface paths {
                     content: {
                         "application/json": {
                             /**
-                             * @description Operation failed
-                             * @example false
-                             * @enum {boolean}
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
                              */
-                            success: false;
-                            /**
-                             * @description Error message
-                             * @example Invalid submission data
-                             */
-                            error: string;
-                            /** @description Additional error details (validation errors) */
-                            details?: unknown[];
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
                         };
                     };
                 };
@@ -3033,23 +3097,42 @@ export interface components {
             };
         };
         /**
+         * Error Envelope
+         * @description Standard error envelope for LEAPS APIs
+         */
+        ErrorEnvelope: {
+            /**
+             * @example validation
+             * @enum {string}
+             */
+            type: "validation" | "cap" | "state" | "auth" | "idempotency";
+            /** @example INVALID_JSON */
+            code: string;
+            /** @example Body must be valid JSON */
+            message: string;
+            details?: unknown;
+        };
+        /**
          * Error Response
-         * @description Standard error response format
+         * @description API error response with standardized envelope
          */
         ErrorResponse: {
             /**
-             * @description Operation failed
-             * @example false
-             * @enum {boolean}
+             * Error Envelope
+             * @description Standard error envelope for LEAPS APIs
              */
-            success: false;
-            /**
-             * @description Error message
-             * @example Invalid submission data
-             */
-            error: string;
-            /** @description Additional error details (validation errors) */
-            details?: unknown[];
+            error: {
+                /**
+                 * @example validation
+                 * @enum {string}
+                 */
+                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                /** @example INVALID_JSON */
+                code: string;
+                /** @example Body must be valid JSON */
+                message: string;
+                details?: unknown;
+            };
         };
         /**
          * Success Response

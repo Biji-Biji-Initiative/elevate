@@ -30,6 +30,7 @@ import {
   SubmissionResponseSchema,
   LeaderboardResponseSchema,
   FileUploadResponseSchema,
+  ErrorEnvelopeSchema,
   ErrorResponseSchema,
   SuccessResponseSchema,
   AdminSubmissionsListResponseSchema,
@@ -60,6 +61,7 @@ registry.register('SubmissionRequest', SubmissionRequestSchema)
 registry.register('SubmissionResponse', SubmissionResponseSchema)
 registry.register('LeaderboardResponse', LeaderboardResponseSchema)
 registry.register('FileUploadResponse', FileUploadResponseSchema)
+registry.register('ErrorEnvelope', ErrorEnvelopeSchema)
 registry.register('ErrorResponse', ErrorResponseSchema)
 registry.register('SuccessResponse', SuccessResponseSchema)
 
