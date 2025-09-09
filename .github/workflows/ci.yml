@@ -12,7 +12,7 @@ concurrency:
 
 env:
   NODE_VERSION: '20.11.1'
-  PNPM_VERSION: '9'
+  PNPM_VERSION: '10'
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/elevate_test
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
   CLERK_SECRET_KEY: sk_test_dummy
@@ -182,6 +182,12 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build package types (for import resolution)
+        run: pnpm -r --filter @elevate/* run build:types
+
+      - name: Build UI package (for styles export)
+        run: pnpm -F @elevate/ui run build
 
       - name: 🔍 Validate environment configuration
         run: pnpm run env:validate:ci
