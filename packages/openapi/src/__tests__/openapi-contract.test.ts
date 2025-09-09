@@ -19,13 +19,12 @@ describe('OpenAPI contract', () => {
     const sample = {
       success: true,
       data: {
-        totalEducators: 100,
-        totalSubmissions: 200,
-        totalPoints: 5000,
-        studentsImpacted: 1200,
-        byStage: {
-          LEARN: { total: 50, approved: 40, pending: 5, rejected: 5 },
-          EXPLORE: { total: 60, approved: 50, pending: 5, rejected: 5 },
+        counters: {
+          educators_learning: 10,
+          peers_students_reached: 20,
+          stories_shared: 5,
+          micro_credentials: 15,
+          mce_certified: 0,
         },
       },
     }
@@ -59,15 +58,22 @@ describe('OpenAPI contract', () => {
         id: 'user_1',
         handle: 'educator_1',
         name: 'Educator',
-        created_at: new Date().toISOString(),
-        _sum: { points: 100 },
-        earned_badges: [
-          { earned_at: new Date().toISOString(), badge: { code: 'FIRST', name: 'First', description: 'desc', icon_url: null } },
+        email: 'educator@example.com',
+        avatarUrl: null,
+        school: null,
+        cohort: null,
+        createdAt: new Date().toISOString(),
+        totalPoints: 100,
+        earnedBadges: [
+          {
+            earnedAt: new Date().toISOString(),
+            badge: { code: 'FIRST', name: 'First', description: 'desc', iconUrl: null },
+          },
         ],
         submissions: [
           {
             id: 'sub_1',
-            activity_code: 'LEARN',
+            activityCode: 'LEARN',
             activity: { name: 'Learn', code: 'LEARN' },
             status: 'APPROVED',
             visibility: 'PUBLIC',
@@ -77,10 +83,11 @@ describe('OpenAPI contract', () => {
                 provider: 'SPL',
                 course_name: 'AI for Educators',
                 completed_at: new Date().toISOString(),
-                certificate_file: 'evidence/learn/user123/certificate.pdf'
-              }
+                certificate_file: 'evidence/learn/user123/certificate.pdf',
+              },
             },
-            created_at: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           },
         ],
       },

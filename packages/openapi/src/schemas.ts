@@ -309,11 +309,13 @@ export const StageStatsSchema = z.object({
 export const PlatformStatsResponseSchema = z.object({
   success: z.literal(true),
   data: z.object({
-    totalEducators: z.number().int(),
-    totalSubmissions: z.number().int(),
-    totalPoints: z.number().int(),
-    studentsImpacted: z.number().int(),
-    byStage: z.record(StageStatsSchema),
+    counters: z.object({
+      educators_learning: z.number().int(),
+      peers_students_reached: z.number().int(),
+      stories_shared: z.number().int(),
+      micro_credentials: z.number().int(),
+      mce_certified: z.number().int(),
+    }),
   })
 }).openapi({
   title: 'Platform Stats Response',
@@ -665,20 +667,27 @@ export const AdminCohortsResponseSchema = z.object({
   example: { success: true, data: { cohorts: ['Cohort-2024-A', 'Cohort-2024-B'] } }
 })
 
+export const ErrorEnvelopeSchema = z
+  .object({
+    type: z
+      .enum(['validation', 'cap', 'state', 'auth', 'idempotency'])
+      .openapi({ example: 'validation' }),
+    code: z.string().openapi({ example: 'INVALID_JSON' }),
+    message: z.string().openapi({ example: 'Body must be valid JSON' }),
+    details: z.unknown().optional(),
+  })
+  .openapi({
+    title: 'Error Envelope',
+    description: 'Standard error envelope for LEAPS APIs',
+  });
+
 export const ErrorResponseSchema = z
   .object({
-    success: z.literal(false).openapi({ description: 'Operation failed', example: false }),
-    error: z.string().openapi({
-      description: 'Error message',
-      example: 'Invalid submission data',
-    }),
-    details: z.array(z.unknown()).optional().openapi({
-      description: 'Additional error details (validation errors)',
-    }),
+    error: ErrorEnvelopeSchema,
   })
   .openapi({
     title: 'Error Response',
-    description: 'Standard error response format',
+    description: 'API error response with standardized envelope',
   });
 
 export const SuccessResponseSchema = z
