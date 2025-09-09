@@ -276,14 +276,17 @@ export const ErrorTestScenarios = {
  * Helper function to test API error responses
  * Use in your test files like:
  *
- * describe('Error handling', () => {
- *   it('should handle authentication errors', async () => {
+ * @example
+ * ```typescript
+ * describe('Error handling', () =\> \{
+ *   it('should handle authentication errors', async () =\> \{
  *     const scenario = ErrorTestScenarios.unauthenticated
  *     // ... your test logic
  *     expect(response.status).toBe(scenario.expectedStatus)
  *     expect(response.body).toMatchObject(scenario.expectedResponse)
- *   })
- * })
+ *   \})
+ * \})
+ * ```
  */
 export function testErrorScenario(
   scenario: (typeof ErrorTestScenarios)[keyof typeof ErrorTestScenarios],

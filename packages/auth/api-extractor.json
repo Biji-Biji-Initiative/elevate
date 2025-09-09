@@ -37,6 +37,9 @@
     "tsdocMessageReporting": {
       "default": {
         "logLevel": "warning"
+      },
+      "tsdoc-param-tag-missing-hyphen": {
+        "logLevel": "none"
       }
     }
   }
