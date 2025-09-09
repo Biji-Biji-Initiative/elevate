@@ -75,11 +75,16 @@ class CodeQualityValidator {
       const countsByPkgAndName = new Map()
       for (const file of testFiles) {
         const parts = file.split(path.sep)
-        const pkgIdx = parts.indexOf('packages')
-        const pkgName =
-          pkgIdx >= 0 && parts[pkgIdx + 1] ? parts[pkgIdx + 1] : 'root'
+        const packagesIdx = parts.indexOf('packages')
+        const appsIdx = parts.indexOf('apps')
+        let scope = 'root'
+        if (packagesIdx >= 0 && parts[packagesIdx + 1]) {
+          scope = `pkg:${parts[packagesIdx + 1]}`
+        } else if (appsIdx >= 0 && parts[appsIdx + 1]) {
+          scope = `app:${parts[appsIdx + 1]}`
+        }
         const base = path.basename(file)
-        const key = `${pkgName}:${base}`
+        const key = `${scope}:${base}`
         countsByPkgAndName.set(key, (countsByPkgAndName.get(key) || 0) + 1)
       }
       const dupes = [...countsByPkgAndName.entries()].filter(
