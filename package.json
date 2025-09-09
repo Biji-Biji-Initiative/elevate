@@ -80,6 +80,7 @@
     "type-safety:check": "node scripts/check-type-safety.js",
     "type-safety:strict": "node scripts/check-type-safety.js --strict",
     "type-safety:help": "node scripts/check-type-safety.js --best-practices",
+    "build:types": "pnpm -r --filter @elevate/* run build:types",
     "lint": "pnpm run lint:packages && pnpm run lint:apps",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --fix",
     "lint:apps": "pnpm -F web lint && pnpm -F elevate-admin lint",

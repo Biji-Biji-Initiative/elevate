@@ -1,5 +1,5 @@
 import baseTsup from '../../tsup.base.mjs'
 
 export default baseTsup({
-  entry: ['src/index.ts', 'src/errors.ts'],
+  entry: ['src/index.ts', 'src/errors.ts', 'src/env.ts'],
 })

@@ -107,7 +107,9 @@ export class AdminApiClient {
   }
 
   async reviewSubmission(
-    body: paths['/api/admin/submissions']['patch']['requestBody']['content']['application/json'],
+    body: NonNullable<
+      paths['/api/admin/submissions']['patch']['requestBody']
+    >['content']['application/json'],
   ) {
     return this.request<paths['/api/admin/submissions']['patch']['responses']['200']['content']['application/json']>(
       '/api/admin/submissions',
@@ -116,7 +118,9 @@ export class AdminApiClient {
   }
 
   async bulkReview(
-    body: paths['/api/admin/submissions']['post']['requestBody']['content']['application/json'],
+    body: NonNullable<
+      paths['/api/admin/submissions']['post']['requestBody']
+    >['content']['application/json'],
   ) {
     return this.request<paths['/api/admin/submissions']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/submissions',
@@ -141,7 +145,9 @@ export class AdminApiClient {
   }
 
   async updateAdminUser(
-    body: paths['/api/admin/users']['patch']['requestBody']['content']['application/json'],
+    body: NonNullable<
+      paths['/api/admin/users']['patch']['requestBody']
+    >['content']['application/json'],
   ) {
     return this.request<paths['/api/admin/users']['patch']['responses']['200']['content']['application/json']>(
       '/api/admin/users',
@@ -150,7 +156,9 @@ export class AdminApiClient {
   }
 
   async bulkUpdateAdminUsers(
-    body: paths['/api/admin/users']['post']['requestBody']['content']['application/json'],
+    body: NonNullable<
+      paths['/api/admin/users']['post']['requestBody']
+    >['content']['application/json'],
   ) {
     return this.request<paths['/api/admin/users']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/users',
@@ -175,7 +183,9 @@ export class AdminApiClient {
   }
 
   async createAdminBadge(
-    body: paths['/api/admin/badges']['post']['requestBody']['content']['application/json'],
+    body: NonNullable<
+      paths['/api/admin/badges']['post']['requestBody']
+    >['content']['application/json'],
   ) {
     return this.request<paths['/api/admin/badges']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/badges',
@@ -184,7 +194,9 @@ export class AdminApiClient {
   }
 
   async updateAdminBadge(
-    body: paths['/api/admin/badges']['patch']['requestBody']['content']['application/json'],
+    body: NonNullable<
+      paths['/api/admin/badges']['patch']['requestBody']
+    >['content']['application/json'],
   ) {
     return this.request<paths['/api/admin/badges']['patch']['responses']['200']['content']['application/json']>(
       '/api/admin/badges',
@@ -200,7 +212,9 @@ export class AdminApiClient {
   }
 
   async assignAdminBadge(
-    body: paths['/api/admin/badges/assign']['post']['requestBody']['content']['application/json'],
+    body: NonNullable<
+      paths['/api/admin/badges/assign']['post']['requestBody']
+    >['content']['application/json'],
   ) {
     return this.request<paths['/api/admin/badges/assign']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/badges/assign',
@@ -209,7 +223,9 @@ export class AdminApiClient {
   }
 
   async removeAdminBadge(
-    body: paths['/api/admin/badges/assign']['delete']['requestBody']['content']['application/json'],
+    body: NonNullable<
+      paths['/api/admin/badges/assign']['delete']['requestBody']
+    >['content']['application/json'],
   ) {
     return this.request<paths['/api/admin/badges/assign']['delete']['responses']['200']['content']['application/json']>(
       '/api/admin/badges/assign',
@@ -240,7 +256,9 @@ export class AdminApiClient {
   }
 
   async testAdminKajabi(
-    body: paths['/api/admin/kajabi/test']['post']['requestBody']['content']['application/json'],
+    body: NonNullable<
+      paths['/api/admin/kajabi/test']['post']['requestBody']
+    >['content']['application/json'],
   ) {
     return this.request<paths['/api/admin/kajabi/test']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/kajabi/test',
@@ -249,7 +267,9 @@ export class AdminApiClient {
   }
 
   async reprocessAdminKajabi(
-    body: paths['/api/admin/kajabi/reprocess']['post']['requestBody']['content']['application/json'],
+    body: NonNullable<
+      paths['/api/admin/kajabi/reprocess']['post']['requestBody']
+    >['content']['application/json'],
   ) {
     return this.request<paths['/api/admin/kajabi/reprocess']['post']['responses']['200']['content']['application/json']>(
       '/api/admin/kajabi/reprocess',

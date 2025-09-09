@@ -3,6 +3,7 @@
  */
 
 import ElevateAPIClient from '@elevate/openapi/sdk'
+
 import type { ApiClient } from './client'
 
 export type ServerApiResponse<T> =

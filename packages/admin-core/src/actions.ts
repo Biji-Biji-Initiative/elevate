@@ -67,7 +67,7 @@ function isApiError(
 
 function validateAndExtract<T>(
   response: unknown,
-  schema: z.ZodSchema<{ success: true; data: T }>,
+  schema: z.ZodType<{ success: true; data: T }, z.ZodTypeDef, unknown>,
   context: string,
 ): T {
   try {
@@ -239,7 +239,9 @@ export const adminActions = {
   async getBadges(includeStats = true): Promise<{ badges: AdminBadge[] }> {
     try {
       const api = await getApiClient()
-      const params = includeStats ? { includeStats: 'true' } : undefined
+      const params = includeStats
+        ? ({ includeStats: 'true' } as const)
+        : undefined
       const response = await api.getAdminBadges(params)
       return validateAndExtract(response, BadgesListResponseSchema, 'getBadges')
     } catch (error) {

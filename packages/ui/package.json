@@ -28,17 +28,33 @@
       "types": "./dist/types/blocks/index.d.ts",
       "import": "./dist/js/blocks/index.js"
     },
+    "./blocks/*": {
+      "types": "./dist/types/blocks/*.d.ts",
+      "import": "./dist/js/blocks/*.js"
+    },
     "./blocks/sections": {
       "types": "./dist/types/blocks/sections/index.d.ts",
       "import": "./dist/js/blocks/sections/index.js"
+    },
+    "./blocks/sections/*": {
+      "types": "./dist/types/blocks/sections/*.d.ts",
+      "import": "./dist/js/blocks/sections/*.js"
     },
     "./next": {
       "types": "./dist/types/next/index.d.ts",
       "import": "./dist/js/next/index.js"
     },
+    "./next/*": {
+      "types": "./dist/types/next/*.d.ts",
+      "import": "./dist/js/next/*.js"
+    },
     "./feedback": {
       "types": "./dist/types/feedback/index.d.ts",
       "import": "./dist/js/feedback/index.js"
+    },
+    "./feedback/*": {
+      "types": "./dist/types/feedback/*.d.ts",
+      "import": "./dist/js/feedback/*.js"
     },
     "./lib/utils": {
       "types": "./dist/types/lib/utils.d.ts",
