@@ -4,7 +4,7 @@
  * DTO transformations should be handled at the API layer
  */
 
-import { 
+import {
   Prisma,
   type User,
   type Submission,
@@ -213,7 +213,7 @@ export async function findSubmissionsWithPagination(
 }
 
 export async function findSubmissionsWithFilters(
-  params: Prisma.SubmissionFindManyArgs
+  params: Prisma.SubmissionFindManyArgs,
 ): Promise<
   (Submission & {
     user?: User
@@ -224,7 +224,9 @@ export async function findSubmissionsWithFilters(
   return await prisma.submission.findMany(params)
 }
 
-export async function countSubmissionsWithFilters(where: Prisma.SubmissionWhereInput): Promise<number> {
+export async function countSubmissionsWithFilters(
+  where: Prisma.SubmissionWhereInput,
+): Promise<number> {
   return await prisma.submission.count({ where })
 }
 
@@ -393,7 +395,6 @@ export async function createPointsEntry(data: {
       activity_code: data.activity_code,
       delta_points: data.delta_points,
       source: data.source,
-      event_time: new Date(),
       external_event_id: data.external_event_id ?? null,
     },
   })
@@ -517,7 +518,10 @@ export async function getPlatformStats() {
 
 export async function getStageMetrics() {
   const activities = await findAllActivities()
-  const metrics: Record<string, { total: number; approved: number; pending: number; rejected: number }> = {}
+  const metrics: Record<
+    string,
+    { total: number; approved: number; pending: number; rejected: number }
+  > = {}
 
   for (const activity of activities) {
     const [total, approved, pending, rejected] = await Promise.all([
@@ -569,9 +573,7 @@ export async function findKajabiEventByExternalId(
   })
 }
 
-export async function findKajabiEvents(
-  limit = 50,
-): Promise<KajabiEvent[]> {
+export async function findKajabiEvents(limit = 50): Promise<KajabiEvent[]> {
   return await prisma.kajabiEvent.findMany({
     orderBy: { received_at: 'desc' },
     take: limit,
@@ -630,9 +632,7 @@ export async function createAuditLogEntry(data: {
   })
 }
 
-export async function findAuditLogEntries(
-  limit = 50,
-): Promise<AuditLog[]> {
+export async function findAuditLogEntries(limit = 50): Promise<AuditLog[]> {
   return await prisma.auditLog.findMany({
     orderBy: { created_at: 'desc' },
     take: limit,
@@ -724,7 +724,6 @@ export async function createSubmissionWithTransaction(data: {
           activity_code: data.submission.activity_code,
           delta_points: data.points.delta_points,
           source: data.points.source,
-          event_time: new Date(),
           external_event_id: data.points.external_event_id ?? null,
         },
       })
@@ -820,7 +819,6 @@ export async function updateSubmissionStatusWithTransaction(data: {
           activity_code: existingSubmission.activity_code,
           delta_points: data.points.delta_points,
           source: data.points.source,
-          event_time: new Date(),
           external_event_id: data.points.external_event_id ?? null,
         },
       })
@@ -901,7 +899,6 @@ export async function bulkUpdateSubmissionsWithTransaction(data: {
             activity_code: submission.activity_code,
             delta_points: pointsData.delta_points,
             source: pointsData.source,
-            event_time: new Date(),
           },
         }),
       )
