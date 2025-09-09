@@ -83,16 +83,16 @@ function SubmissionsPage() {
     {
       key: 'created_at',
       header: 'Date',
-      accessor: (row) => row.created_at,
-      sortAccessor: (row) => new Date(row.created_at),
-      render: (row) => new Date(row.created_at).toLocaleDateString(),
+      accessor: (row: AdminSubmission) => row.created_at,
+      sortAccessor: (row: AdminSubmission) => new Date(row.created_at),
+      render: (row: AdminSubmission) => new Date(row.created_at).toLocaleDateString(),
       width: '100px'
     },
     {
       key: 'user.name',
       header: 'Participant',
-      accessor: (row) => ({ name: row.user.name, handle: row.user.handle, school: row.user.school ?? '' }),
-      sortAccessor: (row) => row.user.name,
+      accessor: (row: AdminSubmission) => ({ name: row.user.name, handle: row.user.handle, school: row.user.school ?? '' }),
+      sortAccessor: (row: AdminSubmission) => row.user.name,
       render: (row) => (
         <div>
           <div className="font-medium">{row.user.name}</div>
@@ -107,8 +107,8 @@ function SubmissionsPage() {
     {
       key: 'activity.name',
       header: 'Activity',
-      accessor: (row) => ({ name: row.activity.name, code: row.activity.code }),
-      sortAccessor: (row) => row.activity.name,
+      accessor: (row: AdminSubmission) => ({ name: row.activity.name, code: row.activity.code }),
+      sortAccessor: (row: AdminSubmission) => row.activity.name,
       render: (row) => (
         <div>
           <div className="font-medium">{row.activity.name}</div>
@@ -120,21 +120,21 @@ function SubmissionsPage() {
     {
       key: 'status',
       header: 'Status',
-      accessor: (row) => row.status,
+      accessor: (row: AdminSubmission) => row.status,
       render: (_row, value?: string) => <StatusBadge status={value ?? ''} />,
       width: '100px'
     },
     {
       key: 'visibility',
       header: 'Visibility',
-      accessor: (row) => row.visibility,
+      accessor: (row: AdminSubmission) => row.visibility,
       render: (_row, value?: string) => <StatusBadge status={value ?? ''} size="sm" />,
       width: '80px'
     },
     {
       key: 'attachments',
       header: 'Files',
-      accessor: (row) => row.attachmentCount ?? 0,
+      accessor: (row: AdminSubmission) => row.attachmentCount ?? 0,
       render: (_row, value?: number) => (
         <span className="text-sm text-gray-600">{value ?? 0} files</span>
       ),
