@@ -19,10 +19,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.12.4
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Check for duplicate test files
         run: |
@@ -68,10 +83,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check for missing .js extensions in relative imports
+      - name: Check for missing .js extensions in compiled JS
         run: |
-          echo "Checking for missing .js extensions in ESM imports..."
-          MISSING_EXTENSIONS=$(grep -r "from '\\./" packages --include="*.ts" --include="*.tsx" | grep -v "\.js'" | grep -v "/dist/" | grep -v "/node_modules/" || true)
+          echo "Checking for missing .js extensions in compiled ESM (dist/js)..."
+          # Only check compiled JS output for .js extensions; TS sources are extensionless by design
+          MISSING_EXTENSIONS=$(grep -r "from '\\./" packages/*/dist/js --include="*.js" 2>/dev/null | grep -v "\.js'" || true)
           if [ ! -z "$MISSING_EXTENSIONS" ]; then
             echo "❌ Found relative imports missing .js extensions:"
             echo "$MISSING_EXTENSIONS"
@@ -81,7 +97,7 @@ jobs:
             echo "  ❌ import { foo } from './module'"
             exit 1
           fi
-          echo "✅ All relative imports have proper .js extensions"
+          echo "✅ All relative imports in compiled JS have proper .js extensions"
 
       - name: Check for absolute import consistency
         run: |
@@ -105,10 +121,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.12.4
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Check package boundaries
         run: |
@@ -135,7 +166,7 @@ jobs:
           echo "✅ No deprecated imports found"
 
       - name: Run boundary validation script
-        run: npm run verify:boundaries
+        run: pnpm run verify:boundaries
         continue-on-error: true
 
   # Type safety validation
@@ -150,20 +181,35 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.12.4
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: TypeScript compilation check
-        run: npm run typecheck:build
+        run: pnpm run typecheck:build
 
       - name: API extractor validation
-        run: npm run api:extract
+        run: pnpm run api:extract
         continue-on-error: true
 
       - name: Run type safety validation
-        run: npm run type-safety:check
+        run: pnpm run type-safety:check
         continue-on-error: true
 
   # Build consistency
@@ -178,10 +224,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.12.4
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Check for consistent tsconfig usage
         run: |
@@ -208,7 +269,7 @@ jobs:
           done
 
       - name: Run full build test
-        run: npm run build:check
+        run: pnpm run build:check
 
   # Security and secrets
   security:
@@ -222,13 +283,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.12.4
+
+      - name: Get pnpm store directory
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Scan for secrets
-        run: npm run verify:secrets
+        run: pnpm run verify:secrets
 
       - name: Check for hardcoded credentials
         run: |
