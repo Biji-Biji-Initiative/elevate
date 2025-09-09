@@ -1,9 +1,9 @@
 import type { NextRequest } from 'next/server'
 
+import { prisma } from '@elevate/db'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { createSuccessResponse } from '@elevate/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import { prisma } from '@elevate/db'
 import {
   computeApprovalRate,
   computeActivationRate,
