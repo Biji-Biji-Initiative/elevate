@@ -4,7 +4,7 @@
  * DTO transformations should be handled at the API layer
  */
 
-import { 
+import {
   Prisma,
   type User,
   type Submission,
@@ -213,7 +213,7 @@ export async function findSubmissionsWithPagination(
 }
 
 export async function findSubmissionsWithFilters(
-  params: Prisma.SubmissionFindManyArgs
+  params: Prisma.SubmissionFindManyArgs,
 ): Promise<
   (Submission & {
     user?: User
@@ -224,7 +224,9 @@ export async function findSubmissionsWithFilters(
   return await prisma.submission.findMany(params)
 }
 
-export async function countSubmissionsWithFilters(where: Prisma.SubmissionWhereInput): Promise<number> {
+export async function countSubmissionsWithFilters(
+  where: Prisma.SubmissionWhereInput,
+): Promise<number> {
   return await prisma.submission.count({ where })
 }
 
@@ -512,7 +514,10 @@ export async function getPlatformStats() {
 
 export async function getStageMetrics() {
   const activities = await findAllActivities()
-  const metrics: Record<string, { total: number; approved: number; pending: number; rejected: number }> = {}
+  const metrics: Record<
+    string,
+    { total: number; approved: number; pending: number; rejected: number }
+  > = {}
 
   for (const activity of activities) {
     const [total, approved, pending, rejected] = await Promise.all([
@@ -564,13 +569,19 @@ export async function findKajabiEventByExternalId(
   })
 }
 
-export async function findKajabiEvents(
-  limit = 50,
-): Promise<KajabiEvent[]> {
+export async function findKajabiEvents(limit = 50): Promise<KajabiEvent[]> {
   return await prisma.kajabiEvent.findMany({
     orderBy: { received_at: 'desc' },
     take: limit,
   })
+}
+
+type KajabiEventAggregate = {
+  _count: {
+    id: number
+    processed_at: number
+    user_match: number
+  }
 }
 
 export async function getKajabiEventStats(): Promise<{
@@ -579,13 +590,13 @@ export async function getKajabiEventStats(): Promise<{
   matched_users: number
   unmatched_events: number
 }> {
-  const stats = await prisma.kajabiEvent.aggregate({
+  const stats = (await prisma.kajabiEvent.aggregate({
     _count: {
       id: true,
       processed_at: true,
       user_match: true,
     },
-  })
+  })) as KajabiEventAggregate
 
   return {
     total_events: stats._count.id,
@@ -625,9 +636,7 @@ export async function createAuditLogEntry(data: {
   })
 }
 
-export async function findAuditLogEntries(
-  limit = 50,
-): Promise<AuditLog[]> {
+export async function findAuditLogEntries(limit = 50): Promise<AuditLog[]> {
   return await prisma.auditLog.findMany({
     orderBy: { created_at: 'desc' },
     take: limit,
