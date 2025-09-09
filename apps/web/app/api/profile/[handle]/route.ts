@@ -1,17 +1,9 @@
 import { type NextRequest, type NextResponse } from 'next/server'
 
-// Use database service layer instead of direct Prisma
-import { 
-  getPublicProfileByHandle,
-  getTotalPointsByUserId
-} from '@elevate/db'
-
-// Use DTO transformations
+import { getPublicProfileByHandle, getTotalPointsByUserId } from '@elevate/db'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { HandleParamSchema } from '@elevate/types'
-import { 
-  mapRawUserProfileToDTO
-} from '@elevate/types/dto-mappers'
+import { mapRawUserProfileToDTO } from '@elevate/types/dto-mappers'
 
 
 export const runtime = 'nodejs';

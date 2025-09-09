@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { adminClient, AdminClientError, type AdminSubmission } from '@/lib/admin-client'
+import { handleApiError } from '@/lib/error-utils'
 import { withRoleGuard } from '@elevate/auth/context'
 import { Button , Textarea, Input, Alert } from '@elevate/ui'
 import { StatusBadge, ConfirmModal } from '@elevate/ui/blocks'
@@ -41,12 +42,8 @@ function ReviewSubmissionPage({
       setSubmission(data.submission)
       setEvidenceUrl(data.evidence || null)
       setReviewNote(data.submission.review_note || '')
-    } catch (error) {
-      if (error instanceof AdminClientError) {
-        setError(error.message)
-      } else {
-        setError('Failed to fetch submission')
-      }
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Fetch submission'))
       // Don't automatically redirect on error, let user decide
     } finally {
       setLoading(false)
@@ -94,12 +91,8 @@ function ReviewSubmissionPage({
       await adminClient.reviewSubmission(reviewData)
       await fetchSubmission()
       setConfirmModal({ isOpen: false, action: 'approve' })
-    } catch (error) {
-      if (error instanceof AdminClientError) {
-        setError(error.message)
-      } else {
-        setError('Failed to process review')
-      }
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Process review'))
     } finally {
       setProcessing(false)
     }

@@ -8,7 +8,7 @@ import { Button } from '../components/ui/button'
 export interface Column<T, V = unknown> {
   key: keyof T | string
   header: string
-  render?: (row: T) => React.ReactNode
+  render?: (row: T, value?: V) => React.ReactNode
   sortable?: boolean
   width?: string
   accessor?: (row: T) => V
@@ -20,11 +20,11 @@ export interface Column<T, V = unknown> {
 export type ColumnOf<T> = Column<T>
 
 // Factory to build typed column arrays with inference
-export const createColumns = <T,>() => <C extends Column<T, unknown>[]>(cols: C) => cols
+export const createColumns = <T,>() => <C extends readonly Column<T, unknown>[]>(cols: C) => cols
 
-export interface DataTableProps<T = Record<string, unknown>> {
+export interface DataTableProps<T = Record<string, unknown>, C extends readonly Column<T, unknown>[] = readonly Column<T, unknown>[]> {
   data: T[]
-  columns: Column<T, unknown>[]
+  columns: C
   loading?: boolean
   pagination?: {
     page: number
@@ -47,7 +47,7 @@ export interface DataTableProps<T = Record<string, unknown>> {
   className?: string
 }
 
-export function DataTable<T extends Record<string, unknown> = Record<string, unknown>>({
+export function DataTable<T extends Record<string, unknown> = Record<string, unknown>, C extends readonly Column<T, unknown>[] = readonly Column<T, unknown>[]>({
   data,
   columns,
   loading = false,
@@ -57,7 +57,7 @@ export function DataTable<T extends Record<string, unknown> = Record<string, unk
   onRowClick,
   emptyMessage = 'No data available',
   className = ''
-}: DataTableProps<T>) {
+}: DataTableProps<T, C>) {
   const [localSort, setLocalSort] = useState<{ key: string; order: 'asc' | 'desc' } | null>(null)
 
   const sortedData = useMemo(() => {
@@ -85,7 +85,7 @@ export function DataTable<T extends Record<string, unknown> = Record<string, unk
                     column.accessor ? column.accessor(b) : 
                     getNestedValue(b, sortConfig.key)
         
-        const result = column.sortComparator(aRaw, bRaw)
+        const result = (column.sortComparator as ((a: unknown, b: unknown) => number))(aRaw, bRaw)
         return sortConfig.order === 'asc' ? result : -result
       }
       
@@ -260,11 +260,12 @@ export function DataTable<T extends Record<string, unknown> = Record<string, unk
                       </td>
                     )}
                     {columns.map((column) => {
-                      const cellValue = column.render 
-                        ? column.render(row)
-                        : column.accessor
+                      const value = column.accessor
                         ? column.accessor(row)
                         : getNestedValue(row, String(column.key))
+                      const cellValue = column.render
+                        ? column.render(row, value as never)
+                        : value
                       
                       const displayValue = cellValue === null || cellValue === undefined 
                         ? '-' 

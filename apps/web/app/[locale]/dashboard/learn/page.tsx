@@ -65,7 +65,7 @@ export default function LearnFormPage() {
   })
 
   // Accessing provider ensures validation feedback; value not used elsewhere
-  watch('provider')
+  const watchedProvider = watch('provider')
 
   const handleFileSelect = async (files: File[]) => {
     const results = await handleFileUpload(files)

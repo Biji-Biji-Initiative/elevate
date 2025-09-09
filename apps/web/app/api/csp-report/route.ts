@@ -8,19 +8,18 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { createErrorResponse } from '@elevate/http'
-import { createCSPReportHandler } from '@elevate/security/security-middleware';
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createCSPReportHandler } from '@elevate/security/security-middleware'
 
 // Initialize logger
-type ServerLogger = import('@elevate/logging/server').ServerLogger
-let logger: ServerLogger | null = null;
+let logger: Awaited<ReturnType<typeof getSafeServerLogger>> | null = null
 void (async () => {
   try {
-    const { getServerLogger } = await import('@elevate/logging/server');
-    logger = getServerLogger({ name: 'csp-report' });
-  } catch (error) {
-    console.warn('Failed to initialize CSP report logger, falling back to console');
+    logger = await getSafeServerLogger('csp-report')
+  } catch {
+    console.warn('Failed to initialize CSP report logger, falling back to console')
   }
-})();
+})()
 
 // Create CSP report handler with web app specific configuration
 const handleCSPReport = createCSPReportHandler({
@@ -30,29 +29,26 @@ const handleCSPReport = createCSPReportHandler({
   onViolation: (violation) => {
     // Log CSP violations with structured logging
     if (logger) {
-      logger.security({
-        event: 'csp_violation',
-        severity: violation.severity || 'medium',
-        details: {
-          directive: violation['violated-directive'],
-          blockedUri: violation['blocked-uri'],
-          documentUri: violation['document-uri'],
-          sourceFile: violation['source-file'],
-          lineNumber: violation['line-number'],
-          userAgent: violation.userAgent || 'unknown',
-          app: 'web'
-        }
-      }, {
+      const details = {
+        directive: violation['violated-directive'],
+        blockedUri: violation['blocked-uri'],
+        documentUri: violation['document-uri'],
+        sourceFile: violation['source-file'],
+        lineNumber: violation['line-number'],
+        userAgent: violation.userAgent || 'unknown',
+        app: 'web',
+      }
+      logger.warn('CSP violation detected', {
         action: 'csp_violation_detected',
-        component: 'security'
-      });
-
-      // Log high severity violations with error level
+        component: 'security',
+        details,
+        severity: violation.severity || 'medium',
+      })
       if (violation.severity === 'high') {
         logger.error('High severity CSP violation detected', new Error('CSP Violation'), {
           action: 'csp_high_severity',
-          details: violation
-        });
+          details: violation,
+        })
       }
     } else {
       // Fallback to console logging
@@ -99,7 +95,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Rate limiting check (basic implementation)
     
     // Simple in-memory rate limiting (in production, use Redis or similar)
-    const rateLimitKey = `csp-report:${clientIP}`;
+    // const rateLimitKey = `csp-report:${clientIP}`;
     // Implementation would depend on your rate limiting strategy
 
     // Process the violation report
@@ -126,7 +122,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  * CSP reports can come from any origin that loads our content, so we allow all origins
  * but only for this specific non-credentialed endpoint.
  */
-export async function OPTIONS(request: NextRequest): Promise<NextResponse> {
+export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
   const response = new NextResponse(null, { status: 200 });
   
   // CSP reports can come from any origin that loads our content

@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+// no-op import removed; notFound not used
 
 import { getRequestConfig } from 'next-intl/server';
 

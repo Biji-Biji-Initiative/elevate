@@ -1,10 +1,11 @@
 // Refresh materialized views using Prisma
-import { prisma } from '@elevate/db/client'
 import { Prisma } from '@prisma/client'
+
+import { prisma } from '@elevate/db/client'
 
 async function main() {
   try {
-    // eslint-disable-next-line no-console
+     
     console.log('Refreshing materialized view: leaderboard_totals')
     await prisma.$executeRaw(Prisma.sql`REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_totals`)
   } catch (e) {
@@ -12,7 +13,7 @@ async function main() {
   }
 
   try {
-    // eslint-disable-next-line no-console
+     
     console.log('Refreshing materialized view: leaderboard_30d')
     await prisma.$executeRaw(Prisma.sql`REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_30d`)
   } catch (e) {
@@ -20,7 +21,7 @@ async function main() {
   }
 
   try {
-    // eslint-disable-next-line no-console
+     
     console.log('Refreshing materialized view: metric_counts')
     await prisma.$executeRaw(Prisma.sql`REFRESH MATERIALIZED VIEW CONCURRENTLY metric_counts`)
   } catch (e) {
@@ -31,7 +32,7 @@ async function main() {
 main()
   .then(async () => {
     await prisma.$disconnect()
-    // eslint-disable-next-line no-console
+     
     console.log('Materialized views refresh complete')
   })
   .catch(async (e) => {

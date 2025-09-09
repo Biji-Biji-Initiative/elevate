@@ -5,9 +5,9 @@
  * Tracks build times, bundle sizes, and performance metrics
  */
 
+const { execSync } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
-const { execSync } = require('child_process');
 
 const PERF_LOG_FILE = path.join(__dirname, '..', 'performance-history.json');
 const APPS = ['web', 'admin'];

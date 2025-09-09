@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 
-import { adminClient, type UsersQuery, type AdminUser } from '@/lib/admin-client'
-import { handleApiError } from '@/lib/error-utils'
-import { withRoleGuard } from '@elevate/auth/context'
 import type { UserRole } from '@elevate/types'
 import { Button, Input, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 import { DataTable, StatusBadge, Modal, ConfirmModal, createColumns } from '@elevate/ui/blocks'
+import { withRoleGuard } from '@elevate/auth/context'
+import { adminClient, type UsersQuery, type AdminUser } from '@/lib/admin-client'
+import { handleApiError } from '@/lib/error-utils'
 
 type User = AdminUser
 
@@ -70,19 +70,24 @@ function UsersPage() {
     {
       key: 'name',
       header: 'User',
-      accessor: (row: User) => row.name,
-      render: (row: User) => (
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm">
-            {row.name[0]?.toUpperCase() || 'U'}
+      accessor: (row: User) => ({ name: row.name, handle: row.handle, email: row.email }),
+      render: (row: User) => {
+        const name = row.name ?? ''
+        const handle = row.handle ?? ''
+        const email = row.email ?? ''
+        return (
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm">
+              {name[0]?.toUpperCase() || 'U'}
+            </div>
+            <div>
+              <div className="font-medium">{name}</div>
+              <div className="text-sm text-gray-500">@{handle}</div>
+              <div className="text-xs text-gray-400">{email}</div>
+            </div>
           </div>
-          <div>
-            <div className="font-medium">{row.name}</div>
-            <div className="text-sm text-gray-500">@{row.handle}</div>
-            <div className="text-xs text-gray-400">{row.email}</div>
-          </div>
-        </div>
-      ),
+        )
+      },
       width: '250px'
     },
     {
@@ -96,14 +101,14 @@ function UsersPage() {
       key: 'school',
       header: 'School',
       accessor: (row: User) => row.school ?? '',
-      render: (row: User) => row.school || '-',
+      render: (row: User) => (row.school && row.school.length > 0 ? row.school : '-') as string,
       width: '150px'
     },
     {
       key: 'cohort',
       header: 'Cohort',
       accessor: (row: User) => row.cohort ?? '',
-      render: (row: User) => row.cohort || '-',
+      render: (row: User) => (row.cohort && row.cohort.length > 0 ? row.cohort : '-') as string,
       width: '100px'
     },
     {
@@ -142,8 +147,9 @@ function UsersPage() {
     {
       key: 'created_at',
       header: 'Joined',
+      accessor: (row: User) => row.created_at,
       sortAccessor: (row: User) => new Date(row.created_at),
-      render: (row: User) => new Date(row.created_at).toLocaleDateString(),
+      render: (_row: User, value?: string) => new Date(value ?? '').toLocaleDateString(),
       width: '100px'
     },
     {

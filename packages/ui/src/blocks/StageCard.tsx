@@ -97,7 +97,7 @@ export function StageCard({
   
   if (isClickable && Link) {
     return (
-      <Link href={`/metrics/${stage}`} className="block">
+      <Link href={`metrics/${stage}`} className="block">
         <CardContent />
       </Link>
     )

@@ -13,6 +13,7 @@ import { Button, Input, Textarea, Card, Alert, AlertTitle, AlertDescription } fr
 import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
 
 import { getApiClient } from '../../../../lib/api-client'
+import { toMessage } from '../../../lib/error-utils'
 
 export default function ShineFormPage() {
   const { userId } = useAuth()
@@ -37,7 +38,7 @@ export default function ShineFormPage() {
         } catch (error) {
           return {
             file,
-            error: error instanceof Error ? error.message : 'Upload failed',
+            error: toMessage(error),
           }
         }
       })
@@ -75,8 +76,8 @@ export default function ShineFormPage() {
       }
 
       const payload = {
-        ideaTitle: data.ideaTitle,
-        ideaSummary: data.ideaSummary,
+        ideaTitle: String(data.ideaTitle),
+        ideaSummary: String(data.ideaSummary),
         attachments: successfulUploads.length > 0 ? successfulUploads.map(f => f.path) : undefined
       }
 
@@ -88,6 +89,15 @@ export default function ShineFormPage() {
         visibility: makePublic ? 'PUBLIC' : 'PRIVATE'
       })
     })
+  }
+
+  const errMsg = (value: unknown): string | undefined => {
+    if (typeof value === 'string') return value
+    if (value && typeof value === 'object' && 'message' in (value as Record<string, unknown>)) {
+      const m = (value as Record<string, unknown>).message
+      return typeof m === 'string' ? m : undefined
+    }
+    return undefined
   }
 
   return (
@@ -106,7 +116,7 @@ export default function ShineFormPage() {
             className="mb-6"
           >
             <AlertTitle>{submitStatus.type === 'success' ? 'Success!' : 'Error'}</AlertTitle>
-            <AlertDescription>{submitStatus.message}</AlertDescription>
+            <AlertDescription>{String(submitStatus.message)}</AlertDescription>
           </Alert>
         )}
 
@@ -115,7 +125,7 @@ export default function ShineFormPage() {
             <FormField
               label="Innovation Title"
               required
-              error={errors.ideaTitle?.message}
+              error={errMsg(errors.ideaTitle)}
               description="Give your innovation idea a compelling title (minimum 4 characters)"
             >
               <Input
@@ -130,7 +140,7 @@ export default function ShineFormPage() {
             <FormField
               label="Innovation Summary"
               required
-              error={errors.ideaSummary?.message}
+              error={errMsg(errors.ideaSummary)}
               description="Describe your innovative approach, implementation, and impact (minimum 50 characters)"
             >
               <Textarea

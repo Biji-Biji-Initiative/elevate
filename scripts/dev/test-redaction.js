@@ -1,6 +1,6 @@
 /* Dev utility to verify redaction utils */
-const logger = require('../utils/logger')
 const { redactSensitiveData, redactObjectSensitiveData } = require('../../packages/types/dist/error-utils.js')
+const logger = require('../utils/logger')
 
 const testCases = [
   'API key: sk-abc123def456',

@@ -69,6 +69,8 @@ function BadgesPage() {
     {
       key: 'name',
       header: 'Badge',
+      accessor: (row) => ({ name: row.name, code: row.code, icon_url: row.icon_url ?? '' }),
+      sortAccessor: (row) => row.name,
       render: (row: Badge) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
@@ -89,6 +91,7 @@ function BadgesPage() {
     {
       key: 'description',
       header: 'Description',
+      accessor: (row) => row.description,
       render: (row: Badge) => (
         <div className="max-w-xs">
           <p className="text-sm text-gray-600 truncate">{row.description}</p>
@@ -99,6 +102,7 @@ function BadgesPage() {
     {
       key: 'criteria.type',
       header: 'Type',
+      accessor: (row) => row.criteria.type,
       render: (row: Badge) => (
         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm capitalize">
           {row.criteria.type}
@@ -109,6 +113,8 @@ function BadgesPage() {
     {
       key: 'criteria.threshold',
       header: 'Threshold',
+      accessor: (row) => ({ threshold: row.criteria.threshold, type: row.criteria.type }),
+      sortAccessor: (row) => row.criteria.threshold,
       render: (row: Badge) => (
         <div className="text-sm">
           {row.criteria.threshold}
@@ -122,6 +128,7 @@ function BadgesPage() {
     {
       key: '_count.earned_badges',
       header: 'Earned',
+      accessor: (row) => row._count?.earned_badges ?? 0,
       render: (row: Badge) => (
         <div className="text-center font-medium">
           {row._count?.earned_badges || 0}

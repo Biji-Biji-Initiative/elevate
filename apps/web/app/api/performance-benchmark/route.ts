@@ -5,7 +5,8 @@ import { auth } from '@clerk/nextjs/server'
 import { withRole } from '@elevate/auth'
 import { prisma } from '@elevate/db/client'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
-import { getServerLogger, trackApiRequest } from '@elevate/logging'
+import { trackApiRequest } from '@elevate/logging'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
 
 import { normalizeError } from '../../lib/error-utils'
 
@@ -38,7 +39,10 @@ export async function GET(request: NextRequest) {
     return new Response(null, { status: 404 })
   }
   const startTime = Date.now()
-  const logger = getServerLogger().forRequestWithHeaders(request)
+  const baseLogger = await getSafeServerLogger('performance-benchmark')
+  const logger = baseLogger.forRequestWithHeaders
+    ? baseLogger.forRequestWithHeaders(request as unknown as Request)
+    : baseLogger
   
   try {
     // Verify admin/reviewer role
@@ -139,7 +143,10 @@ export async function GET(request: NextRequest) {
     return res
 
   } catch (err: unknown) {
-    const logger = getServerLogger().forRequestWithHeaders(request)
+    const baseLogger = await getSafeServerLogger('performance-benchmark')
+    const logger = baseLogger.forRequestWithHeaders
+      ? baseLogger.forRequestWithHeaders(request as unknown as Request)
+      : baseLogger
     const e = normalizeError(err)
     logger.error('Performance benchmark failed', new Error(e.message), {
       operation: 'performance_benchmark',
@@ -247,7 +254,7 @@ async function benchmarkAnalyticsQueries(): Promise<BenchmarkResult[]> {
 
   // Comprehensive analytics query (optimized version)
   const start1 = Date.now()
-  const analyticsData = await prisma.$queryRaw`
+  const _analyticsData = await prisma.$queryRaw`
     SELECT 
       COUNT(DISTINCT u.id) as total_users,
       COUNT(DISTINCT s.id) as total_submissions,
@@ -343,7 +350,7 @@ async function benchmarkStatsQueries(): Promise<BenchmarkResult[]> {
 
   // Platform stats using materialized view
   const start1 = Date.now()
-  const platformStats = await prisma.$queryRaw`
+  const _platformStats = await prisma.$queryRaw`
     SELECT * FROM platform_stats_overview LIMIT 1
   `
   results.push({
@@ -399,8 +406,8 @@ async function runPerformanceComparisons(): Promise<PerformanceComparison[]> {
   const comparisons: PerformanceComparison[] = []
 
   // Compare materialized view vs direct aggregation for leaderboard
-  const logger = getServerLogger()
-  logger.info('Running performance comparisons...', { operation: 'performance_benchmark_comparisons' })
+  const baseLogger = await getSafeServerLogger('performance-benchmark')
+  baseLogger.info('Running performance comparisons...', { operation: 'performance_benchmark_comparisons' })
 
   // 1. Leaderboard comparison
   const mvStart = Date.now()

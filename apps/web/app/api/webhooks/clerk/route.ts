@@ -5,8 +5,7 @@ import { Webhook } from 'svix'
 
 import { parseClerkPublicMetadata } from '@elevate/auth'
 import { prisma } from '@elevate/db/client'
-import { getKajabiClient } from '@elevate/integrations'
-import { enrollUserInKajabi } from '@elevate/integrations'
+import { getKajabiClient, enrollUserInKajabi } from '@elevate/integrations'
 import { withRateLimit, webhookRateLimiter } from '@elevate/security'
 import { parseRole, parseClerkWebhook } from '@elevate/types'
 
@@ -189,7 +188,7 @@ export async function POST(req: NextRequest) {
             updateData.handle = handle
           }
 
-          const upsertedUser = await prisma.user.upsert({
+          await prisma.user.upsert({
             where: { id },
             update: updateData,
             create: {

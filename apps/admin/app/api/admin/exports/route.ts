@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import { parseActivityCode, parseSubmissionStatus, toPrismaJson, buildAuditMeta, ExportsQuerySchema, type UserWhereClause, type SubmissionWhereClause, type PointsLedgerWhereClause, type ActivityCode } from '@elevate/types'
+import { parseActivityCode, parseSubmissionStatus, buildAuditMeta, ExportsQuerySchema, type UserWhereClause, type SubmissionWhereClause, type PointsLedgerWhereClause } from '@elevate/types'
 
 export const runtime = 'nodejs';
 

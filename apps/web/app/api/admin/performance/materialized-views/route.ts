@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client'
 import { withRole } from '@elevate/auth'
 import { prisma } from '@elevate/db/client'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
-import { getServerLogger } from '@elevate/logging'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
 // Local error wrapper to avoid resolver issues
 function wrapError(err: unknown, message?: string): Error {
   if (err instanceof Error) return new Error(message ? `${message}: ${err.message}` : err.message)
@@ -276,7 +276,8 @@ export async function GET(request: NextRequest) {
       try {
         benchmarks = await runPerformanceBenchmarks()
       } catch (error: unknown) {
-        getServerLogger().error('Performance benchmarks failed', wrapError(error, 'Performance benchmarks failed'), {
+        const baseLogger = await getSafeServerLogger('admin-performance')
+        baseLogger.error('Performance benchmarks failed', wrapError(error, 'Performance benchmarks failed'), {
           operation: 'admin_performance_materialized_views',
         })
       }
@@ -302,7 +303,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error: unknown) {
     const wrappedError = wrapError(error, 'Materialized views performance monitoring failed')
-    getServerLogger().error('Materialized views performance monitoring failed', wrappedError, {
+    const baseLogger = await getSafeServerLogger('admin-performance')
+    baseLogger.error('Materialized views performance monitoring failed', wrappedError, {
       operation: 'admin_performance_materialized_views',
     })
     return createErrorResponse(wrappedError, 500)

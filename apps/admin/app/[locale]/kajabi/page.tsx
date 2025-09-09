@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-
-import { adminClient, AdminClientError, type KajabiEvent, type KajabiStats } from '@/lib/admin-client'
-import { withRoleGuard } from '@elevate/auth/context';
-import { Button, Card, CardContent, Input, Alert } from '@elevate/ui';
-import { LoadingSpinner } from '@elevate/ui/blocks';
+import { useState, useEffect, useCallback } from 'react'
+import { Button, Card, CardContent, Input, Alert } from '@elevate/ui'
+import { LoadingSpinner } from '@elevate/ui/blocks'
+import { withRoleGuard } from '@elevate/auth/context'
+import { adminClient, type KajabiEvent, type KajabiStats } from '@/lib/admin-client'
+import { handleApiError } from '@/lib/error-utils'
 
 function KajabiPage() {
   const [events, setEvents] = useState<KajabiEvent[]>([]);
@@ -22,14 +22,8 @@ function KajabiPage() {
       const data = await adminClient.getKajabi()
       setEvents(data.events);
       setStats(data.stats);
-    } catch (error) {
-      if (error instanceof AdminClientError) {
-        setError(error.message);
-      } else if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unexpected error occurred');
-      }
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Kajabi fetch'))
     } finally {
       setLoading(false);
     }
@@ -53,14 +47,8 @@ function KajabiPage() {
       const res = await adminClient.testKajabi({ user_email: testEmail, course_name: 'Test Course - Admin Console' })
       setTestResult(res)
       await fetchKajabiData()
-    } catch (error) {
-      if (error instanceof AdminClientError) {
-        setError(error.message);
-      } else if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('Test failed: Unknown error');
-      }
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Kajabi test'))
     } finally {
       setTestLoading(false);
     }
@@ -70,14 +58,8 @@ function KajabiPage() {
     try {
       await adminClient.reprocessKajabi({ event_id: eventId })
       await fetchKajabiData()
-    } catch (error) {
-      if (error instanceof AdminClientError) {
-        setError(error.message);
-      } else if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('Reprocess failed: Unknown error');
-      }
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Kajabi reprocess'))
     }
   };
 

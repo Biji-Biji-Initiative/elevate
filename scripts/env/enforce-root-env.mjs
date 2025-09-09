@@ -18,7 +18,8 @@ function listEnvFiles(dir) {
     const full = path.join(dir, e.name)
     if (e.isDirectory()) {
       // Skip node_modules and build dirs
-      if (e.name === 'node_modules' || e.name === '.next' || e.name === 'dist') continue
+      if (e.name === 'node_modules' || e.name === '.next' || e.name === 'dist')
+        continue
       files.push(...listEnvFiles(full))
     } else if (e.isFile()) {
       if (/^\.env(\..+)?$/.test(e.name)) files.push(full)
@@ -99,7 +100,8 @@ for (const f of envFiles) {
 }
 
 if (changes > 0) {
-  console.log(`env: enforce-root-env: normalized DB keys in ${changes} app env file(s) (backups *.bak)`) 
+  console.log(
+    `env: enforce-root-env: normalized DB keys in ${changes} app env file(s) (backups *.bak)`,
+  )
 }
 console.log('env: enforce-root-env: OK')
-

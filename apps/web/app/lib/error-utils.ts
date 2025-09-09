@@ -25,3 +25,20 @@ export function normalizeError(err: unknown): NormalizedError {
   }
 }
 
+export function toMessage(err: unknown): string {
+  if (err instanceof Error) return err.message
+  try {
+    return typeof err === 'string' ? err : JSON.stringify(err)
+  } catch {
+    return 'Unknown error'
+  }
+}
+
+export function toMessage(err: unknown): string {
+  if (err instanceof Error) return err.message
+  try {
+    return typeof err === 'string' ? err : JSON.stringify(err)
+  } catch {
+    return 'Unknown error'
+  }
+}

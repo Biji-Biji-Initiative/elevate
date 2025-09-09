@@ -215,7 +215,7 @@ export class SecureDatabaseLogger {
 
     try {
       type LoggingModule = {
-        getServerLogger: (config: { name?: string; level?: LoggingLogLevel }) => ServerLogger
+        getServerLogger: (config: { name?: string; level?: LoggingLogLevel; pretty?: boolean }) => ServerLogger
       }
       const mod: unknown = await import('@elevate/logging/server')
       const { getServerLogger } = mod as LoggingModule
@@ -229,6 +229,7 @@ export class SecureDatabaseLogger {
       this.logger = getServerLogger({
         name: 'elevate-db',
         level: levelMap[this.logLevel],
+        pretty: false, // Avoid pretty transports in worker contexts
       })
     } catch {
       // Fallback to console logging with structured format

@@ -5,6 +5,7 @@ export default baseTsup({
     index: 'src/index.ts',
     client: 'src/client.ts',
     server: 'src/server.ts',
+    'safe-server': 'src/safe-server.ts',
   },
   external: ['pino', 'pino-pretty', '@sentry/node'],
 })

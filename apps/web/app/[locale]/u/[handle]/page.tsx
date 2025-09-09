@@ -2,17 +2,26 @@ import { Suspense } from 'react'
 
 import { notFound } from 'next/navigation'
 
-import { getProfileUrl, parseLearnPayload, parseExplorePayload, parsePresentPayload, type SubmissionPayload } from '@elevate/types'
-import { ShareButton, SocialShareButtons, StageCard, PageLoading } from '@elevate/ui/blocks'
+import {
+  getProfileUrl,
+  parseLearnPayload,
+  parseExplorePayload,
+  parsePresentPayload,
+  type SubmissionPayload,
+} from '@elevate/types'
+import {
+  ShareButton,
+  SocialShareButtons,
+  StageCard,
+  PageLoading,
+} from '@elevate/ui/blocks'
 
-import { getApiClient } from '../../../../lib/api-client'
+import { getServerApiClient } from '../../../../lib/api-client'
 
 import type { Metadata } from 'next'
 
 interface ProfilePageProps {
-  params: {
-    handle: string
-  }
+  params: { handle: string }
 }
 
 interface UserProfile {
@@ -51,9 +60,19 @@ interface UserProfile {
 
 async function fetchUserProfile(handle: string): Promise<UserProfile | null> {
   try {
-    const api = getApiClient()
+    const api = await getServerApiClient()
     const res = await api.getProfile(handle)
-    return res.data as unknown as UserProfile
+    const raw = res.data as unknown
+    if (
+      raw &&
+      typeof raw === 'object' &&
+      'id' in raw &&
+      'handle' in raw &&
+      'submissions' in raw
+    ) {
+      return raw as UserProfile
+    }
+    return null
   } catch (_) {
     return null
   }
@@ -63,17 +82,23 @@ function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
-function ActivityTimeline({ submissions }: { submissions: UserProfile['submissions'] }) {
-  const publicSubmissions = submissions.filter(s => s.visibility === 'PUBLIC' && s.status === 'APPROVED')
-  
+function ActivityTimeline({
+  submissions,
+}: {
+  submissions: UserProfile['submissions']
+}) {
+  const publicSubmissions = submissions.filter(
+    (s) => s.visibility === 'PUBLIC' && s.status === 'APPROVED',
+  )
+
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold text-gray-900">Journey Timeline</h3>
-      
+
       {publicSubmissions.length === 0 ? (
         <p className="text-gray-600">No public submissions yet.</p>
       ) : (
@@ -87,7 +112,7 @@ function ActivityTimeline({ submissions }: { submissions: UserProfile['submissio
                   </span>
                 </div>
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-2 mb-1">
                   <h4 className="text-lg font-medium text-gray-900">
@@ -97,48 +122,60 @@ function ActivityTimeline({ submissions }: { submissions: UserProfile['submissio
                     Approved
                   </span>
                 </div>
-                
+
                 <p className="text-sm text-gray-600 mb-2">
                   {formatDate(submission.createdAt)}
                 </p>
-                
-                {submission.activityCode === 'LEARN' && (() => {
-                  const learnPayload = parseLearnPayload(submission.payload)
-                  if (!learnPayload) return null
-                  return (
-                    <p className="text-gray-700">
-                      Completed: {learnPayload.data.course} via {learnPayload.data.provider}
-                    </p>
-                  )
-                })()}
-                
-                {submission.activityCode === 'EXPLORE' && (() => {
-                  const explorePayload = parseExplorePayload(submission.payload)
-                  if (!explorePayload) return null
-                  const { classDate, reflection } = explorePayload.data
-                  return (
-                    <div>
-                      <p className="text-gray-700 mb-2">
-                        Applied AI in classroom on {formatDate(classDate)}
+
+                {submission.activityCode === 'LEARN' &&
+                  (() => {
+                    const learnPayload = parseLearnPayload(submission.payload)
+                    if (!learnPayload) return null
+                    return (
+                      <p className="text-gray-700">
+                        Completed: {learnPayload.data.course_name} via{' '}
+                        {learnPayload.data.provider}
                       </p>
-                      <blockquote className="pl-4 border-l-2 border-blue-200 text-gray-700 italic">
-                        {reflection.substring(0, 200)}
-                        {reflection.length > 200 && '...'}
-                      </blockquote>
-                    </div>
-                  )
-                })()}
-                
-                {submission.activityCode === 'PRESENT' && (() => {
-                  const presentPayload = parsePresentPayload(submission.payload)
-                  if (!presentPayload) return null
-                  return (
-                    <div>
-                      <p className="text-gray-700 mb-2">Shared experience on LinkedIn</p>
-                      <p className="text-blue-600 italic">"{presentPayload.data.caption}"</p>
-                    </div>
-                  )
-                })()}
+                    )
+                  })()}
+
+                {submission.activityCode === 'EXPLORE' &&
+                  (() => {
+                    const explorePayload = parseExplorePayload(
+                      submission.payload,
+                    )
+                    if (!explorePayload) return null
+                    const { class_date, reflection } = explorePayload.data
+                    return (
+                      <div>
+                        <p className="text-gray-700 mb-2">
+                          Applied AI in classroom on {formatDate(class_date)}
+                        </p>
+                        <blockquote className="pl-4 border-l-2 border-blue-200 text-gray-700 italic">
+                          {reflection.substring(0, 200)}
+                          {reflection.length > 200 && '...'}
+                        </blockquote>
+                      </div>
+                    )
+                  })()}
+
+                {submission.activityCode === 'PRESENT' &&
+                  (() => {
+                    const presentPayload = parsePresentPayload(
+                      submission.payload,
+                    )
+                    if (!presentPayload) return null
+                    return (
+                      <div>
+                        <p className="text-gray-700 mb-2">
+                          Shared experience on LinkedIn
+                        </p>
+                        <p className="text-blue-600 italic">
+                          "{presentPayload.data.caption}"
+                        </p>
+                      </div>
+                    )
+                  })()}
               </div>
             </div>
           ))}
@@ -150,14 +187,14 @@ function ActivityTimeline({ submissions }: { submissions: UserProfile['submissio
 
 async function ProfileContent({ handle }: { handle: string }) {
   const profile = await fetchUserProfile(handle)
-  
+
   if (!profile) {
     notFound()
   }
-  
+
   const profileUrl = getProfileUrl(profile.handle)
   const stageBreakdown = profile.submissions
-    .filter(s => s.status === 'APPROVED')
+    .filter((s) => s.status === 'APPROVED')
     .reduce<Record<string, number>>((acc, submission) => {
       acc[submission.activityCode] = (acc[submission.activityCode] || 0) + 1
       return acc
@@ -174,11 +211,13 @@ async function ProfileContent({ handle }: { handle: string }) {
                 {profile.name.charAt(0).toUpperCase()}
               </span>
             </div>
-            
+
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">{profile.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {profile.name}
+              </h1>
               <p className="text-lg text-gray-600">@{profile.handle}</p>
-              
+
               <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-600">
                 {profile.school && (
                   <div className="flex items-center">
@@ -197,25 +236,34 @@ async function ProfileContent({ handle }: { handle: string }) {
                   Joined {formatDate(profile.createdAt)}
                 </div>
               </div>
-              
+
               <div className="mt-4 flex items-center space-x-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{profile.totalPoints}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {profile.totalPoints}
+                  </div>
                   <div className="text-sm text-gray-600">Total Points</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{profile.submissions.filter(s => s.status === 'APPROVED').length}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {
+                      profile.submissions.filter((s) => s.status === 'APPROVED')
+                        .length
+                    }
+                  </div>
                   <div className="text-sm text-gray-600">Achievements</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{profile.earnedBadges.length}</div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {profile.earnedBadges.length}
+                  </div>
                   <div className="text-sm text-gray-600">Badges</div>
                 </div>
               </div>
             </div>
-            
+
             <div className="flex flex-col space-y-2">
-              <ShareButton 
+              <ShareButton
                 url={profileUrl}
                 title={`${profile.name}'s LEAPS Journey`}
                 text={`Check out ${profile.name}'s amazing progress in the MS Elevate LEAPS program!`}
@@ -231,25 +279,40 @@ async function ProfileContent({ handle }: { handle: string }) {
           <div className="lg:col-span-2 space-y-8">
             {/* Stage Progress */}
             <div className="bg-white rounded-lg border p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">LEAPS Progress</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">
+                LEAPS Progress
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {['learn', 'explore', 'amplify', 'present', 'shine'].map((stage) => {
-                  const completedCount = stageBreakdown[stage.toUpperCase()] || 0
-                  return (
-                    <div key={stage} className="relative">
-                      <StageCard 
-                        stage={stage === 'learn' || stage === 'explore' || stage === 'amplify' || stage === 'present' || stage === 'shine' ? stage : 'learn'} 
-                        completedCount={completedCount}
-                        isClickable={false}
-                      />
-                      {completedCount > 0 && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">✓</span>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                {['learn', 'explore', 'amplify', 'present', 'shine'].map(
+                  (stage) => {
+                    const completedCount =
+                      stageBreakdown[stage.toUpperCase()] || 0
+                    return (
+                      <div key={stage} className="relative">
+                        <StageCard
+                          stage={
+                            stage === 'learn' ||
+                            stage === 'explore' ||
+                            stage === 'amplify' ||
+                            stage === 'present' ||
+                            stage === 'shine'
+                              ? stage
+                              : 'learn'
+                          }
+                          completedCount={completedCount}
+                          isClickable={false}
+                        />
+                        {completedCount > 0 && (
+                          <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">
+                              ✓
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  },
+                )}
               </div>
             </div>
 
@@ -263,14 +326,19 @@ async function ProfileContent({ handle }: { handle: string }) {
           <div className="space-y-6">
             {/* Badges */}
             <div className="bg-white rounded-lg border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Badges Earned</h3>
-              
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Badges Earned
+              </h3>
+
               {profile.earnedBadges.length === 0 ? (
                 <p className="text-gray-600">No badges earned yet.</p>
               ) : (
                 <div className="space-y-3">
                   {profile.earnedBadges.map((earnedBadge) => (
-                    <div key={earnedBadge.badge.code} className="flex items-start space-x-3">
+                    <div
+                      key={earnedBadge.badge.code}
+                      className="flex items-start space-x-3"
+                    >
                       <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
                         <span className="text-yellow-600">🏆</span>
                       </div>
@@ -293,7 +361,9 @@ async function ProfileContent({ handle }: { handle: string }) {
 
             {/* Share Profile */}
             <div className="bg-white rounded-lg border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Share Profile</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Share Profile
+              </h3>
               <SocialShareButtons
                 url={profileUrl}
                 title={`${profile.name}'s LEAPS Journey`}
@@ -307,11 +377,13 @@ async function ProfileContent({ handle }: { handle: string }) {
   )
 }
 
-export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ProfilePageProps): Promise<Metadata> {
   // In production, you'd fetch the profile data here for accurate metadata
-  const { handle } = params
+  const { handle } = await params
   const profile = await fetchUserProfile(handle)
-  
+
   if (!profile) {
     return {
       title: 'Profile Not Found - MS Elevate LEAPS Tracker',
@@ -320,10 +392,16 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   }
 
   const canonicalUrl = getProfileUrl(profile.handle)
-  
+
   return {
     title: `${profile.name} (@${profile.handle}) - MS Elevate LEAPS Tracker`,
-    description: `Follow ${profile.name}'s journey through the LEAPS framework. ${profile.totalPoints} points earned across ${profile.submissions.filter(s => s.status === 'APPROVED').length} achievements.`,
+    description: `Follow ${
+      profile.name
+    }'s journey through the LEAPS framework. ${
+      profile.totalPoints
+    } points earned across ${
+      profile.submissions.filter((s) => s.status === 'APPROVED').length
+    } achievements.`,
     alternates: {
       canonical: canonicalUrl,
     },
@@ -350,8 +428,8 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 }
 
 export default async function PublicProfile({ params }: ProfilePageProps) {
-  const { handle } = params
-  
+  const { handle } = await params
+
   return (
     <Suspense fallback={<PageLoading />}>
       <ProfileContent handle={handle} />

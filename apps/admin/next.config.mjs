@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 
 import bundleAnalyzer from '@next/bundle-analyzer'
 import createNextIntlPlugin from 'next-intl/plugin'
+
 import { getSecurityHeaders } from '@elevate/config/next'
 
 const __filename = fileURLToPath(import.meta.url)

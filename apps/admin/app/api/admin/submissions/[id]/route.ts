@@ -11,7 +11,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await requireRole('reviewer')
+  await requireRole('reviewer')
     const { id } = params
     
     const submission = await prisma.submission.findUnique({

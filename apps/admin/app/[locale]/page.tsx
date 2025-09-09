@@ -1,14 +1,13 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-
 import Link from 'next/link'
-
-import { adminClient, AdminClientError, type OverviewStats, type Distributions, type Trends, type RecentActivity, type Performance } from '@/lib/admin-client'
-import { withRoleGuard } from '@elevate/auth/context'
 import type { AnalyticsQuery } from '@elevate/types'
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 import { StatusBadge } from '@elevate/ui/blocks'
+import { withRoleGuard } from '@elevate/auth/context'
+import { adminClient, type OverviewStats, type Distributions, type Trends, type RecentActivity, type Performance } from '@/lib/admin-client'
+import { handleApiError } from '@/lib/error-utils'
 
 interface AnalyticsData {
   overview: OverviewStats
@@ -41,8 +40,8 @@ function AdminDashboard() {
 
       const result = await adminClient.getAnalytics(params)
       setAnalytics(result)
-    } catch (error) {
-      console.error('Failed to fetch analytics:', error instanceof AdminClientError ? error.message : 'Unknown error')
+    } catch (error: unknown) {
+      console.error('Failed to fetch analytics:', handleApiError(error, 'Analytics fetch'))
       setAnalytics(null)
     } finally {
       setLoading(false)
@@ -58,9 +57,9 @@ function AdminDashboard() {
       try {
         const cohortData = await adminClient.getCohorts()
         setCohorts(cohortData)
-      } catch (error) {
+      } catch (error: unknown) {
         // Cohorts are optional for UI, don't break on fetch failure
-        console.warn('Failed to fetch cohorts:', error instanceof AdminClientError ? error.message : 'Unknown error')
+        console.warn('Failed to fetch cohorts:', handleApiError(error, 'Cohort fetch'))
       }
     }
     void fetchCohorts()

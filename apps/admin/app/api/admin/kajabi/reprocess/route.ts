@@ -4,13 +4,10 @@ import { requireRole } from '@elevate/auth/server-helpers';
 import { prisma, type Prisma } from '@elevate/db';
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import { toPrismaJson, parseKajabiWebhook, KajabiReprocessSchema, type KajabiTagEvent, buildAuditMeta } from '@elevate/types';
+import { toPrismaJson, parseKajabiWebhook, KajabiReprocessSchema, buildAuditMeta } from '@elevate/types';
 
 export const runtime = 'nodejs';
 
-interface ReprocessRequest {
-  event_id: string;
-}
 
 export async function POST(request: NextRequest) {
   return withRateLimit(request, adminRateLimiter, async () => {

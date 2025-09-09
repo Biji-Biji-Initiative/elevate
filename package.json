@@ -131,6 +131,8 @@
     "api:extract": "turbo run api:extract --filter=@elevate/* --filter=!@elevate/admin-core --filter=!@elevate/logic",
     "api:check": "turbo run api:check --filter=@elevate/* --filter=!@elevate/admin-core --filter=!@elevate/logic",
     "ci": "pnpm run env:validate:ci && pnpm run build:check && pnpm run verify:secrets && pnpm run verify:all && pnpm run verify:consumer && pnpm run db:ci && pnpm run test:coverage",
+    "prepare": "husky",
+    "precommit": "lint-staged",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "pnpm build && changeset publish",
@@ -173,7 +175,15 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
     "webpack-bundle-analyzer": "^4.10.2",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "pnpm -C elevate lint:fix",
+      "pnpm -C elevate type-check"
+    ]
   },
   "dependencies": {
     "@sentry/nextjs": "^10.9.0",

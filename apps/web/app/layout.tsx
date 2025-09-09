@@ -1,14 +1,27 @@
 import * as React from 'react'
 
 import { Inter } from 'next/font/google'
+import { headers } from 'next/headers'
 import Script from 'next/script'
 
 import { ClerkProvider } from '@clerk/nextjs'
+
+import type { Metadata } from 'next'
 import '@elevate/ui/styles/globals.css'
 
 const inter = Inter({ subsets: ['latin'], display: 'swap' })
 
 // Root layout - minimal metadata, detailed metadata moved to locale layout
+
+export async function generateMetadata(): Promise<Metadata> {
+  const h = await headers()
+  const proto = h.get('x-forwarded-proto') || 'http'
+  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
+  const baseUrl = `${proto}://${host}`
+  return {
+    metadataBase: new URL(baseUrl),
+  }
+}
 
 export const viewport = {
   themeColor: [
@@ -28,7 +41,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en" className="scroll-smooth">
+      <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
         <head>
           <link rel="icon" href="/favicon.ico" sizes="any" />
           <link rel="icon" href="/icon.svg" type="image/svg+xml" />

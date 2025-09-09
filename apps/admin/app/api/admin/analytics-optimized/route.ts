@@ -3,16 +3,13 @@ import type { NextRequest } from 'next/server'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma, Prisma } from '@elevate/db'
 import { createSuccessResponse } from '@elevate/http'
-import { getDefaultLogger } from '@elevate/logging'
 import { computeApprovalRate, computeActivationRate } from '@elevate/logic'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import {
   parseActivityCode,
   AnalyticsQuerySchema,
   type AnalyticsDateFilter,
-  type AnalyticsCohortFilter,
-  type AnalyticsSubmissionFilter,
-  type AnalyticsUserFilter,
+  // filters are computed inline; do not import unused types
   type SubmissionStats,
   type UserAnalyticsStats,
   type PointsStats,
@@ -20,7 +17,7 @@ import {
   type ReviewStats,
   type StatusDistribution,
   type ActivityDistribution,
-  type ActivityCode,
+  // keep only used domain types
   type RoleDistribution,
   type CohortDistribution,
   type PointsActivityDistribution,
@@ -37,7 +34,7 @@ import {
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
-  const logger = (await getDefaultLogger()).forRequestWithHeaders(request)
+  const logger: any = console
   return withRateLimit(request, adminRateLimiter, async () => {
   try {
     await requireRole('reviewer')

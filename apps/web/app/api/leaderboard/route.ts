@@ -3,15 +3,12 @@ import { type NextRequest, type NextResponse } from 'next/server'
 // Use database service layer and DTO transformations
 import { Prisma } from '@prisma/client'
 
-import { 
-  findEarnedBadgesByUserIds,
-  prisma
-} from '@elevate/db'
+import { findEarnedBadgesByUserIds, prisma } from '@elevate/db'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { LeaderboardQuerySchema } from '@elevate/types'
-import { 
+import {
   mapRawLeaderboardEntryToDTO,
-  type LeaderboardEntryDTO 
+  type LeaderboardEntryDTO,
 } from '@elevate/types/dto-mappers'
 
 export const runtime = 'nodejs'
@@ -23,7 +20,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       Object.fromEntries(searchParams),
     )
     if (!parsed.success) {
-      return createErrorResponse(new Error('Invalid leaderboard query parameters'), 400)
+      return createErrorResponse(
+        new Error('Invalid leaderboard query parameters'),
+        400,
+      )
     }
     const { period, limit, offset, search } = parsed.data
 
@@ -55,7 +55,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         offset,
         hasMore: false,
       })
-      response.headers.set('Cache-Control', period === '30d' ? 'public, s-maxage=300' : 'public, s-maxage=600')
+      response.headers.set(
+        'Cache-Control',
+        period === '30d' ? 'public, s-maxage=300' : 'public, s-maxage=600',
+      )
       return response
     }
 
@@ -110,14 +113,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           lb.avatar_url,
           lb.school,
           lb.cohort,
-          lb.total_points,
-          lb.public_submissions,
+          COALESCE(lb.total_points, 0)::int AS total_points,
+          COALESCE(lb.public_submissions, 0)::int AS public_submissions,
           lb.last_activity_at,
-          ap.learn_points,
-          ap.explore_points,
-          ap.amplify_points,
-          ap.present_points,
-          ap.shine_points
+          COALESCE(ap.learn_points, 0)::int AS learn_points,
+          COALESCE(ap.explore_points, 0)::int AS explore_points,
+          COALESCE(ap.amplify_points, 0)::int AS amplify_points,
+          COALESCE(ap.present_points, 0)::int AS present_points,
+          COALESCE(ap.shine_points, 0)::int AS shine_points
         FROM ${table} lb
         JOIN activity_points ap ON lb.user_id = ap.user_id
         ${where}
@@ -146,25 +149,26 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         badge: {
           code: earnedBadge.badge.code,
           name: earnedBadge.badge.name,
-          icon_url: earnedBadge.badge.icon_url
+          icon_url: earnedBadge.badge.icon_url,
         },
       })
       return acc
     }, {})
 
     // Format the response data using DTO mappers
-    const formattedData: LeaderboardEntryDTO[] = leaderboardData.map((user, index) => 
-      mapRawLeaderboardEntryToDTO(offset + index + 1, {
-        id: user.user_id,
-        handle: user.handle,
-        name: user.name,
-        avatar_url: user.avatar_url,
-        school: user.school,
-        earned_badges: badgesByUser[user.user_id] || [],
-        _sum: {
-          points: user.total_points,
-        }
-      })
+    const formattedData: LeaderboardEntryDTO[] = leaderboardData.map(
+      (user, index) =>
+        mapRawLeaderboardEntryToDTO(offset + index + 1, {
+          id: user.user_id,
+          handle: user.handle,
+          name: user.name,
+          avatar_url: user.avatar_url,
+          school: user.school,
+          earned_badges: badgesByUser[user.user_id] || [],
+          _sum: {
+            points: user.total_points,
+          },
+        }),
     )
 
     const response = createSuccessResponse({
@@ -175,10 +179,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       offset,
       hasMore: offset + limit < totalCount,
     })
-    response.headers.set('Cache-Control', period === '30d' ? 'public, s-maxage=300' : 'public, s-maxage=600')
+    response.headers.set(
+      'Cache-Control',
+      period === '30d' ? 'public, s-maxage=300' : 'public, s-maxage=600',
+    )
     return response
-
   } catch (error) {
-    return createErrorResponse(new Error('Failed to fetch leaderboard data'), 500)
+    return createErrorResponse(
+      new Error('Failed to fetch leaderboard data'),
+      500,
+    )
   }
 }

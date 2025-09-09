@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation'
 import { Header } from './Header'
 
 export interface ClientHeaderProps {
-  isSignedIn?: boolean
   userButton?: React.ReactNode
   signInButton?: React.ReactNode
+  dashboardCta?: React.ReactNode
   navigation?: Array<{
     name: string
     href: string

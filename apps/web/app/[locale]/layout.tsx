@@ -1,5 +1,7 @@
+import { headers } from 'next/headers'
+import Link from 'next/link'
+
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
-import { auth } from '@clerk/nextjs/server'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations } from 'next-intl/server'
 
@@ -29,8 +31,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params
   const _t = await getTranslations({ locale, namespace: 'homepage' })
+  const h = await headers()
+  const proto = h.get('x-forwarded-proto') || 'http'
+  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000'
+  const baseUrl = `${proto}://${host}`
 
   return {
+    metadataBase: new URL(baseUrl),
     title: 'Microsoft Elevate Indonesia — AI for Educators',
     description:
       'Join the LEAPS journey to learn, apply, amplify, present, and shine. Earn points, unlock badges, and compete for national recognition in Jakarta.',
@@ -108,15 +115,12 @@ export async function generateMetadata({
 }
 
 export default async function LocaleLayout({ children, params }: Props) {
-  const { locale: _locale } = await params
+  const { locale } = await params
   const messages = await getMessages()
-  const { userId } = await auth()
-  const isSignedIn = Boolean(userId)
 
   return (
     <NextIntlClientProvider messages={messages}>
       <ClientHeader
-        isSignedIn={isSignedIn}
         signInButton={
           <SignedOut>
             <SignInButton mode="modal">
@@ -127,6 +131,13 @@ export default async function LocaleLayout({ children, params }: Props) {
         userButton={
           <SignedIn>
             <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+        }
+        dashboardCta={
+          <SignedIn>
+            <Link href={`/${locale}/dashboard`}>
+              <Button variant="default">Dashboard</Button>
+            </Link>
           </SignedIn>
         }
         languageSwitcher={<LanguageSwitcher />}

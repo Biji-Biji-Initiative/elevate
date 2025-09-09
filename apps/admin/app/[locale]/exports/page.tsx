@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-
-import { adminClient, AdminClientError } from '@/lib/admin-client'
-import { withRoleGuard } from '@elevate/auth/context'
-import { ACTIVITY_CODES, SUBMISSION_STATUSES } from '@elevate/types'
+import type { ACTIVITY_CODES, SUBMISSION_STATUSES } from '@elevate/types'
 import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Alert } from '@elevate/ui'
+import { withRoleGuard } from '@elevate/auth/context'
+import { adminClient } from '@/lib/admin-client'
+import { handleApiError } from '@/lib/error-utils'
 
 interface ExportFilters {
   startDate: string
@@ -33,9 +33,9 @@ function ExportsPage() {
       try {
         const cohortData = await adminClient.getCohorts()
         setCohorts(cohortData)
-      } catch (error) {
+      } catch (error: unknown) {
         // Cohorts are optional for UI, don't break on fetch failure
-        console.warn('Failed to fetch cohorts:', error instanceof AdminClientError ? error.message : 'Unknown error')
+        console.warn('Failed to fetch cohorts:', handleApiError(error, 'Cohort fetch'))
       }
     }
     void fetchCohorts()
@@ -81,12 +81,8 @@ function ExportsPage() {
           setError(`Export failed: HTTP ${response.status} ${response.statusText}`)
         }
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(`Failed to export data: ${error.message}`)
-      } else {
-        setError('Failed to export data: Unknown error')
-      }
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Export data'))
     } finally {
       setLoading(prev => ({ ...prev, [type]: false }))
     }

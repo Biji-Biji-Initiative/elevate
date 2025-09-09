@@ -6,48 +6,35 @@ import { requireRole } from '@elevate/auth/server-helpers'
 // Use database service layer instead of direct Prisma
 import { 
   findSubmissionById,
-  updateSubmission,
   findSubmissionsWithFilters,
   countSubmissionsWithFilters,
-  findSubmissionsByIds,
-  createPointsEntry,
-  createAuditLogEntry,
-  type SubmissionStatus,
-  type Submission,
-  type Activity,
   prisma // Still need for transactions and raw queries
 } from '@elevate/db'
+import { createSuccessResponse, withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { computePoints } from '@elevate/logic'
-// TODO: Re-enable when @elevate/security package is available
-// import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import {
   parseSubmissionStatus,
   parseActivityCode,
   parseSubmissionPayload,
-  toPrismaJson,
   buildAuditMeta,
   ReviewSubmissionSchema,
   BulkReviewSubmissionsSchema,
   AdminSubmissionsQuerySchema,
   type SubmissionWhereClause,
-  type ActivityCode,
-  type ActivityPayload,
   ValidationError,
   NotFoundError,
   ElevateApiError,
-  validationError,
   SUBMISSION_STATUSES,
   LEDGER_SOURCES,
 } from '@elevate/types'
-import { createSuccessResponse, withApiErrorHandling } from '@elevate/http'
-import type { ApiContext } from '@elevate/http'
+// (moved @elevate/http import above for import-order compliance)
 
 import type { Prisma } from '@prisma/client'
 
 export const runtime = 'nodejs';
 
 export const GET = withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
-  const user = await requireRole('reviewer')
+  await requireRole('reviewer')
   const { searchParams } = new URL(request.url)
   
   const parsedQuery = AdminSubmissionsQuerySchema.safeParse(Object.fromEntries(searchParams))

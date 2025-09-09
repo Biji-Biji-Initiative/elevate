@@ -5,14 +5,14 @@ import { z } from 'zod'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import { BadgeSchema, toPrismaJson, parseBadgeAuditMeta, buildAuditMeta , createSuccessResponse } from '@elevate/types'
+import { BadgeSchema, toPrismaJson, buildAuditMeta , createSuccessResponse } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
   return withRateLimit(request, adminRateLimiter, async () => {
   try {
-    const user = await requireRole('admin')
+    await requireRole('admin')
     const { searchParams } = new URL(request.url)
     
     const includeStats = searchParams.get('includeStats') === 'true'
@@ -148,7 +148,7 @@ export async function PATCH(request: NextRequest) {
       updateData.criteria = toPrismaJson(validation.data.criteria) as Prisma.InputJsonValue
     }
     
-    const badge = await prisma.badge.update({
+    await prisma.badge.update({
       where: { code },
       data: updateData
     })

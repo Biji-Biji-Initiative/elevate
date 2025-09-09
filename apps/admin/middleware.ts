@@ -4,7 +4,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import createIntlMiddleware from 'next-intl/middleware';
 
 import { parseClerkPublicMetadata, safeParseRole, type RoleName } from '@elevate/auth';
-import { createSecurityMiddleware, getSecurityConfig, withSecurity } from '@elevate/security/security-middleware'
+import { getSecurityConfig, withSecurity } from '@elevate/security/security-middleware'
 
 import { locales, defaultLocale } from './i18n';
 

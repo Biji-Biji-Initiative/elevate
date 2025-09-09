@@ -13,6 +13,7 @@ import {
   toPrismaJson,
   buildAuditMeta,
   type KajabiTagEvent,
+  type AuditEntityType,
   ElevateApiError,
   ACTIVITY_CODES,
   SUBMISSION_STATUSES,
@@ -34,7 +35,7 @@ function toPrismaJsonObject(
 
 // Local wrapper for audit meta to ensure type safety
 function buildAuditMetaSafe(
-  envelope: { entityType: import('@elevate/types').AuditEntityType; entityId: string },
+  envelope: { entityType: AuditEntityType; entityId: string },
   meta?: Record<string, unknown>,
 ) {
   const result = buildAuditMeta(envelope, meta)

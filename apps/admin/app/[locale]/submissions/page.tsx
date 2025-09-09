@@ -83,13 +83,17 @@ function SubmissionsPage() {
     {
       key: 'created_at',
       header: 'Date',
-      render: (row: AdminSubmission) => new Date(row.created_at).toLocaleDateString(),
+      accessor: (row) => row.created_at,
+      sortAccessor: (row) => new Date(row.created_at),
+      render: (row) => new Date(row.created_at).toLocaleDateString(),
       width: '100px'
     },
     {
       key: 'user.name',
       header: 'Participant',
-      render: (row: AdminSubmission) => (
+      accessor: (row) => ({ name: row.user.name, handle: row.user.handle, school: row.user.school ?? '' }),
+      sortAccessor: (row) => row.user.name,
+      render: (row) => (
         <div>
           <div className="font-medium">{row.user.name}</div>
           <div className="text-sm text-gray-500">@{row.user.handle}</div>
@@ -103,7 +107,9 @@ function SubmissionsPage() {
     {
       key: 'activity.name',
       header: 'Activity',
-      render: (row: AdminSubmission) => (
+      accessor: (row) => ({ name: row.activity.name, code: row.activity.code }),
+      sortAccessor: (row) => row.activity.name,
+      render: (row) => (
         <div>
           <div className="font-medium">{row.activity.name}</div>
           <div className="text-sm text-gray-500">{row.activity.code}</div>
@@ -114,20 +120,23 @@ function SubmissionsPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (row: AdminSubmission) => <StatusBadge status={row.status} />,
+      accessor: (row) => row.status,
+      render: (_row, value?: string) => <StatusBadge status={value ?? ''} />,
       width: '100px'
     },
     {
       key: 'visibility',
       header: 'Visibility',
-      render: (row: AdminSubmission) => <StatusBadge status={row.visibility} size="sm" />,
+      accessor: (row) => row.visibility,
+      render: (_row, value?: string) => <StatusBadge status={value ?? ''} size="sm" />,
       width: '80px'
     },
     {
       key: 'attachments',
       header: 'Files',
-      render: (row) => (
-        <span className="text-sm text-gray-600">{row.attachmentCount ?? 0} files</span>
+      accessor: (row) => row.attachmentCount ?? 0,
+      render: (_row, value?: number) => (
+        <span className="text-sm text-gray-600">{value ?? 0} files</span>
       ),
       width: '80px',
       sortable: false

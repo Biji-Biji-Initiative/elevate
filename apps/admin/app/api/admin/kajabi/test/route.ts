@@ -9,10 +9,6 @@ import { KajabiTestSchema, buildAuditMeta } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
-interface TestKajabiRequest {
-  user_email: string;
-  course_name?: string;
-}
 
 export async function POST(request: NextRequest) {
   try {

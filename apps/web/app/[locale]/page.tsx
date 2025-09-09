@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useRouter, usePathname } from 'next/navigation'
 
-import { SignInButton, SignedOut } from '@clerk/nextjs'
 import { useTranslations } from 'next-intl'
 
 import type { StatsResponseDTO, LeaderboardEntryDTO } from '@elevate/types'
@@ -56,7 +56,6 @@ interface StoriesResponse {
   }
 }
 
-
 async function fetchPlatformStats(): Promise<PlatformStats | null> {
   try {
     const api = getApiClient()
@@ -72,7 +71,7 @@ async function fetchPlatformStats(): Promise<PlatformStats | null> {
           pending: value.pending,
           rejected: value.rejected,
         },
-      ])
+      ]),
     )
 
     return {
@@ -87,12 +86,13 @@ async function fetchPlatformStats(): Promise<PlatformStats | null> {
   }
 }
 
-
 async function fetchLeaderboardPreview(): Promise<LeaderboardPreviewEntry[]> {
   try {
     const api = getApiClient()
     const res = await api.getLeaderboard({ limit: 3 })
-    const payload = res.data.data as LeaderboardEntryDTO[]
+    // API enveloped response shape is { success, data: { period, data: LeaderboardEntryDTO[] } }
+    const payloadContainer = res.data as { data?: LeaderboardEntryDTO[]; [k: string]: unknown }
+    const payload = Array.isArray(payloadContainer.data) ? payloadContainer.data : []
 
     return payload.map((entry) => ({
       rank: entry.rank,
@@ -104,11 +104,18 @@ async function fetchLeaderboardPreview(): Promise<LeaderboardPreviewEntry[]> {
       },
       points: entry.user.totalPoints,
       badges:
-        entry.user.earnedBadges?.map((b) => ({ code: b.badge.code, name: b.badge.name })) ?? [],
+        entry.user.earnedBadges?.map((b) => ({
+          code: b.badge.code,
+          name: b.badge.name,
+        })) ?? [],
     }))
   } catch (_) {
     return []
   }
+}
+
+function isStoriesResponse(raw: unknown): raw is StoriesResponse {
+  return !!raw && typeof raw === 'object' && 'stories' in (raw as Record<string, unknown>) && Array.isArray((raw as StoriesResponse).stories)
 }
 
 async function fetchStories(): Promise<StoryEntry[]> {
@@ -116,8 +123,9 @@ async function fetchStories(): Promise<StoryEntry[]> {
     const response = await fetch('/api/stories?limit=6')
     if (!response.ok) return []
 
-    const data: StoriesResponse = await response.json()
-    return data.stories || []
+    const raw = (await response.json()) as unknown
+    if (isStoriesResponse(raw)) return raw.stories || []
+    return []
   } catch (_) {
     return []
   }
@@ -148,6 +156,8 @@ function LeapsSection() {
     return stats.byStage[stage.toUpperCase()]?.approved || 0
   }
 
+  // keep hook ready for analytics routes if needed
+  void usePathname()
   return (
     <section className="py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -170,22 +180,27 @@ function LeapsSection() {
               <StageCard
                 stage="learn"
                 completedCount={getStageCount('learn')}
+                Link={Link}
               />
               <StageCard
                 stage="explore"
                 completedCount={getStageCount('explore')}
+                Link={Link}
               />
               <StageCard
                 stage="amplify"
                 completedCount={getStageCount('amplify')}
+                Link={Link}
               />
               <StageCard
                 stage="present"
                 completedCount={getStageCount('present')}
+                Link={Link}
               />
               <StageCard
                 stage="shine"
                 completedCount={getStageCount('shine')}
+                Link={Link}
               />
             </>
           )}
@@ -198,6 +213,7 @@ function LeapsSection() {
 export default function Page() {
   const t = useTranslations('homepage')
   const router = useRouter()
+  const _pathname2 = usePathname()
 
   const [stats, setStats] = useState<PlatformStats | null>(null)
   const [leaderboard, setLeaderboard] = useState<LeaderboardPreviewEntry[]>([])
@@ -236,15 +252,8 @@ export default function Page() {
   // Event handlers
   const handlePrimaryCTA = () => {
     analytics.ctaClick({ area: 'hero', label: 'join_leaps' })
-    // Navigate to sign-in or dashboard based on auth state
-    const signInButton = document.querySelector(
-      '[data-clerk-sign-in]',
-    ) as HTMLElement
-    if (signInButton) {
-      signInButton.click()
-    } else {
-      router.push('/dashboard')
-    }
+    // Always route to sign-in to make flow explicit; Clerk will redirect after
+    router.push('/sign-in')
   }
 
   const handleSecondaryCTA = () => {
@@ -355,7 +364,7 @@ export default function Page() {
         countersLoading={loading}
         partnersLogos={
           <div className="flex flex-wrap justify-center items-center gap-8 text-white/70">
-            {(t.raw('partners.list') as string[] || []).map(
+            {((t.raw('partners.list') as string[]) || []).map(
               (partner: string) => (
                 <span key={partner} className="text-lg font-medium">
                   {partner}
@@ -399,7 +408,7 @@ export default function Page() {
           'Registration via form routes educators to the LEAPS tracker (Entry & Sign-In → Tracker).',
           'Educators progress through LEAPS stages with support from Mentors.',
           'Points, leaderboards, and badges keep educators motivated.',
-          'Top performers qualify for the Shine showcase in Jakarta.'
+          'Top performers qualify for the Shine showcase in Jakarta.',
         ]}
       />
 
@@ -445,7 +454,7 @@ export default function Page() {
 
       {/* Partners & Contact */}
       <PartnersContact
-        partners={t.raw('partners.list') as string[] || []}
+        partners={(t.raw('partners.list') as string[]) || []}
         contacts={[
           {
             email: 'rashvin@biji-biji.com',
@@ -460,12 +469,7 @@ export default function Page() {
         ]}
       />
 
-      {/* Hidden sign-in trigger for analytics */}
-      <SignedOut>
-        <SignInButton mode="modal">
-          <button data-clerk-sign-in className="hidden" />
-        </SignInButton>
-      </SignedOut>
+      {/* No hidden triggers needed; navigation is explicit */}
     </div>
   )
 }

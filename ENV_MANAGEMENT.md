@@ -7,12 +7,14 @@ The MS Elevate LEAPS Tracker monorepo implements a **three-layer environment man
 ## Three-Layer Architecture
 
 ### Layer 1: Repository Defaults (`.env.defaults`)
+
 - **Location**: `/.env.defaults`
 - **Purpose**: Safe default values that can be committed to version control
 - **Contents**: Non-sensitive configuration values, placeholders, and development defaults
 - **Git Status**: **COMMITTED** ✅
 
 **What goes here:**
+
 - Default application settings (rate limits, timeouts, debug flags)
 - Email template configurations
 - Development seed data
@@ -20,12 +22,14 @@ The MS Elevate LEAPS Tracker monorepo implements a **three-layer environment man
 - Safe defaults for optional services
 
 ### Layer 2: Environment Specific (`.env.{environment}`)
+
 - **Files**: `/.env.development`, `/.env.staging`, `/.env.production`
 - **Purpose**: Environment-specific configuration overrides
 - **Contents**: Environment-appropriate values (URLs, service endpoints, feature flags)
 - **Git Status**: **COMMITTED** ✅
 
 **What goes here:**
+
 - Environment-specific URLs and endpoints
 - Feature flags per environment
 - Environment-appropriate settings (debug levels, rate limits)
@@ -33,12 +37,14 @@ The MS Elevate LEAPS Tracker monorepo implements a **three-layer environment man
 - Template configurations for deployment
 
 ### Layer 3: Local Overrides (`.env.local` and variants)
+
 - **Files**: `/.env.local`, `/.env.development.local`, `/.env.staging.local`, etc.
 - **Purpose**: Local development overrides and sensitive values
 - **Contents**: Personal development settings and secrets
 - **Git Status**: **GITIGNORED** 🚫
 
 **What goes here:**
+
 - Sensitive API keys and secrets
 - Personal development database connections
 - Local service endpoints (localhost URLs)
@@ -55,6 +61,7 @@ The MS Elevate LEAPS Tracker monorepo implements a **three-layer environment man
 ## Current Configuration
 
 ### Development Environment
+
 The development environment uses **real working values** that have been migrated from the existing `.env.local` files:
 
 ```bash
@@ -65,6 +72,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://gsvhfcjmjnocxxosjloi.supabase.co
 ```
 
 ### Staging Environment
+
 Staging uses placeholder values that should be replaced with actual staging credentials:
 
 ```bash
@@ -74,6 +82,7 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_staging_placeholder
 ```
 
 ### Production Environment
+
 Production uses placeholder values that **must be set in the Vercel deployment environment**:
 
 ```bash
@@ -86,26 +95,30 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_production_placeholder
 
 ### What Was Moved Where
 
-| Original Location | New Location | Status |
-|------------------|--------------|--------|
-| `/.env.local` | `/.env.development` | ✅ Values preserved |
+| Original Location      | New Location        | Status              |
+| ---------------------- | ------------------- | ------------------- |
+| `/.env.local`          | `/.env.development` | ✅ Values preserved |
 | `/apps/web/.env.local` | `/.env.development` | ✅ Values preserved |
-| `/packages/db/.env` | `/.env.development` | ✅ Values preserved |
+| `/packages/db/.env`    | `/.env.development` | ✅ Values preserved |
 
 ### Backup Files
+
 All original environment files have been backed up to `/env-backup/`:
+
 - `env-backup/root.env.local.backup`
-- `env-backup/web.env.local.backup`  
+- `env-backup/web.env.local.backup`
 - `env-backup/db.env.backup`
 
 ## Usage Guide
 
 ### For Local Development
+
 1. The monorepo should work immediately with the new structure
 2. All existing values are preserved in `.env.development`
 3. Create `.env.local` only if you need personal overrides
 
 ### For New Developers
+
 1. Clone the repository
 2. The `.env.defaults` and `.env.development` provide working defaults
 3. Copy values to `.env.local` if personal customization is needed:
@@ -115,6 +128,7 @@ All original environment files have been backed up to `/env-backup/`:
    ```
 
 ### For Deployment
+
 1. **Staging**: Set actual staging values in Vercel environment variables
 2. **Production**: Set actual production values in Vercel environment variables
 3. The environment-specific files provide templates for required variables
@@ -145,33 +159,33 @@ All original environment files have been backed up to `/env-backup/`:
 
 ### Required Variables (Must be set in all environments)
 
-| Variable | Purpose | Layer |
-|----------|---------|-------|
-| `DATABASE_URL` | PostgreSQL connection | Environment-specific |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk authentication | Environment-specific |
-| `CLERK_SECRET_KEY` | Clerk server-side key | Local/Deployment |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Environment-specific |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase admin key | Local/Deployment |
-| `NEXT_PUBLIC_SITE_URL` | Application public URL | Environment-specific |
+| Variable                            | Purpose                | Layer                |
+| ----------------------------------- | ---------------------- | -------------------- |
+| `DATABASE_URL`                      | PostgreSQL connection  | Environment-specific |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk authentication   | Environment-specific |
+| `CLERK_SECRET_KEY`                  | Clerk server-side key  | Local/Deployment     |
+| `NEXT_PUBLIC_SUPABASE_URL`          | Supabase project URL   | Environment-specific |
+| `SUPABASE_SERVICE_ROLE_KEY`         | Supabase admin key     | Local/Deployment     |
+| `NEXT_PUBLIC_SITE_URL`              | Application public URL | Environment-specific |
 
 ### Integration Variables
 
-| Variable | Purpose | Required For |
-|----------|---------|-------------|
-| `KAJABI_WEBHOOK_SECRET` | Webhook validation | Production |
-| `KAJABI_API_KEY` | Kajabi API access | Production |
-| `KAJABI_CLIENT_SECRET` | Kajabi OAuth | Production |
-| `RESEND_API_KEY` | Email service | Optional |
-| `OPENAI_API_KEY` | AI features | Optional |
+| Variable                | Purpose            | Required For |
+| ----------------------- | ------------------ | ------------ |
+| `KAJABI_WEBHOOK_SECRET` | Webhook validation | Production   |
+| `KAJABI_API_KEY`        | Kajabi API access  | Production   |
+| `KAJABI_CLIENT_SECRET`  | Kajabi OAuth       | Production   |
+| `RESEND_API_KEY`        | Email service      | Optional     |
+| `OPENAI_API_KEY`        | AI features        | Optional     |
 
 ### Application Settings
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `RATE_LIMIT_RPM` | 60 | API rate limiting |
-| `WEBHOOK_RATE_LIMIT_RPM` | 120 | Webhook rate limiting |
-| `DEBUG` | false | Debug logging |
-| `DATABASE_POOL_MAX` | 10 | Connection pool size |
+| Variable                 | Default | Purpose               |
+| ------------------------ | ------- | --------------------- |
+| `RATE_LIMIT_RPM`         | 60      | API rate limiting     |
+| `WEBHOOK_RATE_LIMIT_RPM` | 120     | Webhook rate limiting |
+| `DEBUG`                  | false   | Debug logging         |
+| `DATABASE_POOL_MAX`      | 10      | Connection pool size  |
 
 ## Security Best Practices
 
@@ -217,18 +231,21 @@ pnpm run env:validate:json
 #### Validation Categories
 
 1. **Critical Variables**: Must be present and valid in all environments
+
    - Database connections
    - Authentication keys
    - Storage configuration
    - Site URLs
 
 2. **Integration Variables**: Required in production, optional in development
+
    - Kajabi webhook secrets
    - Email service keys
    - AI service tokens
    - Error tracking DSNs
 
 3. **Application Configuration**: Settings with safe defaults
+
    - Rate limits
    - Debug flags
    - Pool sizes
@@ -244,23 +261,23 @@ pnpm run env:validate:json
 The application includes runtime validation helpers for type-safe environment access:
 
 ```typescript
-import { 
+import {
   initializeEnvironment,
   getDatabaseConfig,
   getAuthConfig,
-  validateCriticalEnvironment 
-} from '@elevate/utils/env';
+  validateCriticalEnvironment,
+} from '@elevate/utils/env'
 
 // Early validation during app startup
 initializeEnvironment({
   skipOptional: false,
   throwOnError: true,
-  logger: console.log
-});
+  logger: console.log,
+})
 
 // Type-safe configuration objects
-const dbConfig = getDatabaseConfig();
-const authConfig = getAuthConfig();
+const dbConfig = getDatabaseConfig()
+const authConfig = getAuthConfig()
 ```
 
 #### Error Types
@@ -275,9 +292,9 @@ Environment variables are fully typed with JSDoc documentation:
 
 ```typescript
 // Auto-complete and type safety for all environment variables
-process.env.DATABASE_URL  // string
-process.env.RATE_LIMIT_RPM  // string | undefined
-process.env.DEBUG  // 'true' | 'false' | undefined
+process.env.DATABASE_URL // string
+process.env.RATE_LIMIT_RPM // string | undefined
+process.env.DEBUG // 'true' | 'false' | undefined
 ```
 
 ### Build Integration
@@ -296,35 +313,35 @@ Environment validation is integrated into the build process:
 The runtime validation system provides type-safe environment access with early error detection:
 
 ```typescript
-import { 
+import {
   initializeEnvironment,
   getDatabaseConfig,
   getAuthConfig,
   getStorageConfig,
   getAppConfig,
   validateCriticalEnvironment,
-  EnvironmentError
-} from '@elevate/utils/env';
+  EnvironmentError,
+} from '@elevate/utils/env'
 
 // Early validation during app startup (recommended in _app.tsx or layout.tsx)
 try {
   initializeEnvironment({
-    skipOptional: false,     // Validate optional integrations
-    throwOnError: true,      // Throw errors for missing critical vars
-    logger: console.log      // Custom logger function
-  });
+    skipOptional: false, // Validate optional integrations
+    throwOnError: true, // Throw errors for missing critical vars
+    logger: console.log, // Custom logger function
+  })
 } catch (error) {
   if (error instanceof EnvironmentError) {
-    console.error(`Environment setup failed: ${error.message}`);
+    console.error(`Environment setup failed: ${error.message}`)
     // Handle gracefully or exit
   }
 }
 
 // Type-safe configuration objects with validation
-const dbConfig = getDatabaseConfig();    // Validates DB_URL, DIRECT_URL, etc.
-const authConfig = getAuthConfig();      // Validates Clerk keys
-const storageConfig = getStorageConfig(); // Validates Supabase configuration  
-const appConfig = getAppConfig();        // General app settings
+const dbConfig = getDatabaseConfig() // Validates DB_URL, DIRECT_URL, etc.
+const authConfig = getAuthConfig() // Validates Clerk keys
+const storageConfig = getStorageConfig() // Validates Supabase configuration
+const appConfig = getAppConfig() // General app settings
 ```
 
 ### API Route Validation
@@ -333,18 +350,18 @@ Add validation to API routes to ensure proper configuration:
 
 ```typescript
 // pages/api/webhooks/kajabi.ts or app/api/webhooks/kajabi/route.ts
-import { getRequiredEnv, validateKajabiConfig } from '@elevate/utils/env';
+import { getRequiredEnv, validateKajabiConfig } from '@elevate/utils/env'
 
 export async function POST(request: Request) {
   try {
     // Validate Kajabi configuration before processing
-    validateKajabiConfig();
-    
-    const webhookSecret = getRequiredEnv('KAJABI_WEBHOOK_SECRET');
+    validateKajabiConfig()
+
+    const webhookSecret = getRequiredEnv('KAJABI_WEBHOOK_SECRET')
     // ... handle webhook
   } catch (error) {
     if (error instanceof EnvironmentError) {
-      return new Response('Configuration error', { status: 500 });
+      return new Response('Configuration error', { status: 500 })
     }
   }
 }
@@ -356,20 +373,20 @@ For Next.js Server Components, validate environment early:
 
 ```typescript
 // app/dashboard/page.tsx
-import { getAppConfig, getStorageConfig } from '@elevate/utils/env';
+import { getAppConfig, getStorageConfig } from '@elevate/utils/env'
 
 export default async function DashboardPage() {
   // Validate configuration at component level
-  const appConfig = getAppConfig();
-  const storageConfig = getStorageConfig();
-  
+  const appConfig = getAppConfig()
+  const storageConfig = getStorageConfig()
+
   // Safe to use configuration
   return (
     <div>
       <h1>Dashboard for {appConfig.siteUrl}</h1>
       {/* Component content */}
     </div>
-  );
+  )
 }
 ```
 
@@ -379,17 +396,17 @@ Add development-specific validation and warnings:
 
 ```typescript
 // lib/dev-setup.ts
-import { isDevelopment, validateOptionalIntegrations } from '@elevate/utils/env';
+import { isDevelopment, validateOptionalIntegrations } from '@elevate/utils/env'
 
 if (isDevelopment()) {
-  const { configured, errors } = validateOptionalIntegrations();
-  
-  console.log('🔧 Development Environment Setup:');
-  console.log(`   Configured services: ${configured.join(', ') || 'None'}`);
-  
+  const { configured, errors } = validateOptionalIntegrations()
+
+  console.log('🔧 Development Environment Setup:')
+  console.log(`   Configured services: ${configured.join(', ') || 'None'}`)
+
   if (errors.length > 0) {
-    console.warn('⚠️  Optional service warnings:');
-    errors.forEach(error => console.warn(`   ${error}`));
+    console.warn('⚠️  Optional service warnings:')
+    errors.forEach((error) => console.warn(`   ${error}`))
   }
 }
 ```
@@ -399,27 +416,30 @@ if (isDevelopment()) {
 Create custom validators for your specific needs:
 
 ```typescript
-import { getRequiredEnv, InvalidEnvironmentVariableError } from '@elevate/utils/env';
+import {
+  getRequiredEnv,
+  InvalidEnvironmentVariableError,
+} from '@elevate/utils/env'
 
 // Custom validator for specific format requirements
 function validateCustomApiKey(apiKey: string): boolean {
-  return /^custom_[A-Za-z0-9]{32}$/.test(apiKey);
+  return /^custom_[A-Za-z0-9]{32}$/.test(apiKey)
 }
 
 // Usage with custom validation
 try {
-  const customApiKey = getRequiredEnv('CUSTOM_API_KEY');
-  
+  const customApiKey = getRequiredEnv('CUSTOM_API_KEY')
+
   if (!validateCustomApiKey(customApiKey)) {
     throw new InvalidEnvironmentVariableError(
       'CUSTOM_API_KEY',
-      'format: custom_[32 alphanumeric characters]'
-    );
+      'format: custom_[32 alphanumeric characters]',
+    )
   }
-  
+
   // Safe to use customApiKey
 } catch (error) {
-  console.error('Custom API key validation failed:', error.message);
+  console.error('Custom API key validation failed:', error.message)
 }
 ```
 
@@ -428,55 +448,58 @@ try {
 Recommended error handling patterns for different scenarios:
 
 ```typescript
-import { 
-  EnvironmentError, 
+import {
+  EnvironmentError,
   MissingEnvironmentVariableError,
   InvalidEnvironmentVariableError,
-  IncompleteEnvironmentError
-} from '@elevate/utils/env';
+  IncompleteEnvironmentError,
+} from '@elevate/utils/env'
 
 // Graceful degradation pattern
 function getOptionalFeatureConfig() {
   try {
-    validateKajabiConfig();
-    return { kajabiEnabled: true };
+    validateKajabiConfig()
+    return { kajabiEnabled: true }
   } catch (error) {
     if (error instanceof EnvironmentError) {
-      console.warn('Kajabi integration disabled:', error.message);
-      return { kajabiEnabled: false };
+      console.warn('Kajabi integration disabled:', error.message)
+      return { kajabiEnabled: false }
     }
-    throw error; // Re-throw unexpected errors
+    throw error // Re-throw unexpected errors
   }
 }
 
 // Early exit pattern for critical features
 function requireDatabaseConnection() {
   try {
-    return getDatabaseConfig();
+    return getDatabaseConfig()
   } catch (error) {
     if (error instanceof EnvironmentError) {
-      console.error('Database configuration required but missing:', error.message);
-      process.exit(1); // Exit early in server context
+      console.error(
+        'Database configuration required but missing:',
+        error.message,
+      )
+      process.exit(1) // Exit early in server context
     }
-    throw error;
+    throw error
   }
 }
 
 // Detailed error reporting for debugging
 function debugEnvironmentIssues() {
   try {
-    validateCriticalEnvironment();
+    validateCriticalEnvironment()
   } catch (error) {
     if (error instanceof IncompleteEnvironmentError) {
-      console.error('Multiple environment issues found:');
-      error.message.split('\n').forEach(line => {
-        if (line.trim()) console.error(`  - ${line.trim()}`);
-      });
+      console.error('Multiple environment issues found:')
+      error.message.split('\n').forEach((line) => {
+        if (line.trim()) console.error(`  - ${line.trim()}`)
+      })
     } else if (error instanceof EnvironmentError) {
-      console.error(`Environment error: ${error.message}`);
-      console.error(`Error code: ${error.code}`);
+      console.error(`Environment error: ${error.message}`)
+      console.error(`Error code: ${error.code}`)
       if (error.variable) {
-        console.error(`Variable: ${error.variable}`);
+        console.error(`Variable: ${error.variable}`)
       }
     }
   }
@@ -509,6 +532,7 @@ pnpm run env:validate:json | jq '.summary'
 #### Common Validation Error Types
 
 **1. Placeholder Values**: Variables contain placeholder text
+
 ```bash
 # Error message:
 ❌ Variable KAJABI_WEBHOOK_SECRET contains placeholder value: your-kajabi-webhook-secret
@@ -518,6 +542,7 @@ KAJABI_WEBHOOK_SECRET=whsec_actual_webhook_secret_from_kajabi
 ```
 
 **2. Invalid Formats**: URLs, keys, or tokens have wrong format
+
 ```bash
 # Error message:
 ❌ Invalid format for NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: expected Clerk publishable key
@@ -527,6 +552,7 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_abcd1234efgh5678ijkl9012mnop3456
 ```
 
 **3. Environment Mismatches**: Test keys in production environment
+
 ```bash
 # Error message:
 ❌ Variable CLERK_KEYS: expected live keys in production environment
@@ -537,6 +563,7 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_productionkey123...
 ```
 
 **4. Missing Required Variables**: Critical variables not set
+
 ```bash
 # Error message:
 ❌ Missing required variable: DATABASE_URL
@@ -546,6 +573,7 @@ DATABASE_URL=postgresql://user:password@host:5432/database
 ```
 
 **5. URL Format Issues**: Invalid URL structure
+
 ```bash
 # Error message:
 ❌ Invalid URL format for NEXT_PUBLIC_SITE_URL: https://localhost
@@ -555,6 +583,7 @@ NEXT_PUBLIC_SITE_URL=https://leaps.mereka.org
 ```
 
 **6. JWT Token Issues**: Invalid Supabase key format
+
 ```bash
 # Error message:
 ❌ Invalid format for SUPABASE_SERVICE_ROLE_KEY: expected valid JWT
@@ -595,6 +624,7 @@ When running `pnpm run env:validate --json`, the output includes:
 ```
 
 Use this for automated checking:
+
 ```bash
 # Check if validation passes
 if pnpm run env:validate:ci --silent; then
@@ -616,6 +646,7 @@ fi
 **Symptoms**: Variables not available in `process.env` or validation reports missing variables
 
 **Diagnosis**:
+
 ```bash
 # Check which files exist and their contents
 ls -la .env*
@@ -626,13 +657,15 @@ node -e "console.log('NODE_ENV:', process.env.NODE_ENV); console.log('Sample var
 ```
 
 **Solutions**:
+
 1. **File Naming**: Use exact names (`.env.development` not `.env.dev`)
-2. **Location**: Files must be in repository root, not app subdirectories  
+2. **Location**: Files must be in repository root, not app subdirectories
 3. **Restart**: Restart development server after env file changes
 4. **Syntax**: Check for missing quotes, extra spaces, or invalid characters
 5. **Turbo Cache**: If variable affects builds, add to `turbo.json` globalEnv
 
 **Example Debug Session**:
+
 ```bash
 # Step 1: Verify files exist
 ls -la .env*
@@ -654,6 +687,7 @@ pnpm run env:validate
 **Symptoms**: App works locally but fails in staging/production with "missing variable" errors
 
 **Diagnosis**:
+
 ```bash
 # Check deployment requirements
 pnpm run env:validate:prod
@@ -664,6 +698,7 @@ pnpm run env:validate:json | jq '.errors[] | select(.code == "MISSING_REQUIRED_V
 ```
 
 **Solutions**:
+
 1. **Set in Platform**: Add variables to Vercel/deployment platform environment
 2. **Replace Placeholders**: Update placeholder values in `.env.production`
 3. **Check Sensitive Variables**: Ensure secrets aren't committed to git
@@ -671,6 +706,7 @@ pnpm run env:validate:json | jq '.errors[] | select(.code == "MISSING_REQUIRED_V
 5. **Build-time vs Runtime**: Understand which variables are needed when
 
 **Vercel Environment Setup**:
+
 ```bash
 # Using Vercel CLI
 vercel env add KAJABI_WEBHOOK_SECRET
@@ -684,6 +720,7 @@ vercel env add CLERK_SECRET_KEY
 **Symptoms**: Database connection errors, timeouts, or authentication failures
 
 **Diagnosis**:
+
 ```bash
 # Validate database configuration
 pnpm run env:validate | grep -i database
@@ -703,6 +740,7 @@ npx prisma db execute --preview-feature --command "SELECT version();" --schema p
 ```
 
 **Solutions**:
+
 1. **Format Validation**: Run `pnpm run env:validate` to check URL format
 2. **Connection String**: Verify `DATABASE_URL` and `DIRECT_URL` are valid PostgreSQL URLs
 3. **Network Access**: Ensure database allows connections from your environment
@@ -710,6 +748,7 @@ npx prisma db execute --preview-feature --command "SELECT version();" --schema p
 5. **SSL Requirements**: Add `?sslmode=require` if needed for production databases
 
 **Connection String Format**:
+
 ```bash
 # Correct format:
 postgresql://username:password@host:port/database?sslmode=require
@@ -725,6 +764,7 @@ postgresql://user:pass@host/db                   # ❌ Missing port
 **Symptoms**: Login failures, webhook validation errors, or key format issues
 
 **Diagnosis**:
+
 ```bash
 # Validate auth configuration
 pnpm run env:validate | grep -i clerk
@@ -740,17 +780,19 @@ console.log('Keys match env:', (pub?.includes('test') === secret?.includes('test
 ```
 
 **Solutions**:
+
 1. **Format Validation**: Use validation to verify Clerk key formats
 2. **Environment Matching**: Ensure test/live keys match environment
 3. **Webhook Secrets**: Check webhook secrets are correctly formatted
-4. **Public Keys**: Ensure public keys are accessible to browser (NEXT_PUBLIC_)
+4. **Public Keys**: Ensure public keys are accessible to browser (NEXT*PUBLIC*)
 5. **OAuth URLs**: Verify redirect URLs match your environment
 
 **Key Format Reference**:
+
 ```bash
 # Clerk key formats:
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_[24+ chars] or pk_live_[24+ chars]
-CLERK_SECRET_KEY=sk_test_[24+ chars] or sk_live_[24+ chars]  
+CLERK_SECRET_KEY=sk_test_[24+ chars] or sk_live_[24+ chars]
 CLERK_WEBHOOK_SECRET=whsec_[24+ chars]
 
 # Environment consistency:
@@ -764,21 +806,23 @@ CLERK_WEBHOOK_SECRET=whsec_[24+ chars]
 **Symptoms**: Application crashes on startup with environment errors
 
 **Diagnosis**:
+
 ```typescript
 // Add to your app startup (e.g., _app.tsx or layout.tsx)
-import { initializeEnvironment } from '@elevate/utils/env';
+import { initializeEnvironment } from '@elevate/utils/env'
 
 try {
-  initializeEnvironment({ 
-    throwOnError: false,  // Don't crash, just log
-    logger: console.log   // See detailed output
-  });
+  initializeEnvironment({
+    throwOnError: false, // Don't crash, just log
+    logger: console.log, // See detailed output
+  })
 } catch (error) {
-  console.error('Environment validation failed:', error);
+  console.error('Environment validation failed:', error)
 }
 ```
 
 **Solutions**:
+
 1. **Early Validation**: Call `initializeEnvironment()` early in app startup
 2. **Graceful Degradation**: Set `throwOnError: false` for non-critical features
 3. **Feature Flags**: Use validation results to enable/disable features
@@ -804,26 +848,28 @@ try {
 ```
 
 **Troubleshooting build vs runtime issues**:
+
 ```typescript
 // Build-time access (client + server):
-const publicUrl = process.env.NEXT_PUBLIC_SITE_URL;  // ✅ Always works
+const publicUrl = process.env.NEXT_PUBLIC_SITE_URL // ✅ Always works
 
 // Runtime-only access (server only):
-const secretKey = process.env.CLERK_SECRET_KEY;      // ✅ Server, ❌ Client
+const secretKey = process.env.CLERK_SECRET_KEY // ✅ Server, ❌ Client
 
 // Check where code runs:
 if (typeof window === 'undefined') {
   // Server-side: can access all variables
-  console.log('Secret key available:', !!process.env.CLERK_SECRET_KEY);
+  console.log('Secret key available:', !!process.env.CLERK_SECRET_KEY)
 } else {
   // Client-side: only NEXT_PUBLIC_ variables
-  console.log('Public URL:', process.env.NEXT_PUBLIC_SITE_URL);
+  console.log('Public URL:', process.env.NEXT_PUBLIC_SITE_URL)
 }
 ```
 
 ## Monitoring and Maintenance
 
 ### Regular Tasks
+
 - [ ] Review and rotate API keys quarterly
 - [ ] Audit environment variable usage monthly
 - [ ] Run environment validation in all environments monthly
@@ -832,6 +878,7 @@ if (typeof window === 'undefined') {
 - [ ] Verify validation rules match current integrations
 
 ### When Adding New Services
+
 1. Add placeholder to `.env.defaults`
 2. Add real values to environment-specific files as appropriate
 3. Update validation rules in `scripts/validate-env.js`
@@ -842,6 +889,7 @@ if (typeof window === 'undefined') {
 8. Add to `turbo.json` globalEnv if affects builds
 
 ### When Deprecating Services
+
 1. Remove from all environment files
 2. Remove from validation rules in `scripts/validate-env.js`
 3. Remove from TypeScript types in `packages/types/src/env.d.ts`
@@ -853,6 +901,7 @@ if (typeof window === 'undefined') {
 ## Migration History
 
 ### 2025-01-XX - Initial Three-Layer Implementation
+
 - ✅ Created `.env.defaults` with safe repository defaults
 - ✅ Migrated existing values to `.env.development`
 - ✅ Created staging and production templates
@@ -862,6 +911,7 @@ if (typeof window === 'undefined') {
 - ✅ Created comprehensive documentation
 
 ### 2025-09-04 - Comprehensive Environment Validation System
+
 - ✅ Created comprehensive validation script (`scripts/validate-env.js`)
 - ✅ Added TypeScript environment types (`packages/types/src/env.d.ts`)
 - ✅ Built runtime validation helpers (`packages/utils/src/env.ts`)
@@ -878,7 +928,9 @@ if (typeof window === 'undefined') {
 - ✅ Added detailed diagnostic commands and debugging workflows
 
 ### Preserved Values
+
 All existing environment variables were preserved during migration:
+
 - Database connections (working Supabase configuration)
 - Authentication keys (working Clerk configuration)
 - Integration secrets (Kajabi, Resend)
@@ -888,6 +940,7 @@ All existing environment variables were preserved during migration:
 ## Support
 
 For questions about environment configuration:
+
 1. Check this documentation first
 2. Review the backup files in `/env-backup/` for original values
 3. Consult the team lead for sensitive production values
@@ -898,3 +951,30 @@ For questions about environment configuration:
 **Last Updated**: 2025-09-04  
 **Next Review**: Quarterly environment audit  
 **Environment Validation System**: Complete and integrated
+
+## Root-only DB Env & Prisma Sync (Enforcement)
+
+- `scripts/env/enforce-root-env.mjs`: strips `DATABASE_URL` and `DIRECT_URL` from any `apps/*/.env*` files to prevent drift. Backs up originals with `.bak` in place.
+- `scripts/env/sync-db-env-to-prisma.mjs`: writes effective root DB URLs into `packages/db/.env` so Prisma CLI uses the same connection as the app.
+- `scripts/env/exec-dev-with-root-env.mjs`: loads root env in precedence order before spawning dev servers, ensuring consistent environment across processes.
+
+## Commands (consolidated)
+
+- `pnpm dev` – runs root env enforcement/sync and starts web/admin with the root env.
+- `pnpm db:push` – syncs DB env to Prisma then pushes schema.
+- `pnpm db:seed` – syncs DB env to Prisma then seeds the DB.
+
+## Routing, i18n, and Middleware (Web)
+
+- i18n uses `next-intl` with locale prefix normalization. URLs are locale-prefixed (e.g., `/en/...`).
+- Public API routes are whitelisted in middleware: `/api/leaderboard`, `/api/stats`, `/api/stories`.
+- Clerk integration in middleware:
+  - For non-public API routes: `await auth()` is checked; returns 401 if unauthenticated.
+  - For non-public page routes: `redirectToSignIn()` is used when session is missing.
+  - We intentionally avoid using unsupported helpers like `auth().protect()` to keep behavior explicit and compatible.
+
+## Production Guidance (recap)
+
+- Source production variables from Vault/platform; do not commit secrets.
+- Keep DB URLs only at the root scope and inject at deploy time.
+- Ensure Clerk keys match environment (test vs live).

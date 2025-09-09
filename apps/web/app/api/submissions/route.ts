@@ -1,10 +1,9 @@
-import type { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server'
 
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 
-// Use database service layer instead of direct Prisma
-import { 
+import {
   findUserById,
   findActivityByCode,
   findSubmissionsByUserAndActivity,
@@ -12,20 +11,22 @@ import {
   findSubmissionsWithPagination,
   createSubmission,
   createSubmissionAttachment,
-  type Submission
+  type Submission,
 } from '@elevate/db'
-
-// Import DTO transformers
-import { createSuccessResponse, withApiErrorHandling, type ApiContext } from '@elevate/http'
+import {
+  createSuccessResponse,
+  withApiErrorHandling,
+  type ApiContext,
+} from '@elevate/http'
 import { withCSRFProtection } from '@elevate/security/csrf'
 import { submissionRateLimiter, withRateLimit } from '@elevate/security/rate-limiter'
 import { sanitizeSubmissionPayload } from '@elevate/security/sanitizer'
-import { 
+import {
   SubmissionCreateRequestSchema,
-  parseActivityCode, 
-  parseSubmissionStatus, 
-  parseAmplifyPayload, 
-  parseSubmissionPayload, 
+  parseActivityCode,
+  parseSubmissionStatus,
+  parseAmplifyPayload,
+  parseSubmissionPayload,
   type SubmissionWhereClause,
   AuthenticationError,
   NotFoundError,
@@ -34,7 +35,7 @@ import {
   LEARN,
   AMPLIFY,
   VISIBILITY_OPTIONS,
-  SUBMISSION_STATUSES
+  SUBMISSION_STATUSES,
 } from '@elevate/types'
 import { transformPayloadAPIToDB, transformPayloadDBToAPI } from '@elevate/types/dto-mappers'
 
@@ -217,7 +218,7 @@ export const POST = withCSRFProtection(withApiErrorHandling(async (request: Next
   })
 }))
 
-export const GET = withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
+export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const { userId } = await auth()
   
   if (!userId) {

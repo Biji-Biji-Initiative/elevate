@@ -15,6 +15,10 @@
     "./server": {
       "types": "./dist/types/server.d.ts",
       "import": "./dist/js/server.js"
+    },
+    "./safe-server": {
+      "types": "./src/safe-server.ts",
+      "import": "./src/safe-server.ts"
     }
   },
   "main": "./dist/js/index.js",

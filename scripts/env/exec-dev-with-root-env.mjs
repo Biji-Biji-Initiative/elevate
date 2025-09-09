@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process'
-import path from 'node:path'
 import fs from 'node:fs'
+import path from 'node:path'
 
 const root = process.cwd()
 
@@ -26,7 +26,12 @@ function loadEnvFile(file) {
 
 // Load env files in precedence order
 const loaded = []
-for (const f of ['.env.local', '.env.development.local', '.env.development', '.env.defaults']) {
+for (const f of [
+  '.env.local',
+  '.env.development.local',
+  '.env.development',
+  '.env.defaults',
+]) {
   const p = path.join(root, f)
   const c = loadEnvFile(p)
   if (c) loaded.push(`${f}(${c})`)

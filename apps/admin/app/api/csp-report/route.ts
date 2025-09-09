@@ -8,9 +8,18 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { createErrorResponse } from '@elevate/http'
-import { getServerLogger } from '@elevate/logging/server'
 import { createCSPReportHandler } from '@elevate/security/security-middleware'
-import { wrapError } from '@elevate/utils'
+
+const logger: { info: (...args: any[]) => void; warn: (...args: any[]) => void; error: (...args: any[]) => void } = console
+
+function wrapErrorLocal(error: unknown, message: string): Error {
+  if (error instanceof Error) return new Error(`${message}: ${error.message}`)
+  try {
+    return new Error(`${message}: ${JSON.stringify(error)}`)
+  } catch {
+    return new Error(message)
+  }
+}
 
 // Create CSP report handler with admin app specific configuration
 const handleCSPReport = createCSPReportHandler({
@@ -18,7 +27,7 @@ const handleCSPReport = createCSPReportHandler({
   logToDB: false, // Can be enabled later with database integration
   alertOnSeverity: 'medium', // More sensitive for admin app
   onViolation: (violation) => {
-    const logger = getServerLogger({ name: 'admin-csp' })
+    const _logger = logger
     // Custom handling for admin app violations
     if (violation.severity === 'high' || violation.severity === 'medium') {
       logger.security({
@@ -38,7 +47,7 @@ const handleCSPReport = createCSPReportHandler({
 
       // Admin violations might be more concerning - log with more detail
       if (violation['violated-directive']?.includes('script-src')) {
-        logger.warn('Script injection attempt detected in admin panel')
+        _logger?.warn('Script injection attempt detected in admin panel')
       }
 
       // In production, send immediate alerts for admin violations
@@ -74,7 +83,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     
     const userAgent = request.headers.get('user-agent') || 'unknown';
     
-    getServerLogger({ name: 'admin-csp' }).info('CSP Report received in Admin App', {
+    logger?.info('CSP Report received in Admin App', {
       clientIP,
       userAgent,
       timestamp: new Date().toISOString(),
@@ -87,7 +96,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Process the violation report
     return await handleCSPReport(request);
   } catch (error: unknown) {
-    getServerLogger({ name: 'admin-csp' }).error('Error in Admin CSP report handler', wrapError(error, 'Admin CSP report error'))
+    logger?.error('Error in Admin CSP report handler', wrapErrorLocal(error, 'Admin CSP report error'))
     
     // Don't expose internal errors to clients
     return createErrorResponse(new Error('Internal server error'), 500)
@@ -99,7 +108,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  * CSP reports can come from any origin that loads our content, so we allow all origins
  * but only for this specific non-credentialed endpoint.
  */
-export async function OPTIONS(request: NextRequest): Promise<NextResponse> {
+export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
   const response = new NextResponse(null, { status: 200 });
   
   // CSP reports can come from any origin that loads our content

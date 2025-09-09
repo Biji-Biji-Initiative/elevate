@@ -4,12 +4,6 @@ import { roleToRoleName } from '@elevate/auth'
 import { requireRole, hasRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { 
   findUserById,
-  findAllUsers,
-  updateUser,
-  findUserByHandle,
-  createAuditLogEntry,
-  type Role,
-  type User,
   prisma // Still need for complex queries and transactions
 } from '@elevate/db'
 import { createSuccessResponse, createErrorResponse as createHttpError } from '@elevate/http'
@@ -24,7 +18,7 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   return withRateLimit(request, adminRateLimiter, async () => {
   try {
-    const user = await requireRole('admin')
+    await requireRole('admin')
     const { searchParams } = new URL(request.url)
     
     const parsedQuery = AdminUsersQuerySchema.safeParse(Object.fromEntries(searchParams))
