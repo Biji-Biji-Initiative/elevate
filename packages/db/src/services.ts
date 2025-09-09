@@ -391,6 +391,7 @@ export async function createPointsEntry(data: {
       activity_code: data.activity_code,
       delta_points: data.delta_points,
       source: data.source,
+      event_time: new Date(),
       external_event_id: data.external_event_id ?? null,
     },
   })
@@ -736,6 +737,7 @@ export async function createSubmissionWithTransaction(data: {
           activity_code: data.submission.activity_code,
           delta_points: data.points.delta_points,
           source: data.points.source,
+          event_time: new Date(),
           external_event_id: data.points.external_event_id ?? null,
         },
       })
@@ -830,6 +832,7 @@ export async function updateSubmissionStatusWithTransaction(data: {
           activity_code: existingSubmission.activity_code,
           delta_points: data.points.delta_points,
           source: data.points.source,
+          event_time: new Date(),
           external_event_id: data.points.external_event_id ?? null,
         },
       })
