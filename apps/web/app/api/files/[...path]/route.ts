@@ -6,6 +6,7 @@ import { type NextRequest, type NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 
 import { prisma } from '@elevate/db/client'
+import { getServerLogger } from '@elevate/logging/server'
 import { createSuccessResponse, createErrorResponse, unauthorized, forbidden, notFound, badRequest } from '@elevate/http'
 import { withRateLimit, apiRateLimiter } from '@elevate/security'
 import {
@@ -65,6 +66,8 @@ export async function GET(
 ): Promise<NextResponse> {
   return withRateLimit(request, apiRateLimiter, async () => {
     try {
+      const logger = getServerLogger().forRequestWithHeaders(request)
+      const timerStart = Date.now()
       const { userId } = await auth()
 
       if (!userId) return unauthorized()
@@ -136,8 +139,18 @@ export async function GET(
       response.headers.set('Referrer-Policy', 'no-referrer')
       response.headers.set('X-Download-Options', 'noopen')
 
+      logger.info('file.signed_url.issued', {
+        path: filePath,
+        userId,
+        isOwner,
+        isReviewer,
+        durationMs: Date.now() - timerStart,
+      })
+
       return response
     } catch (error) {
+      const logger = getServerLogger()
+      logger.error('file.signed_url.error', error instanceof Error ? error : new Error('Unknown error'))
       return createErrorResponse(new Error('Failed to access file'), 500)
     }
   })
@@ -149,6 +162,8 @@ export async function DELETE(
 ): Promise<NextResponse> {
   return withRateLimit(request, apiRateLimiter, async () => {
     try {
+      const logger = getServerLogger().forRequestWithHeaders(request)
+      const timerStart = Date.now()
       const { userId } = await auth()
 
       if (!userId) return unauthorized()
@@ -194,11 +209,20 @@ export async function DELETE(
       try {
         await deleteEvidenceFile(filePath)
       } catch (e) {
+        logger.error('file.delete.error', e instanceof Error ? e : new Error('Unknown storage error'), { path: filePath })
         return createErrorResponse(new Error('Storage deletion failed'), 502)
       }
 
+      logger.info('file.deleted', {
+        path: filePath,
+        userId,
+        durationMs: Date.now() - timerStart,
+      })
+
       return createSuccessResponse({ message: 'File deleted' })
     } catch (error) {
+      const logger = getServerLogger()
+      logger.error('file.delete.unhandled', error instanceof Error ? error : new Error('Unknown error'))
       return createErrorResponse(new Error('Failed to delete file'), 500)
     }
   })
