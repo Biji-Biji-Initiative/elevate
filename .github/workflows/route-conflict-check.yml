@@ -174,13 +174,14 @@ jobs:
           
           log "📊 Step 4: Checking for duplicate route paths..."
           
-          # Extract route paths and check for duplicates
+          # Extract route paths and check for duplicates (scoped per app)
           declare -A route_paths
           
           if [[ -n "$route_files" ]]; then
             while IFS= read -r route_file; do
               # Extract route path from file structure
               app_path=$(echo "$route_file" | sed 's|apps/[^/]*/app||' | sed 's|/[^/]*$||')
+              app_name=$(echo "$route_file" | awk -F'/' '{print $2}')
               
               # Normalize path (remove leading/trailing slashes, handle special cases)
               normalized_path=$(echo "$app_path" | sed 's|^/||' | sed 's|/$||')
@@ -190,15 +191,16 @@ jobs:
                 normalized_path="/"
               fi
               
-              # Check if this path already exists
-              if [[ -n "${route_paths[$normalized_path]:-}" ]]; then
-                log "❌ DUPLICATE: Route path '$normalized_path' exists in multiple places"
-                log "  - ${route_paths[$normalized_path]}"
+              # Scope duplicate detection per app to avoid cross-app false positives
+              route_key="$app_name:$normalized_path"
+              if [[ -n "${route_paths[$route_key]:-}" ]]; then
+                log "❌ DUPLICATE: Route path '$normalized_path' in app '$app_name' exists in multiple places"
+                log "  - ${route_paths[$route_key]}"
                 log "  - $route_file"
                 conflicts_found=true
-                duplicate_routes+=("$normalized_path: ${route_paths[$normalized_path]} and $route_file")
+                duplicate_routes+=("$app_name:$normalized_path: ${route_paths[$route_key]} and $route_file")
               else
-                route_paths[$normalized_path]=$route_file
+                route_paths[$route_key]=$route_file
               fi
             done <<< "$route_files"
           fi
