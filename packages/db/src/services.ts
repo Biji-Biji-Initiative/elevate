@@ -546,17 +546,25 @@ export async function getStageMetrics() {
 
 // Kajabi integration operations
 export async function createKajabiEvent(data: {
-  id: string
-  payload: Prisma.InputJsonValue
-  user_match?: string | null
-  processed_at?: Date | null
+  event_id: string
+  tag_name_raw: string
+  tag_name_norm: string
+  contact_id: string
+  email?: string | null
+  created_at_utc: Date
+  status: string
+  raw: Prisma.InputJsonValue
 }): Promise<KajabiEvent> {
   return await prisma.kajabiEvent.create({
     data: {
-      id: data.id,
-      payload: data.payload,
-      user_match: data.user_match ?? null,
-      processed_at: data.processed_at ?? null,
+      event_id: data.event_id,
+      tag_name_raw: data.tag_name_raw,
+      tag_name_norm: data.tag_name_norm,
+      contact_id: data.contact_id,
+      email: data.email ?? null,
+      created_at_utc: data.created_at_utc,
+      status: data.status,
+      raw: data.raw,
     },
   })
 }
@@ -564,24 +572,16 @@ export async function createKajabiEvent(data: {
 export async function findKajabiEventByExternalId(
   externalId: string,
 ): Promise<KajabiEvent | null> {
-  return await prisma.kajabiEvent.findUnique({
-    where: { id: externalId },
+  return await prisma.kajabiEvent.findFirst({
+    where: { event_id: externalId },
   })
 }
 
 export async function findKajabiEvents(limit = 50): Promise<KajabiEvent[]> {
   return await prisma.kajabiEvent.findMany({
-    orderBy: { received_at: 'desc' },
+    orderBy: { created_at_utc: 'desc' },
     take: limit,
   })
-}
-
-type KajabiEventAggregate = {
-  _count: {
-    id: number
-    processed_at: number
-    user_match: number
-  }
 }
 
 export async function getKajabiEventStats(): Promise<{
@@ -590,19 +590,27 @@ export async function getKajabiEventStats(): Promise<{
   matched_users: number
   unmatched_events: number
 }> {
-  const stats = (await prisma.kajabiEvent.aggregate({
+  const stats = await prisma.kajabiEvent.aggregate({
     _count: {
       id: true,
-      processed_at: true,
-      user_match: true,
+      email: true,
+      status: true,
     },
-  })) as KajabiEventAggregate
+  })
+
+  const processedCount = await prisma.kajabiEvent.count({
+    where: { status: 'processed' },
+  })
+
+  const matchedCount = await prisma.kajabiEvent.count({
+    where: { email: { not: null } },
+  })
 
   return {
-    total_events: stats._count.id,
-    processed_events: stats._count.processed_at,
-    matched_users: stats._count.user_match,
-    unmatched_events: stats._count.id - stats._count.user_match,
+    total_events: stats._count.id || 0,
+    processed_events: processedCount,
+    matched_users: matchedCount,
+    unmatched_events: (stats._count.id || 0) - matchedCount,
   }
 }
 
@@ -902,6 +910,7 @@ export async function bulkUpdateSubmissionsWithTransaction(data: {
             activity_code: submission.activity_code,
             delta_points: pointsData.delta_points,
             source: pointsData.source,
+            event_time: new Date(),
           },
         }),
       )
