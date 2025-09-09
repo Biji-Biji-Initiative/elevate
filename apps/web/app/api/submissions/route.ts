@@ -3,51 +3,18 @@ import type { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 
-// Use database service layer instead of direct Prisma
-import {
-  findUserById,
-  findActivityByCode,
-  findSubmissionsByUserAndActivity,
-  countSubmissionsByUserAndActivity,
-  findSubmissionsWithPagination,
-  createSubmission,
-  createSubmissionAttachment,
-  type Submission,
-} from '@elevate/db'
+import { findUserById, findActivityByCode, findSubmissionsByUserAndActivity, countSubmissionsByUserAndActivity, findSubmissionsWithPagination, createSubmission, createSubmissionAttachment, type Submission } from '@elevate/db'
 
 // Import DTO transformers
-import {
-  createSuccessResponse,
-  withApiErrorHandling,
-  type ApiContext,
-} from '@elevate/http'
+import { createSuccessResponse, withApiErrorHandling, type ApiContext } from '@elevate/http'
+import { getServerLogger } from '@elevate/logging/server'
 import { withCSRFProtection } from '@elevate/security/csrf'
-import {
-  submissionRateLimiter,
-  withRateLimit,
-} from '@elevate/security/rate-limiter'
+import { submissionRateLimiter, withRateLimit } from '@elevate/security/rate-limiter'
 import { sanitizeSubmissionPayload } from '@elevate/security/sanitizer'
-import {
-  SubmissionCreateRequestSchema,
-  parseActivityCode,
-  parseSubmissionStatus,
-  parseAmplifyPayload,
-  parseSubmissionPayload,
-  type SubmissionWhereClause,
-  AuthenticationError,
-  AuthorizationError,
-  NotFoundError,
-  ValidationError,
-  SubmissionLimitError,
-  LEARN,
-  AMPLIFY,
-  VISIBILITY_OPTIONS,
-  SUBMISSION_STATUSES,
-} from '@elevate/types'
-import {
-  transformPayloadAPIToDB,
-  transformPayloadDBToAPI,
-} from '@elevate/types/dto-mappers'
+import { SubmissionCreateRequestSchema, parseActivityCode, parseSubmissionStatus, parseAmplifyPayload, parseSubmissionPayload, AuthenticationError, AuthorizationError, NotFoundError, ValidationError, SubmissionLimitError, LEARN, AMPLIFY, VISIBILITY_OPTIONS, SUBMISSION_STATUSES, type SubmissionWhereClause } from '@elevate/types'
+import { transformPayloadAPIToDB, transformPayloadDBToAPI } from '@elevate/types/dto-mappers'
+
+ 
 
 export const runtime = 'nodejs'
 
@@ -58,6 +25,8 @@ export const POST = withCSRFProtection(
   withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
     // Apply rate limiting for submissions
     return withRateLimit(request, submissionRateLimiter, async () => {
+      const logger = getServerLogger().forRequestWithHeaders(request)
+      const t0 = Date.now()
       const { userId } = await auth()
 
       if (!userId) {
@@ -273,7 +242,7 @@ export const POST = withCSRFProtection(
         }
       }
 
-      return createSuccessResponse(
+      const response = createSuccessResponse(
         {
           id: submission.id,
           activityCode: submission.activity_code,
@@ -284,12 +253,18 @@ export const POST = withCSRFProtection(
         },
         201,
       )
+      logger.info('submission.created', {
+        activityCode: submission.activity_code,
+        userId,
+        durationMs: Date.now() - t0,
+      })
+      return response
     })
   }),
 )
 
 export const GET = withApiErrorHandling(
-  async (request: NextRequest, context: ApiContext) => {
+  async (request: NextRequest, _context: ApiContext) => {
     const { userId } = await auth()
 
     if (!userId) {
@@ -320,13 +295,15 @@ export const GET = withApiErrorHandling(
       }
     }
 
+    const logger = getServerLogger().forRequestWithHeaders(request)
+    const t0 = Date.now()
     const { submissions, totalCount } = await findSubmissionsWithPagination(
       whereClause,
       limit,
       offset,
     )
 
-    return createSuccessResponse({
+    const resp = createSuccessResponse({
       data: submissions.map((submission) => ({
         id: submission.id,
         activityCode: submission.activity_code,
@@ -350,5 +327,14 @@ export const GET = withApiErrorHandling(
         hasMore: offset + limit < totalCount,
       },
     })
+    logger.info('submission.list', {
+      userId,
+      activityCode: whereClause.activity_code,
+      status: whereClause.status,
+      limit,
+      offset,
+      durationMs: Date.now() - t0,
+    })
+    return resp
   },
 )
