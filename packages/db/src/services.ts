@@ -573,19 +573,27 @@ export async function findKajabiEvents(
   })
 }
 
+type KajabiEventAggregate = {
+  _count: {
+    id: number
+    processed_at: number
+    user_match: number
+  }
+}
+
 export async function getKajabiEventStats(): Promise<{
   total_events: number
   processed_events: number
   matched_users: number
   unmatched_events: number
 }> {
-  const stats = await prisma.kajabiEvent.aggregate({
+  const stats = (await prisma.kajabiEvent.aggregate({
     _count: {
       id: true,
       processed_at: true,
       user_match: true,
     },
-  })
+  })) as KajabiEventAggregate
 
   return {
     total_events: stats._count.id,

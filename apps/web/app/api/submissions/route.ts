@@ -1,9 +1,10 @@
-import type { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server';
 
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 
-import {
+// Use database service layer instead of direct Prisma
+import { 
   findUserById,
   findActivityByCode,
   findSubmissionsByUserAndActivity,
@@ -11,31 +12,30 @@ import {
   findSubmissionsWithPagination,
   createSubmission,
   createSubmissionAttachment,
-  type Submission,
+  type Submission
 } from '@elevate/db'
-import {
-  createSuccessResponse,
-  withApiErrorHandling,
-  type ApiContext,
-} from '@elevate/http'
+
+// Import DTO transformers
+import { createSuccessResponse, withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { withCSRFProtection } from '@elevate/security/csrf'
 import { submissionRateLimiter, withRateLimit } from '@elevate/security/rate-limiter'
 import { sanitizeSubmissionPayload } from '@elevate/security/sanitizer'
-import {
+import { 
   SubmissionCreateRequestSchema,
-  parseActivityCode,
-  parseSubmissionStatus,
+  parseActivityCode, 
+  parseSubmissionStatus, 
   parseAmplifyPayload,
   parseSubmissionPayload,
   type SubmissionWhereClause,
   AuthenticationError,
+  AuthorizationError,
   NotFoundError,
   ValidationError,
   SubmissionLimitError,
   LEARN,
   AMPLIFY,
   VISIBILITY_OPTIONS,
-  SUBMISSION_STATUSES,
+  SUBMISSION_STATUSES
 } from '@elevate/types'
 import { transformPayloadAPIToDB, transformPayloadDBToAPI } from '@elevate/types/dto-mappers'
 
@@ -58,6 +58,10 @@ export const POST = withCSRFProtection(withApiErrorHandling(async (request: Next
 
   if (!user) {
     throw new NotFoundError('User', userId, context.traceId)
+  }
+
+  if (user.user_type === 'STUDENT') {
+    throw new AuthorizationError('Student accounts are not eligible to submit', context.traceId)
   }
 
   const body: unknown = await request.json()
@@ -218,7 +222,7 @@ export const POST = withCSRFProtection(withApiErrorHandling(async (request: Next
   })
 }))
 
-export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
+export const GET = withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
   const { userId } = await auth()
   
   if (!userId) {

@@ -122,7 +122,7 @@ export interface SafeSelectProps {
 }
 
 // Status types with type guards
-export const STATUS_VALUES = ['PENDING', 'APPROVED', 'REJECTED', 'PUBLIC', 'PRIVATE'] as const
+export const STATUS_VALUES = ['PENDING', 'APPROVED', 'REJECTED', 'REVOKED', 'PUBLIC', 'PRIVATE'] as const
 export type StatusValue = typeof STATUS_VALUES[number]
 
 export function isStatusValue(value: unknown): value is StatusValue {

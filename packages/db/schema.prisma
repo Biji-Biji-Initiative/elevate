@@ -15,12 +15,14 @@ model User {
   email             String         @unique
   avatar_url        String?
   role              Role           @default(PARTICIPANT)
+  user_type         UserType       @default(EDUCATOR)
   school            String?
   cohort            String?
   kajabi_contact_id String?        @unique
   created_at        DateTime       @default(now())
   earned_badges     EarnedBadge[]
   ledger            PointsLedger[]
+  learn_tag_grants  LearnTagGrant[]
   submissions       Submission[]
   reviewed_submissions Submission[] @relation("ReviewedSubmissions")
 
@@ -48,6 +50,7 @@ model Submission {
   reviewer_id     String?
   reviewer        User?                  @relation("ReviewedSubmissions", fields: [reviewer_id], references: [id])
   review_note     String?
+  approval_org_timezone String?
   created_at      DateTime               @default(now())
   updated_at      DateTime               @updatedAt
   activity        Activity               @relation(fields: [activity_code], references: [code], onDelete: Cascade)
@@ -64,12 +67,15 @@ model PointsLedger {
   source            LedgerSource
   delta_points      Int
   external_source   String?
-  external_event_id String?      @unique
+  external_event_id String?
+  event_time        DateTime
+  meta              Json         @default("{}")
   created_at        DateTime     @default(now())
   activity          Activity     @relation(fields: [activity_code], references: [code], onDelete: Cascade)
   user              User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  @@index([user_id, activity_code])
+  @@index([user_id, activity_code], map: "ix_points_ledger_user_activity")
+  @@index([activity_code, external_source, event_time], map: "ix_points_ledger_activity_source_time")
   @@map("points_ledger")
 }
 
@@ -92,18 +98,34 @@ model EarnedBadge {
   badge      Badge    @relation(fields: [badge_code], references: [code], onDelete: Cascade)
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
-  @@unique([user_id, badge_code])
+  @@unique([user_id, badge_code], map: "ux_earned_badges_user_code")
   @@index([badge_code])
   @@map("earned_badges")
 }
 
-model KajabiEvent {
-  id           String    @id
-  received_at  DateTime  @default(now())
-  payload      Json
-  processed_at DateTime?
-  user_match   String?
+model LearnTagGrant {
+  user_id   String
+  tag_name  String   @db.Citext
+  granted_at DateTime @default(now())
+  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
+  @@id([user_id, tag_name])
+  @@map("learn_tag_grants")
+}
+
+model KajabiEvent {
+  id             String   @id @default(cuid())
+  event_id       String
+  tag_name_raw   String
+  tag_name_norm  String   @db.Citext
+  contact_id     String
+  email          String?
+  created_at_utc DateTime
+  status         String
+  raw            Json
+
+  @@unique([event_id, tag_name_norm], map: "ux_kajabi_event_tag")
+  @@index([status, created_at_utc], map: "ix_kajabi_events_status_time")
   @@map("kajabi_events")
 }
 
@@ -140,10 +162,16 @@ enum Role {
   SUPERADMIN
 }
 
+enum UserType {
+  EDUCATOR
+  STUDENT
+}
+
 enum SubmissionStatus {
   PENDING
   APPROVED
   REJECTED
+  REVOKED
 }
 
 enum Visibility {

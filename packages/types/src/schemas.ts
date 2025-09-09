@@ -23,6 +23,19 @@ export const AmplifySchema = z.object({
   peers_trained: z.number().int().min(0).max(50), // DB storage format: snake_case
   students_trained: z.number().int().min(0).max(200), // DB storage format: snake_case
   attendance_proof_files: z.array(z.string()).optional(), // DB storage format: snake_case
+  session_date: z.string(),
+  session_start_time: z.string().optional(),
+  duration_minutes: z.number().int().min(0).optional(),
+  location: z
+    .object({
+      venue: z.string().optional(),
+      city: z.string().optional(),
+      country: z.string().optional(),
+    })
+    .optional(),
+  session_title: z.string().optional(),
+  co_facilitators: z.array(z.string()).optional(),
+  evidence_note: z.string().optional(),
 })
 
 export const PresentSchema = z.object({

@@ -8,6 +8,7 @@ import { prisma } from '@elevate/db/client'
 import { getKajabiClient, enrollUserInKajabi } from '@elevate/integrations'
 import { withRateLimit, webhookRateLimiter } from '@elevate/security'
 import { parseRole, parseClerkWebhook } from '@elevate/types'
+import { clerkClient } from '@clerk/nextjs/server'
 
 import type { WebhookEvent } from '@clerk/nextjs/server'
 import type { Role, Prisma } from '@prisma/client'
@@ -168,6 +169,7 @@ export async function POST(req: NextRequest) {
           const publicMetadata = parseClerkPublicMetadata(public_metadata)
           const userRole =
             parseRole(publicMetadata.role) || ('PARTICIPANT' as Role)
+          const userType = publicMetadata.user_type || 'EDUCATOR'
 
           // Upsert user in database
           const updateData: {
@@ -175,12 +177,14 @@ export async function POST(req: NextRequest) {
             email: string
             avatar_url: string | null
             role: Role
+            user_type: string
             handle?: string
           } = {
             name,
             email,
             avatar_url: image_url || null,
             role: userRole,
+            user_type: userType,
           }
 
           // Only include handle field for user creation events
@@ -198,8 +202,21 @@ export async function POST(req: NextRequest) {
               email,
               avatar_url: image_url || null,
               role: userRole,
+              user_type: userType,
             },
           })
+
+          // Mirror user_type to Clerk if missing or different
+          if (publicMetadata.user_type !== userType) {
+            try {
+              const client = await clerkClient()
+              await client.users.updateUser(id, {
+                publicMetadata: { ...public_metadata, user_type: userType },
+              })
+            } catch {
+              // ignore
+            }
+          }
 
           // Enroll user in Kajabi on registration
           if (eventType === 'user.created') {
