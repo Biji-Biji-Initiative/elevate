@@ -207,6 +207,7 @@
       "react-dom": "19.1.1",
       "typescript": "5.9.2",
       "eslint": "^9.0.0",
+      "@microsoft/api-extractor": "7.45.1",
       "prisma": "6.15.0",
       "@prisma/client": "6.15.0",
       "esbuild": ">=0.25.0",
