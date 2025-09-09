@@ -1,35 +1,36 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
-// Use database service layer instead of direct Prisma client import
-import { prisma } from '@elevate/db' // Still used by analytics helper functions
-import { computeApprovalRate, computeActivationRate, buildActivityNameMap, mapActivityDistribution, computeDailySubmissionStats, mapPointsByActivityDistribution, mapPointsDistributionFromUserTotals, mapTopBadges, mapReviewerPerformance } from '@elevate/logic'
+import { prisma } from '@elevate/db'
+import { createSuccessResponse } from '@elevate/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import { parseActivityCode, AnalyticsQuerySchema, createSuccessResponse } from '@elevate/types'
-import type {
-  AnalyticsDateFilter,
-  AnalyticsCohortFilter,
-  AnalyticsSubmissionFilter,
-  AnalyticsUserFilter,
-  SubmissionStats,
-  UserAnalyticsStats,
-  PointsStats,
-  BadgeStats,
-  ReviewStats,
-  StatusDistribution,
-  ActivityDistribution,
-  ActivityCode,
-  RoleDistribution,
-  CohortDistribution,
-  PointsActivityDistribution,
-  PointsDistributionStats,
-  DailySubmissionStats,
-  DailyRegistrationStats,
-  RecentSubmission,
-  RecentApproval,
-  RecentUser,
-  ReviewerPerformance,
-  TopBadge
+import { computeApprovalRate, computeActivationRate, buildActivityNameMap, mapActivityDistribution, computeDailySubmissionStats, mapPointsByActivityDistribution, mapPointsDistributionFromUserTotals, mapTopBadges, mapReviewerPerformance } from '@elevate/logic'
+import {
+  parseActivityCode,
+  AnalyticsQuerySchema,
+  type AnalyticsDateFilter,
+  type AnalyticsCohortFilter,
+  type AnalyticsSubmissionFilter,
+  type AnalyticsUserFilter,
+  type SubmissionStats,
+  type UserAnalyticsStats,
+  type PointsStats,
+  type BadgeStats,
+  type ReviewStats,
+  type StatusDistribution,
+  type ActivityDistribution,
+  type ActivityCode,
+  type RoleDistribution,
+  type CohortDistribution,
+  type PointsActivityDistribution,
+  type PointsDistributionStats,
+  type DailySubmissionStats,
+  type DailyRegistrationStats,
+  type RecentSubmission,
+  type RecentApproval,
+  type RecentUser,
+  type ReviewerPerformance,
+  type TopBadge,
 } from '@elevate/types'
 
 export const runtime = 'nodejs';
@@ -37,7 +38,7 @@ export const runtime = 'nodejs';
 export async function GET(request: NextRequest) {
   return withRateLimit(request, adminRateLimiter, async () => {
   try {
-    const user = await requireRole('reviewer')
+    await requireRole('reviewer')
     const { searchParams } = new URL(request.url)
     const parsed = AnalyticsQuerySchema.safeParse(Object.fromEntries(searchParams))
     if (!parsed.success) {

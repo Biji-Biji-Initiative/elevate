@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { z } from 'zod'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
-import { Prisma, prisma } from '@elevate/db'
+import { prisma, type Prisma } from '@elevate/db'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import { BadgeSchema, toPrismaJson, parseBadgeAuditMeta, buildAuditMeta , createSuccessResponse } from '@elevate/types'
 

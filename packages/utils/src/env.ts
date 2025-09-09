@@ -329,12 +329,28 @@ export function validateSupabaseConfig(): void {
   getRequiredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', isValidJWT)
   getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY', isValidJWT)
 
-  // Ensure URL is a proper Supabase URL
-  if (!supabaseUrl.match(/^https:\/\/[a-z0-9]+\.supabase\.co$/)) {
-    throw new InvalidEnvironmentVariableError(
-      'NEXT_PUBLIC_SUPABASE_URL',
-      'valid Supabase project URL (https://project.supabase.co)',
-    )
+  // Allow localhost Supabase URL in development; enforce hosted URL in production
+  const isHostedSupabase = /^https:\/\/[a-z0-9]+\.supabase\.co$/.test(
+    supabaseUrl,
+  )
+  const isLocalSupabase = /^http:\/\/localhost:\d+$/.test(supabaseUrl)
+
+  if (isProduction()) {
+    if (!isHostedSupabase) {
+      throw new InvalidEnvironmentVariableError(
+        'NEXT_PUBLIC_SUPABASE_URL',
+        'hosted Supabase project URL in production (https://project.supabase.co)',
+        supabaseUrl,
+      )
+    }
+  } else {
+    if (!isHostedSupabase && !isLocalSupabase) {
+      throw new InvalidEnvironmentVariableError(
+        'NEXT_PUBLIC_SUPABASE_URL',
+        'valid Supabase URL (https://project.supabase.co) or http://localhost:<port> in development',
+        supabaseUrl,
+      )
+    }
   }
 }
 

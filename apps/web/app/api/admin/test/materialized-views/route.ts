@@ -1,7 +1,6 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
 
 import { auth } from '@clerk/nextjs/server'
-import { Prisma } from '@prisma/client'
 
 import { withRole } from '@elevate/auth'
 import { prisma } from '@elevate/db/client'

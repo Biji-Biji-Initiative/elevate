@@ -1,13 +1,8 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { prisma } from '@elevate/db/client'
-import {
-  parseAmplifyPayload,
-  parseActivityCode,
-  type ActivityCode,
-  createSuccessResponse,
-  createErrorResponse,
-} from '@elevate/types'
+import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { parseAmplifyPayload, parseActivityCode, type ActivityCode } from '@elevate/types'
 
 export const runtime = 'nodejs'
 

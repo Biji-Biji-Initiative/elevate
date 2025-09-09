@@ -1,5 +1,6 @@
 // Analytics tracking helper for homepage events
 // Safely calls gtag when Google Analytics is available
+import { useEffect } from 'react'
 
 declare global {
   interface Window {
@@ -81,8 +82,6 @@ export const analytics = {
 }
 
 // Hook for scroll depth tracking
-import { useEffect } from 'react'
-
 export function useScrollDepthTracking() {
   useEffect(() => {
     if (typeof window === 'undefined') return

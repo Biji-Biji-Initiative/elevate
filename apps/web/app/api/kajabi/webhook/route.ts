@@ -1,32 +1,25 @@
 import crypto from 'crypto'
 
 import { headers } from 'next/headers'
-import { NextResponse, type NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { prisma } from '@elevate/db/client'
+import { createSuccessResponse, withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { withRateLimit, webhookRateLimiter } from '@elevate/security'
 import {
   parseKajabiWebhook,
-  parseWebhookHeaders,
   safeGet,
   isString,
-  toJsonValue,
   toPrismaJson,
   buildAuditMeta,
   type KajabiTagEvent,
   ElevateApiError,
-  ValidationError,
   ACTIVITY_CODES,
   SUBMISSION_STATUSES,
   VISIBILITY_OPTIONS,
-  LEDGER_SOURCES
-,
-  createSuccessResponse,
-  createErrorResponse,
-  withApiErrorHandling,
-  generateTraceId,
-  type ApiContext,
+  LEDGER_SOURCES,
 } from '@elevate/types'
+// (moved @elevate/http import above to satisfy import/order)
 
 // Local wrapper to ensure type safety for object inputs
 function toPrismaJsonObject(
@@ -281,7 +274,10 @@ async function processTagEvent(eventData: KajabiTagEvent, eventId: string) {
           // processed_at and user_match omitted (will be null by default)
         },
       })
-    } catch (dbError) {}
+    } catch (dbError) {
+      // Intentionally ignore database errors when logging failed events
+      // The original error should still be thrown to maintain error handling
+    }
 
     throw error
   }
@@ -291,8 +287,7 @@ export const POST = withApiErrorHandling(
   async (request: NextRequest, context: ApiContext) => {
     // Apply rate limiting first
     return withRateLimit(request, webhookRateLimiter, async () => {
-      try {
-        const body = await request.text()
+      const body = await request.text()
         const headersList = await headers()
 
         // Parse JSON first (we'll validate specific schemas by event type)
@@ -461,10 +456,6 @@ export const POST = withApiErrorHandling(
               processed_at: new Date().toISOString(),
             })
         }
-      } catch (error) {
-        // Re-throw the error to be handled by withApiErrorHandling
-        throw error
-      }
     })
   },
 )

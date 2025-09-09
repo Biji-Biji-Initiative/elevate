@@ -1,59 +1,43 @@
-import bundleAnalyzer from '@next/bundle-analyzer';
-import createNextIntlPlugin from 'next-intl/plugin';
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+import bundleAnalyzer from '@next/bundle-analyzer'
+import createNextIntlPlugin from 'next-intl/plugin'
+
 import { getSecurityHeaders } from '@elevate/config/next'
 
-const withNextIntl = createNextIntlPlugin('./i18n.ts');
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const withNextIntl = createNextIntlPlugin('./i18n.ts')
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
-});
+})
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Remove X-Powered-By header for security
   poweredByHeader: false,
-  
+
   // React 19 and Next.js 15 configuration with Turbopack
   experimental: {
     reactCompiler: false, // Disable React Compiler for now
-    // Enable Turbopack for faster builds
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-      resolveAlias: {
-        // Optimize package resolution for faster builds
-        '@elevate/ui': './packages/ui/src',
-        '@elevate/types': './packages/types/src',
-        '@elevate/auth': './packages/auth/src',
-        '@elevate/db': './packages/db/src',
-        '@elevate/storage': './packages/storage/src',
-        '@elevate/logic': './packages/logic/src',
-        '@elevate/config': './packages/config/src',
-        '@elevate/security': './packages/security/src',
-        '@elevate/integrations': './packages/integrations/src',
-      },
-      memoryLimit: 4096,
-      // Enable faster development builds
-      resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
-      loaders: {
-        '.ts': 'tsx',
-        '.tsx': 'tsx'
-      },
-    },
     // Development optimizations
     optimizePackageImports: [
       '@elevate/ui',
-      '@elevate/types', 
+      '@elevate/types',
       '@elevate/auth',
       '@radix-ui/react-dialog',
       '@radix-ui/react-select',
-      'lucide-react'
+      'lucide-react',
     ],
     // Enable faster builds with SWC (moved from forceSwcTransforms which is deprecated)
     // swcTraceProfiling is deprecated and removed
+  },
+
+  // Turbopack configuration: rely on package entrypoints only
+  turbopack: {
+    resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
   },
 
   // Transpile internal packages with React
@@ -68,9 +52,9 @@ const nextConfig = {
     '@elevate/security',
     '@elevate/integrations',
     '@elevate/logic',
-    '@elevate/config'
+    '@elevate/config',
   ],
-  
+
   // ESLint configuration
   eslint: {
     // Use the root ESLint config
@@ -79,16 +63,12 @@ const nextConfig = {
 
   // Build optimizations
   serverExternalPackages: ['@prisma/client', 'bcryptjs'],
-  outputFileTracing: true,
-  
+
   // TypeScript configuration
   typescript: {
     // Enable type checking in development
     tsconfigPath: './tsconfig.json',
   },
-
-  // SWC minification
-  swcMinify: true,
 
   // Image configuration
   images: {
@@ -99,7 +79,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.clerk.dev' },
       { protocol: 'https', hostname: 'img.clerk.com' },
       // Common CDNs (tighten over time as needed)
-      { protocol: 'https', hostname: 'res.cloudinary.com' }
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
 
@@ -127,7 +107,7 @@ const nextConfig = {
         source: '/api/profile/:handle',
         destination: '/u/:handle',
         permanent: true,
-      }
+      },
     ]
   },
 
@@ -169,11 +149,11 @@ const nextConfig = {
             },
           },
         },
-      };
+      }
     }
-    
-    return config;
+
+    return config
   },
 }
 
-export default withNextIntl(withBundleAnalyzer(nextConfig));
+export default withNextIntl(withBundleAnalyzer(nextConfig))

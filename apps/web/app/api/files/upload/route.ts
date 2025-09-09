@@ -1,16 +1,12 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 
+import { createSuccessResponse, withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { fileUploadRateLimiter, withRateLimit } from '@elevate/security/rate-limiter'
 import { saveEvidenceFile, FileValidationError } from '@elevate/storage'
-import { 
-  parseActivityCode,
-  createSuccessResponse,
-  withApiErrorHandling,
-  badRequest
-} from '@elevate/types'
+import { parseActivityCode } from '@elevate/types'
 import {
   AuthenticationError,
   ValidationError,
@@ -19,7 +15,7 @@ import {
 
 export const runtime = 'nodejs';
 
-export const POST = withApiErrorHandling(async (request: NextRequest, context) => {
+export const POST = withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
   // Apply rate limiting for file uploads
   return withRateLimit(request, fileUploadRateLimiter, async () => {
     const { userId } = await auth()
@@ -80,6 +76,6 @@ export const POST = withApiErrorHandling(async (request: NextRequest, context) =
   })
 })
 
-export const GET = withApiErrorHandling(async (request: NextRequest, context) => {
+export const GET = withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
   throw new ElevateApiError('Method not allowed', 'INVALID_INPUT', undefined, context.traceId)
 })

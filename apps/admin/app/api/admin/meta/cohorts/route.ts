@@ -1,5 +1,4 @@
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { Prisma, prisma } from '@elevate/db'

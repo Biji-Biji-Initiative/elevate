@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import { adminClient, AdminClientError, type KajabiEvent, type KajabiStats } from '@/lib/admin-client'
 import { withRoleGuard } from '@elevate/auth/context';
@@ -16,11 +16,7 @@ function KajabiPage() {
   const [testLoading, setTestLoading] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message?: string; test_mode?: boolean; data?: Record<string, unknown> } | null>(null);
 
-  useEffect(() => {
-    void fetchKajabiData();
-  }, []);
-
-  const fetchKajabiData = async () => {
+  const fetchKajabiData = useCallback(async () => {
     setError(null)
     try {
       const data = await adminClient.getKajabi()
@@ -37,7 +33,11 @@ function KajabiPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void fetchKajabiData();
+  }, [fetchKajabiData]);
 
   const handleTestWebhook = async () => {
     if (!testEmail) {

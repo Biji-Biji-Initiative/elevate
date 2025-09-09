@@ -1,7 +1,6 @@
 import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 
-import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
+import { requireRole } from '@elevate/auth/server-helpers';
 // Use database service layer instead of direct Prisma
 import { 
   findKajabiEvents,
@@ -9,7 +8,7 @@ import {
   getKajabiPointsAwarded
 } from '@elevate/db';
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import { createSuccessResponse } from '@elevate/types'
+import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 
 export const runtime = 'nodejs';
 

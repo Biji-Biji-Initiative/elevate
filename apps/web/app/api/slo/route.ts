@@ -1,5 +1,4 @@
 import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { sloMonitor } from '@elevate/logging'

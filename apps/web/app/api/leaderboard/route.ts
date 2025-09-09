@@ -4,19 +4,15 @@ import { type NextRequest, type NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 
 import { 
-  getLeaderboardData, 
-  get30DayLeaderboardData,
   findEarnedBadgesByUserIds,
   prisma
 } from '@elevate/db'
-
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { LeaderboardQuerySchema } from '@elevate/types'
 import { 
   mapRawLeaderboardEntryToDTO,
   type LeaderboardEntryDTO 
 } from '@elevate/types/dto-mappers'
-import { ValidationError } from '@elevate/types/errors'
 
 export const runtime = 'nodejs'
 
@@ -146,7 +142,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       if (!acc[earnedBadge.user_id]) {
         acc[earnedBadge.user_id] = []
       }
-      acc[earnedBadge.user_id]!.push({
+      acc[earnedBadge.user_id].push({
         badge: {
           code: earnedBadge.badge.code,
           name: earnedBadge.badge.name,

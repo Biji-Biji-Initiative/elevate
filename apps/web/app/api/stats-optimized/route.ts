@@ -1,12 +1,10 @@
-import { NextResponse, type NextRequest } from 'next/server'
-
-import { Prisma } from '@prisma/client'
+import { type NextRequest } from 'next/server'
 
 import { prisma } from '@elevate/db/client'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { getServerLogger } from '@elevate/logging/server'
 import { formatActivityBreakdown, formatCohortPerformanceStats, formatMonthlyGrowthStats } from '@elevate/logic'
-import { parseAmplifyPayload, type ActivityCode } from '@elevate/types'
+import { type ActivityCode } from '@elevate/types'
 
 
 export const runtime = 'nodejs'

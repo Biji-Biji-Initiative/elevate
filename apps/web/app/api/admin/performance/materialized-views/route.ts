@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { auth } from '@clerk/nextjs/server'
 import { Prisma } from '@prisma/client'
@@ -7,6 +7,11 @@ import { withRole } from '@elevate/auth'
 import { prisma } from '@elevate/db/client'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { getServerLogger } from '@elevate/logging'
+// Local error wrapper to avoid resolver issues
+function wrapError(err: unknown, message?: string): Error {
+  if (err instanceof Error) return new Error(message ? `${message}: ${err.message}` : err.message)
+  return new Error(message ?? String(err))
+}
 
 export const runtime = 'nodejs'
 
@@ -99,10 +104,14 @@ async function getViewStats(viewName: string): Promise<MaterializedViewStats> {
     WHERE relname = '${Prisma.raw(viewName)}'
   `
 
-  const info = viewInfo[0]!
-  const refresh = refreshStatus[0]!
-  const indexes = indexStats[0]!
-  const queries = queryStats[0]!
+  const info = viewInfo[0]
+  const refresh = refreshStatus[0]
+  const indexes = indexStats[0]
+  const queries = queryStats[0]
+  
+  if (!info || !refresh || !indexes || !queries) {
+    throw new Error(`Failed to retrieve complete stats for view: ${viewName}`)
+  }
 
   // Calculate cache hit ratio
   const totalBlocks = Number(queries.heap_blks_read) + Number(queries.heap_blks_hit)
@@ -266,8 +275,8 @@ export async function GET(request: NextRequest) {
     if (includeBenchmarks) {
       try {
         benchmarks = await runPerformanceBenchmarks()
-      } catch (error) {
-        getServerLogger().error('Performance benchmarks failed', error as Error, {
+      } catch (error: unknown) {
+        getServerLogger().error('Performance benchmarks failed', wrapError(error, 'Performance benchmarks failed'), {
           operation: 'admin_performance_materialized_views',
         })
       }
@@ -276,7 +285,12 @@ export async function GET(request: NextRequest) {
     const response = {
       success: true,
       timestamp: new Date().toISOString(),
-      system_overview: systemStats[0],
+      system_overview: systemStats[0] || {
+        total_materialized_views: 0,
+        total_size_bytes: 0,
+        total_size_pretty: '0 bytes',
+        oldest_refresh: null
+      },
       materialized_views: viewStats,
       performance_benchmarks: benchmarks,
       recommendations: generateRecommendations(viewStats)
@@ -286,11 +300,12 @@ export async function GET(request: NextRequest) {
     res.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
     return res
 
-  } catch (error) {
-    getServerLogger().error('Materialized views performance monitoring failed', error as Error, {
+  } catch (error: unknown) {
+    const wrappedError = wrapError(error, 'Materialized views performance monitoring failed')
+    getServerLogger().error('Materialized views performance monitoring failed', wrappedError, {
       operation: 'admin_performance_materialized_views',
     })
-    return createErrorResponse(new Error('Failed to retrieve performance data'), 500)
+    return createErrorResponse(wrappedError, 500)
   }
 }
 

@@ -5,12 +5,12 @@
  * for monitoring and debugging purposes. Admin app specific handling.
  */
 
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server'
 
 import { createErrorResponse } from '@elevate/http'
 import { getServerLogger } from '@elevate/logging/server'
-import { createCSPReportHandler } from '@elevate/security/security-middleware';
+import { createCSPReportHandler } from '@elevate/security/security-middleware'
+import { wrapError } from '@elevate/utils'
 
 // Create CSP report handler with admin app specific configuration
 const handleCSPReport = createCSPReportHandler({
@@ -86,8 +86,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Process the violation report
     return await handleCSPReport(request);
-  } catch (error) {
-    getServerLogger({ name: 'admin-csp' }).error('Error in Admin CSP report handler', error as Error)
+  } catch (error: unknown) {
+    getServerLogger({ name: 'admin-csp' }).error('Error in Admin CSP report handler', wrapError(error, 'Admin CSP report error'))
     
     // Don't expose internal errors to clients
     return createErrorResponse(new Error('Internal server error'), 500)

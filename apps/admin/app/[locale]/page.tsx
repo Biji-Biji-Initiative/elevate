@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 
 import Link from 'next/link'
 
 import { adminClient, AdminClientError, type OverviewStats, type Distributions, type Trends, type RecentActivity, type Performance } from '@/lib/admin-client'
-import type { AnalyticsQuery } from '@elevate/types'
 import { withRoleGuard } from '@elevate/auth/context'
-import { Button , Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
+import type { AnalyticsQuery } from '@elevate/types'
+import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 import { StatusBadge } from '@elevate/ui/blocks'
 
 interface AnalyticsData {
@@ -17,6 +17,8 @@ interface AnalyticsData {
   recentActivity: RecentActivity
   performance: Performance
 }
+
+const SKELETON_KEYS = ['a','b','c','d','e','f','g','h'] as const
 
 function AdminDashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
@@ -28,24 +30,7 @@ function AdminDashboard() {
     cohort: 'ALL'
   })
 
-  useEffect(() => {
-    void fetchAnalytics()
-  }, [dateRange])
-
-  useEffect(() => {
-    const fetchCohorts = async () => {
-      try {
-        const cohortData = await adminClient.getCohorts()
-        setCohorts(cohortData)
-      } catch (error) {
-        // Cohorts are optional for UI, don't break on fetch failure
-        console.warn('Failed to fetch cohorts:', error instanceof AdminClientError ? error.message : 'Unknown error')
-      }
-    }
-    void fetchCohorts()
-  }, [])
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     setLoading(true)
     try {
       const params: AnalyticsQuery = {
@@ -62,7 +47,24 @@ function AdminDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [dateRange])
+
+  useEffect(() => {
+    void fetchAnalytics()
+  }, [fetchAnalytics])
+
+  useEffect(() => {
+    const fetchCohorts = async () => {
+      try {
+        const cohortData = await adminClient.getCohorts()
+        setCohorts(cohortData)
+      } catch (error) {
+        // Cohorts are optional for UI, don't break on fetch failure
+        console.warn('Failed to fetch cohorts:', error instanceof AdminClientError ? error.message : 'Unknown error')
+      }
+    }
+    void fetchCohorts()
+  }, [])
 
   if (loading) {
     return (
@@ -70,8 +72,8 @@ function AdminDashboard() {
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+            {SKELETON_KEYS.map((k) => (
+              <div key={`skeleton-${k}`} className="h-24 bg-gray-200 rounded"></div>
             ))}
           </div>
         </div>
@@ -107,8 +109,9 @@ function AdminDashboard() {
       <div className="bg-white p-4 rounded-lg border mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <label htmlFor="analytics-start-date" className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
             <input
+              id="analytics-start-date"
               type="date"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={dateRange.startDate}
@@ -116,8 +119,9 @@ function AdminDashboard() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <label htmlFor="analytics-end-date" className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
             <input
+              id="analytics-end-date"
               type="date"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={dateRange.endDate}
@@ -125,9 +129,9 @@ function AdminDashboard() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
+            <label id="analytics-cohort-label" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
             <Select value={dateRange.cohort} onValueChange={(value) => setDateRange(prev => ({ ...prev, cohort: value }))}>
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="analytics-cohort-label">
                 <SelectValue placeholder="Select cohort" />
               </SelectTrigger>
               <SelectContent>

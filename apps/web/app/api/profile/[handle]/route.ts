@@ -7,11 +7,10 @@ import {
 } from '@elevate/db'
 
 // Use DTO transformations
-import { HandleParamSchema } from '@elevate/types'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { HandleParamSchema } from '@elevate/types'
 import { 
-  mapRawUserProfileToDTO,
-  type UserProfileDTO 
+  mapRawUserProfileToDTO
 } from '@elevate/types/dto-mappers'
 
 

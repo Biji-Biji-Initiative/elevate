@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { z } from 'zod'
 
@@ -20,34 +20,33 @@ import {
 import { computePoints } from '@elevate/logic'
 // TODO: Re-enable when @elevate/security package is available
 // import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import { 
-  parseSubmissionStatus, 
-  parseActivityCode, 
-  parseSubmissionPayload, 
-  toPrismaJson, 
-  buildAuditMeta, 
-  ReviewSubmissionSchema, 
-  BulkReviewSubmissionsSchema, 
-  AdminSubmissionsQuerySchema, 
-  type SubmissionWhereClause, 
-  type ActivityCode, 
+import {
+  parseSubmissionStatus,
+  parseActivityCode,
+  parseSubmissionPayload,
+  toPrismaJson,
+  buildAuditMeta,
+  ReviewSubmissionSchema,
+  BulkReviewSubmissionsSchema,
+  AdminSubmissionsQuerySchema,
+  type SubmissionWhereClause,
+  type ActivityCode,
   type ActivityPayload,
-  createSuccessResponse,
-  createErrorResponse,
-  withApiErrorHandling,
   ValidationError,
   NotFoundError,
   ElevateApiError,
   validationError,
   SUBMISSION_STATUSES,
-  LEDGER_SOURCES
+  LEDGER_SOURCES,
 } from '@elevate/types'
+import { createSuccessResponse, withApiErrorHandling } from '@elevate/http'
+import type { ApiContext } from '@elevate/http'
 
 import type { Prisma } from '@prisma/client'
 
 export const runtime = 'nodejs';
 
-export const GET = withApiErrorHandling(async (request: NextRequest, context) => {
+export const GET = withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
   const user = await requireRole('reviewer')
   const { searchParams } = new URL(request.url)
   
@@ -122,7 +121,7 @@ export const GET = withApiErrorHandling(async (request: NextRequest, context) =>
   })
 })
 
-export const PATCH = withApiErrorHandling(async (request: NextRequest, context) => {
+export const PATCH = withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
   const user = await requireRole('reviewer')
   const body = await request.json()
   const parsed = ReviewSubmissionSchema.safeParse(body)
@@ -258,7 +257,7 @@ export const PATCH = withApiErrorHandling(async (request: NextRequest, context) 
 })
 
 // Bulk operations
-export const POST = withApiErrorHandling(async (request: NextRequest, context) => {
+export const POST = withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
   const user = await requireRole('reviewer')
   const body = await request.json()
   const parsed = BulkReviewSubmissionsSchema.safeParse(body)

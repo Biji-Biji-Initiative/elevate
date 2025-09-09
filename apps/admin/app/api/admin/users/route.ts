@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 import { roleToRoleName } from '@elevate/auth'
 import { requireRole, hasRole, createErrorResponse } from '@elevate/auth/server-helpers'
@@ -13,9 +13,6 @@ import {
   prisma // Still need for complex queries and transactions
 } from '@elevate/db'
 import { createSuccessResponse, createErrorResponse as createHttpError } from '@elevate/http'
-
-// Use database service layer instead of direct Prisma
-
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import { parseRole, toPrismaJson, UpdateUserSchema, BulkUpdateUsersSchema, AdminUsersQuerySchema, buildAuditMeta, AdminUserDTOSchema, mapRawAdminUserToDTO } from '@elevate/types'
 

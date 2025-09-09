@@ -78,3 +78,61 @@ export function wrapError(error: unknown, message?: string): Error {
   
   return new Error(message || getErrorMessage(error))
 }
+
+/**
+ * Enhanced error handler for API responses
+ */
+export function handleApiError(error: unknown, operation: string): string {
+  if (isError(error)) {
+    return `${operation} failed: ${error.message}`
+  }
+  
+  if (error && typeof error === 'object') {
+    if ('status' in error && 'message' in error) {
+      return `${operation} failed with status ${error.status}: ${getErrorMessage(error)}`
+    }
+    if ('code' in error) {
+      return `${operation} failed with code ${error.code}: ${getErrorMessage(error)}`
+    }
+  }
+  
+  return `${operation} failed: ${getErrorMessage(error)}`
+}
+
+/**
+ * Type guard for objects with error-like properties
+ */
+export function isErrorLike(value: unknown): value is { message: string; name?: string; stack?: string } {
+  return value !== null && 
+         typeof value === 'object' && 
+         'message' in value && 
+         typeof (value as Record<string, unknown>).message === 'string'
+}
+
+/**
+ * Type guard for HTTP error responses
+ */
+export function isHttpError(value: unknown): value is { status: number; message: string } {
+  return value !== null &&
+         typeof value === 'object' &&
+         'status' in value &&
+         'message' in value &&
+         typeof (value as Record<string, unknown>).status === 'number' &&
+         typeof (value as Record<string, unknown>).message === 'string'
+}
+
+/**
+ * Safe error logging handler
+ */
+export function logError(error: unknown, context?: string): void {
+  const errorMessage = getErrorMessage(error)
+  const logContext = context ? `[${context}]` : ''
+  
+  if (isError(error)) {
+    console.error(`${logContext} Error:`, error.message, error.stack)
+  } else if (isErrorLike(error)) {
+    console.error(`${logContext} Error-like object:`, error.message)
+  } else {
+    console.error(`${logContext} Unknown error:`, errorMessage)
+  }
+}

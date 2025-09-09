@@ -1,13 +1,13 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
+import { SignInButton, SignedOut } from '@clerk/nextjs'
 import { useTranslations } from 'next-intl'
 
+import type { StatsResponseDTO, LeaderboardEntryDTO } from '@elevate/types'
 import {
   StoriesGrid,
   LeaderboardPreview,
@@ -30,7 +30,6 @@ import {
 
 import { analytics, useScrollDepthTracking } from '../../lib/analytics'
 import { getApiClient } from '../../lib/api-client'
-import type { StatsResponseDTO, LeaderboardEntryDTO } from '@elevate/types'
 
 interface PlatformStats {
   totalEducators: number
@@ -356,9 +355,9 @@ export default function Page() {
         countersLoading={loading}
         partnersLogos={
           <div className="flex flex-wrap justify-center items-center gap-8 text-white/70">
-            {['Microsoft', 'MOE', 'Biji-biji', 'Mata Garuda', 'MIEE'].map(
-              (partner: string, index: number) => (
-                <span key={index} className="text-lg font-medium">
+            {(t.raw('partners.list') as string[] || []).map(
+              (partner: string) => (
+                <span key={partner} className="text-lg font-medium">
                   {partner}
                 </span>
               ),
@@ -367,7 +366,17 @@ export default function Page() {
         }
       >
         {/* Leaderboard Preview in Hero */}
-        <div onClick={() => router.push('/leaderboard')} role="link">
+        <div
+          role="link"
+          tabIndex={0}
+          onClick={() => router.push('/leaderboard')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              router.push('/leaderboard')
+            }
+          }}
+        >
           <LeaderboardPreview
             entries={leaderboard}
             loading={loading}
@@ -436,7 +445,7 @@ export default function Page() {
 
       {/* Partners & Contact */}
       <PartnersContact
-        partners={['Microsoft', 'MOE', 'Biji-biji', 'Mata Garuda', 'MIEE']}
+        partners={t.raw('partners.list') as string[] || []}
         contacts={[
           {
             email: 'rashvin@biji-biji.com',

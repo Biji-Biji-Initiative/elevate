@@ -1,11 +1,13 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { auth } from '@clerk/nextjs/server'
 
 import { withRole } from '@elevate/auth'
-import { prisma, Prisma } from '@elevate/db/client'
+import { prisma } from '@elevate/db/client'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
-import { getServerLogger, trackApiRequest, trackDatabaseOperation } from '@elevate/logging'
+import { getServerLogger, trackApiRequest } from '@elevate/logging'
+
+import { normalizeError } from '../../lib/error-utils'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5 minutes for comprehensive benchmarks
@@ -136,9 +138,10 @@ export async function GET(request: NextRequest) {
     res.headers.set('X-Benchmark-Count', benchmarks.length.toString())
     return res
 
-  } catch (error) {
+  } catch (err: unknown) {
     const logger = getServerLogger().forRequestWithHeaders(request)
-    logger.error('Performance benchmark failed', error as Error, {
+    const e = normalizeError(err)
+    logger.error('Performance benchmark failed', new Error(e.message), {
       operation: 'performance_benchmark',
     })
     return createErrorResponse(new Error('Failed to run performance benchmarks'), 500)

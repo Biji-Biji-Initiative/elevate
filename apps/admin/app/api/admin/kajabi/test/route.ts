@@ -1,10 +1,10 @@
 import { randomUUID } from 'crypto';
 
-import { type NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers';
-import { Prisma, prisma } from '@elevate/db';
-import { createSuccessResponse, createErrorResponse as createHttpError } from '@elevate/http'
+import { requireRole } from '@elevate/auth/server-helpers';
+import { prisma, type Prisma } from '@elevate/db';
+import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { KajabiTestSchema, buildAuditMeta } from '@elevate/types'
 
 export const runtime = 'nodejs';
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json();
     const parsed = KajabiTestSchema.safeParse(body)
     if (!parsed.success) {
-      return createHttpError(new Error('Invalid request body'), 400)
+      return createErrorResponse(new Error('Invalid request body'), 400)
     }
     const { user_email, course_name = 'Test Course - Admin Console' } = parsed.data;
 

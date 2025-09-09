@@ -1,4 +1,4 @@
-import { type NextRequest, type NextResponse } from 'next/server'
+import { type NextResponse } from 'next/server'
 
 import { prisma } from '@elevate/db/client'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
@@ -16,8 +16,8 @@ export async function GET(): Promise<NextResponse> {
       'DATABASE_URL',
       'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
       'CLERK_SECRET_KEY',
-      'SUPABASE_URL',
-      'SUPABASE_SERVICE_ROLE',
+      'NEXT_PUBLIC_SUPABASE_URL',
+      'SUPABASE_SERVICE_ROLE_KEY',
     ]
 
     const missingEnvVars = requiredEnvVars.filter(

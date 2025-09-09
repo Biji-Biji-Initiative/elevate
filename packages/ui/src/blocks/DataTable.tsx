@@ -5,26 +5,26 @@ import React, { useState, useMemo, useCallback } from 'react'
 import { Button } from '../components/ui/button'
 
 
-export interface Column<T> {
+export interface Column<T, V = unknown> {
   key: keyof T | string
   header: string
   render?: (row: T) => React.ReactNode
   sortable?: boolean
   width?: string
-  accessor?: (row: T) => unknown
+  accessor?: (row: T) => V
   sortAccessor?: (row: T) => string | number | Date
-  sortComparator?: (a: unknown, b: unknown) => number
+  sortComparator?: (a: V, b: V) => number
 }
 
 // Helper types and factories for strong typing
 export type ColumnOf<T> = Column<T>
 
 // Factory to build typed column arrays with inference
-export const createColumns = <T,>() => <C extends Column<T>[]>(cols: C) => cols
+export const createColumns = <T,>() => <C extends Column<T, unknown>[]>(cols: C) => cols
 
 export interface DataTableProps<T = Record<string, unknown>> {
   data: T[]
-  columns: Column<T>[]
+  columns: Column<T, unknown>[]
   loading?: boolean
   pagination?: {
     page: number

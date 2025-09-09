@@ -1,18 +1,14 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { auth } from '@clerk/nextjs/server'
 
 import { prisma } from '@elevate/db/client'
-import {
-  createSuccessResponse,
-  withApiErrorHandling,
-  AuthenticationError,
-} from '@elevate/http'
+import { createSuccessResponse, withApiErrorHandling, AuthenticationError, type ApiContext } from '@elevate/http'
 
 export const runtime = 'nodejs'
 
 export const GET = withApiErrorHandling(
-  async (request: NextRequest, context) => {
+  async (_request: NextRequest, _context: ApiContext) => {
     const { userId } = await auth()
 
     if (!userId) {

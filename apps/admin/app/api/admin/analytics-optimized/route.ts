@@ -1,44 +1,46 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma, Prisma } from '@elevate/db'
-import { getServerLogger } from '@elevate/logging/server'
+import { createSuccessResponse } from '@elevate/http'
+import { getDefaultLogger } from '@elevate/logging'
 import { computeApprovalRate, computeActivationRate } from '@elevate/logic'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import { parseActivityCode, AnalyticsQuerySchema, createSuccessResponse } from '@elevate/types'
-import type {
-  AnalyticsDateFilter,
-  AnalyticsCohortFilter,
-  AnalyticsSubmissionFilter,
-  AnalyticsUserFilter,
-  SubmissionStats,
-  UserAnalyticsStats,
-  PointsStats,
-  BadgeStats,
-  ReviewStats,
-  StatusDistribution,
-  ActivityDistribution,
-  ActivityCode,
-  RoleDistribution,
-  CohortDistribution,
-  PointsActivityDistribution,
-  PointsDistributionStats,
-  DailySubmissionStats,
-  DailyRegistrationStats,
-  RecentSubmission,
-  RecentApproval,
-  RecentUser,
-  ReviewerPerformance,
-  TopBadge
+import {
+  parseActivityCode,
+  AnalyticsQuerySchema,
+  type AnalyticsDateFilter,
+  type AnalyticsCohortFilter,
+  type AnalyticsSubmissionFilter,
+  type AnalyticsUserFilter,
+  type SubmissionStats,
+  type UserAnalyticsStats,
+  type PointsStats,
+  type BadgeStats,
+  type ReviewStats,
+  type StatusDistribution,
+  type ActivityDistribution,
+  type ActivityCode,
+  type RoleDistribution,
+  type CohortDistribution,
+  type PointsActivityDistribution,
+  type PointsDistributionStats,
+  type DailySubmissionStats,
+  type DailyRegistrationStats,
+  type RecentSubmission,
+  type RecentApproval,
+  type RecentUser,
+  type ReviewerPerformance,
+  type TopBadge,
 } from '@elevate/types'
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
-  const logger = getServerLogger().forRequestWithHeaders(request)
+  const logger = (await getDefaultLogger()).forRequestWithHeaders(request)
   return withRateLimit(request, adminRateLimiter, async () => {
   try {
-    const user = await requireRole('reviewer')
+    await requireRole('reviewer')
     const { searchParams } = new URL(request.url)
     const parsed = AnalyticsQuerySchema.safeParse(Object.fromEntries(searchParams))
     if (!parsed.success) {

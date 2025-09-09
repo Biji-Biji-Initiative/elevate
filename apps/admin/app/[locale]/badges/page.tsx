@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 
 import { adminClient, type AdminBadge, type AdminUser } from '@/lib/admin-client'
+import { handleApiError } from '@/lib/error-utils'
 import { withRoleGuard } from '@elevate/auth/context'
 import { Button, Input, Textarea, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 import { DataTable, Modal, ConfirmModal, createColumns } from '@elevate/ui/blocks'
@@ -68,7 +69,7 @@ function BadgesPage() {
     {
       key: 'name',
       header: 'Badge',
-      render: (row) => (
+      render: (row: Badge) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
             {row.icon_url ? (
@@ -88,7 +89,7 @@ function BadgesPage() {
     {
       key: 'description',
       header: 'Description',
-      render: (row) => (
+      render: (row: Badge) => (
         <div className="max-w-xs">
           <p className="text-sm text-gray-600 truncate">{row.description}</p>
         </div>
@@ -98,7 +99,7 @@ function BadgesPage() {
     {
       key: 'criteria.type',
       header: 'Type',
-      render: (row) => (
+      render: (row: Badge) => (
         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm capitalize">
           {row.criteria.type}
         </span>
@@ -108,7 +109,7 @@ function BadgesPage() {
     {
       key: 'criteria.threshold',
       header: 'Threshold',
-      render: (row) => (
+      render: (row: Badge) => (
         <div className="text-sm">
           {row.criteria.threshold}
           {row.criteria.type === 'points' && ' pts'}
@@ -121,7 +122,7 @@ function BadgesPage() {
     {
       key: '_count.earned_badges',
       header: 'Earned',
-      render: (row) => (
+      render: (row: Badge) => (
         <div className="text-center font-medium">
           {row._count?.earned_badges || 0}
         </div>
@@ -185,8 +186,8 @@ function BadgesPage() {
     try {
       const result = await adminClient.getBadges(true)
       setBadges(result.badges || [])
-    } catch (_error) {
-      // Silent fail - badges will remain empty array
+    } catch (error: unknown) {
+      console.warn('Failed to fetch badges:', handleApiError(error, 'Badge fetch'))
     } finally {
       setLoading(false)
     }
@@ -196,8 +197,8 @@ function BadgesPage() {
     try {
       const result = await adminClient.getUsers({ limit: 1000 })
       setUsers(result.users || [])
-    } catch (_error) {
-      // Silent fail - users will remain empty array
+    } catch (error: unknown) {
+      console.warn('Failed to fetch users:', handleApiError(error, 'User fetch'))
     }
   }
 
@@ -254,8 +255,8 @@ function BadgesPage() {
       await adminClient.createBadge(badgeForm)
       await fetchBadges()
       closeBadgeModal()
-    } catch (_error) {
-      setError('Failed to create badge')
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Create badge'))
     } finally {
       setProcessing(false)
     }
@@ -269,8 +270,8 @@ function BadgesPage() {
       await adminClient.updateBadge({ ...badgeForm, code: badgeModal.badge.code })
       await fetchBadges()
       closeBadgeModal()
-    } catch (_error) {
-      setError('Failed to update badge')
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Update badge'))
     } finally {
       setProcessing(false)
     }
@@ -284,8 +285,8 @@ function BadgesPage() {
       await adminClient.deleteBadge(deleteModal.badge.code)
       await fetchBadges()
       setDeleteModal({ isOpen: false })
-    } catch (_error) {
-      setError('Failed to delete badge')
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Delete badge'))
     } finally {
       setProcessing(false)
     }
@@ -300,8 +301,8 @@ function BadgesPage() {
       await fetchBadges()
       setAssignModal({ isOpen: false })
       setAssignForm({ userIds: [], reason: '' })
-    } catch (_error) {
-      setError('Failed to assign badge')
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Assign badge'))
     } finally {
       setProcessing(false)
     }

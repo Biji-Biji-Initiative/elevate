@@ -289,7 +289,6 @@ export const securityConfig = {
       external: [
         'http://localhost:3000',
         'http://localhost:3001',
-        'ws://localhost:*',
       ],
     },
   } as SecurityMiddlewareOptions,

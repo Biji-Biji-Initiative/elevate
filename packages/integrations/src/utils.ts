@@ -1,13 +1,13 @@
-import { getKajabiClient } from './kajabi';
+import { getKajabiClient } from './kajabi'
 
 /**
  * Utility functions for Kajabi integration
  */
 
 export interface EnrollmentResult {
-  success: boolean;
-  contactId?: number;
-  error?: string;
+  success: boolean
+  contactId?: number
+  error?: string
 }
 
 /**
@@ -17,35 +17,35 @@ export async function enrollUserInKajabi(
   email: string,
   name: string,
   options?: {
-    offerId?: number;
-    tagId?: number;
-  }
+    offerId?: string | number
+    tagId?: number
+  },
 ): Promise<EnrollmentResult> {
   try {
-    const client = getKajabiClient();
-    
+    const client = getKajabiClient()
+
     // Create or update contact
-    const contact = await client.createOrUpdateContact(email, name);
-    
+    const contact = await client.createOrUpdateContact(email, name)
+
     // Grant offer if provided
     if (options?.offerId) {
-      await client.grantOffer(contact.id, options.offerId);
+      await client.grantOffer(contact.id, options.offerId)
     }
-    
+
     // Add tag if provided
     if (options?.tagId) {
-      await client.tagContact(contact.id, options.tagId);
+      await client.tagContact(contact.id, options.tagId)
     }
-    
+
     return {
       success: true,
-      contactId: contact.id
-    };
+      contactId: contact.id,
+    }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : String(error)
-    };
+      error: error instanceof Error ? error.message : String(error),
+    }
   }
 }
 
@@ -54,10 +54,10 @@ export async function enrollUserInKajabi(
  */
 export async function isKajabiHealthy(): Promise<boolean> {
   try {
-    const client = getKajabiClient();
-    return await client.healthCheck();
+    const client = getKajabiClient()
+    return await client.healthCheck()
   } catch (error) {
-    return false;
+    return false
   }
 }
 
@@ -66,8 +66,8 @@ export async function isKajabiHealthy(): Promise<boolean> {
  */
 export function tryGetKajabiClient() {
   try {
-    return getKajabiClient();
+    return getKajabiClient()
   } catch (error) {
-    return null;
+    return null
   }
 }

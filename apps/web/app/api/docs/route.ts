@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server'
-
 import { createSuccessResponse } from '@elevate/http'
 import { spec } from '@elevate/openapi'
 

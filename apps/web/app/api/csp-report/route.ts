@@ -5,8 +5,7 @@
  * for monitoring and debugging purposes.
  */
 
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server'
 
 import { createErrorResponse } from '@elevate/http'
 import { createCSPReportHandler } from '@elevate/security/security-middleware';

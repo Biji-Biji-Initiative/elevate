@@ -1,8 +1,8 @@
-import { type NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
-import { createSuccessResponse } from '@elevate/types'
+import { createSuccessResponse } from '@elevate/http'
 
 export const runtime = 'nodejs';
 

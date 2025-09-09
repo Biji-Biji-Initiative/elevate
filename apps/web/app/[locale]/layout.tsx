@@ -1,4 +1,5 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations } from 'next-intl/server'
 
@@ -109,11 +110,13 @@ export async function generateMetadata({
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale: _locale } = await params
   const messages = await getMessages()
+  const { userId } = await auth()
+  const isSignedIn = Boolean(userId)
 
   return (
     <NextIntlClientProvider messages={messages}>
       <ClientHeader
-        isSignedIn={false}
+        isSignedIn={isSignedIn}
         signInButton={
           <SignedOut>
             <SignInButton mode="modal">
@@ -131,99 +134,99 @@ export default async function LocaleLayout({ children, params }: Props) {
       <main className="flex-1">{children}</main>
       <Footer />
 
-      {/* JSON-LD structured data */}
+      {/* JSON-LD structured data (use @graph to avoid client parsing issues) */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([
-            {
-              '@context': 'https://schema.org',
-              '@type': 'EducationalOrganization',
-              name: 'MS Elevate LEAPS Tracker',
-              description:
-                'Transform your teaching with AI through the LEAPS framework',
-              url: 'https://leaps.mereka.org',
-              logo: 'https://leaps.mereka.org/logo.png',
-              sameAs: [
-                'https://twitter.com/MicrosoftEDU',
-                'https://linkedin.com/company/microsoft',
-              ],
-              address: {
-                '@type': 'PostalAddress',
-                addressCountry: 'ID',
-                addressRegion: 'Jakarta',
-              },
-              offers: {
-                '@type': 'Offer',
-                category: 'Educational Program',
-                name: 'LEAPS Framework Training',
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'EducationalOrganization',
+                name: 'MS Elevate LEAPS Tracker',
                 description:
-                  'Professional development program for educators to integrate AI in classrooms',
-              },
-            },
-            {
-              '@context': 'https://schema.org',
-              '@type': 'Event',
-              name: 'Educators Convening Jakarta',
-              description:
-                'National recognition event for top 10-15 educators based on LEAPS points and policy ideas',
-              location: {
-                '@type': 'Place',
-                name: 'Jakarta',
+                  'Transform your teaching with AI through the LEAPS framework',
+                url: 'https://leaps.mereka.org',
+                logo: 'https://leaps.mereka.org/logo.png',
+                sameAs: [
+                  'https://twitter.com/MicrosoftEDU',
+                  'https://linkedin.com/company/microsoft',
+                ],
                 address: {
                   '@type': 'PostalAddress',
-                  addressLocality: 'Jakarta',
                   addressCountry: 'ID',
+                  addressRegion: 'Jakarta',
+                },
+                offers: {
+                  '@type': 'Offer',
+                  category: 'Educational Program',
+                  name: 'LEAPS Framework Training',
+                  description:
+                    'Professional development program for educators to integrate AI in classrooms',
                 },
               },
-              organizer: {
-                '@type': 'Organization',
-                name: 'Microsoft Indonesia',
+              {
+                '@type': 'Event',
+                name: 'Educators Convening Jakarta',
+                description:
+                  'National recognition event for top 10-15 educators based on LEAPS points and policy ideas',
+                location: {
+                  '@type': 'Place',
+                  name: 'Jakarta',
+                  address: {
+                    '@type': 'PostalAddress',
+                    addressLocality: 'Jakarta',
+                    addressCountry: 'ID',
+                  },
+                },
+                organizer: {
+                  '@type': 'Organization',
+                  name: 'Microsoft Indonesia',
+                },
+                eventAttendanceMode:
+                  'https://schema.org/OfflineEventAttendanceMode',
+                eventStatus: 'https://schema.org/EventScheduled',
               },
-              eventAttendanceMode:
-                'https://schema.org/OfflineEventAttendanceMode',
-              eventStatus: 'https://schema.org/EventScheduled',
-            },
-            {
-              '@context': 'https://schema.org',
-              '@type': 'HowTo',
-              name: 'LEAPS Framework for AI Education',
-              description:
-                '5-stage journey for educators to integrate AI tools in classrooms',
-              step: [
-                {
-                  '@type': 'HowToStep',
-                  name: 'Learn',
-                  text: 'Complete AI for Educators course and upload certificate',
-                  url: 'https://leaps.mereka.org/dashboard/learn',
-                },
-                {
-                  '@type': 'HowToStep',
-                  name: 'Explore',
-                  text: 'Implement AI tools in classroom and document experience',
-                  url: 'https://leaps.mereka.org/dashboard/explore',
-                },
-                {
-                  '@type': 'HowToStep',
-                  name: 'Amplify',
-                  text: 'Train peers and students on AI education',
-                  url: 'https://leaps.mereka.org/dashboard/amplify',
-                },
-                {
-                  '@type': 'HowToStep',
-                  name: 'Present',
-                  text: 'Share your AI education story on LinkedIn',
-                  url: 'https://leaps.mereka.org/dashboard/present',
-                },
-                {
-                  '@type': 'HowToStep',
-                  name: 'Shine',
-                  text: 'Submit policy ideas for national recognition',
-                  url: 'https://leaps.mereka.org/dashboard/shine',
-                },
-              ],
-            },
-          ]),
+              {
+                '@type': 'HowTo',
+                name: 'LEAPS Framework for AI Education',
+                description:
+                  '5-stage journey for educators to integrate AI tools in classrooms',
+                step: [
+                  {
+                    '@type': 'HowToStep',
+                    name: 'Learn',
+                    text: 'Complete AI for Educators course and upload certificate',
+                    url: 'https://leaps.mereka.org/dashboard/learn',
+                  },
+                  {
+                    '@type': 'HowToStep',
+                    name: 'Explore',
+                    text: 'Implement AI tools in classroom and document experience',
+                    url: 'https://leaps.mereka.org/dashboard/explore',
+                  },
+                  {
+                    '@type': 'HowToStep',
+                    name: 'Amplify',
+                    text: 'Train peers and students on AI education',
+                    url: 'https://leaps.mereka.org/dashboard/amplify',
+                  },
+                  {
+                    '@type': 'HowToStep',
+                    name: 'Present',
+                    text: 'Share your AI education story on LinkedIn',
+                    url: 'https://leaps.mereka.org/dashboard/present',
+                  },
+                  {
+                    '@type': 'HowToStep',
+                    name: 'Shine',
+                    text: 'Submit policy ideas for national recognition',
+                    url: 'https://leaps.mereka.org/dashboard/shine',
+                  },
+                ],
+              },
+            ],
+          }),
         }}
       />
     </NextIntlClientProvider>

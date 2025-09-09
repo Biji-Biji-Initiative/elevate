@@ -2,34 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 
-import { adminClient, type UsersQuery } from '@/lib/admin-client'
-import type { UserRole } from '@elevate/types'
-import { ROLE_FILTER_OPTIONS } from '@elevate/types'
+import { adminClient, type UsersQuery, type AdminUser } from '@/lib/admin-client'
+import { handleApiError } from '@/lib/error-utils'
 import { withRoleGuard } from '@elevate/auth/context'
-import { Button , Input, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
+import type { UserRole } from '@elevate/types'
+import { Button, Input, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 import { DataTable, StatusBadge, Modal, ConfirmModal, createColumns } from '@elevate/ui/blocks'
 
-type User = {
-  readonly id: string
-  readonly handle: string
-  readonly name: string
-  readonly email: string
-  readonly avatar_url?: string | null | undefined
-  readonly role: 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
-  readonly school?: string | null | undefined
-  readonly cohort?: string | null | undefined
-  readonly created_at: string
-  readonly totalPoints: number
-  readonly _count: {
-    submissions: number
-    ledger: number
-    earned_badges: number
-  }
-}
+type User = AdminUser
 
 interface Filters {
   search: string
-  role: typeof ROLE_FILTER_OPTIONS[number]
+  role: UserRole | 'ALL'
   cohort: string
   sortBy: 'created_at' | 'name' | 'email'
   sortOrder: 'asc' | 'desc'
@@ -86,7 +70,8 @@ function UsersPage() {
     {
       key: 'name',
       header: 'User',
-      render: (row) => (
+      accessor: (row: User) => row.name,
+      render: (row: User) => (
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm">
             {row.name[0]?.toUpperCase() || 'U'}
@@ -103,25 +88,29 @@ function UsersPage() {
     {
       key: 'role',
       header: 'Role',
-      render: (row) => <StatusBadge status={row.role} />,
+      accessor: (row: User) => row.role,
+      render: (row: User) => <StatusBadge status={row.role} />,
       width: '120px'
     },
     {
       key: 'school',
       header: 'School',
-      render: (row) => row.school || '-',
+      accessor: (row: User) => row.school ?? '',
+      render: (row: User) => row.school || '-',
       width: '150px'
     },
     {
       key: 'cohort',
       header: 'Cohort',
-      render: (row) => row.cohort || '-',
+      accessor: (row: User) => row.cohort ?? '',
+      render: (row: User) => row.cohort || '-',
       width: '100px'
     },
     {
       key: 'totalPoints',
       header: 'Points',
-      render: (row) => (
+      accessor: (row: User) => row.totalPoints,
+      render: (row: User) => (
         <div className="text-right">
           <div className="font-medium">{row.totalPoints}</div>
         </div>
@@ -131,7 +120,8 @@ function UsersPage() {
     {
       key: '_count.submissions',
       header: 'Submissions',
-      render: (row) => (
+      accessor: (row: User) => row._count.submissions,
+      render: (row: User) => (
         <div className="text-center">
           {row._count.submissions}
         </div>
@@ -141,7 +131,8 @@ function UsersPage() {
     {
       key: '_count.earned_badges',
       header: 'Badges',
-      render: (row) => (
+      accessor: (row: User) => row._count.earned_badges,
+      render: (row: User) => (
         <div className="text-center">
           {row._count.earned_badges}
         </div>
@@ -151,13 +142,14 @@ function UsersPage() {
     {
       key: 'created_at',
       header: 'Joined',
-      render: (row) => new Date(row.created_at).toLocaleDateString(),
+      sortAccessor: (row: User) => new Date(row.created_at),
+      render: (row: User) => new Date(row.created_at).toLocaleDateString(),
       width: '100px'
     },
     {
       key: 'actions',
       header: 'Actions',
-      render: (row) => (
+      render: (row: User) => (
         <div className="flex space-x-2">
           <Button
             variant="ghost"
@@ -190,14 +182,14 @@ function UsersPage() {
       }
 
       const result = await adminClient.getUsers(params)
-      setUsers(result.users as unknown as User[])
+      setUsers(result.users)
       setPagination(prev => ({
         ...prev,
         total: result.pagination.total,
         pages: result.pagination.pages ?? Math.ceil(result.pagination.total / prev.limit),
       }))
-    } catch (_error) {
-      setError('Failed to fetch users')
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Fetch users'))
     } finally {
       setLoading(false)
     }
@@ -212,9 +204,9 @@ function UsersPage() {
       try {
         const cohortData = await adminClient.getCohorts()
         setCohorts(Array.isArray(cohortData) ? cohortData : [])
-      } catch (_error) {
+      } catch (error: unknown) {
         // Cohorts are optional for UI, don't break on fetch failure
-        // Silently fail in production
+        console.warn('Failed to fetch cohorts:', handleApiError(error, 'Cohort fetch'))
       }
     }
     void fetchCohorts()

@@ -208,7 +208,10 @@ export async function getActivityLeaderboard(
       SELECT * FROM get_activity_leaderboard(${activityCode}, ${limit})
     `,
   )
-  return transformRawAnalytics(results as RawAnalyticsResult, parseActivityLeaderboardEntry)
+  return transformRawAnalytics(
+    results as RawAnalyticsResult,
+    parseActivityLeaderboardEntry,
+  )
 }
 
 // =============================================================================
@@ -229,7 +232,10 @@ export async function getCohortMetrics(): Promise<CohortMetrics[]> {
       ORDER BY total_points DESC
     `,
   )
-  return transformRawAnalytics(results as RawAnalyticsResult, parseCohortMetrics)
+  return transformRawAnalytics(
+    results as RawAnalyticsResult,
+    parseCohortMetrics,
+  )
 }
 
 /**
@@ -248,7 +254,10 @@ export async function getCohortMetricsById(
       WHERE cohort = ${cohort}
     `,
   )
-  const parsed = transformRawAnalytics(results as RawAnalyticsResult, parseCohortMetrics)
+  const parsed = transformRawAnalytics(
+    results as RawAnalyticsResult,
+    parseCohortMetrics,
+  )
   return parsed.length > 0 ? parsed[0] ?? null : null
 }
 
@@ -266,7 +275,10 @@ export async function getSchoolMetrics(): Promise<SchoolMetrics[]> {
       ORDER BY total_points DESC
     `,
   )
-  return transformRawAnalytics(results as RawAnalyticsResult, parseSchoolMetrics)
+  return transformRawAnalytics(
+    results as RawAnalyticsResult,
+    parseSchoolMetrics,
+  )
 }
 
 /**
@@ -285,7 +297,10 @@ export async function getSchoolMetricsById(
       WHERE school = ${school}
     `,
   )
-  const parsed = transformRawAnalytics(results as RawAnalyticsResult, parseSchoolMetrics)
+  const parsed = transformRawAnalytics(
+    results as RawAnalyticsResult,
+    parseSchoolMetrics,
+  )
   return parsed.length > 0 ? parsed[0] ?? null : null
 }
 
@@ -300,7 +315,10 @@ export async function getCohortComparison(): Promise<CohortComparison[]> {
       ORDER BY total_points DESC
     `,
   )
-  return transformRawAnalytics(results as RawAnalyticsResult, parseCohortComparison)
+  return transformRawAnalytics(
+    results as RawAnalyticsResult,
+    parseCohortComparison,
+  )
 }
 
 // =============================================================================
@@ -333,7 +351,10 @@ export async function getTimeSeriesMetrics(
     'get_time_series_metrics',
     'time_series_metrics',
   )(() => query)
-  return transformRawAnalytics(results as RawAnalyticsResult, parseTimeSeriesMetrics)
+  return transformRawAnalytics(
+    results as RawAnalyticsResult,
+    parseTimeSeriesMetrics,
+  )
 }
 
 /**
@@ -366,7 +387,10 @@ export async function getDailyAggregateMetrics(days = 30): Promise<
       ORDER BY date DESC
     `,
   )
-  return transformRawAnalytics(results as RawAnalyticsResult, parseDailyAggregateMetrics)
+  return transformRawAnalytics(
+    results as RawAnalyticsResult,
+    parseDailyAggregateMetrics,
+  )
 }
 
 // =============================================================================
@@ -385,7 +409,10 @@ export async function getUserPointSummary(
       SELECT * FROM get_user_point_summary(${userId})
     `,
   )
-  const parsed = transformRawAnalytics(results as RawAnalyticsResult, parseUserPointSummary)
+  const parsed = transformRawAnalytics(
+    results as RawAnalyticsResult,
+    parseUserPointSummary,
+  )
   return parsed.length > 0 ? parsed[0] ?? null : null
 }
 
@@ -434,7 +461,10 @@ export async function getUserActivityBreakdown(
       ORDER BY uas.total_points DESC
     `,
   )
-  return transformRawAnalytics(results as RawAnalyticsResult, parseUserActivityBreakdown)
+  return transformRawAnalytics(
+    results as RawAnalyticsResult,
+    parseUserActivityBreakdown,
+  )
 }
 
 // =============================================================================
@@ -488,7 +518,8 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
 
       // Get recent trends (last 30 days)
       getTimeSeriesMetrics(30),
-    ]))
+    ]),
+  )
   const [
     basicStatsArr,
     activityBreakdown,
@@ -508,50 +539,50 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
   ]
   const [basicStats] = basicStatsArr
 
-    // Calculate derived statistics
-    const totalUsers = Number(basicStats?.total_users || 0)
-    const activeUsers = Number(basicStats?.active_users || 0)
-    const totalSubmissions = Number(basicStats?.total_submissions || 0)
-    const totalPointsAwarded = Number(basicStats?.total_points || 0)
+  // Calculate derived statistics
+  const totalUsers = Number(basicStats?.total_users || 0)
+  const activeUsers = Number(basicStats?.active_users || 0)
+  const totalSubmissions = Number(basicStats?.total_submissions || 0)
+  const totalPointsAwarded = Number(basicStats?.total_points || 0)
 
-    const approvedSubmissions = activityBreakdown.reduce(
-      (sum: number, activity: ActivityMetrics) =>
-        sum + activity.approved_submissions,
-      0,
-    )
-    const submissionApprovalRate =
-      totalSubmissions > 0 ? (approvedSubmissions / totalSubmissions) * 100 : 0
+  const approvedSubmissions = activityBreakdown.reduce(
+    (sum: number, activity: ActivityMetrics) =>
+      sum + activity.approved_submissions,
+    0,
+  )
+  const submissionApprovalRate =
+    totalSubmissions > 0 ? (approvedSubmissions / totalSubmissions) * 100 : 0
 
-    const averagePointsPerUser =
-      totalUsers > 0 ? totalPointsAwarded / totalUsers : 0
+  const averagePointsPerUser =
+    totalUsers > 0 ? totalPointsAwarded / totalUsers : 0
 
-    const averageSubmissionsPerUser =
-      totalUsers > 0 ? totalSubmissions / totalUsers : 0
+  const averageSubmissionsPerUser =
+    totalUsers > 0 ? totalSubmissions / totalUsers : 0
 
-    const participationRate =
-      totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0
+  const participationRate =
+    totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0
 
-    return {
-      totalUsers,
-      activeUsers,
-      totalSubmissions,
-      totalPointsAwarded,
-      activityBreakdown,
-      topPerformersAllTime,
-      topPerformers30d,
-      cohortPerformance,
-      schoolPerformance,
-      recentTrends,
-      overallStats: {
-        submissionApprovalRate: Math.round(submissionApprovalRate * 100) / 100,
-        averagePointsPerUser: Math.round(averagePointsPerUser * 100) / 100,
-        averageSubmissionsPerUser:
-          Math.round(averageSubmissionsPerUser * 100) / 100,
-        participationRate: Math.round(participationRate * 100) / 100,
-        cohortCount: cohortPerformance.length,
-        schoolCount: schoolPerformance.length,
-      },
-    }
+  return {
+    totalUsers,
+    activeUsers,
+    totalSubmissions,
+    totalPointsAwarded,
+    activityBreakdown,
+    topPerformersAllTime,
+    topPerformers30d,
+    cohortPerformance,
+    schoolPerformance,
+    recentTrends,
+    overallStats: {
+      submissionApprovalRate: Math.round(submissionApprovalRate * 100) / 100,
+      averagePointsPerUser: Math.round(averagePointsPerUser * 100) / 100,
+      averageSubmissionsPerUser:
+        Math.round(averageSubmissionsPerUser * 100) / 100,
+      participationRate: Math.round(participationRate * 100) / 100,
+      cohortCount: cohortPerformance.length,
+      schoolCount: schoolPerformance.length,
+    },
+  }
 }
 
 // =============================================================================

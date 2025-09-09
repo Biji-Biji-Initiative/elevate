@@ -1,5 +1,4 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { metrics } from '@elevate/logging'
@@ -55,7 +54,7 @@ export async function GET(request: NextRequest) {
       operation: 'metrics_json_access',
     })
 
-    res = createSuccessResponse(metricsSummary)
+    const res = createSuccessResponse(metricsSummary)
     res.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
     return res
   } catch (error) {

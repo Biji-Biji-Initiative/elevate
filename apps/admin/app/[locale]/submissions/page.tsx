@@ -4,10 +4,11 @@ import React, { useState, useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { adminClient, AdminClientError, type SubmissionsQuery, type AdminSubmission, type Pagination } from '@/lib/admin-client'
+import { adminClient, type SubmissionsQuery, type AdminSubmission, type Pagination } from '@/lib/admin-client'
+import { handleApiError } from '@/lib/error-utils'
 import { withRoleGuard } from '@elevate/auth/context'
 import { ACTIVITY_CODES, SUBMISSION_STATUSES, ACTIVITY_FILTER_OPTIONS, STATUS_FILTER_OPTIONS, AMPLIFY } from '@elevate/types'
-import { Button , Input, Textarea, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
+import { Button, Input, Textarea, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 import { DataTable, StatusBadge, Modal, ConfirmModal, createColumns } from '@elevate/ui/blocks'
 
 // Define proper filter types for submissions
@@ -48,9 +49,9 @@ function SubmissionsPage() {
       try {
         const cohortData = await adminClient.getCohorts()
         setCohorts(cohortData)
-      } catch (error) {
+      } catch (error: unknown) {
         // Cohorts are optional for UI, don't break on fetch failure
-        console.warn('Failed to fetch cohorts:', error instanceof AdminClientError ? error.message : 'Unknown error')
+        console.warn('Failed to fetch cohorts:', handleApiError(error, 'Cohort fetch'))
       }
     }
     void fetchCohorts()
@@ -82,13 +83,13 @@ function SubmissionsPage() {
     {
       key: 'created_at',
       header: 'Date',
-      render: (row) => new Date(row.created_at).toLocaleDateString(),
+      render: (row: AdminSubmission) => new Date(row.created_at).toLocaleDateString(),
       width: '100px'
     },
     {
       key: 'user.name',
       header: 'Participant',
-      render: (row) => (
+      render: (row: AdminSubmission) => (
         <div>
           <div className="font-medium">{row.user.name}</div>
           <div className="text-sm text-gray-500">@{row.user.handle}</div>
@@ -102,7 +103,7 @@ function SubmissionsPage() {
     {
       key: 'activity.name',
       header: 'Activity',
-      render: (row) => (
+      render: (row: AdminSubmission) => (
         <div>
           <div className="font-medium">{row.activity.name}</div>
           <div className="text-sm text-gray-500">{row.activity.code}</div>
@@ -113,13 +114,13 @@ function SubmissionsPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (row) => <StatusBadge status={row.status} />,
+      render: (row: AdminSubmission) => <StatusBadge status={row.status} />,
       width: '100px'
     },
     {
       key: 'visibility',
       header: 'Visibility',
-      render: (row) => <StatusBadge status={row.visibility} size="sm" />,
+      render: (row: AdminSubmission) => <StatusBadge status={row.visibility} size="sm" />,
       width: '80px'
     },
     {
@@ -207,12 +208,8 @@ function SubmissionsPage() {
       
       setSubmissions(result.submissions)
       setPagination(result.pagination)
-    } catch (error) {
-      if (error instanceof AdminClientError) {
-        setError(error.message)
-      } else {
-        setError('Failed to fetch submissions')
-      }
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Fetch submissions'))
     } finally {
       setLoading(false)
     }
@@ -258,8 +255,8 @@ function SubmissionsPage() {
       await adminClient.reviewSubmission(reviewData)
       await fetchSubmissions()
       closeReviewModal()
-    } catch (error) {
-      setError('Failed to process review')
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Process review'))
     } finally {
       setProcessing(false)
     }
@@ -281,8 +278,8 @@ function SubmissionsPage() {
       await fetchSubmissions()
       setBulkModal({ isOpen: false, action: 'approve' })
       setReviewNote('')
-    } catch (error) {
-      setError('Failed to process bulk action')
+    } catch (error: unknown) {
+      setError(handleApiError(error, 'Process bulk action'))
     } finally {
       setProcessing(false)
     }
@@ -371,8 +368,9 @@ function SubmissionsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <label htmlFor="submissions-filter-search" className="block text-sm font-medium text-gray-700 mb-1">Search</label>
             <Input
+              id="submissions-filter-search"
               placeholder="Search by name, email..."
               value={filters.search}
               onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}

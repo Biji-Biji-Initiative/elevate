@@ -1,9 +1,7 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 import { prisma } from '@elevate/db'
-import { withApiErrorHandling, type ApiContext } from '@elevate/http'
-import { createSuccessResponse } from '@elevate/http'
+import { withApiErrorHandling, createSuccessResponse, type ApiContext } from '@elevate/http'
 import { parsePresentPayload } from '@elevate/types'
 
 export const runtime = 'nodejs'
@@ -12,7 +10,7 @@ export const runtime = 'nodejs'
 export const revalidate = 300
 
 export const GET = withApiErrorHandling(
-  async (request: NextRequest, context: ApiContext) => {
+  async (request: NextRequest, _context: ApiContext) => {
     const url = new URL(request.url)
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '12'), 50)
     const offset = Math.max(parseInt(url.searchParams.get('offset') || '0'), 0)

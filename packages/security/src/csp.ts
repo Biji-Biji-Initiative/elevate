@@ -141,7 +141,7 @@ export function buildCSPDirectives(options: CSPOptions = {}): string {
       ...analyticsDomains,
       'https://vitals.vercel-analytics.com',
       'wss://*.supabase.co', // Supabase realtime
-      ...(isDevelopment ? ['ws://localhost:*', 'http://localhost:*'] : []),
+      ...(isDevelopment ? ['http://localhost:*', 'ws://localhost:*'] : []),
       ...externalDomains,
     ],
 
@@ -345,12 +345,20 @@ export function validateCSPConfig(options: CSPOptions): {
   if (options.allowedDomains?.external) {
     const external = options.allowedDomains.external
     for (const domain of external) {
-      if (!domain.startsWith('https://') && !domain.startsWith('http://')) {
+      // Allow WebSocket protocols
+      if (!domain.startsWith('https://') && 
+          !domain.startsWith('http://') && 
+          !domain.startsWith('ws://') && 
+          !domain.startsWith('wss://')) {
         errors.push(
-          `External domain "${domain}" should include protocol (https:// or http://)`,
+          `External domain "${domain}" should include protocol (https://, http://, ws://, or wss://)`,
         )
       }
-      if (domain.includes('*') && !domain.startsWith('https://*.')) {
+      if (domain.includes('*') && 
+          !domain.startsWith('https://*.') && 
+          !domain.startsWith('http://*.') &&
+          !domain.startsWith('ws://*.') &&
+          !domain.startsWith('wss://*.')) {
         errors.push(
           `Wildcard domain "${domain}" should be properly formatted (e.g., https://*.example.com)`,
         )
