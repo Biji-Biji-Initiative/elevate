@@ -4,9 +4,6 @@
 
 ```ts
 
-import type { LogContext } from '@elevate/logging';
-import { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
 import { Role } from '@elevate/types';
 
 // @public (undocumented)
@@ -20,18 +17,6 @@ export interface AuthUser {
     // (undocumented)
     userId: string;
 }
-
-// @public
-export function createErrorResponse(error: unknown, fallbackStatus?: number, context?: LogContext): NextResponse;
-
-// @public
-export function createProtectedAction<TInput, TOutput>(minRole: RoleName, action: (user: AuthUser, input: TInput) => Promise<TOutput>): (input: TInput) => Promise<TOutput>;
-
-// @public
-export function createProtectedApiHandler(minRole: RoleName, handler: (user: AuthUser, req: NextRequest, context?: LogContext) => Promise<NextResponse>, context?: LogContext): (req: NextRequest) => Promise<NextResponse>;
-
-// @public
-export function getCurrentUser(): Promise<AuthUser | null>;
 
 // @public
 export function hasAnyRole(userRole: RoleName, requiredRoles: RoleName[]): boolean;
@@ -90,10 +75,7 @@ export function roleToRoleName(role: Role): RoleName;
 export function safeParseRole(role?: unknown): RoleName;
 
 // @public
-export function validateAuth(minRole?: RoleName): Promise<AuthUser>;
-
-// @public
-export function withRoleProtection<T extends unknown[], R>(minRole: RoleName, handler: (user: AuthUser, ...args: T) => R | Promise<R>): (...args: T) => Promise<R>;
+export function withRole<T extends unknown[], R>(minRole: RoleName, handler: (user: AuthUser, ...args: T) => R | Promise<R>): (...args: T) => Promise<R>;
 
 // (No @packageDocumentation comment for this package)
 
