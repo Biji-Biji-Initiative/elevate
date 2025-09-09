@@ -37,9 +37,11 @@ env:
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/elevate_test
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
   CLERK_SECRET_KEY: sk_test_dummy
-  NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+  # Use CI-safe, format-valid placeholders for env validation
+  NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
   NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_key
   SUPABASE_SERVICE_ROLE: dummy_key
+  CLERK_WEBHOOK_SECRET: whsec_dummy
   KAJABI_WEBHOOK_SECRET: test_secret
   NEXT_PUBLIC_SITE_URL: http://localhost:3000
 

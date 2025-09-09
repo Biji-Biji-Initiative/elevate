@@ -140,12 +140,15 @@ export const POST = withCSRFProtection(withApiErrorHandling(async (request: Next
 
       // Calculate total peers and students trained in last 7 days
       const totalPeers = recentSubmissions.reduce((sum: number, sub: Submission) => {
-        const parsedPayload = parseAmplifyPayload({ activityCode: AMPLIFY, data: sub.payload })
+        // Transform DB payload (snake_case) to API (camelCase) before parsing
+        const apiPayload = transformPayloadDBToAPI(AMPLIFY, sub.payload)
+        const parsedPayload = parseAmplifyPayload({ activityCode: AMPLIFY, data: apiPayload })
         return sum + (parsedPayload?.data.peersTrained || 0)
       }, 0)
 
       const totalStudents = recentSubmissions.reduce((sum: number, sub: Submission) => {
-        const parsedPayload = parseAmplifyPayload({ activityCode: AMPLIFY, data: sub.payload })
+        const apiPayload = transformPayloadDBToAPI(AMPLIFY, sub.payload)
+        const parsedPayload = parseAmplifyPayload({ activityCode: AMPLIFY, data: apiPayload })
         return sum + (parsedPayload?.data.studentsTrained || 0)
       }, 0)
 
