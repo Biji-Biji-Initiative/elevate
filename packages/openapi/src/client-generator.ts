@@ -705,8 +705,6 @@ writeFileSync(examplesPath, examples, 'utf-8')
 
 console.log(`✅ Usage examples generated: ${examplesPath}`)
 console.log('\n🎯 TypeScript client SDK is ready!')
-console.log(
-  '   Import: import ElevateAPIClient from "@elevate/openapi/dist/sdk"',
-)
+console.log('   Import: import ElevateAPIClient from "@elevate/openapi/sdk"')
 console.log('   Types: All endpoints have full TypeScript support')
 console.log('   Examples: See dist/examples.ts for usage patterns')

@@ -41,9 +41,9 @@ function toUtc(date: string, time: string | undefined, tz: string): Date {
   const parts = fmt.formatToParts(dt)
   const tzName = parts.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT'
   const match = tzName.match(/GMT([+-])(\d{1,2})/)
-  const offset = match
-    ? parseInt(match[2]!, 10) * (match[1] === '-' ? -1 : 1)
-    : 0
+  const hours = match?.[2] ? parseInt(match[2], 10) : 0
+  const sign = match?.[1] === '-' ? -1 : 1
+  const offset = hours * sign
   return new Date(dt.getTime() - offset * 60 * 60 * 1000)
 }
 
