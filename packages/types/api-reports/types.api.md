@@ -1242,27 +1242,90 @@ export const AdminSubmissionSchema: z.ZodObject<{
             peers_trained: z.ZodNumber;
             students_trained: z.ZodNumber;
             attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            session_date: z.ZodString;
+            session_start_time: z.ZodOptional<z.ZodString>;
+            duration_minutes: z.ZodOptional<z.ZodNumber>;
+            location: z.ZodOptional<z.ZodObject<{
+                venue: z.ZodOptional<z.ZodString>;
+                city: z.ZodOptional<z.ZodString>;
+                country: z.ZodOptional<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            }, {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            }>>;
+            session_title: z.ZodOptional<z.ZodString>;
+            co_facilitators: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            evidence_note: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         }, {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         }>;
     }, "strip", z.ZodTypeAny, {
         data: {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         };
         activityCode: "AMPLIFY";
     }, {
         data: {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         };
         activityCode: "AMPLIFY";
     }>, z.ZodObject<{
@@ -1337,7 +1400,18 @@ export const AdminSubmissionSchema: z.ZodObject<{
     } | {
         peers_trained: number;
         students_trained: number;
+        session_date: string;
         attendance_proof_files?: string[] | undefined;
+        session_start_time?: string | undefined;
+        duration_minutes?: number | undefined;
+        location?: {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        } | undefined;
+        session_title?: string | undefined;
+        co_facilitators?: string[] | undefined;
+        evidence_note?: string | undefined;
     } | {
         linkedin_url: string;
         caption: string;
@@ -1367,7 +1441,18 @@ export const AdminSubmissionSchema: z.ZodObject<{
         data: {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         };
         activityCode: "AMPLIFY";
     } | {
@@ -1489,7 +1574,18 @@ export const AdminSubmissionSchema: z.ZodObject<{
     } | {
         peers_trained: number;
         students_trained: number;
+        session_date: string;
         attendance_proof_files?: string[] | undefined;
+        session_start_time?: string | undefined;
+        duration_minutes?: number | undefined;
+        location?: {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        } | undefined;
+        session_title?: string | undefined;
+        co_facilitators?: string[] | undefined;
+        evidence_note?: string | undefined;
     } | {
         linkedin_url: string;
         caption: string;
@@ -1556,7 +1652,18 @@ export const AdminSubmissionSchema: z.ZodObject<{
         data: {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         };
         activityCode: "AMPLIFY";
     } | {
@@ -1789,17 +1896,17 @@ export const AdminUsersQuerySchema: z.ZodObject<{
     limit: number;
     cohort: string;
     role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL";
-    search: string;
     sortBy: "created_at" | "name" | "email";
     sortOrder: "desc" | "asc";
+    search: string;
 }, {
     page?: number | undefined;
     limit?: number | undefined;
     cohort?: string | undefined;
     role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
-    search?: string | undefined;
     sortBy?: "created_at" | "name" | "email" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
+    search?: string | undefined;
 }>;
 
 // @public (undocumented)
@@ -1838,27 +1945,90 @@ export const AmplifyPayloadSchema: z.ZodObject<{
         peers_trained: z.ZodNumber;
         students_trained: z.ZodNumber;
         attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        session_date: z.ZodString;
+        session_start_time: z.ZodOptional<z.ZodString>;
+        duration_minutes: z.ZodOptional<z.ZodNumber>;
+        location: z.ZodOptional<z.ZodObject<{
+            venue: z.ZodOptional<z.ZodString>;
+            city: z.ZodOptional<z.ZodString>;
+            country: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        }, {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        }>>;
+        session_title: z.ZodOptional<z.ZodString>;
+        co_facilitators: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        evidence_note: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         peers_trained: number;
         students_trained: number;
+        session_date: string;
         attendance_proof_files?: string[] | undefined;
+        session_start_time?: string | undefined;
+        duration_minutes?: number | undefined;
+        location?: {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        } | undefined;
+        session_title?: string | undefined;
+        co_facilitators?: string[] | undefined;
+        evidence_note?: string | undefined;
     }, {
         peers_trained: number;
         students_trained: number;
+        session_date: string;
         attendance_proof_files?: string[] | undefined;
+        session_start_time?: string | undefined;
+        duration_minutes?: number | undefined;
+        location?: {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        } | undefined;
+        session_title?: string | undefined;
+        co_facilitators?: string[] | undefined;
+        evidence_note?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     data: {
         peers_trained: number;
         students_trained: number;
+        session_date: string;
         attendance_proof_files?: string[] | undefined;
+        session_start_time?: string | undefined;
+        duration_minutes?: number | undefined;
+        location?: {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        } | undefined;
+        session_title?: string | undefined;
+        co_facilitators?: string[] | undefined;
+        evidence_note?: string | undefined;
     };
     activityCode: "AMPLIFY";
 }, {
     data: {
         peers_trained: number;
         students_trained: number;
+        session_date: string;
         attendance_proof_files?: string[] | undefined;
+        session_start_time?: string | undefined;
+        duration_minutes?: number | undefined;
+        location?: {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        } | undefined;
+        session_title?: string | undefined;
+        co_facilitators?: string[] | undefined;
+        evidence_note?: string | undefined;
     };
     activityCode: "AMPLIFY";
 }>;
@@ -1868,14 +2038,55 @@ export const AmplifySchema: z.ZodObject<{
     peers_trained: z.ZodNumber;
     students_trained: z.ZodNumber;
     attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    session_date: z.ZodString;
+    session_start_time: z.ZodOptional<z.ZodString>;
+    duration_minutes: z.ZodOptional<z.ZodNumber>;
+    location: z.ZodOptional<z.ZodObject<{
+        venue: z.ZodOptional<z.ZodString>;
+        city: z.ZodOptional<z.ZodString>;
+        country: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        venue?: string | undefined;
+        city?: string | undefined;
+        country?: string | undefined;
+    }, {
+        venue?: string | undefined;
+        city?: string | undefined;
+        country?: string | undefined;
+    }>>;
+    session_title: z.ZodOptional<z.ZodString>;
+    co_facilitators: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    evidence_note: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     peers_trained: number;
     students_trained: number;
+    session_date: string;
     attendance_proof_files?: string[] | undefined;
+    session_start_time?: string | undefined;
+    duration_minutes?: number | undefined;
+    location?: {
+        venue?: string | undefined;
+        city?: string | undefined;
+        country?: string | undefined;
+    } | undefined;
+    session_title?: string | undefined;
+    co_facilitators?: string[] | undefined;
+    evidence_note?: string | undefined;
 }, {
     peers_trained: number;
     students_trained: number;
+    session_date: string;
     attendance_proof_files?: string[] | undefined;
+    session_start_time?: string | undefined;
+    duration_minutes?: number | undefined;
+    location?: {
+        venue?: string | undefined;
+        city?: string | undefined;
+        country?: string | undefined;
+    } | undefined;
+    session_title?: string | undefined;
+    co_facilitators?: string[] | undefined;
+    evidence_note?: string | undefined;
 }>;
 
 // @public (undocumented)
@@ -3556,19 +3767,11 @@ export const ApiResponseSchema: <T extends z.ZodTypeAny>(dataSchema: T) => z.Zod
     success: z.ZodLiteral<true>;
     data: T;
     message: z.ZodOptional<z.ZodString>;
-}>, any> extends infer T_1 ? { [k in keyof T_1]: z.objectUtil.addQuestionMarks<z.baseObjectOutputType<{
-        success: z.ZodLiteral<true>;
-        data: T;
-        message: z.ZodOptional<z.ZodString>;
-    }>, any>[k]; } : never, z.baseObjectInputType<{
+}>, any> extends infer T_1 ? { [k in keyof T_1]: T_1[k]; } : never, z.baseObjectInputType<{
     success: z.ZodLiteral<true>;
     data: T;
     message: z.ZodOptional<z.ZodString>;
-}> extends infer T_2 ? { [k_1 in keyof T_2]: z.baseObjectInputType<{
-        success: z.ZodLiteral<true>;
-        data: T;
-        message: z.ZodOptional<z.ZodString>;
-    }>[k_1]; } : never>, z.ZodObject<{
+}> extends infer T_2 ? { [k_1 in keyof T_2]: T_2[k_1]; } : never>, z.ZodObject<{
     success: z.ZodLiteral<false>;
     error: z.ZodString;
     details: z.ZodOptional<z.ZodObject<{
@@ -3660,19 +3863,11 @@ export const ApiSuccessSchema: <T extends z.ZodTypeAny>(dataSchema: T) => z.ZodO
     success: z.ZodLiteral<true>;
     data: T;
     message: z.ZodOptional<z.ZodString>;
-}>, any> extends infer T_1 ? { [k in keyof T_1]: z.objectUtil.addQuestionMarks<z.baseObjectOutputType<{
-        success: z.ZodLiteral<true>;
-        data: T;
-        message: z.ZodOptional<z.ZodString>;
-    }>, any>[k]; } : never, z.baseObjectInputType<{
+}>, any> extends infer T_1 ? { [k in keyof T_1]: T_1[k]; } : never, z.baseObjectInputType<{
     success: z.ZodLiteral<true>;
     data: T;
     message: z.ZodOptional<z.ZodString>;
-}> extends infer T_2 ? { [k_1 in keyof T_2]: z.baseObjectInputType<{
-        success: z.ZodLiteral<true>;
-        data: T;
-        message: z.ZodOptional<z.ZodString>;
-    }>[k_1]; } : never>;
+}> extends infer T_2 ? { [k_1 in keyof T_2]: T_2[k_1]; } : never>;
 
 // @public (undocumented)
 export const ApprovalEmailSchema: z.ZodObject<{
@@ -5383,19 +5578,11 @@ export const DomainSchemas: {
         success: z.ZodLiteral<true>;
         data: T;
         message: z.ZodOptional<z.ZodString>;
-    }>, any> extends infer T_1 ? { [k in keyof T_1]: z.objectUtil.addQuestionMarks<z.baseObjectOutputType<{
-            success: z.ZodLiteral<true>;
-            data: T;
-            message: z.ZodOptional<z.ZodString>;
-        }>, any>[k]; } : never, z.baseObjectInputType<{
+    }>, any> extends infer T_1 ? { [k in keyof T_1]: T_1[k]; } : never, z.baseObjectInputType<{
         success: z.ZodLiteral<true>;
         data: T;
         message: z.ZodOptional<z.ZodString>;
-    }> extends infer T_2 ? { [k_1 in keyof T_2]: z.baseObjectInputType<{
-            success: z.ZodLiteral<true>;
-            data: T;
-            message: z.ZodOptional<z.ZodString>;
-        }>[k_1]; } : never>;
+    }> extends infer T_2 ? { [k_1 in keyof T_2]: T_2[k_1]; } : never>;
     readonly ApiError: z.ZodObject<{
         success: z.ZodLiteral<false>;
         error: z.ZodString;
@@ -5475,19 +5662,11 @@ export const DomainSchemas: {
         success: z.ZodLiteral<true>;
         data: T;
         message: z.ZodOptional<z.ZodString>;
-    }>, any> extends infer T_1 ? { [k in keyof T_1]: z.objectUtil.addQuestionMarks<z.baseObjectOutputType<{
-            success: z.ZodLiteral<true>;
-            data: T;
-            message: z.ZodOptional<z.ZodString>;
-        }>, any>[k]; } : never, z.baseObjectInputType<{
+    }>, any> extends infer T_1 ? { [k in keyof T_1]: T_1[k]; } : never, z.baseObjectInputType<{
         success: z.ZodLiteral<true>;
         data: T;
         message: z.ZodOptional<z.ZodString>;
-    }> extends infer T_2 ? { [k_1 in keyof T_2]: z.baseObjectInputType<{
-            success: z.ZodLiteral<true>;
-            data: T;
-            message: z.ZodOptional<z.ZodString>;
-        }>[k_1]; } : never>, z.ZodObject<{
+    }> extends infer T_2 ? { [k_1 in keyof T_2]: T_2[k_1]; } : never>, z.ZodObject<{
         success: z.ZodLiteral<false>;
         error: z.ZodString;
         details: z.ZodOptional<z.ZodObject<{
@@ -5622,6 +5801,21 @@ export const ErrorCodes: {
     readonly CONNECTION_ERROR: "CONNECTION_ERROR";
     readonly CUSTOM_ERROR: "CUSTOM_ERROR";
 };
+
+// @public (undocumented)
+export interface ErrorEnvelope {
+    // (undocumented)
+    code: string;
+    // (undocumented)
+    details?: Record<string, unknown>;
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    type: ErrorEnvelopeType;
+}
+
+// @public (undocumented)
+export type ErrorEnvelopeType = 'validation' | 'cap' | 'state' | 'auth' | 'idempotency';
 
 // @public (undocumented)
 export const ErrorSeverity: {
@@ -7558,27 +7752,90 @@ export const ProgressStageSchema: z.ZodObject<{
             peers_trained: z.ZodNumber;
             students_trained: z.ZodNumber;
             attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            session_date: z.ZodString;
+            session_start_time: z.ZodOptional<z.ZodString>;
+            duration_minutes: z.ZodOptional<z.ZodNumber>;
+            location: z.ZodOptional<z.ZodObject<{
+                venue: z.ZodOptional<z.ZodString>;
+                city: z.ZodOptional<z.ZodString>;
+                country: z.ZodOptional<z.ZodString>;
+            }, "strip", z.ZodTypeAny, {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            }, {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            }>>;
+            session_title: z.ZodOptional<z.ZodString>;
+            co_facilitators: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+            evidence_note: z.ZodOptional<z.ZodString>;
         }, "strip", z.ZodTypeAny, {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         }, {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         }>;
     }, "strip", z.ZodTypeAny, {
         data: {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         };
         activityCode: "AMPLIFY";
     }, {
         data: {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         };
         activityCode: "AMPLIFY";
     }>, z.ZodObject<{
@@ -7673,7 +7930,18 @@ export const ProgressStageSchema: z.ZodObject<{
         data: {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         };
         activityCode: "AMPLIFY";
     } | {
@@ -7724,7 +7992,18 @@ export const ProgressStageSchema: z.ZodObject<{
         data: {
             peers_trained: number;
             students_trained: number;
+            session_date: string;
             attendance_proof_files?: string[] | undefined;
+            session_start_time?: string | undefined;
+            duration_minutes?: number | undefined;
+            location?: {
+                venue?: string | undefined;
+                city?: string | undefined;
+                country?: string | undefined;
+            } | undefined;
+            session_title?: string | undefined;
+            co_facilitators?: string[] | undefined;
+            evidence_note?: string | undefined;
         };
         activityCode: "AMPLIFY";
     } | {
@@ -8137,27 +8416,90 @@ export const SafeDashboardDataSchema: z.ZodObject<{
                 peers_trained: z.ZodNumber;
                 students_trained: z.ZodNumber;
                 attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                session_date: z.ZodString;
+                session_start_time: z.ZodOptional<z.ZodString>;
+                duration_minutes: z.ZodOptional<z.ZodNumber>;
+                location: z.ZodOptional<z.ZodObject<{
+                    venue: z.ZodOptional<z.ZodString>;
+                    city: z.ZodOptional<z.ZodString>;
+                    country: z.ZodOptional<z.ZodString>;
+                }, "strip", z.ZodTypeAny, {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                }, {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                }>>;
+                session_title: z.ZodOptional<z.ZodString>;
+                co_facilitators: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                evidence_note: z.ZodOptional<z.ZodString>;
             }, "strip", z.ZodTypeAny, {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             }, {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             }>;
         }, "strip", z.ZodTypeAny, {
             data: {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             };
             activityCode: "AMPLIFY";
         }, {
             data: {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             };
             activityCode: "AMPLIFY";
         }>, z.ZodObject<{
@@ -8252,7 +8594,18 @@ export const SafeDashboardDataSchema: z.ZodObject<{
             data: {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             };
             activityCode: "AMPLIFY";
         } | {
@@ -8303,7 +8656,18 @@ export const SafeDashboardDataSchema: z.ZodObject<{
             data: {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             };
             activityCode: "AMPLIFY";
         } | {
@@ -8448,7 +8812,18 @@ export const SafeDashboardDataSchema: z.ZodObject<{
             data: {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             };
             activityCode: "AMPLIFY";
         } | {
@@ -8536,7 +8911,18 @@ export const SafeDashboardDataSchema: z.ZodObject<{
             data: {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             };
             activityCode: "AMPLIFY";
         } | {
@@ -8975,53 +9361,14 @@ export const StageMetricsDTOSchema: z.ZodObject<{
 }>;
 
 // @public (undocumented)
-export interface StatsResponseDTO {
-    // (undocumented)
-    badges: {
-        totalAwarded: number;
-        uniqueBadges: number;
-        mostPopular: Array<{
-            code: string;
-            name: string;
-            count: number;
-        }>;
-    };
-    // (undocumented)
-    byStage: {
-        learn: StageBreakdownDTO;
-        explore: StageBreakdownDTO;
-        amplify: StageBreakdownDTO;
-        present: StageBreakdownDTO;
-        shine: StageBreakdownDTO;
-    };
-    // (undocumented)
-    monthlyGrowth: Array<{
-        month: string;
-        educators: number;
-        submissions: number;
-    }>;
-    // (undocumented)
-    studentsImpacted?: number;
-    // (undocumented)
-    topCohorts: Array<{
-        name: string;
-        count: number;
-        avgPoints?: number;
-    }>;
-    // (undocumented)
-    totalEducators: number;
-    // (undocumented)
-    totalPoints: number;
-    // (undocumented)
-    totalSubmissions: number;
-}
+export type StatsResponseDTO = z.infer<typeof StatsResponseDTOSchema>;
 
 // @public (undocumented)
 export const StatsResponseDTOSchema: z.ZodObject<{
     totalEducators: z.ZodNumber;
     totalSubmissions: z.ZodNumber;
     totalPoints: z.ZodNumber;
-    studentsImpacted: z.ZodOptional<z.ZodNumber>;
+    studentsImpacted: z.ZodNumber;
     byStage: z.ZodObject<{
         learn: z.ZodObject<{
             total: z.ZodNumber;
@@ -9238,6 +9585,7 @@ export const StatsResponseDTOSchema: z.ZodObject<{
     };
     totalSubmissions: number;
     totalEducators: number;
+    studentsImpacted: number;
     byStage: {
         learn: {
             total: number;
@@ -9280,7 +9628,6 @@ export const StatsResponseDTOSchema: z.ZodObject<{
         month: string;
         educators: number;
     }[];
-    studentsImpacted?: number | undefined;
 }, {
     totalPoints: number;
     badges: {
@@ -9294,6 +9641,7 @@ export const StatsResponseDTOSchema: z.ZodObject<{
     };
     totalSubmissions: number;
     totalEducators: number;
+    studentsImpacted: number;
     byStage: {
         learn: {
             total: number;
@@ -9336,7 +9684,6 @@ export const StatsResponseDTOSchema: z.ZodObject<{
         month: string;
         educators: number;
     }[];
-    studentsImpacted?: number | undefined;
 }>;
 
 // @public
@@ -9529,27 +9876,90 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                     peers_trained: z.ZodNumber;
                     students_trained: z.ZodNumber;
                     attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                    session_date: z.ZodString;
+                    session_start_time: z.ZodOptional<z.ZodString>;
+                    duration_minutes: z.ZodOptional<z.ZodNumber>;
+                    location: z.ZodOptional<z.ZodObject<{
+                        venue: z.ZodOptional<z.ZodString>;
+                        city: z.ZodOptional<z.ZodString>;
+                        country: z.ZodOptional<z.ZodString>;
+                    }, "strip", z.ZodTypeAny, {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    }, {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    }>>;
+                    session_title: z.ZodOptional<z.ZodString>;
+                    co_facilitators: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                    evidence_note: z.ZodOptional<z.ZodString>;
                 }, "strip", z.ZodTypeAny, {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 }, {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 }>;
             }, "strip", z.ZodTypeAny, {
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             }, {
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             }>, z.ZodObject<{
@@ -9624,7 +10034,18 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
             } | {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             } | {
                 linkedin_url: string;
                 caption: string;
@@ -9654,7 +10075,18 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             } | {
@@ -9776,7 +10208,18 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
             } | {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             } | {
                 linkedin_url: string;
                 caption: string;
@@ -9843,7 +10286,18 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             } | {
@@ -9914,7 +10368,18 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
             } | {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             } | {
                 linkedin_url: string;
                 caption: string;
@@ -9984,7 +10449,18 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             } | {
@@ -10058,7 +10534,18 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
             } | {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             } | {
                 linkedin_url: string;
                 caption: string;
@@ -10131,7 +10618,18 @@ export const SubmissionDetailResponseSchema: z.ZodObject<{
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             } | {
@@ -10328,27 +10826,90 @@ export const SubmissionPayloadSchema: z.ZodDiscriminatedUnion<"activityCode", [z
         peers_trained: z.ZodNumber;
         students_trained: z.ZodNumber;
         attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        session_date: z.ZodString;
+        session_start_time: z.ZodOptional<z.ZodString>;
+        duration_minutes: z.ZodOptional<z.ZodNumber>;
+        location: z.ZodOptional<z.ZodObject<{
+            venue: z.ZodOptional<z.ZodString>;
+            city: z.ZodOptional<z.ZodString>;
+            country: z.ZodOptional<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        }, {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        }>>;
+        session_title: z.ZodOptional<z.ZodString>;
+        co_facilitators: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        evidence_note: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
         peers_trained: number;
         students_trained: number;
+        session_date: string;
         attendance_proof_files?: string[] | undefined;
+        session_start_time?: string | undefined;
+        duration_minutes?: number | undefined;
+        location?: {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        } | undefined;
+        session_title?: string | undefined;
+        co_facilitators?: string[] | undefined;
+        evidence_note?: string | undefined;
     }, {
         peers_trained: number;
         students_trained: number;
+        session_date: string;
         attendance_proof_files?: string[] | undefined;
+        session_start_time?: string | undefined;
+        duration_minutes?: number | undefined;
+        location?: {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        } | undefined;
+        session_title?: string | undefined;
+        co_facilitators?: string[] | undefined;
+        evidence_note?: string | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     data: {
         peers_trained: number;
         students_trained: number;
+        session_date: string;
         attendance_proof_files?: string[] | undefined;
+        session_start_time?: string | undefined;
+        duration_minutes?: number | undefined;
+        location?: {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        } | undefined;
+        session_title?: string | undefined;
+        co_facilitators?: string[] | undefined;
+        evidence_note?: string | undefined;
     };
     activityCode: "AMPLIFY";
 }, {
     data: {
         peers_trained: number;
         students_trained: number;
+        session_date: string;
         attendance_proof_files?: string[] | undefined;
+        session_start_time?: string | undefined;
+        duration_minutes?: number | undefined;
+        location?: {
+            venue?: string | undefined;
+            city?: string | undefined;
+            country?: string | undefined;
+        } | undefined;
+        session_title?: string | undefined;
+        co_facilitators?: string[] | undefined;
+        evidence_note?: string | undefined;
     };
     activityCode: "AMPLIFY";
 }>, z.ZodObject<{
@@ -10502,27 +11063,90 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                     peers_trained: z.ZodNumber;
                     students_trained: z.ZodNumber;
                     attendance_proof_files: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                    session_date: z.ZodString;
+                    session_start_time: z.ZodOptional<z.ZodString>;
+                    duration_minutes: z.ZodOptional<z.ZodNumber>;
+                    location: z.ZodOptional<z.ZodObject<{
+                        venue: z.ZodOptional<z.ZodString>;
+                        city: z.ZodOptional<z.ZodString>;
+                        country: z.ZodOptional<z.ZodString>;
+                    }, "strip", z.ZodTypeAny, {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    }, {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    }>>;
+                    session_title: z.ZodOptional<z.ZodString>;
+                    co_facilitators: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+                    evidence_note: z.ZodOptional<z.ZodString>;
                 }, "strip", z.ZodTypeAny, {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 }, {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 }>;
             }, "strip", z.ZodTypeAny, {
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             }, {
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             }>, z.ZodObject<{
@@ -10597,7 +11221,18 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
             } | {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             } | {
                 linkedin_url: string;
                 caption: string;
@@ -10627,7 +11262,18 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             } | {
@@ -10749,7 +11395,18 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
             } | {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             } | {
                 linkedin_url: string;
                 caption: string;
@@ -10816,7 +11473,18 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             } | {
@@ -10899,7 +11567,18 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
             } | {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             } | {
                 linkedin_url: string;
                 caption: string;
@@ -10973,7 +11652,18 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             } | {
@@ -11051,7 +11741,18 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
             } | {
                 peers_trained: number;
                 students_trained: number;
+                session_date: string;
                 attendance_proof_files?: string[] | undefined;
+                session_start_time?: string | undefined;
+                duration_minutes?: number | undefined;
+                location?: {
+                    venue?: string | undefined;
+                    city?: string | undefined;
+                    country?: string | undefined;
+                } | undefined;
+                session_title?: string | undefined;
+                co_facilitators?: string[] | undefined;
+                evidence_note?: string | undefined;
             } | {
                 linkedin_url: string;
                 caption: string;
@@ -11128,7 +11829,18 @@ export const SubmissionsListResponseSchema: z.ZodObject<{
                 data: {
                     peers_trained: number;
                     students_trained: number;
+                    session_date: string;
                     attendance_proof_files?: string[] | undefined;
+                    session_start_time?: string | undefined;
+                    duration_minutes?: number | undefined;
+                    location?: {
+                        venue?: string | undefined;
+                        city?: string | undefined;
+                        country?: string | undefined;
+                    } | undefined;
+                    session_title?: string | undefined;
+                    co_facilitators?: string[] | undefined;
+                    evidence_note?: string | undefined;
                 };
                 activityCode: "AMPLIFY";
             } | {
@@ -11191,9 +11903,9 @@ export const SubmissionsQuerySchema: z.ZodObject<{
     cohort?: string | undefined;
     activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
     userId?: string | undefined;
-    search?: string | undefined;
     sortBy?: "status" | "created_at" | "updated_at" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
+    search?: string | undefined;
 }, {
     page?: number | undefined;
     limit?: number | undefined;
@@ -11201,9 +11913,9 @@ export const SubmissionsQuerySchema: z.ZodObject<{
     cohort?: string | undefined;
     activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE" | "ALL" | undefined;
     userId?: string | undefined;
-    search?: string | undefined;
     sortBy?: "status" | "created_at" | "updated_at" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
+    search?: string | undefined;
 }>;
 
 // @public (undocumented)
@@ -12042,17 +12754,17 @@ export const UsersQuerySchema: z.ZodObject<{
     limit?: number | undefined;
     cohort?: string | undefined;
     role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
-    search?: string | undefined;
     sortBy?: "created_at" | "name" | "email" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
+    search?: string | undefined;
 }, {
     page?: number | undefined;
     limit?: number | undefined;
     cohort?: string | undefined;
     role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
-    search?: string | undefined;
     sortBy?: "created_at" | "name" | "email" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
+    search?: string | undefined;
 }>;
 
 // @public

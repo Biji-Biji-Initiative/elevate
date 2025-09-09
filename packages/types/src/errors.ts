@@ -39,6 +39,8 @@ export const ErrorCodes = {
   SUBMISSION_LIMIT_EXCEEDED: 'SUBMISSION_LIMIT_EXCEEDED',
   INVALID_SUBMISSION_STATUS: 'INVALID_SUBMISSION_STATUS',
   POINT_ADJUSTMENT_OUT_OF_BOUNDS: 'POINT_ADJUSTMENT_OUT_OF_BOUNDS',
+  SELF_REFERRAL: 'SELF_REFERRAL',
+  CIRCULAR_REFERRAL: 'CIRCULAR_REFERRAL',
 
   // Files
   FILE_TOO_LARGE: 'FILE_TOO_LARGE',
@@ -97,6 +99,8 @@ export const ErrorStatusCodes: Record<ErrorCode, number> = {
   SUBMISSION_LIMIT_EXCEEDED: 400,
   INVALID_SUBMISSION_STATUS: 400,
   POINT_ADJUSTMENT_OUT_OF_BOUNDS: 400,
+  SELF_REFERRAL: 400,
+  CIRCULAR_REFERRAL: 400,
 
   FILE_TOO_LARGE: 413,
   INVALID_FILE_TYPE: 400,
@@ -136,6 +140,8 @@ export const ErrorSeverityMap: Record<ErrorCode, ErrorSeverityLevel> = {
   SUBMISSION_LIMIT_EXCEEDED: ErrorSeverity.MEDIUM,
   INVALID_SUBMISSION_STATUS: ErrorSeverity.LOW,
   POINT_ADJUSTMENT_OUT_OF_BOUNDS: ErrorSeverity.MEDIUM,
+  SELF_REFERRAL: ErrorSeverity.MEDIUM,
+  CIRCULAR_REFERRAL: ErrorSeverity.MEDIUM,
 
   FILE_TOO_LARGE: ErrorSeverity.LOW,
   INVALID_FILE_TYPE: ErrorSeverity.LOW,
@@ -258,6 +264,22 @@ export class SubmissionLimitError extends ElevateApiError {
       traceId,
     )
     this.name = 'SubmissionLimitError'
+  }
+}
+
+// Referral-specific errors
+export class ReferralError extends ElevateApiError {
+  constructor(
+    code: 'SELF_REFERRAL' | 'CIRCULAR_REFERRAL',
+    details?: unknown,
+    traceId?: string,
+  ) {
+    const message =
+      code === 'SELF_REFERRAL'
+        ? 'Referrer and referee must be different users'
+        : 'Circular referral detected within 30 days'
+    super(message, code, details, traceId)
+    this.name = 'ReferralError'
   }
 }
 
@@ -483,6 +505,8 @@ export const DefaultErrorMessages: Record<ErrorCode, string> = {
   SUBMISSION_LIMIT_EXCEEDED: 'Submission limit exceeded',
   INVALID_SUBMISSION_STATUS: 'Invalid submission status',
   POINT_ADJUSTMENT_OUT_OF_BOUNDS: 'Point adjustment out of allowed bounds',
+  SELF_REFERRAL: 'Cannot refer yourself',
+  CIRCULAR_REFERRAL: 'Circular referral detected',
 
   FILE_TOO_LARGE: 'File size exceeds maximum allowed',
   INVALID_FILE_TYPE: 'Invalid file type',

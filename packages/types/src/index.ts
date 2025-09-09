@@ -9,11 +9,13 @@ export {
   PRESENT,
   SHINE,
   USER_ROLES,
+  USER_TYPES,
   SUBMISSION_STATUSES,
   VISIBILITY_OPTIONS,
   LEDGER_SOURCES,
   ActivityCodeSchema,
   UserRoleSchema,
+  UserTypeSchema,
   SubmissionStatusSchema,
   VisibilitySchema,
   LedgerSourceSchema,
@@ -43,6 +45,7 @@ export {
   RoleSchema,
   ActivityCodeEnum,
   RoleEnum,
+  UserTypeEnum,
   SubmissionStatusEnum,
   VisibilityEnum,
   PaginationSchema,
@@ -50,6 +53,7 @@ export {
 export type {
   ActivityCode,
   UserRole,
+  UserType,
   SubmissionStatus,
   Visibility,
   LedgerSource,
@@ -61,6 +65,7 @@ export type {
   Role,
   ActivityCodeType,
   RoleType,
+  UserTypeType,
   SubmissionStatusType,
   VisibilityType,
   PaginationType,
@@ -72,6 +77,7 @@ export * from './dto-mappers'
 export * from './analytics-views'
 export * from './request-schemas'
 export * from './logging-schemas'
+export type { ErrorEnvelope, ErrorEnvelopeType } from './error-envelope'
 
 // Re-export specific items from common to avoid conflicts
 export {
@@ -156,6 +162,7 @@ export {
   ConflictError,
   RateLimitError,
   SubmissionLimitError,
+  ReferralError,
   FileValidationError,
   ExternalServiceError,
   ForbiddenError,

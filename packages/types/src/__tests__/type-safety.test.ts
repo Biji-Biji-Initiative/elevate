@@ -19,7 +19,7 @@ import {
   type SubmissionAuditMeta,
   type UserAuditMeta,
   type BadgeAuditMeta
-} from '../src/common'
+} from '../common'
 
 // Import submission payload parsers from the correct module
 import {
@@ -30,18 +30,19 @@ import {
   parsePresentPayload,
   parseShinePayload,
   type SubmissionPayload,
-} from '../src/submission-payloads'
+} from '../submission-payloads'
 
 // Import auth helpers from the auth package (these were moved there)
 // Note: These functions are actually in @elevate/auth/types but testing them here for completeness
-const parseClerkPublicMetadata = (metadata: unknown): { role?: string } => {
+const parseClerkPublicMetadata = (metadata: unknown): { role?: string; user_type?: string } => {
   if (!metadata || typeof metadata !== 'object' || metadata === null) {
     return {}
   }
-  
+
   const metadataObj = metadata as Record<string, unknown>
   return {
-    role: typeof metadataObj.role === 'string' ? metadataObj.role : undefined
+    role: typeof metadataObj.role === 'string' ? metadataObj.role : undefined,
+    user_type: typeof metadataObj.user_type === 'string' ? metadataObj.user_type : undefined,
   }
 }
 
@@ -91,6 +92,7 @@ describe('Type Safety Tests', () => {
       expect(parseSubmissionStatus('PENDING')).toBe('PENDING')
       expect(parseSubmissionStatus('APPROVED')).toBe('APPROVED')
       expect(parseSubmissionStatus('REJECTED')).toBe('REJECTED')
+      expect(parseSubmissionStatus('REVOKED')).toBe('REVOKED')
     })
 
     it('should return null for invalid statuses', () => {
@@ -193,9 +195,10 @@ describe('Type Safety Tests', () => {
 
   describe('Clerk Auth Parsing', () => {
     it('should parse Clerk publicMetadata safely', () => {
-      const metadata = { role: 'admin', other: 'data' }
+      const metadata = { role: 'admin', user_type: 'EDUCATOR', other: 'data' }
       const result = parseClerkPublicMetadata(metadata)
       expect(result.role).toBe('admin')
+      expect(result.user_type).toBe('EDUCATOR')
     })
 
     it('should handle invalid publicMetadata', () => {

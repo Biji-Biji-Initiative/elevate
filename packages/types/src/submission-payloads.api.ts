@@ -54,6 +54,19 @@ export const AmplifyApiSchema = z.object({
   peersTrained: z.number().int().min(0).max(50), // API receives: peersTrained
   studentsTrained: z.number().int().min(0).max(200), // API receives: studentsTrained
   attendanceProofFiles: z.array(z.string()).optional(), // API receives: attendanceProofFiles
+  sessionDate: z.string(),
+  sessionStartTime: z.string().optional(),
+  durationMinutes: z.number().int().min(0).optional(),
+  location: z
+    .object({
+      venue: z.string().optional(),
+      city: z.string().optional(),
+      country: z.string().optional(),
+    })
+    .optional(),
+  sessionTitle: z.string().optional(),
+  coFacilitators: z.array(z.string()).optional(),
+  evidenceNote: z.string().optional(),
 })
 
 export const PresentApiSchema = z.object({
@@ -170,6 +183,13 @@ export function transformAmplifyApiToDb(
     peers_trained: apiInput.peersTrained, // camelCase → snake_case
     students_trained: apiInput.studentsTrained, // camelCase → snake_case
     attendance_proof_files: apiInput.attendanceProofFiles, // camelCase → snake_case
+    session_date: apiInput.sessionDate,
+    session_start_time: apiInput.sessionStartTime,
+    duration_minutes: apiInput.durationMinutes,
+    location: apiInput.location,
+    session_title: apiInput.sessionTitle,
+    co_facilitators: apiInput.coFacilitators,
+    evidence_note: apiInput.evidenceNote,
   }
 }
 
@@ -271,6 +291,13 @@ export function transformAmplifyDbToApi(
     peersTrained: dbInput.peers_trained, // snake_case → camelCase
     studentsTrained: dbInput.students_trained, // snake_case → camelCase
     attendanceProofFiles: dbInput.attendance_proof_files, // snake_case → camelCase
+    sessionDate: dbInput.session_date,
+    sessionStartTime: dbInput.session_start_time,
+    durationMinutes: dbInput.duration_minutes,
+    location: dbInput.location,
+    sessionTitle: dbInput.session_title,
+    coFacilitators: dbInput.co_facilitators,
+    evidenceNote: dbInput.evidence_note,
   }
 }
 

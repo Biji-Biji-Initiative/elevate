@@ -4,10 +4,12 @@ import {
   // Core enums
   ACTIVITY_CODES,
   USER_ROLES,
+  USER_TYPES,
   SUBMISSION_STATUSES,
   VISIBILITY_OPTIONS,
   ActivityCodeSchema,
   UserRoleSchema,
+  UserTypeSchema,
   SubmissionStatusSchema,
   VisibilitySchema,
   
@@ -91,9 +93,21 @@ describe('Domain Constants - Core Enums', () => {
     })
   })
 
+  describe('USER_TYPES', () => {
+    it('should list educator and student types', () => {
+      expect(USER_TYPES).toEqual(['EDUCATOR', 'STUDENT'])
+    })
+
+    it('should validate against schema', () => {
+      USER_TYPES.forEach(t => {
+        expect(() => UserTypeSchema.parse(t)).not.toThrow()
+      })
+    })
+  })
+
   describe('SUBMISSION_STATUSES', () => {
     it('should contain all valid submission states', () => {
-      expect(SUBMISSION_STATUSES).toEqual(['PENDING', 'APPROVED', 'REJECTED'])
+      expect(SUBMISSION_STATUSES).toEqual(['PENDING', 'APPROVED', 'REJECTED', 'REVOKED'])
     })
 
     it('should validate workflow states', () => {
