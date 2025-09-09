@@ -2,7 +2,6 @@
  * Row Level Security (RLS) Policy Tests
  * Validates that database security policies work correctly
  */
-// Note: removed unused eslint-disable directives to comply with max-warnings=0
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Role } from '@prisma/client';
