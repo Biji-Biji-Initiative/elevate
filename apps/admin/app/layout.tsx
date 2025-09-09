@@ -1,9 +1,10 @@
 import * as React from 'react'
 import { Inter } from 'next/font/google'
 import { headers } from 'next/headers'
-import '@elevate/ui/styles/globals.css'
-import type { Metadata } from 'next'
+
 import { Providers } from './providers'
+import type { Metadata } from 'next'
+import '@elevate/ui/styles/globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
