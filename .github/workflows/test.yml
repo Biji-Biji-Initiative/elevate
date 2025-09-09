@@ -49,9 +49,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 10.12.4
+          version: 10.15.1
           run_install: false
 
       - name: Get pnpm store directory
@@ -124,9 +124,9 @@ jobs:
           node-version: '20'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 10.12.4
+          version: 10.15.1
           run_install: false
 
       - name: Install dependencies
@@ -152,9 +152,9 @@ jobs:
           node-version: '20'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 10.12.4
+          version: 10.15.1
           run_install: false
 
       - name: Install dependencies
@@ -203,9 +203,9 @@ jobs:
           node-version: '20'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 10.12.4
+          version: 10.15.1
           run_install: false
 
       - name: Install dependencies
@@ -267,9 +267,9 @@ jobs:
           node-version: '20'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 10.12.4
+          version: 10.15.1
           run_install: false
 
       - name: Install dependencies

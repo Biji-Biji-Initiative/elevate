@@ -3,7 +3,6 @@ import type { NextRequest } from 'next/server'
 import { prisma } from '@elevate/db'
 import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
 import { createSuccessResponse } from '@elevate/http'
-import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import {
   computeApprovalRate,
   computeActivationRate,
@@ -15,6 +14,7 @@ import {
   mapTopBadges,
   mapReviewerPerformance,
 } from '@elevate/logic'
+import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import {
   parseActivityCode,
   AnalyticsQuerySchema,

@@ -2,7 +2,7 @@
   "name": "elevate-monorepo",
   "private": true,
   "version": "0.1.0",
-  "packageManager": "pnpm@10.13.4",
+  "packageManager": "pnpm@10.15.1",
   "workspaces": [
     "apps/*",
     "packages/*",

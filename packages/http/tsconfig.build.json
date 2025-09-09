@@ -12,7 +12,10 @@
     "sourceMap": true,
     "inlineSources": true,
     "tsBuildInfoFile": "dist/.tsbuildinfo",
-    "paths": {}
+    "paths": {
+      "@elevate/types": ["../types/dist/types"],
+      "@elevate/types/*": ["../types/dist/types/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["src/__tests__/**"],
