@@ -52,3 +52,13 @@ Counters (Option B)
 Reconciliation UI (admin)
 
 - List `kajabi_events` with `status='queued_unmatched'`; attach to user and replay safely.
+
+## Normalization
+
+- Normalize incoming Kajabi `tag.name` to lowercase and trim whitespace before any processing.
+- Persist both raw and normalized values; all idempotency and uniqueness checks use the normalized value.
+
+## Tag removals
+
+- Tag removal events do not revoke points or badges (ledger is immutable; Starter is sticky).
+- Removals are recorded for audit and reconciliation only; no compensating entries are created for removals.

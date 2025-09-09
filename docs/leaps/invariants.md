@@ -11,3 +11,4 @@ These invariants guide design and reviews. Treat them like conservation laws.
 7. No PII on public surfaces: only aggregates leave the server.
 8. Safe replay: reprocessing any event never inflates points or duplicates badges.
 
+

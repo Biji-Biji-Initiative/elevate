@@ -30,3 +30,9 @@ Anti‑gaming
 
 - Block self‑referral and A↔B circular referrals within 30 days.
 - Rate‑limit signups by device/IP; reject disposable email domains.
+
+## Student enforcement and flips
+
+- Webhook: if resolved user_type is `STUDENT`, reject LEARN awards with `type:'auth', code:'STUDENT_NOT_ELIGIBLE'`.
+- Counters: always join on current `users.user_type` and exclude STUDENT from public aggregates.
+- Post-award EDU→STUDENT flips: existing ledger rows remain (immutability) but are excluded from public counters due to current-type filtering.

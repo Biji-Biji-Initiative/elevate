@@ -27,3 +27,4 @@ export async function grantBadgesForUser(userId: string): Promise<void> {
 
 Usage patterns are documented in related pages; ensure all run inside transactions where noted.
 
+

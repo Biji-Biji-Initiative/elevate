@@ -27,3 +27,12 @@ Tests
 
 - Use Vitest (not Jest) for unit/property tests and race scenarios.
 
+## HTTP mapping (canonical)
+
+- validation → 400 (parse) or 422 (semantic)
+- cap → 422
+- state → 409
+- auth → 401 (unauthenticated) / 403 (forbidden)
+- idempotency → 200 with `{ duplicate: true }`
+
+Include one example envelope per route (webhook, approval, stats) and regenerate the SDK after spec updates.

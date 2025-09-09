@@ -36,3 +36,7 @@ Edge cases
 - Duplicate Kajabi events: prevented via `external_event_id`; counts must rely on ledger not submissions.
 - Backfills: micro_credentials should reflect historical ledger rows; no reprocessing needed.
 - Performance: add indexes on `points_ledger(user_id, activity_code)` (exists) and filters on `external_source`.
+
+## Implementation note (ledger derivation)
+
+When deriving micro-credentials from `points_ledger` (without `learn_tag_grants`), group by `(user_id, meta->>'tag_name')` and count only groups where `SUM(delta_points) > 0`. This avoids false positives when compensations exist.

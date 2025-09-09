@@ -24,3 +24,4 @@ MCE provider
 
 - `mce.provider = 'none' | 'import' | 'badge' | 'external_feed'` (default: none)
 
+

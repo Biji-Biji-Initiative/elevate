@@ -106,3 +106,18 @@ Files: `docs/leaps/activity-canon.md`
 - Fill PASS/FAIL, link diffs, create small PRs to fix drift.
 - Do not add new features—only match docs.
 - Keep this file updated as acceptance criteria.
+
+## Acceptance Criteria (binary)
+
+- Starter granted only when both normalized tags exist; replays/compensations do not double-grant.
+- /api/stats filters current user_type='EDUCATOR'.
+- Approving AMPLIFY with missing time does not block; reviewer warning emitted.
+- Replaying same Kajabi event 100× yields exactly 1 ledger row and ≤1 badge insert.
+- org.timezone changes do not retro‑alter approved cap windows.
+- Deleting a user removes PII; counters unaffected.
+
+## CI Parity Tests
+
+- Schema drift: import `packages/types/src/submission-payloads.api.ts` and assert presence of AMPLIFY fields.
+- Stats parity: seed EDU/STUDENT fixtures; assert /api/stats equals SQL sketches in docs.
+- Config mode: if `learnStarter.mode='source_points'`, PR body includes incident link + rollback plan banner.

@@ -59,3 +59,12 @@ Org timezone
 Reviewer guidance
 
 - Verify counts vs evidence sample; request re‑upload if unclear; note anomalies.
+
+## Clarifications
+
+- Duplicate-session soft flag:
+  - If `sessionStartTime` AND `location.city` are present and an APPROVED session exists within ±45 minutes in the same city, flag `DUPLICATE_SESSION_SUSPECT`.
+  - If `sessionStartTime` OR `location.city` is missing, skip the duplicate check and add a reviewer warning.
+- Org timezone at approval:
+  - Persist `approval_org_timezone` with the approval record.
+  - Cap windows for that approval are computed using this persisted value, even if `org.timezone` changes later.

@@ -38,3 +38,4 @@ This folder is the canonical reference for LEAPS points, badges, webhooks, caps,
 - All server-side validations must mirror UI constraints and include explicit error messages.
 - Public pages read only aggregate data; no PII.
 
+

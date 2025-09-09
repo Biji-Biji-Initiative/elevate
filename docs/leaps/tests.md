@@ -15,3 +15,4 @@ Notes
 - Prefer property tests for cap math over a sliding 30‑day window.
 - Use test helpers to seed users, submissions, and ledger rows; avoid mutating existing rows (simulate compensations).
 
+
