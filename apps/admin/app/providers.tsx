@@ -1,17 +1,18 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import type { ReactNode } from 'react'
 
-import { useUser, SignOutButton , ClerkProvider } from '@clerk/nextjs'
+import { useUser, SignOutButton, ClerkProvider } from '@clerk/nextjs'
+import { usePathname } from 'next/navigation'
 
 import { AuthProvider } from '@elevate/auth/context'
 import { AdminLayout } from '@elevate/ui/next'
 
 interface ProvidersProps {
-  children: React.ReactNode
+  children: ReactNode
 }
 
-function AdminLayoutWrapper({ children }: { children: React.ReactNode }) {
+function AdminLayoutWrapper({ children }: { children: ReactNode }) {
   const { user, isLoaded } = useUser()
   const pathname = usePathname()
   
