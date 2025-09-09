@@ -2,15 +2,12 @@ import type { NextRequest} from 'next/server';
 
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { sloMonitor } from '@elevate/logging'
-import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { getServerLogger } from '@elevate/logging/server'
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
-  const baseLogger = await getSafeServerLogger('slo')
-  const logger = baseLogger.forRequestWithHeaders
-    ? baseLogger.forRequestWithHeaders(request)
-    : baseLogger
+  const logger = getServerLogger().forRequestWithHeaders(request)
 
   try {
     // Gate internal endpoint via env

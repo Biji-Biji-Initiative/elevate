@@ -2,17 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { z } from 'zod'
 import { ClientErrorReportSchema } from '@elevate/types'
-import { getSafeServerLogger } from '@elevate/logging/safe-server'
 
 // Initialize logger
-let logger: Awaited<ReturnType<typeof getSafeServerLogger>> | null = null
-void (async () => {
+type ServerLogger = import('@elevate/logging/server').ServerLogger
+let logger: ServerLogger | null = null
+const initializeLogger = async () => {
   try {
-    logger = await getSafeServerLogger('client-errors')
-  } catch {
+    const { getServerLogger } = await import('@elevate/logging/server')
+    logger = getServerLogger({ name: 'client-errors' })
+  } catch (error) {
     console.warn('Failed to initialize client errors logger')
   }
-})()
+}
+
+initializeLogger()
 
 // Schema for client error reports (shared)
 const ClientErrorSchema = ClientErrorReportSchema
@@ -46,19 +49,14 @@ export async function POST(request: NextRequest) {
 
     // Log the client error
     if (logger) {
-      const log = (lvl: string, msg: string, err: Error | null, ctx: Record<string, unknown>) => {
-        if (lvl === 'error') return logger!.error(msg, err || undefined, ctx)
-        if (lvl === 'warn') return logger!.warn(msg, ctx)
-        // map debug/info to info
-        return logger!.info(msg, ctx)
-      }
       if (error) {
         const errorObj = new Error(error.message)
         errorObj.name = error.name
         errorObj.stack = error.stack
-        log(level, message, errorObj, logContext)
+        
+        logger[level](message, errorObj, logContext)
       } else {
-        log(level, message, null, logContext)
+        logger[level](message, logContext)
       }
     } else {
       // Fallback to console

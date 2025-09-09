@@ -5,7 +5,7 @@ import { auth } from '@clerk/nextjs/server'
 import { withRole } from '@elevate/auth'
 import { prisma } from '@elevate/db/client'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
-import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { getServerLogger } from '@elevate/logging'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -458,8 +458,7 @@ export async function GET(request: NextRequest) {
     const suiteParam = searchParams.get('suite')
     const suitesToRun = suiteParam ? [suiteParam] : ['consistency', 'performance', 'refresh']
 
-    const baseLogger = await getSafeServerLogger('admin-test-materialized-views')
-    baseLogger.info('Running materialized view tests', {
+    getServerLogger().info('Running materialized view tests', {
       operation: 'admin_test_materialized_views',
       suites: suitesToRun,
     })
@@ -510,8 +509,7 @@ export async function GET(request: NextRequest) {
     return res
 
   } catch (error) {
-    const baseLogger = await getSafeServerLogger('admin-test-materialized-views')
-    baseLogger.error('Materialized view testing failed', error as Error, {
+    getServerLogger().error('Materialized view testing failed', error as Error, {
       operation: 'admin_test_materialized_views',
     })
     return createErrorResponse(new Error('Failed to run tests'), 500)

@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 
-import { auth, clerkClient } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
 
 import { prisma } from '@elevate/db/client'
 import {
@@ -8,13 +8,14 @@ import {
   withApiErrorHandling,
   type ApiContext,
 } from '@elevate/http'
+import { AuthenticationError, NotFoundError } from '@elevate/types/errors'
+import { clerkClient } from '@clerk/nextjs/server'
 import { enrollUserInKajabi } from '@elevate/integrations'
-import { AuthenticationError } from '@elevate/types/errors'
 
 export const runtime = 'nodejs'
 
 export const GET = withApiErrorHandling(
-  async (_request: NextRequest, _context: ApiContext) => {
+  async (_request: NextRequest, context: ApiContext) => {
     const { userId } = await auth()
 
     if (!userId) {

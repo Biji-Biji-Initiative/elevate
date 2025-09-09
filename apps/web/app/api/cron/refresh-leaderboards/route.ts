@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 
 import { prisma } from '@elevate/db/client';
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
-import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { getServerLogger } from '@elevate/logging/server';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Allow up to 60 seconds for refresh operations
@@ -54,11 +54,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const jobStartTime = Date.now()
   const timestamp = new Date().toISOString()
   
-  // Create logger with request context (safe for Next route handlers)
-  const baseLogger = await getSafeServerLogger('refresh-leaderboards')
-  const logger = baseLogger.forRequestWithHeaders
-    ? baseLogger.forRequestWithHeaders(request)
-    : baseLogger
+  // Create logger with request context
+  const logger = getServerLogger().forRequestWithHeaders(request)
 
   try {
     // Verify this is coming from Vercel Cron or authorized request
@@ -93,7 +90,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // Log detailed refresh statistics
     refreshResults.forEach(result => {
-      const _status = result.success ? 'SUCCESS' : 'FAILED'
+      const status = result.success ? 'SUCCESS' : 'FAILED'
       if (result.success) {
         logger.info(`Materialized view refresh completed: ${result.view_name}`, {
           operation: 'refresh_materialized_view',
