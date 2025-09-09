@@ -189,6 +189,9 @@ jobs:
       - name: Build UI package (for styles export)
         run: pnpm -F @elevate/ui run build
 
+      - name: Build Auth package (for server-helpers export)
+        run: pnpm -F @elevate/auth run build
+
       - name: 🔍 Validate environment configuration
         run: pnpm run env:validate:ci
 
