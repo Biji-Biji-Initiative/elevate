@@ -1,19 +1,21 @@
 import crypto from 'crypto'
 
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest } from 'next/server'
 
 import { prisma } from '@elevate/db/client'
-import { withRateLimit, webhookRateLimiter } from '@elevate/security/rate-limiter'
+import { createErrorResponse, createSuccessResponse } from '@elevate/http'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { grantBadgesForUser } from '@elevate/logic'
-import type { ErrorEnvelope } from '@elevate/types'
+import { withRateLimit, webhookRateLimiter } from '@elevate/security/rate-limiter'
+import { KajabiTagEventSchema } from '@elevate/types/webhooks'
+import type { Prisma as PrismaNS } from '@elevate/db'
+import { activityCanon } from '@elevate/types/activity-canon'
+
+//
 
 export const runtime = 'nodejs'
 
 const COURSE_TAGS = new Set(['elevate-ai-1-completed', 'elevate-ai-2-completed'])
-
-function errorResponse(status: number, envelope: ErrorEnvelope) {
-  return NextResponse.json({ error: envelope }, { status })
-}
 
 function verifySignature(body: string, signature: string | null): boolean {
   const secret = process.env.KAJABI_WEBHOOK_SECRET
@@ -25,44 +27,50 @@ function verifySignature(body: string, signature: string | null): boolean {
   return crypto.timingSafeEqual(sigBuf, expBuf)
 }
 
+function isUniqueConstraintError(err: unknown): err is PrismaNS.PrismaClientKnownRequestError {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'code' in err &&
+    (err as { code?: unknown }).code === 'P2002'
+  )
+}
+
 export async function POST(request: NextRequest) {
+  const logger = await getSafeServerLogger('kajabi-webhook')
   return withRateLimit(request, webhookRateLimiter, async () => {
     const bodyText = await request.text()
     if (!verifySignature(bodyText, request.headers.get('x-kajabi-signature'))) {
-      return errorResponse(401, {
-        type: 'auth',
-        code: 'INVALID_SIGNATURE',
-        message: 'Invalid webhook signature',
-      })
+      logger.warn('Invalid webhook signature', { url: request.url })
+      return createErrorResponse(new Error('Invalid webhook signature'), 401)
     }
 
-    let payload: any
+    let payloadUnknown: unknown
     try {
-      payload = JSON.parse(bodyText)
+      payloadUnknown = JSON.parse(bodyText)
     } catch {
-      return errorResponse(400, {
-        type: 'validation',
-        code: 'INVALID_JSON',
-        message: 'Body must be valid JSON',
-      })
+      logger.warn('Invalid JSON body for Kajabi webhook')
+      return createErrorResponse(new Error('Body must be valid JSON'), 400)
     }
 
-    const createdAt = Date.parse(payload.created_at as string)
+    // Base schema validation for expected Kajabi payload
+    const base = KajabiTagEventSchema.safeParse(payloadUnknown)
+    if (!base.success) {
+      logger.warn('Invalid Kajabi webhook payload', { issues: base.error?.issues })
+      return createErrorResponse(new Error('Invalid Kajabi webhook payload'), 400)
+    }
+
+    const payload = base.data as typeof base.data & { created_at?: string }
+    const createdAt = Date.parse((payload as { created_at?: string }).created_at ?? '')
     if (Number.isNaN(createdAt)) {
-      return errorResponse(400, {
-        type: 'validation',
-        code: 'MISSING_CREATED_AT',
-        message: 'created_at required',
-      })
+      logger.warn('Kajabi webhook missing created_at')
+      return createErrorResponse(new Error('created_at required'), 400)
     }
 
     const replay = request.headers.get('x-admin-replay') === 'true'
     if (Math.abs(Date.now() - createdAt) > 5 * 60 * 1000 && !replay) {
-      return errorResponse(400, {
-        type: 'auth',
-        code: 'TIMESTAMP_SKEW',
-        message: 'Event timestamp outside allowed window',
-      })
+      logger.warn('Kajabi webhook outside allowed window', { createdAt, replay })
+      return createErrorResponse(new Error('Event timestamp outside allowed window'), 400)
     }
 
     const eventId = String(payload.event_id ?? '')
@@ -89,9 +97,10 @@ export async function POST(request: NextRequest) {
               raw: payload,
             },
           })
-        } catch (e: any) {
-          if (e.code === 'P2002') {
-            return NextResponse.json({ duplicate: true })
+        } catch (e: unknown) {
+          if (isUniqueConstraintError(e)) {
+            logger.info('Kajabi event deduplicated (create)', { eventId, tagNorm })
+            return createSuccessResponse({ duplicate: true })
           }
           throw e
         }
@@ -101,7 +110,7 @@ export async function POST(request: NextRequest) {
             where: { event_id_tag_name_norm: { event_id: eventId, tag_name_norm: tagNorm } },
             data: { status: 'ignored' },
           })
-          return NextResponse.json({ ignored: true }, { status: 202 })
+          return createSuccessResponse({ ignored: true }, 202)
         }
 
         let user = await tx.user.findUnique({ where: { kajabi_contact_id: contactId } })
@@ -117,7 +126,7 @@ export async function POST(request: NextRequest) {
             where: { event_id_tag_name_norm: { event_id: eventId, tag_name_norm: tagNorm } },
             data: { status: 'queued_unmatched' },
           })
-          return NextResponse.json({ queued: true }, { status: 202 })
+          return createSuccessResponse({ queued: true }, 202)
         }
 
         if (user.user_type === 'STUDENT') {
@@ -125,24 +134,21 @@ export async function POST(request: NextRequest) {
             where: { event_id_tag_name_norm: { event_id: eventId, tag_name_norm: tagNorm } },
             data: { status: 'student' },
           })
-          return errorResponse(403, {
-            type: 'auth',
-            code: 'STUDENT_NOT_ELIGIBLE',
-            message: 'Student accounts are not eligible',
-          })
+          return createErrorResponse(new Error('Student accounts are not eligible'), 403)
         }
 
         try {
           await tx.learnTagGrant.create({
             data: { user_id: user.id, tag_name: tagNorm, granted_at: eventTime },
           })
-        } catch (e: any) {
-          if (e.code === 'P2002') {
+        } catch (e: unknown) {
+          if (isUniqueConstraintError(e)) {
             await tx.kajabiEvent.update({
               where: { event_id_tag_name_norm: { event_id: eventId, tag_name_norm: tagNorm } },
               data: { status: 'duplicate' },
             })
-            return NextResponse.json({ duplicate: true })
+            logger.info('Kajabi grant deduplicated', { userId: user.id, tagNorm })
+            return createSuccessResponse({ duplicate: true })
           }
           throw e
         }
@@ -155,18 +161,19 @@ export async function POST(request: NextRequest) {
               source: 'WEBHOOK',
               external_source: 'kajabi',
               external_event_id: externalEventId,
-              delta_points: 10,
+              delta_points: activityCanon.learn.perTag,
               event_time: eventTime,
               meta: { tag_name: tagNorm },
             },
           })
-        } catch (e: any) {
-          if (e.code === 'P2002') {
+        } catch (e: unknown) {
+          if (isUniqueConstraintError(e)) {
             await tx.kajabiEvent.update({
               where: { event_id_tag_name_norm: { event_id: eventId, tag_name_norm: tagNorm } },
               data: { status: 'duplicate' },
             })
-            return NextResponse.json({ duplicate: true })
+            logger.info('Kajabi points deduplicated', { userId: user.id, externalEventId })
+            return createSuccessResponse({ duplicate: true })
           }
           throw e
         }
@@ -178,15 +185,15 @@ export async function POST(request: NextRequest) {
           data: { status: 'processed' },
         })
 
-        return NextResponse.json({ awarded: true })
+        return createSuccessResponse({ awarded: true })
       })
-    } catch (error: any) {
-      return errorResponse(500, {
-        type: 'state',
-        code: 'UNEXPECTED_ERROR',
-        message: 'Unexpected error',
-        details: { message: error?.message },
-      })
+    } catch (error: unknown) {
+      logger.error(
+        'Error processing Kajabi webhook',
+        error instanceof Error ? error : new Error(String(error)),
+        { eventId, tagNorm, contactId },
+      )
+      return createErrorResponse(new Error('Internal Server Error'), 500)
     }
   })
 }
