@@ -231,7 +231,7 @@ pnpm dev
 
 11. **Understand the Business** (1 hour):
 
-    - Read program documentation in [`plan/`](../plan/)
+    - Read program documentation in `archive/planning/plan/`
     - Understand Indonesian education context
     - Learn about Microsoft's role and objectives
 

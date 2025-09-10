@@ -1,0 +1,38 @@
+[
+  {
+    "path": "README.md"
+  },
+  {
+    "path": "docs/README.md"
+  },
+  {
+    "path": "docs/development.md"
+  },
+  {
+    "path": "docs/DEPLOYMENT.md"
+  },
+  {
+    "path": "docs/CONTRIBUTING.md"
+  },
+  {
+    "path": "docs/DATABASE.md"
+  },
+  {
+    "path": "docs/API.md"
+  },
+  {
+    "path": "docs/architecture/overview.md"
+  },
+  {
+    "path": "docs/onboarding.md"
+  },
+  {
+    "path": "docs/runbooks/deploy.md"
+  },
+  {
+    "path": "docs/security/index.md"
+  },
+  {
+    "path": "VALIDATION_SYSTEMS.md"
+  }
+]

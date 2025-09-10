@@ -8,7 +8,7 @@ import { Button } from '../components/ui/button'
 export interface Column<T, V = unknown> {
   key: keyof T | string
   header: string
-  render?: (row: T) => React.ReactNode
+  render?: (row: T, value: V) => React.ReactNode
   sortable?: boolean
   width?: string
   accessor?: (row: T) => V
@@ -22,7 +22,11 @@ export type ColumnOf<T> = Column<T>
 // Factory to build typed column arrays with inference
 export const createColumns = <T,>() => <C extends readonly Column<T, unknown>[]>(cols: C) => cols
 
-export interface DataTableProps<T = Record<string, unknown>, C extends readonly Column<T, unknown>[] = readonly Column<T, unknown>[]> {
+export interface DataTableProps<
+  T = Record<string, unknown>,
+  C extends readonly Column<T, unknown>[] = readonly Column<T, unknown>[],
+  Id extends string | number = string,
+> {
   data: T[]
   columns: C
   loading?: boolean
@@ -33,9 +37,9 @@ export interface DataTableProps<T = Record<string, unknown>, C extends readonly 
     onPageChange: (page: number) => void
   }
   selection?: {
-    selectedRows: Set<string | number>
-    onSelectionChange: (selectedRows: Set<string | number>) => void
-    getRowId: (row: T) => string | number
+    selectedRows: Set<Id>
+    onSelectionChange: (selectedRows: Set<Id>) => void
+    getRowId: (row: T) => Id
   }
   sorting?: {
     sortBy?: string
@@ -47,7 +51,11 @@ export interface DataTableProps<T = Record<string, unknown>, C extends readonly 
   className?: string
 }
 
-export function DataTable<T extends Record<string, unknown> = Record<string, unknown>, C extends readonly Column<T, unknown>[] = readonly Column<T, unknown>[]>({
+export function DataTable<
+  T extends Record<string, unknown> = Record<string, unknown>,
+  C extends readonly Column<T, unknown>[] = readonly Column<T, unknown>[],
+  Id extends string | number = string,
+>({
   data,
   columns,
   loading = false,
@@ -57,7 +65,7 @@ export function DataTable<T extends Record<string, unknown> = Record<string, unk
   onRowClick,
   emptyMessage = 'No data available',
   className = ''
-}: DataTableProps<T, C>) {
+}: DataTableProps<T, C, Id>) {
   const [localSort, setLocalSort] = useState<{ key: string; order: 'asc' | 'desc' } | null>(null)
 
   const sortedData = useMemo(() => {
@@ -153,7 +161,7 @@ export function DataTable<T extends Record<string, unknown> = Record<string, unk
     }
   }
 
-  const handleRowSelect = (rowId: string | number) => {
+  const handleRowSelect = (rowId: Id) => {
     if (!selection) return
 
     const newSelection = new Set(selection.selectedRows)
@@ -235,7 +243,7 @@ export function DataTable<T extends Record<string, unknown> = Record<string, unk
               </tr>
             ) : (
               sortedData.map((row, index) => {
-                const rowId = selection ? selection.getRowId(row) : index
+                const rowId: Id = selection ? selection.getRowId(row) : (index as unknown as Id)
                 const isSelected = selection ? selection.selectedRows.has(rowId) : false
                 
                 return (
@@ -263,15 +271,18 @@ export function DataTable<T extends Record<string, unknown> = Record<string, unk
                       const value = column.accessor
                         ? column.accessor(row)
                         : getNestedValue(row, String(column.key))
-                      const cellValue = column.render
-                        ? column.render(row)
-                        : value
-                      
-                      const displayValue = cellValue === null || cellValue === undefined 
-                        ? '-' 
-                        : React.isValidElement(cellValue) 
-                        ? cellValue 
-                        : String(cellValue)
+
+                      let displayValue: React.ReactNode
+                      if (column.render) {
+                        displayValue = column.render(row, value as unknown)
+                      } else {
+                        displayValue =
+                          value === null || value === undefined
+                            ? '-'
+                            : typeof value === 'string' || typeof value === 'number'
+                              ? String(value)
+                              : String(value)
+                      }
                       
                       return (
                         <td key={String(column.key)} className="px-4 py-3 text-sm text-gray-900">

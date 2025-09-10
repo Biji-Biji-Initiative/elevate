@@ -27,7 +27,8 @@
     "node_modules",
     "**/*.md",
     "**/*.mdx",
-    "*.md"
+    "*.md",
+    "tests/**"
   ],
   "references": [
     { "path": "../../packages/types/tsconfig.build.json" },

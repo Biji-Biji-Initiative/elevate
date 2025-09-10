@@ -14,6 +14,8 @@ export const AdminEnvSchema: z.ZodObject<{
     NODE_ENV: z.ZodDefault<z.ZodEnum<["development", "production", "test"]>>;
     KAJABI_API_KEY: z.ZodOptional<z.ZodString>;
     KAJABI_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
+    KAJABI_BASE_URL: z.ZodOptional<z.ZodString>;
+    KAJABI_OFFER_NAME: z.ZodOptional<z.ZodString>;
     NEXT_PUBLIC_SITE_URL: z.ZodDefault<z.ZodString>;
     RATE_LIMIT_RPM: z.ZodDefault<z.ZodPipeline<z.ZodEffects<z.ZodString, number, string>, z.ZodNumber>>;
     DEBUG: z.ZodOptional<z.ZodDefault<z.ZodEffects<z.ZodString, boolean, string>>>;
@@ -26,6 +28,8 @@ export const AdminEnvSchema: z.ZodObject<{
     RATE_LIMIT_RPM: number;
     KAJABI_API_KEY?: string | undefined;
     KAJABI_CLIENT_SECRET?: string | undefined;
+    KAJABI_BASE_URL?: string | undefined;
+    KAJABI_OFFER_NAME?: string | undefined;
     DEBUG?: boolean | undefined;
 }, {
     DATABASE_URL: string;
@@ -34,6 +38,8 @@ export const AdminEnvSchema: z.ZodObject<{
     NODE_ENV?: "development" | "production" | "test" | undefined;
     KAJABI_API_KEY?: string | undefined;
     KAJABI_CLIENT_SECRET?: string | undefined;
+    KAJABI_BASE_URL?: string | undefined;
+    KAJABI_OFFER_NAME?: string | undefined;
     NEXT_PUBLIC_SITE_URL?: string | undefined;
     RATE_LIMIT_RPM?: string | undefined;
     DEBUG?: string | undefined;
@@ -50,6 +56,9 @@ export const EnvSchema: z.ZodObject<{
     KAJABI_WEBHOOK_SECRET: z.ZodOptional<z.ZodString>;
     KAJABI_API_KEY: z.ZodOptional<z.ZodString>;
     KAJABI_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
+    KAJABI_BASE_URL: z.ZodOptional<z.ZodString>;
+    KAJABI_LEARN_TAGS: z.ZodOptional<z.ZodEffects<z.ZodString, string[], string>>;
+    KAJABI_OFFER_NAME: z.ZodOptional<z.ZodString>;
     NEXT_PUBLIC_SITE_URL: z.ZodDefault<z.ZodString>;
     NODE_ENV: z.ZodDefault<z.ZodEnum<["development", "production", "test"]>>;
     RATE_LIMIT_RPM: z.ZodDefault<z.ZodPipeline<z.ZodEffects<z.ZodString, number, string>, z.ZodNumber>>;
@@ -78,6 +87,9 @@ export const EnvSchema: z.ZodObject<{
     KAJABI_WEBHOOK_SECRET?: string | undefined;
     KAJABI_API_KEY?: string | undefined;
     KAJABI_CLIENT_SECRET?: string | undefined;
+    KAJABI_BASE_URL?: string | undefined;
+    KAJABI_LEARN_TAGS?: string[] | undefined;
+    KAJABI_OFFER_NAME?: string | undefined;
     RESEND_API_KEY?: string | undefined;
     OPENAI_API_KEY?: string | undefined;
     CRON_SECRET?: string | undefined;
@@ -99,6 +111,9 @@ export const EnvSchema: z.ZodObject<{
     KAJABI_WEBHOOK_SECRET?: string | undefined;
     KAJABI_API_KEY?: string | undefined;
     KAJABI_CLIENT_SECRET?: string | undefined;
+    KAJABI_BASE_URL?: string | undefined;
+    KAJABI_LEARN_TAGS?: string | undefined;
+    KAJABI_OFFER_NAME?: string | undefined;
     NEXT_PUBLIC_SITE_URL?: string | undefined;
     RATE_LIMIT_RPM?: string | undefined;
     WEBHOOK_RATE_LIMIT_RPM?: string | undefined;
@@ -153,6 +168,8 @@ export const WebEnvSchema: z.ZodObject<{
     CLERK_SECRET_KEY: z.ZodString;
     KAJABI_API_KEY: z.ZodOptional<z.ZodString>;
     KAJABI_CLIENT_SECRET: z.ZodOptional<z.ZodString>;
+    KAJABI_BASE_URL: z.ZodOptional<z.ZodString>;
+    KAJABI_OFFER_NAME: z.ZodOptional<z.ZodString>;
     NEXT_PUBLIC_SITE_URL: z.ZodDefault<z.ZodString>;
     NODE_ENV: z.ZodDefault<z.ZodEnum<["development", "production", "test"]>>;
     RATE_LIMIT_RPM: z.ZodDefault<z.ZodPipeline<z.ZodEffects<z.ZodString, number, string>, z.ZodNumber>>;
@@ -171,6 +188,7 @@ export const WebEnvSchema: z.ZodObject<{
     NEXT_PUBLIC_SUPABASE_URL: z.ZodEffects<z.ZodString, string, string>;
     SUPABASE_SERVICE_ROLE_KEY: z.ZodEffects<z.ZodString, string, string>;
     KAJABI_WEBHOOK_SECRET: z.ZodString;
+    KAJABI_LEARN_TAGS: z.ZodOptional<z.ZodEffects<z.ZodString, string[], string>>;
     CLERK_WEBHOOK_SECRET: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     DATABASE_URL: string;
@@ -186,6 +204,9 @@ export const WebEnvSchema: z.ZodObject<{
     WEBHOOK_RATE_LIMIT_RPM: number;
     KAJABI_API_KEY?: string | undefined;
     KAJABI_CLIENT_SECRET?: string | undefined;
+    KAJABI_BASE_URL?: string | undefined;
+    KAJABI_LEARN_TAGS?: string[] | undefined;
+    KAJABI_OFFER_NAME?: string | undefined;
     RESEND_API_KEY?: string | undefined;
     OPENAI_API_KEY?: string | undefined;
     CRON_SECRET?: string | undefined;
@@ -207,6 +228,9 @@ export const WebEnvSchema: z.ZodObject<{
     NODE_ENV?: "development" | "production" | "test" | undefined;
     KAJABI_API_KEY?: string | undefined;
     KAJABI_CLIENT_SECRET?: string | undefined;
+    KAJABI_BASE_URL?: string | undefined;
+    KAJABI_LEARN_TAGS?: string | undefined;
+    KAJABI_OFFER_NAME?: string | undefined;
     NEXT_PUBLIC_SITE_URL?: string | undefined;
     RATE_LIMIT_RPM?: string | undefined;
     WEBHOOK_RATE_LIMIT_RPM?: string | undefined;

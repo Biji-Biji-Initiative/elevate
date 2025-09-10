@@ -6,11 +6,13 @@
 import { PrismaClient } from '@prisma/client';
 import { DatabaseFixtures } from './fixtures';
 
-// Test database configuration
-const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL;
+// Test database configuration with optional skip mode for non-DB test runs
+const SKIP_DB = String(process.env.SKIP_DB_TESTS || '').toLowerCase() === '1' ||
+  String(process.env.SKIP_DB_TESTS || '').toLowerCase() === 'true'
+const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
 
-if (!TEST_DATABASE_URL) {
-  throw new Error('TEST_DATABASE_URL or DATABASE_URL must be set for testing');
+if (!TEST_DATABASE_URL && !SKIP_DB) {
+  throw new Error('TEST_DATABASE_URL or DATABASE_URL must be set for testing')
 }
 
 /**
@@ -23,21 +25,23 @@ export class TestDatabase {
 
   constructor() {
     this.prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: TEST_DATABASE_URL,
-        },
-      },
+      ...(TEST_DATABASE_URL
+        ? {
+            datasources: {
+              db: { url: TEST_DATABASE_URL },
+            },
+          }
+        : {}),
       log: process.env.NODE_ENV === 'test' ? [] : ['query', 'error'],
-    });
-    this.fixtures = new DatabaseFixtures(this.prisma);
+    })
+    this.fixtures = new DatabaseFixtures(this.prisma)
   }
 
   /**
    * Setup test database with seed data
    */
   async setup(): Promise<void> {
-    if (this.isSetup) return;
+    if (this.isSetup || SKIP_DB) return
 
     try {
       await this.prisma.$connect();
@@ -55,7 +59,7 @@ export class TestDatabase {
    * Clean up test database
    */
   async cleanup(): Promise<void> {
-    if (!this.isSetup) return;
+    if (!this.isSetup || SKIP_DB) return
 
     try {
       await this.fixtures.cleanup();

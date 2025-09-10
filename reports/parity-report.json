@@ -1,0 +1,142 @@
+{
+  "summary": {
+    "docs": 339,
+    "api_files": 153,
+    "db_models": 11,
+    "db_enums": 5
+  },
+  "findings": {
+    "missing": [
+      "docs/openapi.yaml missing"
+    ],
+    "drifts": [],
+    "duplicates": [
+      {
+        "title": "api reference - actual endpoints",
+        "paths": [
+          "docs/API.md",
+          "docs/API.md"
+        ]
+      },
+      {
+        "title": "api usage guide",
+        "paths": [
+          "docs/api/index.md",
+          "docs/api/index.md"
+        ]
+      },
+      {
+        "title": "adr-0001: architecture decision record template",
+        "paths": [
+          "docs/architecture/adr/ADR-0001-template.md",
+          "docs/architecture/adr/ADR-0001-template.md"
+        ]
+      },
+      {
+        "title": "architecture overview",
+        "paths": [
+          "docs/architecture/overview.md",
+          "docs/architecture/overview.md"
+        ]
+      },
+      {
+        "title": "contribution guide",
+        "paths": [
+          "docs/CONTRIBUTING.md",
+          "docs/CONTRIBUTING.md"
+        ]
+      },
+      {
+        "title": "database schema management",
+        "paths": [
+          "docs/database-management.md",
+          "docs/database-management.md"
+        ]
+      },
+      {
+        "title": "database schema - actual prisma models",
+        "paths": [
+          "docs/DATABASE.md",
+          "docs/DATABASE.md"
+        ]
+      },
+      {
+        "title": "deployment guide",
+        "paths": [
+          "docs/DEPLOYMENT.md",
+          "docs/DEPLOYMENT.md"
+        ]
+      },
+      {
+        "title": "development troubleshooting & patterns",
+        "paths": [
+          "docs/DEV_TROUBLESHOOTING.md",
+          "docs/DEV_TROUBLESHOOTING.md"
+        ]
+      },
+      {
+        "title": "core developer guide",
+        "paths": [
+          "docs/development.md",
+          "docs/development.md"
+        ]
+      },
+      {
+        "title": "documentation transformation summary",
+        "paths": [
+          "docs/DOCS_TRANSFORMATION_SUMMARY.md",
+          "docs/DOCS_TRANSFORMATION_SUMMARY.md"
+        ]
+      },
+      {
+        "title": "lean documentation plan - radical consolidation",
+        "paths": [
+          "docs/LEAN_DOCS_PLAN.md",
+          "docs/LEAN_DOCS_PLAN.md"
+        ]
+      },
+      {
+        "title": "logging in next.js route handlers",
+        "paths": [
+          "docs/LOGGING.md",
+          "docs/LOGGING.md"
+        ]
+      },
+      {
+        "title": "engineering onboarding",
+        "paths": [
+          "docs/onboarding.md",
+          "docs/onboarding.md"
+        ]
+      },
+      {
+        "title": "privacy & publication policies",
+        "paths": [
+          "docs/policies.md",
+          "docs/policies.md"
+        ]
+      },
+      {
+        "title": "roles & permissions",
+        "paths": [
+          "docs/roles-permissions.md",
+          "docs/roles-permissions.md"
+        ]
+      },
+      {
+        "title": "deployment runbook",
+        "paths": [
+          "docs/runbooks/deploy.md",
+          "docs/runbooks/deploy.md"
+        ]
+      },
+      {
+        "title": "security & privacy guide",
+        "paths": [
+          "docs/security/index.md",
+          "docs/security/index.md"
+        ]
+      }
+    ]
+  }
+}

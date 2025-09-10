@@ -20,22 +20,18 @@ export type BadgeUI = {
 }
 
 export function toBadgeUI(badge: AdminBadge): BadgeUI {
-  const c = badge.criteria as unknown as BadgeUI['criteria'] | undefined
-  const type = (c?.type ?? 'points') as BadgeUI['criteria']['type']
-  const threshold = typeof c?.threshold === 'number' ? c.threshold : 0
-  const activity_codes = Array.isArray(c?.activity_codes)
-    ? (c.activity_codes as string[])
-    : []
-  const conditions =
-    c?.conditions && typeof c.conditions === 'object'
-      ? (c.conditions as Record<string, unknown>)
-      : {}
+  const criteria: BadgeUI['criteria'] = {
+    type: badge.criteria.type,
+    threshold: badge.criteria.threshold,
+    activity_codes: badge.criteria.activity_codes ?? [],
+    conditions: badge.criteria.conditions ?? {},
+  }
   return {
     code: badge.code,
     name: badge.name,
     description: badge.description,
     icon_url: badge.icon_url ?? '',
-    criteria: { type, threshold, activity_codes, conditions },
+    criteria,
     _count: { earned_badges: badge._count?.earned_badges ?? 0 },
   }
 }
@@ -101,4 +97,3 @@ export function toSubmissionRowUI(s: AdminSubmission): SubmissionRowUI {
     },
   }
 }
-

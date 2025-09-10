@@ -67,6 +67,26 @@ export const ActivityCanonSchema = z.object({
   }),
 })
 
+/**
+ * Compute points for an AMPLIFY submission using canonical coefficients.
+ * Does not enforce weekly caps; caller can clamp to policy if needed.
+ */
+export function computeAmplifyPoints(peersTrained: number, studentsTrained: number): number {
+  const peers = Math.max(0, Math.floor(peersTrained || 0))
+  const students = Math.max(0, Math.floor(studentsTrained || 0))
+  return peers * amplifyRules.peersCoefficient + students * amplifyRules.studentsCoefficient
+}
+
+/**
+ * Clamp an AMPLIFY weekly tally to policy limits.
+ */
+export function clampAmplifyWeekly(peers: number, students: number): { peers: number; students: number } {
+  return {
+    peers: Math.min(Math.max(0, peers), amplifyRules.limits.weeklyPeers),
+    students: Math.min(Math.max(0, students), amplifyRules.limits.weeklyStudents),
+  }
+}
+
 // Badge canon — centralize badge linkage and criteria
 export const badgeCanon = {
   STARTER: {

@@ -65,6 +65,7 @@ This is the canonical entry point for documentation across the monorepo. Use the
 - [`API_ENVELOPES.md`](./API_ENVELOPES.md) - Response envelope patterns
 - OpenAPI: [`openapi.yaml`](./openapi.yaml)
 - Integrations: [`kajabi-integration.md`](./kajabi-integration.md), [`webhooks/kajabi.md`](./webhooks/kajabi.md)
+- Submission payloads: [`submissions/payloads.md`](./submissions/payloads.md)
 
 ### UI & Frontend
 

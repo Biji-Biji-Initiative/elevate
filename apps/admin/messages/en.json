@@ -26,15 +26,15 @@
     "dashboard": "Dashboard",
     "submissions": "Review Queue",
     "users": "User Management",
-    "analytics": "Analytics", 
+    "analytics": "Analytics",
     "exports": "Data Exports",
     "settings": "Settings",
     "badges": "Badge Management",
-  "kajabi": "Kajabi Integration",
-  "storage": "Storage & Retention",
-  "ops": "Ops Dashboard",
-  "referrals": "Referrals",
-  "logout": "Logout"
+    "kajabi": "Kajabi Integration",
+    "storage": "Storage & Retention",
+    "ops": "Ops Dashboard",
+    "referrals": "Referrals",
+    "logout": "Logout"
   },
   "storage": {
     "title": "Storage & Retention",
@@ -55,7 +55,18 @@
     "pending_reviews": "Pending Reviews",
     "total_users": "Total Users",
     "total_submissions": "Total Submissions",
-    "points_awarded": "Points Awarded Today"
+    "points_awarded": "Points Awarded Today",
+    "quick": {
+      "integration": "Kajabi Health & Invite",
+      "integration_desc": "Manage enrollment and offers",
+      "integration_label": "Integration",
+      "storage": "Evidence Retention",
+      "storage_desc": "Enforce per-user retention",
+      "storage_label": "Storage",
+      "ops": "SLO Summary",
+      "ops_desc": "Monitor API health & trends",
+      "ops_label": "Operations"
+    }
   },
   "submissions": {
     "title": "Submission Review Queue",
@@ -102,7 +113,7 @@
     },
     "roles": {
       "participant": "Participant",
-      "reviewer": "Reviewer", 
+      "reviewer": "Reviewer",
       "admin": "Admin",
       "superadmin": "Super Admin"
     },
@@ -142,7 +153,7 @@
     "backup": "Backup & Recovery"
   },
   "badges": {
-    "title": "Badge Management", 
+    "title": "Badge Management",
     "criteria": "Badge Criteria",
     "design": "Badge Design",
     "assignments": "Badge Assignments"
@@ -166,30 +177,6 @@
     "test_success_header": "Test Successful!",
     "reprocess_started": "Reprocessing…",
     "reprocess_success": "Reprocessed event {id}…"
-  },
-  "ops": {
-    "title": "Ops Dashboard",
-    "slo_summary": "SLO Summary",
-    "refresh": "Refresh"
-  },
-  "storage": {
-    "title": "Storage & Retention",
-    "enforce": "Enforce Retention",
-    "user_id": "User ID",
-    "days": "Days"
-  },
-  "dashboard": {
-    "quick": {
-      "integration": "Kajabi Health & Invite",
-      "integration_desc": "Manage enrollment and offers",
-      "integration_label": "Integration",
-      "storage": "Evidence Retention",
-      "storage_desc": "Enforce per-user retention",
-      "storage_label": "Storage",
-      "ops": "SLO Summary",
-      "ops_desc": "Monitor API health & trends",
-      "ops_label": "Operations"
-    }
   },
   "errors": {
     "something_went_wrong": "Something went wrong",

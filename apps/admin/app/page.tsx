@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 
+import { defaultLocale } from '../i18n'
+
 export default function AdminRootPage() {
-  // Redirect to the default locale (English) admin dashboard
-  redirect('/en')
+  redirect(`/${defaultLocale}`)
 }

@@ -1,0 +1,16 @@
+{
+  "broken": [
+    {
+      "file": "packages/logic/temp/logic.api.md",
+      "link": "../../docs/README.md"
+    },
+    {
+      "file": "packages/db/docs/LOGGING_BEST_PRACTICES.md",
+      "link": "../../docs/README.md"
+    },
+    {
+      "file": "docs/architecture/adr/ADR-0001-template.md",
+      "link": "../README.md"
+    }
+  ]
+}

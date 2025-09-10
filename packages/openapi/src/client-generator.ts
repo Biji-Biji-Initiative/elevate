@@ -59,8 +59,11 @@ export class ElevateAPIClient {
   `;
     
     // Type-safe header merging
+    const isFormData =
+      typeof FormData !== 'undefined' && (options as any)?.body instanceof FormData;
+    const defaultHeaders = isFormData ? {} : { 'Content-Type': 'application/json' };
     let headers = mergeHeaders(
-      { 'Content-Type': 'application/json' },
+      defaultHeaders,
       options.headers
     );
 
@@ -69,6 +72,7 @@ export class ElevateAPIClient {
     }
 
     const response = await fetch(url, {
+      credentials: 'include',
       ...options,
       headers,
     });

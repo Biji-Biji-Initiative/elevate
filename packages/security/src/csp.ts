@@ -14,6 +14,8 @@ export interface CSPOptions {
   isDevelopment?: boolean
   reportOnly?: boolean
   reportUri?: string
+  /** Add a `report-to` directive and matching Report-To header when reporting */
+  addReportTo?: boolean
   applyToApiRoutes?: boolean
   allowedDomains?: {
     clerk?: string[]
@@ -59,6 +61,7 @@ export function buildCSPDirectives(options: CSPOptions = {}): string {
   const {
     nonce,
     isDevelopment = process.env.NODE_ENV === 'development',
+    reportOnly = false,
     allowedDomains = {},
   } = options
 
@@ -70,8 +73,7 @@ export function buildCSPDirectives(options: CSPOptions = {}): string {
     'https://img.clerk.com',
     'https://api.clerk.dev',
     'https://*.clerk.com',
-    'https://in-redbird-62.clerk.accounts.dev', // Specific Clerk instance domain
-    'https://*.clerk.accounts.dev', // All Clerk account domains
+    'https://*.clerk.accounts.dev',
     ...(allowedDomains.clerk || []),
   ]
 
@@ -175,8 +177,9 @@ export function buildCSPDirectives(options: CSPOptions = {}): string {
     // Form action - restrict form submissions
     'form-action': ["'self'", ...clerkDomains, ...supabaseDomains],
 
-    // Frame ancestors - prevent clickjacking
-    'frame-ancestors': ["'none'"],
+    // Frame ancestors - prevent clickjacking. In report-only mode this has no
+    // effect and causes noisy warnings, so omit it when reportOnly=true.
+    ...(!reportOnly ? { 'frame-ancestors': ["'none'"] } : {}),
 
     // Upgrade insecure requests in production
     ...(isDevelopment ? {} : { 'upgrade-insecure-requests': [] }),
@@ -201,10 +204,16 @@ export function generateSecurityHeaders(
     reportOnly = false,
     reportUri,
     isDevelopment = process.env.NODE_ENV === 'development',
+    addReportTo = true,
   } = options
 
+  const reportGroup = 'csp-endpoint'
+  const hasReportTo = Boolean(reportOnly && reportUri && addReportTo)
+
   const cspValue =
-    buildCSPDirectives(options) + (reportUri ? `; report-uri ${reportUri}` : '')
+    buildCSPDirectives(options) +
+    (reportUri ? `; report-uri ${reportUri}` : '') +
+    (hasReportTo ? `; report-to ${reportGroup}` : '')
 
   const headers: SecurityHeaders = {
     // CSP header (either enforcing or report-only)
@@ -273,6 +282,18 @@ export function generateSecurityHeaders(
   headers['Cross-Origin-Embedder-Policy'] = 'credentialless'
   headers['Cross-Origin-Opener-Policy'] = 'same-origin'
   headers['Cross-Origin-Resource-Policy'] = 'same-origin'
+
+  // Reporting endpoint header (legacy). Modern browsers prefer
+  // `Reporting-Endpoints`, but `Report-To` removes the dev console warning.
+  if (hasReportTo && reportUri) {
+    const reportToValue = JSON.stringify({
+      group: reportGroup,
+      max_age: 10886400,
+      endpoints: [{ url: reportUri }],
+      include_subdomains: true,
+    })
+    ;(headers as unknown as Record<string, string>)['Report-To'] = reportToValue
+  }
 
   return headers
 }

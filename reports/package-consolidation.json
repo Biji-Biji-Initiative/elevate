@@ -1,0 +1,165 @@
+{
+  "archivedCount": 40,
+  "archived": [
+    {
+      "from": "packages/api-client/temp/api-client.api.md",
+      "to": "archive/packages-legacy/api-client/temp/api-client.api.md"
+    },
+    {
+      "from": "packages/auth/auth.api.md",
+      "to": "archive/packages-legacy/auth/auth.api.md"
+    },
+    {
+      "from": "packages/auth/temp/auth.api.md",
+      "to": "archive/packages-legacy/auth/temp/auth.api.md"
+    },
+    {
+      "from": "packages/config/config.api.md",
+      "to": "archive/packages-legacy/config/config.api.md"
+    },
+    {
+      "from": "packages/config/temp/config.api.md",
+      "to": "archive/packages-legacy/config/temp/config.api.md"
+    },
+    {
+      "from": "packages/db/INDEX_STRATEGY.md",
+      "to": "archive/packages-legacy/db/INDEX_STRATEGY.md"
+    },
+    {
+      "from": "packages/db/MIGRATIONS.md",
+      "to": "archive/packages-legacy/db/MIGRATIONS.md"
+    },
+    {
+      "from": "packages/db/MONITORING.md",
+      "to": "archive/packages-legacy/db/MONITORING.md"
+    },
+    {
+      "from": "packages/db/OPERATIONS.md",
+      "to": "archive/packages-legacy/db/OPERATIONS.md"
+    },
+    {
+      "from": "packages/db/SECURITY.md",
+      "to": "archive/packages-legacy/db/SECURITY.md"
+    },
+    {
+      "from": "packages/db/TROUBLESHOOTING.md",
+      "to": "archive/packages-legacy/db/TROUBLESHOOTING.md"
+    },
+    {
+      "from": "packages/db/db.api.md",
+      "to": "archive/packages-legacy/db/db.api.md"
+    },
+    {
+      "from": "packages/db/docs/LOGGING_BEST_PRACTICES.md",
+      "to": "archive/packages-legacy/db/docs/LOGGING_BEST_PRACTICES.md"
+    },
+    {
+      "from": "packages/db/temp/db.api.md",
+      "to": "archive/packages-legacy/db/temp/db.api.md"
+    },
+    {
+      "from": "packages/emails/emails.api.md",
+      "to": "archive/packages-legacy/emails/emails.api.md"
+    },
+    {
+      "from": "packages/emails/temp/emails.api.md",
+      "to": "archive/packages-legacy/emails/temp/emails.api.md"
+    },
+    {
+      "from": "packages/http/http.api.md",
+      "to": "archive/packages-legacy/http/http.api.md"
+    },
+    {
+      "from": "packages/http/temp/http.api.md",
+      "to": "archive/packages-legacy/http/temp/http.api.md"
+    },
+    {
+      "from": "packages/integrations/integrations.api.md",
+      "to": "archive/packages-legacy/integrations/integrations.api.md"
+    },
+    {
+      "from": "packages/integrations/temp/integrations.api.md",
+      "to": "archive/packages-legacy/integrations/temp/integrations.api.md"
+    },
+    {
+      "from": "packages/logic/logic.api.md",
+      "to": "archive/packages-legacy/logic/logic.api.md"
+    },
+    {
+      "from": "packages/logic/temp/logic.api.md",
+      "to": "archive/packages-legacy/logic/temp/logic.api.md"
+    },
+    {
+      "from": "packages/openapi/CHANGELOG.md",
+      "to": "archive/packages-legacy/openapi/CHANGELOG.md"
+    },
+    {
+      "from": "packages/openapi/openapi.api.md",
+      "to": "archive/packages-legacy/openapi/openapi.api.md"
+    },
+    {
+      "from": "packages/openapi/temp/openapi.api.md",
+      "to": "archive/packages-legacy/openapi/temp/openapi.api.md"
+    },
+    {
+      "from": "packages/security/MIGRATION.md",
+      "to": "archive/packages-legacy/security/MIGRATION.md"
+    },
+    {
+      "from": "packages/security/security.api.md",
+      "to": "archive/packages-legacy/security/security.api.md"
+    },
+    {
+      "from": "packages/security/temp/security.api.md",
+      "to": "archive/packages-legacy/security/temp/security.api.md"
+    },
+    {
+      "from": "packages/storage/storage.api.md",
+      "to": "archive/packages-legacy/storage/storage.api.md"
+    },
+    {
+      "from": "packages/storage/temp/storage.api.md",
+      "to": "archive/packages-legacy/storage/temp/storage.api.md"
+    },
+    {
+      "from": "packages/types/ORM-LEAKAGE-MIGRATION.md",
+      "to": "archive/packages-legacy/types/ORM-LEAKAGE-MIGRATION.md"
+    },
+    {
+      "from": "packages/types/temp/types.api.md",
+      "to": "archive/packages-legacy/types/temp/types.api.md"
+    },
+    {
+      "from": "packages/types/types.api.md",
+      "to": "archive/packages-legacy/types/types.api.md"
+    },
+    {
+      "from": "packages/ui/AUDIT_REPORT.md",
+      "to": "archive/packages-legacy/ui/AUDIT_REPORT.md"
+    },
+    {
+      "from": "packages/ui/MIGRATION_GUIDE.md",
+      "to": "archive/packages-legacy/ui/MIGRATION_GUIDE.md"
+    },
+    {
+      "from": "packages/ui/MIGRATION_PLAN.md",
+      "to": "archive/packages-legacy/ui/MIGRATION_PLAN.md"
+    },
+    {
+      "from": "packages/ui/REGISTRY_LOCK.md",
+      "to": "archive/packages-legacy/ui/REGISTRY_LOCK.md"
+    },
+    {
+      "from": "packages/ui/TAILWIND_SETUP.md",
+      "to": "archive/packages-legacy/ui/TAILWIND_SETUP.md"
+    },
+    {
+      "from": "packages/ui/temp/ui.api.md",
+      "to": "archive/packages-legacy/ui/temp/ui.api.md"
+    },
+    {
+      "from": "packages/ui/ui.api.md",
+      "to": "archive/packages-legacy/ui/ui.api.md"
+    }
+  ]
+}

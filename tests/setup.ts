@@ -18,6 +18,12 @@ vi.mock('@clerk/nextjs/server', () => ({
   },
 }))
 
+// Make @elevate/types/errors resolvable without building packages
+vi.mock('@elevate/types/errors', async () => {
+  // Resolve to source file via relative path during tests
+  return await import('../packages/types/src/errors')
+})
+
 // Mock Next.js headers
 vi.mock('next/headers', () => ({
   headers: vi.fn(() => new Map()),
@@ -41,6 +47,28 @@ vi.mock('fs/promises', () => ({
   writeFile: vi.fn(),
   unlink: vi.fn(),
   stat: vi.fn(),
+}))
+
+// Mock rate limiter globally for tests to avoid header/IP requirements
+vi.mock('@elevate/security', async () => ({
+  withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
+  publicApiRateLimiter: {},
+  fileUploadRateLimiter: {},
+  webhookRateLimiter: {},
+  apiRateLimiter: {},
+  submissionRateLimiter: {},
+}))
+
+// Provide a minimal safe server logger to avoid requiring built outputs
+vi.mock('@elevate/logging/safe-server', () => ({
+  getSafeServerLogger: async () => ({
+    info: () => {},
+    warn: () => {},
+    error: () => {},
+    forRequestWithHeaders: function (this: any, _req: unknown) {
+      return this
+    },
+  }),
 }))
 
 // Mock crypto for consistent hashing in tests

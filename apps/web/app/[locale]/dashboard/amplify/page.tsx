@@ -8,15 +8,9 @@ import { useForm } from 'react-hook-form'
 
 import { useFormSubmission, useFileUpload } from '@elevate/forms'
 import { AMPLIFY } from '@elevate/types'
+import { computeAmplifyPoints, activityCanon } from '@elevate/types/activity-canon'
 import { AmplifySchema, type AmplifyInput } from '@elevate/types/schemas'
-import {
-  Button,
-  Input,
-  Card,
-  Alert,
-  AlertTitle,
-  AlertDescription,
-} from '@elevate/ui'
+import { Button, Input, Card, Alert, AlertTitle, AlertDescription, Textarea } from '@elevate/ui'
 import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
 
 import { getApiClient } from '../../../../lib/api-client'
@@ -62,17 +56,23 @@ export default function AmplifyFormPage() {
     defaultValues: {
       peers_trained: 0,
       students_trained: 0,
+      session_date: new Date().toISOString().slice(0, 10),
     },
   })
 
   const watchedPeers = watch('peers_trained')
   const watchedStudents = watch('students_trained')
 
-  // Calculate potential points (2 points per peer, 1 point per student)
+  // Canonical potential points using activity canon
+  const maxPeers = activityCanon.amplify.limits.weeklyPeers
+  const maxStudents = activityCanon.amplify.limits.weeklyStudents
+  const peersCoef = activityCanon.amplify.peersCoefficient
+  const studentsCoef = activityCanon.amplify.studentsCoefficient
+
   const calculatePoints = () => {
-    const peersPoints = Math.min(watchedPeers || 0, 50) * 2
-    const studentsPoints = Math.min(watchedStudents || 0, 200) * 1
-    return peersPoints + studentsPoints
+    const peers = Math.min(watchedPeers || 0, maxPeers)
+    const students = Math.min(watchedStudents || 0, maxStudents)
+    return computeAmplifyPoints(peers, students)
   }
 
   const handleFileSelect = async (files: File[]) => {
@@ -102,11 +102,47 @@ export default function AmplifyFormPage() {
           throw new Error('Please train at least one peer or student')
         }
 
-        const payload = {
-          peers_trained: Math.min(data.peers_trained || 0, 50),
-          students_trained: Math.min(data.students_trained || 0, 200),
-          attendance_proof_files: successfulUploads.map((f) => f.path),
+        const payload: {
+          peersTrained: number
+          studentsTrained: number
+          attendanceProofFiles: string[]
+          sessionDate: string
+          sessionStartTime?: string
+          durationMinutes?: number
+          location?: { venue?: string; city?: string; country?: string }
+          sessionTitle?: string
+          coFacilitators?: string[]
+          evidenceNote?: string
+        } = {
+          peersTrained: Math.min(data.peers_trained || 0, maxPeers),
+          studentsTrained: Math.min(data.students_trained || 0, maxStudents),
+          attendanceProofFiles: successfulUploads.map((f) => f.path),
+          sessionDate: data.session_date || new Date().toISOString().slice(0, 10),
         }
+
+        // Optional fields (only include if provided)
+        if (data.session_start_time) payload.sessionStartTime = data.session_start_time
+        if (typeof data.duration_minutes === 'number' && !Number.isNaN(data.duration_minutes)) {
+          payload.durationMinutes = data.duration_minutes
+        }
+        const loc = watch('location') as AmplifyInput['location'] | undefined
+        if (loc) {
+          const location: { venue?: string; city?: string; country?: string } = {}
+          if (loc.venue) location.venue = loc.venue
+          if (loc.city) location.city = loc.city
+          if (loc.country) location.country = loc.country
+          if (Object.keys(location).length > 0) payload.location = location
+        }
+        const sessionTitle = watch('session_title') as string | undefined
+        if (sessionTitle) payload.sessionTitle = sessionTitle
+        const coFacilitatorsRaw = (watch('co_facilitators') as string | undefined) || ''
+        const coFacilitators = coFacilitatorsRaw
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+        if (coFacilitators.length > 0) payload.coFacilitators = coFacilitators
+        const evidenceNote = watch('evidence_note') as string | undefined
+        if (evidenceNote) payload.evidenceNote = evidenceNote
 
         const api = getApiClient()
         await api.createSubmission({
@@ -184,6 +220,86 @@ export default function AmplifyFormPage() {
                   placeholder="0"
                 />
               </FormField>
+
+              <FormField
+                label="Session Date"
+                required
+                error={errors.session_date?.message}
+                description="Date of the training session"
+              >
+                <Input
+                  {...register('session_date')}
+                  type="date"
+                />
+              </FormField>
+
+              <FormField
+                label="Session Start Time"
+                error={errors.session_start_time?.message}
+                description="When did the session start? (optional)"
+              >
+                <Input
+                  {...register('session_start_time')}
+                  type="time"
+                />
+              </FormField>
+
+              <FormField
+                label="Duration (minutes)"
+                error={errors.duration_minutes?.message}
+                description="Length of the session in minutes (optional)"
+              >
+                <Input
+                  {...register('duration_minutes', { valueAsNumber: true })}
+                  type="number"
+                  min={0}
+                  placeholder="e.g. 90"
+                />
+              </FormField>
+
+              <FormField
+                label="Venue"
+                description="Location details (optional)"
+              >
+                <Input
+                  {...register('location.venue')}
+                  placeholder="e.g. Auditorium"
+                />
+              </FormField>
+
+              <FormField label="City" description="Optional">
+                <Input
+                  {...register('location.city')}
+                  placeholder="e.g. Jakarta"
+                />
+              </FormField>
+
+              <FormField label="Country" description="Optional">
+                <Input
+                  {...register('location.country')}
+                  placeholder="e.g. Indonesia"
+                />
+              </FormField>
+
+              <FormField
+                label="Session Title"
+                description="Give your training a short title (optional)"
+              >
+                <Input
+                  {...register('session_title')}
+                  placeholder="e.g. AI in Education Workshop"
+                />
+              </FormField>
+
+              <FormField
+                label="Co‑facilitators"
+                description="Comma‑separated list of names (optional)"
+              >
+                <Input
+                  {...register('co_facilitators')}
+                  placeholder="e.g. Rina S., Budi P."
+                />
+              </FormField>
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
@@ -192,12 +308,12 @@ export default function AmplifyFormPage() {
               </h3>
               <div className="text-sm text-blue-700">
                 <div>
-                  Peers: {Math.min(watchedPeers || 0, 50)} × 2 ={' '}
-                  {Math.min(watchedPeers || 0, 50) * 2} points
+                  Peers: {Math.min(watchedPeers || 0, maxPeers)} × {peersCoef} ={' '}
+                  {Math.min(watchedPeers || 0, maxPeers) * peersCoef} points
                 </div>
                 <div>
-                  Students: {Math.min(watchedStudents || 0, 200)} × 1 ={' '}
-                  {Math.min(watchedStudents || 0, 200) * 1} points
+                  Students: {Math.min(watchedStudents || 0, maxStudents)} × {studentsCoef} ={' '}
+                  {Math.min(watchedStudents || 0, maxStudents) * studentsCoef} points
                 </div>
                 <div className="font-medium border-t border-blue-300 mt-2 pt-2">
                   Total: {calculatePoints()} points
@@ -223,6 +339,17 @@ export default function AmplifyFormPage() {
                 disabled={isSubmitting}
               />
               <FileList files={uploadedFiles} onRemove={handleFileRemove} />
+            </FormField>
+
+            <FormField
+              label="Notes"
+              description="Context or evidence notes (optional)"
+            >
+              <Textarea
+                {...register('evidence_note')}
+                placeholder="Add any context or references that help reviewers"
+                rows={3}
+              />
             </FormField>
 
             <div className="pt-4 border-t border-gray-200">

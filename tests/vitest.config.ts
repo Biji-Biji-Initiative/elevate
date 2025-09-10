@@ -1,20 +1,39 @@
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
 
+const SKIP_DB = String(process.env.SKIP_DB_TESTS || '').toLowerCase() === '1' ||
+  String(process.env.SKIP_DB_TESTS || '').toLowerCase() === 'true'
+
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     environment: 'node',
     globals: true,
-    include: [
-      'tests/**/*.{test,spec}.ts',
-      'tests/**/*.integration.{test,spec}.ts',
-      'tests/**/*.e2e.{test,spec}.ts'
-    ],
+    include: SKIP_DB
+      ? [
+          // Unit tests (no-DB)
+          'tests/unit/**/*.{test,spec}.ts',
+          // Selected web route/unit tests that fully mock DB/external deps
+          // Only offline-safe web tests
+          'apps/web/tests/metrics-helpers.test.ts',
+          'apps/web/tests/metrics-*.test.ts',
+          'apps/web/tests/stats-dto.test.ts',
+          'apps/web/tests/stats-optimized-contract.test.ts',
+          'apps/web/tests/profile-*.test.ts',
+          'apps/web/tests/files-*.test.ts',
+          'apps/web/tests/slo-endpoint.test.ts',
+        ]
+      : [
+          'tests/**/*.{test,spec}.ts',
+          'tests/**/*.integration.{test,spec}.ts',
+          'tests/**/*.e2e.{test,spec}.ts',
+        ],
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
-      '**/.next/**'
+      '**/.next/**',
+      // When skipping DB, also exclude integration/performance folders explicitly
+      ...(SKIP_DB ? ['tests/integration/**', 'tests/performance/**', 'tests/e2e/**'] : []),
     ],
     coverage: {
       provider: 'v8',
@@ -44,12 +63,19 @@ export default defineConfig({
     testTimeout: 30000,
     hookTimeout: 10000,
     teardownTimeout: 10000,
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true,
-      },
-    },
+    pool: SKIP_DB ? 'threads' : 'forks',
+    poolOptions: SKIP_DB
+      ? {
+          threads: {
+            isolate: true,
+            singleThread: true,
+          },
+        }
+      : {
+          forks: {
+            singleFork: true,
+          },
+        },
     setupFiles: ['./tests/setup.ts'],
     globalSetup: './tests/global-setup.ts',
     env: {

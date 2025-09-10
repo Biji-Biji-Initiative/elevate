@@ -18,7 +18,7 @@
     ]
   },
   "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "**/*.md", "**/*.mdx", "*.md"],
+  "exclude": ["node_modules", "**/*.md", "**/*.mdx", "*.md", "tests/**"],
   "references": [
     {
       "path": "../../packages/types/tsconfig.build.json"

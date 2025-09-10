@@ -1,6 +1,6 @@
 import type { Prisma } from '@elevate/db'
 import type { ActivityCode, AmplifyInput } from '@elevate/types'
-import { activityCanon, badgeCanon } from '@elevate/types/activity-canon'
+import { activityCanon, badgeCanon, computeAmplifyPoints } from '@elevate/types/activity-canon'
 
 export function computePoints(activity: ActivityCode, payload: unknown): number {
   switch (activity) {
@@ -13,13 +13,9 @@ export function computePoints(activity: ActivityCode, payload: unknown): number 
       const amplifyPayload = payload as AmplifyInput
       const peers = Number((amplifyPayload as { peers_trained?: unknown })?.peers_trained ?? 0)
       const students = Number((amplifyPayload as { students_trained?: unknown })?.students_trained ?? 0)
-      // Caps (proposal) — enforce upstream in validation too
-      const capPeers = Math.min(peers, 50)
-      const capStudents = Math.min(students, 200)
-      return (
-        capPeers * activityCanon.amplify.peersCoefficient +
-        capStudents * activityCanon.amplify.studentsCoefficient
-      )
+      const capPeers = Math.min(peers, activityCanon.amplify.limits.weeklyPeers)
+      const capStudents = Math.min(students, activityCanon.amplify.limits.weeklyStudents)
+      return computeAmplifyPoints(capPeers, capStudents)
     }
     case 'PRESENT':
       return activityCanon.present.onApproved

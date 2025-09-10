@@ -108,10 +108,9 @@ export default function ExploreFormPage() {
 
       const payload = {
         reflection: data.reflection,
-        class_date: data.class_date,
+        classDate: data.class_date,
         school: data.school,
-        ai_tool: selectedAiTool,
-        evidence_files: successfulUploads.map((f) => f.path),
+        evidenceFiles: successfulUploads.map((f) => f.path),
       }
 
       const api = getApiClient()
@@ -139,6 +138,13 @@ export default function ExploreFormPage() {
             points for approved submissions.
           </p>
         </div>
+
+        <Alert className="mb-6">
+          <AlertTitle>Tips</AlertTitle>
+          <AlertDescription>
+            Include clear reflections and evidence files (lesson plans, screenshots). Quality over quantity helps reviews.
+          </AlertDescription>
+        </Alert>
 
         {submitStatus && (
           <Alert

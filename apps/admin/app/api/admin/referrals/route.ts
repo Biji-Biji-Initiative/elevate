@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { requireRole } from '@elevate/auth/server-helpers'
+import type { Prisma } from '@elevate/db'
 import { prisma } from '@elevate/db/client'
 import { badRequest, createSuccessResponse } from '@elevate/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -17,18 +18,8 @@ const QuerySchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}$/)
     .optional(), // YYYY-MM
-  limit: z
-    .string()
-    .transform((v) => parseInt(v, 10))
-    .pipe(z.number().int().min(1).max(200))
-    .optional()
-    .default('50' as unknown as number),
-  offset: z
-    .string()
-    .transform((v) => parseInt(v, 10))
-    .pipe(z.number().int().min(0))
-    .optional()
-    .default('0' as unknown as number),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
 })
 
 export async function GET(request: NextRequest) {
@@ -38,20 +29,24 @@ export async function GET(request: NextRequest) {
     const raw = Object.fromEntries(url.searchParams)
     const parsed = QuerySchema.safeParse(raw)
     if (!parsed.success) return badRequest('Invalid query')
-    const { referrerId, refereeId, email, month } = parsed.data
-    const limit = Number(parsed.data.limit)
-    const offset = Number(parsed.data.offset)
+    const { referrerId, refereeId, email, month, limit, offset } = parsed.data
 
     let monthStart: Date | undefined
     let monthEnd: Date | undefined
-    if (month) {
-      const [y, m] = month.split('-').map((n) => parseInt(n, 10))
-      monthStart = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0))
-      monthEnd = new Date(Date.UTC(y, m, 1, 0, 0, 0))
+    if (typeof month === 'string' && month.length === 7) {
+      const parts = month.split('-') as [string, string]
+      const ys = parts[0]
+      const ms = parts[1]
+      const y = Number.isFinite(parseInt(ys, 10)) ? parseInt(ys, 10) : NaN
+      const m = Number.isFinite(parseInt(ms, 10)) ? parseInt(ms, 10) : NaN
+      if (Number.isFinite(y) && Number.isFinite(m) && m >= 1 && m <= 12) {
+        monthStart = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0))
+        monthEnd = new Date(Date.UTC(y, m, 1, 0, 0, 0))
+      }
     }
 
     // Build where clause
-    const where: Parameters<typeof prisma.referralEvent.findMany>[0]['where'] = {}
+    const where: Prisma.ReferralEventWhereInput = {}
     if (referrerId) where.referrer_user_id = referrerId
     if (refereeId) where.referee_user_id = refereeId
     if (monthStart && monthEnd) where.created_at = { gte: monthStart, lt: monthEnd }

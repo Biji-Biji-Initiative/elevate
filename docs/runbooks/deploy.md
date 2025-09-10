@@ -274,7 +274,7 @@ pnpm db:migrate:reset --to <migration-name>
 **Data Rollback:**
 
 - Restore from database backup
-- See [database runbook](./database.md) for procedures
+- See database procedures in [DATABASE.md](../DATABASE.md)
 
 ## Common Issues
 

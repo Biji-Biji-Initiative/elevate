@@ -25,7 +25,7 @@ vi.mock('@elevate/db/client', () => {
 
 function makeRequest(url: string): NextRequest {
   const u = new URL(url)
-  return { url: u.toString(), nextUrl: u } as unknown as NextRequest
+  return { url: u.toString(), nextUrl: u, headers: new Headers() } as unknown as NextRequest
 }
 
 describe('GET /api/stats - DTO shape', () => {
@@ -45,4 +45,3 @@ describe('GET /api/stats - DTO shape', () => {
     expect(parsed.success).toBe(true)
   })
 })
-

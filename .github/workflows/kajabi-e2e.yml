@@ -1,0 +1,51 @@
+name: Kajabi E2E
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'App Base URL (e.g., https://leaps.mereka.org)'
+        required: true
+      test_email:
+        description: 'Test user email'
+        required: true
+      test_name:
+        description: 'Test user name'
+        required: true
+      offer_name:
+        description: 'Offer name (optional if OFFER_ID is provided)'
+        required: false
+
+jobs:
+  kajabi-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Install deps
+        run: pnpm -C elevate install --frozen-lockfile
+
+      - name: Run E2E (Invite + Webhook)
+        working-directory: elevate
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          KAJABI_WEBHOOK_SECRET: ${{ secrets.KAJABI_WEBHOOK_SECRET }}
+          TEST_EMAIL: ${{ inputs.test_email }}
+          TEST_NAME: ${{ inputs.test_name }}
+          KAJABI_OFFER_ID: ${{ secrets.KAJABI_OFFER_ID }}
+        run: pnpm tsx scripts/qa/kajabi-e2e.ts
+

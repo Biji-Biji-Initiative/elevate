@@ -20,6 +20,7 @@ model User {
   // Referral support
   ref_code          String?        @unique
   referred_by_user_id String?      @db.Text
+  region            String?
   school            String?
   cohort            String?
   kajabi_contact_id String?        @unique

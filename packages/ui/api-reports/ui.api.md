@@ -70,7 +70,7 @@ export interface ButtonProps extends React_2.ButtonHTMLAttributes<HTMLButtonElem
 
 // @public (undocumented)
 export const buttonVariants: (props?: ({
-    variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined;
+    variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
     size?: "default" | "sm" | "lg" | "icon" | null | undefined;
 } & ClassProp) | undefined) => string;
 
@@ -104,7 +104,7 @@ export interface Column<T, V = unknown> {
     // (undocumented)
     key: keyof T | string;
     // (undocumented)
-    render?: (row: T, value?: V) => React_3.ReactNode;
+    render?: (row: T, value: V) => React_3.ReactNode;
     // (undocumented)
     sortable?: boolean;
     // (undocumented)
@@ -187,10 +187,10 @@ export interface CSRFProtectedFormProps {
 }
 
 // @public (undocumented)
-export function DataTable<T extends Record<string, unknown> = Record<string, unknown>, C extends readonly Column<T, unknown>[] = readonly Column<T, unknown>[]>({ data, columns, loading, pagination, selection, sorting, onRowClick, emptyMessage, className }: DataTableProps<T, C>): React_3.JSX.Element;
+export function DataTable<T extends Record<string, unknown> = Record<string, unknown>, C extends readonly Column<T, unknown>[] = readonly Column<T, unknown>[], Id extends string | number = string>({ data, columns, loading, pagination, selection, sorting, onRowClick, emptyMessage, className }: DataTableProps<T, C, Id>): React_3.JSX.Element;
 
 // @public (undocumented)
-export interface DataTableProps<T = Record<string, unknown>, C extends readonly Column<T, unknown>[] = readonly Column<T, unknown>[]> {
+export interface DataTableProps<T = Record<string, unknown>, C extends readonly Column<T, unknown>[] = readonly Column<T, unknown>[], Id extends string | number = string> {
     // (undocumented)
     className?: string;
     // (undocumented)
@@ -212,9 +212,9 @@ export interface DataTableProps<T = Record<string, unknown>, C extends readonly 
     };
     // (undocumented)
     selection?: {
-        selectedRows: Set<string | number>;
-        onSelectionChange: (selectedRows: Set<string | number>) => void;
-        getRowId: (row: T) => string | number;
+        selectedRows: Set<Id>;
+        onSelectionChange: (selectedRows: Set<Id>) => void;
+        getRowId: (row: T) => Id;
     };
     // (undocumented)
     sorting?: {

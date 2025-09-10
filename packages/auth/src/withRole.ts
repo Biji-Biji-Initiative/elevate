@@ -18,11 +18,29 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   if (!userId) return null
 
   const publicMetadata = parseClerkPublicMetadata(sessionClaims?.publicMetadata)
-  const role = safeParseRole(publicMetadata.role)
+  let role = safeParseRole(publicMetadata.role)
   const email = parseClerkEmailAddress(sessionClaims?.primaryEmailAddress)
   const name = `${sessionClaims?.firstName ?? ''} ${
     sessionClaims?.lastName ?? ''
   }`.trim()
+
+  // Development-only override: if the signed-in email is listed in
+  // NEXT_PUBLIC_ADMIN_EMAILS, elevate to superadmin locally to unblock
+  // developer access without editing Clerk metadata. Never applies in prod.
+  if (process.env.NODE_ENV === 'development' && email) {
+    const csv = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').toLowerCase()
+    if (csv.length > 0) {
+      const allow = new Set(
+        csv
+          .split(',')
+          .map((e) => e.trim())
+          .filter(Boolean),
+      )
+      if (allow.has(email.toLowerCase())) {
+        role = 'superadmin'
+      }
+    }
+  }
 
   return {
     userId,

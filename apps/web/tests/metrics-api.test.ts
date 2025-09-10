@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { StageMetricsDTOSchema } from '@elevate/types/dto-mappers'
 
 // Mock Prisma client used by the route
+const queryRawMock = vi.fn()
 vi.mock('@elevate/db/client', () => {
   const submission = {
     count: vi.fn(async ({ where }: { where?: Record<string, unknown> }) => {
@@ -20,7 +21,7 @@ vi.mock('@elevate/db/client', () => {
       { school: 'School B', _count: { id: 2 } },
     ]),
   }
-  return { prisma: { submission, user } }
+  return { prisma: { submission, user, $queryRaw: queryRawMock } }
 })
 
 // Route import will be done dynamically inside the test after mocks are set up
@@ -32,6 +33,12 @@ vi.mock('@elevate/logging/safe-server', () => ({
     warn: () => {},
     error: () => {},
   }),
+}))
+
+// Mock rate limiter to avoid header/IP dependence
+vi.mock('@elevate/security', async () => ({
+  withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
+  publicApiRateLimiter: {},
 }))
 
 function makeRequest(url: string): NextRequest & {
@@ -55,6 +62,12 @@ describe('GET /api/metrics (stage)', () => {
   })
 
   it('returns a valid StageMetricsDTO envelope', async () => {
+    // Mock raw queries: points and monthly trend
+    queryRawMock.mockResolvedValueOnce([{ delta_points: 20 }, { delta_points: 10 }])
+    queryRawMock.mockResolvedValueOnce([
+      { month: '2025-01', submissions: 3, approvals: 2 },
+      { month: '2025-02', submissions: 7, approvals: 4 },
+    ])
     const req = makeRequest('http://localhost/api/metrics?stage=learn')
     const { GET } = await import('../app/api/metrics/route')
     const res = await GET(req)

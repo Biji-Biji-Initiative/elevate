@@ -321,7 +321,7 @@ const apiPayload = transformPayloadDBToAPI(
 
 For issues related to:
 
-- **Schema design** - Consult the [main project documentation](../../CLAUDE.md)
+- **Schema design** - Consult the [central docs hub](../../docs/README.md)
 - **Migration problems** - See [MIGRATIONS.md](./MIGRATIONS.md)
 - **Performance tuning** - Check materialized view refresh patterns
 - **Business logic** - Review trigger implementations in migration files

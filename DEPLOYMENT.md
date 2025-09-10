@@ -1,6 +1,6 @@
 # MS Elevate LEAPS Tracker - Deployment Guide
 
-> ⚠️ **DEPRECATED**: This guide has been consolidated. See the canonical [Deployment Guide](../docs/DEPLOYMENT.md) for the most up-to-date information.
+> ⚠️ **DEPRECATED**: This guide has been consolidated. See the canonical [Deployment Guide](docs/DEPLOYMENT.md) for the most up-to-date information.
 
 ## Overview
 

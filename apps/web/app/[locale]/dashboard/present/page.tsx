@@ -119,10 +119,10 @@ export default function PresentFormPage() {
       }
 
       const payload = {
-        linkedin_url: data.linkedin_url,
+        linkedinUrl: data.linkedin_url,
         caption: data.caption,
-        screenshot_url: firstFile.path,
-        screenshot_hash: firstFile.hash,
+        screenshotUrl: firstFile.path,
+        screenshotHash: firstFile.hash,
       }
 
       const api = getApiClient()
@@ -150,6 +150,13 @@ export default function PresentFormPage() {
             educators. Earn 20 points for approved posts.
           </p>
         </div>
+
+        <Alert className="mb-6">
+          <AlertTitle>Tips</AlertTitle>
+          <AlertDescription>
+            Use a public LinkedIn post with a clear caption. Add a screenshot for faster reviews.
+          </AlertDescription>
+        </Alert>
 
         {submitStatus && (
           <Alert

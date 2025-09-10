@@ -392,6 +392,34 @@ registry.registerPath({
   },
 })
 
+// Profile onboarding
+registry.registerPath({
+  method: 'post',
+  path: '/api/profile/onboarding',
+  description: 'Complete required onboarding fields (role; educator school+region) and mirror to Clerk',
+  summary: 'Profile Onboarding',
+  tags: ['Profile'],
+  security: [{ ClerkAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            userType: z.enum(['EDUCATOR', 'STUDENT']),
+            school: z.string().optional(),
+            region: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: { description: 'OK', content: { 'application/json': { schema: SuccessResponseSchema } } },
+    400: { description: 'Bad Request', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+})
+
 registry.registerPath({
   method: 'get',
   path: '/api/submissions',

@@ -1,0 +1,285 @@
+{
+  "archivedCount": 70,
+  "archived": [
+    {
+      "from": "docs/admin-flows.md",
+      "to": "archive/docs-legacy/admin-flows.md"
+    },
+    {
+      "from": "docs/admin-flows.md",
+      "to": "archive/docs-legacy/admin-flows.md"
+    },
+    {
+      "from": "docs/architecture/adr/ADR-0001-template.md",
+      "to": "archive/docs-legacy/architecture/adr/ADR-0001-template.md"
+    },
+    {
+      "from": "docs/architecture/adr/ADR-0001-template.md",
+      "to": "archive/docs-legacy/architecture/adr/ADR-0001-template.md"
+    },
+    {
+      "from": "docs/badges.md",
+      "to": "archive/docs-legacy/badges.md"
+    },
+    {
+      "from": "docs/badges.md",
+      "to": "archive/docs-legacy/badges.md"
+    },
+    {
+      "from": "docs/changesets-setup.md",
+      "to": "archive/docs-legacy/changesets-setup.md"
+    },
+    {
+      "from": "docs/changesets-setup.md",
+      "to": "archive/docs-legacy/changesets-setup.md"
+    },
+    {
+      "from": "docs/copy/home.md",
+      "to": "archive/docs-legacy/copy/home.md"
+    },
+    {
+      "from": "docs/copy/home.md",
+      "to": "archive/docs-legacy/copy/home.md"
+    },
+    {
+      "from": "docs/DEV_TROUBLESHOOTING.md",
+      "to": "archive/docs-legacy/DEV_TROUBLESHOOTING.md"
+    },
+    {
+      "from": "docs/DEV_TROUBLESHOOTING.md",
+      "to": "archive/docs-legacy/DEV_TROUBLESHOOTING.md"
+    },
+    {
+      "from": "docs/DOCS_TRANSFORMATION_SUMMARY.md",
+      "to": "archive/docs-legacy/DOCS_TRANSFORMATION_SUMMARY.md"
+    },
+    {
+      "from": "docs/DOCS_TRANSFORMATION_SUMMARY.md",
+      "to": "archive/docs-legacy/DOCS_TRANSFORMATION_SUMMARY.md"
+    },
+    {
+      "from": "docs/DOCUMENTS_ORGANIZATION_PLAN.md",
+      "to": "archive/docs-legacy/DOCUMENTS_ORGANIZATION_PLAN.md"
+    },
+    {
+      "from": "docs/DOCUMENTS_ORGANIZATION_PLAN.md",
+      "to": "archive/docs-legacy/DOCUMENTS_ORGANIZATION_PLAN.md"
+    },
+    {
+      "from": "docs/LEAN_DOCS_PLAN.md",
+      "to": "archive/docs-legacy/LEAN_DOCS_PLAN.md"
+    },
+    {
+      "from": "docs/LEAN_DOCS_PLAN.md",
+      "to": "archive/docs-legacy/LEAN_DOCS_PLAN.md"
+    },
+    {
+      "from": "docs/leaps/activity-canon.md",
+      "to": "archive/docs-legacy/leaps/activity-canon.md"
+    },
+    {
+      "from": "docs/leaps/activity-canon.md",
+      "to": "archive/docs-legacy/leaps/activity-canon.md"
+    },
+    {
+      "from": "docs/leaps/activity-examples.md",
+      "to": "archive/docs-legacy/leaps/activity-examples.md"
+    },
+    {
+      "from": "docs/leaps/activity-examples.md",
+      "to": "archive/docs-legacy/leaps/activity-examples.md"
+    },
+    {
+      "from": "docs/leaps/agent-tracker.md",
+      "to": "archive/docs-legacy/leaps/agent-tracker.md"
+    },
+    {
+      "from": "docs/leaps/agent-tracker.md",
+      "to": "archive/docs-legacy/leaps/agent-tracker.md"
+    },
+    {
+      "from": "docs/leaps/badges.md",
+      "to": "archive/docs-legacy/leaps/badges.md"
+    },
+    {
+      "from": "docs/leaps/badges.md",
+      "to": "archive/docs-legacy/leaps/badges.md"
+    },
+    {
+      "from": "docs/leaps/ci-checklist.md",
+      "to": "archive/docs-legacy/leaps/ci-checklist.md"
+    },
+    {
+      "from": "docs/leaps/ci-checklist.md",
+      "to": "archive/docs-legacy/leaps/ci-checklist.md"
+    },
+    {
+      "from": "docs/leaps/config.md",
+      "to": "archive/docs-legacy/leaps/config.md"
+    },
+    {
+      "from": "docs/leaps/config.md",
+      "to": "archive/docs-legacy/leaps/config.md"
+    },
+    {
+      "from": "docs/leaps/dev-stubs.md",
+      "to": "archive/docs-legacy/leaps/dev-stubs.md"
+    },
+    {
+      "from": "docs/leaps/dev-stubs.md",
+      "to": "archive/docs-legacy/leaps/dev-stubs.md"
+    },
+    {
+      "from": "docs/leaps/errors-and-openapi.md",
+      "to": "archive/docs-legacy/leaps/errors-and-openapi.md"
+    },
+    {
+      "from": "docs/leaps/errors-and-openapi.md",
+      "to": "archive/docs-legacy/leaps/errors-and-openapi.md"
+    },
+    {
+      "from": "docs/leaps/glossary.md",
+      "to": "archive/docs-legacy/leaps/glossary.md"
+    },
+    {
+      "from": "docs/leaps/glossary.md",
+      "to": "archive/docs-legacy/leaps/glossary.md"
+    },
+    {
+      "from": "docs/leaps/handoff.md",
+      "to": "archive/docs-legacy/leaps/handoff.md"
+    },
+    {
+      "from": "docs/leaps/handoff.md",
+      "to": "archive/docs-legacy/leaps/handoff.md"
+    },
+    {
+      "from": "docs/leaps/identity-and-referrals.md",
+      "to": "archive/docs-legacy/leaps/identity-and-referrals.md"
+    },
+    {
+      "from": "docs/leaps/identity-and-referrals.md",
+      "to": "archive/docs-legacy/leaps/identity-and-referrals.md"
+    },
+    {
+      "from": "docs/leaps/invariants.md",
+      "to": "archive/docs-legacy/leaps/invariants.md"
+    },
+    {
+      "from": "docs/leaps/invariants.md",
+      "to": "archive/docs-legacy/leaps/invariants.md"
+    },
+    {
+      "from": "docs/leaps/migration-playbook.md",
+      "to": "archive/docs-legacy/leaps/migration-playbook.md"
+    },
+    {
+      "from": "docs/leaps/migration-playbook.md",
+      "to": "archive/docs-legacy/leaps/migration-playbook.md"
+    },
+    {
+      "from": "docs/leaps/referrals-implementation-tracker.md",
+      "to": "archive/docs-legacy/leaps/referrals-implementation-tracker.md"
+    },
+    {
+      "from": "docs/leaps/referrals-implementation-tracker.md",
+      "to": "archive/docs-legacy/leaps/referrals-implementation-tracker.md"
+    },
+    {
+      "from": "docs/leaps/schema-index-deltas.md",
+      "to": "archive/docs-legacy/leaps/schema-index-deltas.md"
+    },
+    {
+      "from": "docs/leaps/schema-index-deltas.md",
+      "to": "archive/docs-legacy/leaps/schema-index-deltas.md"
+    },
+    {
+      "from": "docs/leaps/spec-drift-guard.md",
+      "to": "archive/docs-legacy/leaps/spec-drift-guard.md"
+    },
+    {
+      "from": "docs/leaps/spec-drift-guard.md",
+      "to": "archive/docs-legacy/leaps/spec-drift-guard.md"
+    },
+    {
+      "from": "docs/leaps/tests.md",
+      "to": "archive/docs-legacy/leaps/tests.md"
+    },
+    {
+      "from": "docs/leaps/tests.md",
+      "to": "archive/docs-legacy/leaps/tests.md"
+    },
+    {
+      "from": "docs/leaps/threat-model.md",
+      "to": "archive/docs-legacy/leaps/threat-model.md"
+    },
+    {
+      "from": "docs/leaps/threat-model.md",
+      "to": "archive/docs-legacy/leaps/threat-model.md"
+    },
+    {
+      "from": "docs/logging-migration-plan.md",
+      "to": "archive/docs-legacy/logging-migration-plan.md"
+    },
+    {
+      "from": "docs/logging-migration-plan.md",
+      "to": "archive/docs-legacy/logging-migration-plan.md"
+    },
+    {
+      "from": "docs/qa/VALIDATION_REPORT_TEMPLATE.md",
+      "to": "archive/docs-legacy/qa/VALIDATION_REPORT_TEMPLATE.md"
+    },
+    {
+      "from": "docs/qa/VALIDATION_REPORT_TEMPLATE.md",
+      "to": "archive/docs-legacy/qa/VALIDATION_REPORT_TEMPLATE.md"
+    },
+    {
+      "from": "docs/referral-local-setup.md",
+      "to": "archive/docs-legacy/referral-local-setup.md"
+    },
+    {
+      "from": "docs/referral-local-setup.md",
+      "to": "archive/docs-legacy/referral-local-setup.md"
+    },
+    {
+      "from": "docs/referral-validation-checklist.md",
+      "to": "archive/docs-legacy/referral-validation-checklist.md"
+    },
+    {
+      "from": "docs/referral-validation-checklist.md",
+      "to": "archive/docs-legacy/referral-validation-checklist.md"
+    },
+    {
+      "from": "docs/research.md",
+      "to": "archive/docs-legacy/research.md"
+    },
+    {
+      "from": "docs/research.md",
+      "to": "archive/docs-legacy/research.md"
+    },
+    {
+      "from": "docs/ROUTES.md",
+      "to": "archive/docs-legacy/ROUTES.md"
+    },
+    {
+      "from": "docs/ROUTES.md",
+      "to": "archive/docs-legacy/ROUTES.md"
+    },
+    {
+      "from": "docs/scoring.md",
+      "to": "archive/docs-legacy/scoring.md"
+    },
+    {
+      "from": "docs/scoring.md",
+      "to": "archive/docs-legacy/scoring.md"
+    },
+    {
+      "from": "docs/SSR.md",
+      "to": "archive/docs-legacy/SSR.md"
+    },
+    {
+      "from": "docs/SSR.md",
+      "to": "archive/docs-legacy/SSR.md"
+    }
+  ]
+}

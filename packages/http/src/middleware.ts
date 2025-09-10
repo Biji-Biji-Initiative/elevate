@@ -41,9 +41,12 @@ export function withApiErrorHandling(handler: ApiHandler): SimpleHandler {
       // Add trace ID to response headers
       const response = await handler(request, context)
       response.headers.set(TRACE_HEADER, traceId)
-      
-      // Add performance timing (if response time > 1s, log it)
+
+      // Add Server-Timing header for basic TTFB instrumentation
       const duration = Date.now() - startTime
+      response.headers.set('Server-Timing', `api;desc=handler;dur=${duration}`)
+
+      // Add performance log (if response time > 1s, log it)
       if (duration > 1000) {
         console.warn(`[SLOW API] ${request.method} ${request.url} took ${duration}ms`, {
           traceId,
@@ -52,7 +55,7 @@ export function withApiErrorHandling(handler: ApiHandler): SimpleHandler {
           duration
         })
       }
-      
+
       return response
     } catch (error) {
       // Log the error with context
@@ -70,6 +73,8 @@ export function withApiErrorHandling(handler: ApiHandler): SimpleHandler {
 
       const response = createErrorResponse(error, 500, traceId)
       response.headers.set(TRACE_HEADER, traceId)
+      // Best-effort Server-Timing on errors as well
+      response.headers.set('Server-Timing', `api;desc=handler_error;dur=${Date.now() - startTime}`)
       return response
     }
   }

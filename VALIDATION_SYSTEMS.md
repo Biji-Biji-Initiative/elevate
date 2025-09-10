@@ -430,3 +430,39 @@ pnpm run api:extract  # Generate initial API reports
 ---
 
 _This validation system implements the requirements from [BUILDING.md](./BUILDING.md) Sections 11 and 12, providing comprehensive drift prevention and quality assurance for the monorepo._
+## Typed Tables and DTO Pattern
+
+To keep UI lint/type-safety clean without weakening rules:
+
+- Use the shared `DataTable` with generics: `DataTable<Row, Columns, Id>`.
+- Define `Column<Row, Value>` with `accessor: (row) => Value` and `render: (row, value) => ...` so cell renderers receive typed values.
+- Project server DTOs to flat, UI-safe rows in each page (e.g., `BadgeRow`, `UserRow`, `SubmissionRow`). Avoid deep optional chains in renderers.
+- Before calling `setError`, build a local `string` with a helper (e.g., `toErrorMessage(context, err)`) to avoid “unsafe-argument/unsafe-call” warnings.
+
+Example:
+
+```ts
+type BadgeRow = { code: string; name: string; earned_badges: number }
+const columns = createColumns<BadgeRow>()([
+  {
+    key: 'name',
+    header: 'Badge',
+    accessor: (row) => row.name,
+    render: (_row, value) => <strong>{value}</strong>,
+  },
+])
+
+<DataTable<BadgeRow, typeof columns, string>
+  data={rows}
+  columns={columns}
+  selection={{ selectedRows, onSelectionChange, getRowId: (r) => r.code }}
+/>
+```
+
+This pattern eliminates the need for `unknown` casts and prevents analyzer warnings in pages.
+
+## Route Analyzer Notes
+
+Some third-party route analyzers may flag `layout.tsx` and `page.tsx` pairs as duplicates. In Next.js App Router, a route directory commonly includes both; this is not a conflict.
+
+If your CI checker supports configuration, add ignore rules for `**/layout.tsx` when checking duplicate routes, and for `**/sitemap.*` ensure only one file per app root.

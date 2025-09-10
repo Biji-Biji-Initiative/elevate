@@ -112,20 +112,16 @@ export async function GET(request: NextRequest) {
     const studentsImpacted = amplifyData[0]?.total_students || 0
 
     // Process stage statistics from activity_breakdown JSON
-    const byStage: Partial<
-      Record<
-        ActivityCode,
-        {
-          total: number
-          approved: number
-          pending: number
-          rejected: number
-        }
-      >
-    > = {}
-
-    // Parse activity breakdown from the materialized view
-    Object.assign(byStage, formatActivityBreakdown(stats.activity_breakdown))
+    // Parse activity breakdown and normalize keys to DTO lower-case shape
+    const upper = formatActivityBreakdown(stats.activity_breakdown)
+    const empty = { total: 0, approved: 0, pending: 0, rejected: 0 }
+    const byStage = {
+      learn: upper.LEARN ?? empty,
+      explore: upper.EXPLORE ?? empty,
+      amplify: upper.AMPLIFY ?? empty,
+      present: upper.PRESENT ?? empty,
+      shine: upper.SHINE ?? empty,
+    }
 
     // Format cohort data
     const topCohorts: CohortWithAvgPoints[] = formatCohortPerformanceStats(cohortStats)

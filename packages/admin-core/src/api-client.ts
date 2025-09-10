@@ -49,7 +49,10 @@ export class AdminApiClient {
     return headers
   }
 
-  private async request<T = unknown>(path: string, init?: RequestInit): Promise<T> {
+  private async request<T = unknown>(
+    path: string,
+    init?: RequestInit,
+  ): Promise<T> {
     const url = this.buildUrl(path)
     const res = await fetch(url, {
       ...init,
@@ -79,9 +82,9 @@ export class AdminApiClient {
   // ----- Admin endpoints -----
 
   async getAdminCohorts() {
-    return this.request<paths['/api/admin/meta/cohorts']['get']['responses']['200']['content']['application/json']>(
-      '/api/admin/meta/cohorts',
-    )
+    return this.request<
+      paths['/api/admin/meta/cohorts']['get']['responses']['200']['content']['application/json']
+    >('/api/admin/meta/cohorts')
   }
 
   async getAdminSubmissions(
@@ -95,15 +98,15 @@ export class AdminApiClient {
     }
     const qs = search.toString()
     const endpoint = `/api/admin/submissions${qs ? `?${qs}` : ''}`
-    return this.request<paths['/api/admin/submissions']['get']['responses']['200']['content']['application/json']>(
-      endpoint,
-    )
+    return this.request<
+      paths['/api/admin/submissions']['get']['responses']['200']['content']['application/json']
+    >(endpoint)
   }
 
   async getAdminSubmissionById(id: string) {
-    return this.request<paths['/api/admin/submissions/{id}']['get']['responses']['200']['content']['application/json']>(
-      `/api/admin/submissions/${encodeURIComponent(id)}`,
-    )
+    return this.request<
+      paths['/api/admin/submissions/{id}']['get']['responses']['200']['content']['application/json']
+    >(`/api/admin/submissions/${encodeURIComponent(id)}`)
   }
 
   async reviewSubmission(
@@ -111,10 +114,9 @@ export class AdminApiClient {
       paths['/api/admin/submissions']['patch']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/submissions']['patch']['responses']['200']['content']['application/json']>(
-      '/api/admin/submissions',
-      { method: 'PATCH', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/submissions']['patch']['responses']['200']['content']['application/json']
+    >('/api/admin/submissions', { method: 'PATCH', body: JSON.stringify(body) })
   }
 
   async bulkReview(
@@ -122,10 +124,9 @@ export class AdminApiClient {
       paths['/api/admin/submissions']['post']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/submissions']['post']['responses']['200']['content']['application/json']>(
-      '/api/admin/submissions',
-      { method: 'POST', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/submissions']['post']['responses']['200']['content']['application/json']
+    >('/api/admin/submissions', { method: 'POST', body: JSON.stringify(body) })
   }
 
   async getAdminUsers(
@@ -139,9 +140,9 @@ export class AdminApiClient {
     }
     const qs = search.toString()
     const endpoint = `/api/admin/users${qs ? `?${qs}` : ''}`
-    return this.request<paths['/api/admin/users']['get']['responses']['200']['content']['application/json']>(
-      endpoint,
-    )
+    return this.request<
+      paths['/api/admin/users']['get']['responses']['200']['content']['application/json']
+    >(endpoint)
   }
 
   async updateAdminUser(
@@ -149,10 +150,9 @@ export class AdminApiClient {
       paths['/api/admin/users']['patch']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/users']['patch']['responses']['200']['content']['application/json']>(
-      '/api/admin/users',
-      { method: 'PATCH', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/users']['patch']['responses']['200']['content']['application/json']
+    >('/api/admin/users', { method: 'PATCH', body: JSON.stringify(body) })
   }
 
   async bulkUpdateAdminUsers(
@@ -160,10 +160,9 @@ export class AdminApiClient {
       paths['/api/admin/users']['post']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/users']['post']['responses']['200']['content']['application/json']>(
-      '/api/admin/users',
-      { method: 'POST', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/users']['post']['responses']['200']['content']['application/json']
+    >('/api/admin/users', { method: 'POST', body: JSON.stringify(body) })
   }
 
   async getAdminBadges(
@@ -177,9 +176,9 @@ export class AdminApiClient {
     }
     const qs = search.toString()
     const endpoint = `/api/admin/badges${qs ? `?${qs}` : ''}`
-    return this.request<paths['/api/admin/badges']['get']['responses']['200']['content']['application/json']>(
-      endpoint,
-    )
+    return this.request<
+      paths['/api/admin/badges']['get']['responses']['200']['content']['application/json']
+    >(endpoint)
   }
 
   async createAdminBadge(
@@ -187,10 +186,9 @@ export class AdminApiClient {
       paths['/api/admin/badges']['post']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/badges']['post']['responses']['200']['content']['application/json']>(
-      '/api/admin/badges',
-      { method: 'POST', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/badges']['post']['responses']['200']['content']['application/json']
+    >('/api/admin/badges', { method: 'POST', body: JSON.stringify(body) })
   }
 
   async updateAdminBadge(
@@ -198,17 +196,17 @@ export class AdminApiClient {
       paths['/api/admin/badges']['patch']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/badges']['patch']['responses']['200']['content']['application/json']>(
-      '/api/admin/badges',
-      { method: 'PATCH', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/badges']['patch']['responses']['200']['content']['application/json']
+    >('/api/admin/badges', { method: 'PATCH', body: JSON.stringify(body) })
   }
 
   async deleteAdminBadge(code: string) {
-    return this.request<paths['/api/admin/badges']['delete']['responses']['200']['content']['application/json']>(
-      `/api/admin/badges?code=${encodeURIComponent(code)}`,
-      { method: 'DELETE' },
-    )
+    return this.request<
+      paths['/api/admin/badges']['delete']['responses']['200']['content']['application/json']
+    >(`/api/admin/badges?code=${encodeURIComponent(code)}`, {
+      method: 'DELETE',
+    })
   }
 
   async assignAdminBadge(
@@ -216,10 +214,12 @@ export class AdminApiClient {
       paths['/api/admin/badges/assign']['post']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/badges/assign']['post']['responses']['200']['content']['application/json']>(
-      '/api/admin/badges/assign',
-      { method: 'POST', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/badges/assign']['post']['responses']['200']['content']['application/json']
+    >('/api/admin/badges/assign', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
   }
 
   async removeAdminBadge(
@@ -227,10 +227,12 @@ export class AdminApiClient {
       paths['/api/admin/badges/assign']['delete']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/badges/assign']['delete']['responses']['200']['content']['application/json']>(
-      '/api/admin/badges/assign',
-      { method: 'DELETE', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/badges/assign']['delete']['responses']['200']['content']['application/json']
+    >('/api/admin/badges/assign', {
+      method: 'DELETE',
+      body: JSON.stringify(body),
+    })
   }
 
   async getAdminAnalytics(
@@ -244,15 +246,15 @@ export class AdminApiClient {
     }
     const qs = search.toString()
     const endpoint = `/api/admin/analytics${qs ? `?${qs}` : ''}`
-    return this.request<paths['/api/admin/analytics']['get']['responses']['200']['content']['application/json']>(
-      endpoint,
-    )
+    return this.request<
+      paths['/api/admin/analytics']['get']['responses']['200']['content']['application/json']
+    >(endpoint)
   }
 
   async getAdminKajabi() {
-    return this.request<paths['/api/admin/kajabi']['get']['responses']['200']['content']['application/json']>(
-      '/api/admin/kajabi',
-    )
+    return this.request<
+      paths['/api/admin/kajabi']['get']['responses']['200']['content']['application/json']
+    >('/api/admin/kajabi')
   }
 
   async testAdminKajabi(
@@ -260,10 +262,9 @@ export class AdminApiClient {
       paths['/api/admin/kajabi/test']['post']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/kajabi/test']['post']['responses']['200']['content']['application/json']>(
-      '/api/admin/kajabi/test',
-      { method: 'POST', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/kajabi/test']['post']['responses']['200']['content']['application/json']
+    >('/api/admin/kajabi/test', { method: 'POST', body: JSON.stringify(body) })
   }
 
   async reprocessAdminKajabi(
@@ -271,16 +272,18 @@ export class AdminApiClient {
       paths['/api/admin/kajabi/reprocess']['post']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/kajabi/reprocess']['post']['responses']['200']['content']['application/json']>(
-      '/api/admin/kajabi/reprocess',
-      { method: 'POST', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/kajabi/reprocess']['post']['responses']['200']['content']['application/json']
+    >('/api/admin/kajabi/reprocess', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
   }
 
   async getAdminKajabiHealth() {
-    return this.request<paths['/api/admin/kajabi/health']['get']['responses']['200']['content']['application/json']>(
-      '/api/admin/kajabi/health',
-    )
+    return this.request<
+      paths['/api/admin/kajabi/health']['get']['responses']['200']['content']['application/json']
+    >('/api/admin/kajabi/health')
   }
 
   async postAdminKajabiInvite(
@@ -288,10 +291,12 @@ export class AdminApiClient {
       paths['/api/admin/kajabi/invite']['post']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/kajabi/invite']['post']['responses']['200']['content']['application/json']>(
-      '/api/admin/kajabi/invite',
-      { method: 'POST', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/kajabi/invite']['post']['responses']['200']['content']['application/json']
+    >('/api/admin/kajabi/invite', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
   }
 
   async postAdminStorageRetention(
@@ -299,33 +304,15 @@ export class AdminApiClient {
       paths['/api/admin/storage/retention']['post']['requestBody']
     >['content']['application/json'],
   ) {
-    return this.request<paths['/api/admin/storage/retention']['post']['responses']['200']['content']['application/json']>(
-      '/api/admin/storage/retention',
-      { method: 'POST', body: JSON.stringify(body) },
-    )
+    return this.request<
+      paths['/api/admin/storage/retention']['post']['responses']['200']['content']['application/json']
+    >('/api/admin/storage/retention', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
   }
 }
 
 // Auth token provider (pluggable to avoid hard dependency on Clerk in libraries)
-export type TokenProvider = () => Promise<string | undefined>
-
-export async function getAuthToken(): Promise<string | undefined> {
-  // Try dynamic import to avoid static dependency for consumers not using Clerk
-  try {
-    type ClerkAuth = () => Promise<{ getToken: () => Promise<string | null | undefined> }>
-    type ClerkServerModule = { auth?: ClerkAuth }
-
-    // Use a non-literal to avoid ESLint import/no-unresolved on consumers without Clerk
-    const clerkSpecifier = '@clerk/nextjs/' + 'server'
-    const mod: unknown = await import(clerkSpecifier)
-    const maybe = mod as ClerkServerModule
-    if (typeof maybe.auth === 'function') {
-      const { getToken } = await maybe.auth()
-      const token = await getToken()
-      return typeof token === 'string' && token.length > 0 ? token : undefined
-    }
-  } catch {
-    // Non-Next/Clerk environment; no token available
-  }
-  return undefined
-}
+// Intentionally no server-only imports here. Authentication is provided by
+// cookies via middleware; client code should not attempt to fetch server tokens.

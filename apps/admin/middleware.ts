@@ -1,20 +1,24 @@
 import { NextResponse } from 'next/server'
 
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
-import createIntlMiddleware from 'next-intl/middleware';
+import createIntlMiddleware from 'next-intl/middleware'
 
-import { parseClerkPublicMetadata, safeParseRole, type RoleName } from '@elevate/auth';
-import { getSecurityConfig, withSecurity } from '@elevate/security/security-middleware'
+import {
+  parseClerkPublicMetadata,
+  safeParseRole,
+  type RoleName,
+} from '@elevate/auth'
+import { parseClerkEmailAddress } from '@elevate/auth/types'
+// Security headers are applied via next.config.mjs headers()
 
-import { locales, defaultLocale } from './i18n';
-
+import { locales, defaultLocale } from './i18n'
 
 // Create the intl middleware
 const intlMiddleware = createIntlMiddleware({
   locales,
   defaultLocale,
-  localePrefix: 'as-needed'
-});
+  localePrefix: 'as-needed',
+})
 
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
@@ -27,74 +31,78 @@ const isPublicRoute = createRouteMatcher([
   '/(en|id)/unauthorized',
 ])
 
-
 // Main admin middleware with internationalization, authentication, and role checking
 const adminMiddleware = clerkMiddleware(async (auth, req) => {
+  const method = req.method
+  const isGetLike = method === 'GET' || method === 'HEAD'
+  const pathname = req.nextUrl.pathname
+  const isApi = pathname.startsWith('/api/')
   // Establish Clerk context for all non-static requests to avoid downstream auth() detection errors
   await auth()
 
-  // Bypass API routes; route handlers enforce JSON auth semantics
-  if (req.nextUrl.pathname.startsWith('/api/')) return NextResponse.next()
+  // Ensure API routes also receive Clerk context for auth() usage
+  // Downstream route handlers can still implement their own JSON auth checks
+  // but we should not bypass middleware, otherwise auth() throws.
 
-  // Handle internationalization first for non-API routes
-  const intlResponse = intlMiddleware(req);
-  
-  // If intl middleware returns a response (redirect), use it
-  if (intlResponse) {
-    return intlResponse;
-  }
-
-  // Allow public routes
+  // Allow public routes (intl only for GET/HEAD)
   if (isPublicRoute(req)) {
-    return NextResponse.next()
+    // Never run i18n on API paths
+    return isApi
+      ? NextResponse.next()
+      : isGetLike
+      ? intlMiddleware(req)
+      : NextResponse.next()
   }
 
   // All other routes require authentication
   const { userId, sessionClaims, redirectToSignIn } = await auth()
-  
+
   if (!userId) {
-    return redirectToSignIn()
+    if (isApi)
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return isGetLike
+      ? redirectToSignIn()
+      : NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   // Check if user has minimum required role for admin access
   const publicMetadata = parseClerkPublicMetadata(sessionClaims?.publicMetadata)
-  const userRole = safeParseRole(publicMetadata.role)
+  let userRole = safeParseRole(publicMetadata.role)
+  const email = parseClerkEmailAddress(sessionClaims?.primaryEmailAddress)
+  if (process.env.NODE_ENV === 'development' && email) {
+    const csv = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').toLowerCase()
+    if (csv.length > 0) {
+      const allow = new Set(
+        csv
+          .split(',')
+          .map((e) => e.trim())
+          .filter(Boolean),
+      )
+      if (allow.has(email.toLowerCase())) userRole = 'superadmin'
+    }
+  }
   const allowedRoles: RoleName[] = ['reviewer', 'admin', 'superadmin']
-  
+
   if (!allowedRoles.includes(userRole)) {
-    return NextResponse.redirect(new URL('/unauthorized', req.url))
+    if (isApi) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    return isGetLike
+      ? NextResponse.redirect(new URL('/unauthorized', req.url))
+      : NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  return NextResponse.next()
+  // After authz, apply intl locale handling only for GET/HEAD. Other methods
+  // must pass through untouched so Next.js can handle RSC/server actions.
+  if (isApi) return NextResponse.next()
+  return isGetLike ? intlMiddleware(req) : NextResponse.next()
 })
 
-// Configure security options based on environment for admin app
-const securityConfig = getSecurityConfig()
+// Security configuration handled centrally; no per-middleware overrides here.
 
-// Add additional domains specific to the admin app
-const adminSecurityConfig = {
-  ...securityConfig,
-  skipPaths: [
-    '/api/health',
-    '/_next/static',
-    '/favicon.ico'
-  ],
-  allowedDomains: {
-    ...securityConfig.allowedDomains,
-    external: [
-      ...(securityConfig.allowedDomains?.external || []),
-      // Add any admin-specific external domains here
-    ]
-  },
-  reportUri: '/api/csp-report'
-}
-
-// Export combined middleware with security headers and admin logic
-export default withSecurity(adminMiddleware, adminSecurityConfig)
+// Export Clerk+i18n admin middleware directly. Security headers are provided
+// by next.config.mjs headers() to avoid interfering with Clerk detection.
+export default adminMiddleware
 
 export const config = {
-  matcher: [
-    // Skip Next.js internals and all static files
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-  ],
+  // Use Clerk's recommended matcher to ensure API routes are always matched
+  matcher: ['/((?!.*\\..*|_next).*)', '/(api|trpc)(.*)'],
 }

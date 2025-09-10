@@ -40,7 +40,7 @@ Visit:
 - **[Admin Guide](docs/admin/ADMIN_GUIDE.md)** - Kajabi health/invite, retention, Ops
 - **[Ops Runbook](docs/OPS_RUNBOOK.md)** - Environment, endpoints, cron
 - **[Staging Validation](docs/qa/STAGING_VALIDATION.md)** - E2E validation checklist
-- **[Security Guide](docs/SECURITY.md)** - Auth, RBAC, privacy
+- **[Security Guide](docs/security/index.md)** - Auth, RBAC, privacy
 - **[Contributing Guide](docs/CONTRIBUTING.md)** - How to contribute
 - **[Onboarding Guide](docs/ONBOARDING.md)** - New engineer setup
 
@@ -53,6 +53,7 @@ pnpm build              # Build everything
 pnpm test               # Run tests
 pnpm verify:all         # Run all validation
 pnpm qa:validate:staging # Probe staging endpoints (see docs/qa/STAGING_VALIDATION.md)
+pnpm check              # Lint + type-check sweep
 
 # Database
 pnpm db:studio          # Open Prisma Studio

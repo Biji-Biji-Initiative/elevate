@@ -15,7 +15,8 @@ vercel env add KAJABI_WEBHOOK_SECRET production < /dev/null
 vercel env add KAJABI_API_KEY production <<< "ka_dummy_api_key"
 vercel env add KAJABI_CLIENT_SECRET production <<< "ka_dummy_client_secret"
 vercel env add KAJABI_SITE production <<< "academy.mereka.my"
-vercel env add KAJABI_COMPLETION_TAG production <<< "elevate-ai-1-completed"
+# Optional: Site-scoped Kajabi base URL
+vercel env add KAJABI_BASE_URL production <<< "https://academy.mereka.my/api"
 vercel env add KAJABI_OFFER_ID production <<< "r8LNCZ3f"
 vercel env add RESEND_API_KEY production <<< "re_dummy_key"
 vercel env add FROM_EMAIL production <<< "noreply@elevate-indonesia.com"

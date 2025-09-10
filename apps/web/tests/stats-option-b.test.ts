@@ -49,9 +49,9 @@ vi.mock('@elevate/logging/safe-server', () => ({
 }))
 
 function makeRequest(url: string): NextRequest {
-  // Minimal stub sufficient for route usage
   const u = new URL(url)
-  return { url: u.toString() } as NextRequest
+  const headers = new Headers()
+  return { url: u.toString(), nextUrl: u, headers } as unknown as NextRequest
 }
 
 describe('GET /api/stats (Option B parity)', () => {

@@ -58,7 +58,7 @@ export async function approveAmplifySubmission(
 
   const sessionStart = toUtc(
     opts.payload.session_date,
-    opts.payload.session_start_time ?? null ?? undefined,
+    opts.payload.session_start_time ?? undefined,
     opts.orgTimezone,
   )
   const startOfDay = toUtc(opts.payload.session_date, '00:00', opts.orgTimezone)
@@ -103,7 +103,7 @@ export async function approveAmplifySubmission(
     const data = toAmplifyPayload(sub.payload)
     const otherStart = toUtc(
       data.session_date,
-      data.session_start_time ?? null ?? undefined,
+      data.session_start_time ?? undefined,
       opts.orgTimezone,
     )
     if (otherStart >= windowStart && otherStart <= windowEnd) {

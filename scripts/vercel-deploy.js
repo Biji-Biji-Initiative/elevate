@@ -26,7 +26,7 @@ const ENV_VARS = {
   KAJABI_API_KEY: '3bSjqrBysXjszB3TtFgSSKSV',
   KAJABI_CLIENT_SECRET: 'bEiFQSQiRzeyHZxfP4En52oo',
   KAJABI_SITE: 'academy.mereka.my',
-  KAJABI_COMPLETION_TAG: 'elevate-ai-1-completed',
+  KAJABI_BASE_URL: 'https://academy.mereka.my/api',
   KAJABI_OFFER_ID: 'r8LNCZ3f',
   
   // Resend

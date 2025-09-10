@@ -1,0 +1,465 @@
+{
+  "web": [
+    {
+      "path": "apps/web/.next/server/app/api/admin/performance/materialized-views/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/admin/test/materialized-views/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/badges/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/cron/enforce-retention/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/cron/refresh-leaderboards/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/csp-report/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/csrf-token/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/dashboard/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/docs/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/emails/approval/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/emails/rejection/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/emails/submission-confirmation/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/emails/welcome/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/files/[...path]/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/files/upload/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/health/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/kajabi/webhook/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/leaderboard/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/logs/client-errors/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/metrics/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/performance-benchmark/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/profile/[handle]/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/profile/me/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/profile/user-type/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/referrals/link/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/slo/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/stats/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/stats-optimized/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/stories/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/submissions/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/test-db/route.js"
+    },
+    {
+      "path": "apps/web/.next/server/app/api/webhooks/clerk/route.js"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/admin/performance/materialized-views/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/admin/test/materialized-views/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/badges/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/cron/enforce-retention/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/cron/refresh-leaderboards/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/csp-report/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/csrf-token/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/dashboard/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/docs/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/emails/approval/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/emails/rejection/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/emails/submission-confirmation/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/emails/welcome/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/files/[...path]/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/files/upload/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/health/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/kajabi/webhook/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/leaderboard/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/logs/client-errors/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/metrics/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/performance-benchmark/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/profile/[handle]/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/profile/me/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/profile/user-type/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/referrals/link/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/slo/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/stats/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/stats-optimized/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/stories/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/submissions/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/test-db/route.ts"
+    },
+    {
+      "path": "apps/web/.next/types/app/api/webhooks/clerk/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/admin/performance/materialized-views/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/admin/test/materialized-views/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/badges/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/cron/enforce-retention/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/cron/refresh-leaderboards/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/csp-report/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/csrf-token/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/dashboard/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/docs/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/emails/approval/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/emails/rejection/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/emails/submission-confirmation/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/emails/welcome/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/files/[...path]/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/files/upload/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/health/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/kajabi/webhook/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/leaderboard/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/logs/client-errors/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/metrics/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/performance-benchmark/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/profile/[handle]/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/profile/me/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/profile/user-type/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/referrals/link/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/slo/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/stats/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/stats-optimized/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/stories/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/submissions/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/test-db/route.ts"
+    },
+    {
+      "path": "apps/web/app/api/webhooks/clerk/route.ts"
+    }
+  ],
+  "admin": [
+    {
+      "path": "apps/admin/.next/server/app/api/admin/analytics/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/analytics-optimized/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/badges/assign/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/badges/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/exports/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/kajabi/health/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/kajabi/invite/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/kajabi/reprocess/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/kajabi/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/kajabi/test/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/meta/cohorts/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/meta/rate-limits/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/referrals/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/slo/summary/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/storage/retention/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/submissions/[id]/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/submissions/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/admin/users/route.js"
+    },
+    {
+      "path": "apps/admin/.next/server/app/api/csp-report/route.js"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/analytics/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/analytics-optimized/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/badges/assign/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/badges/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/exports/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/kajabi/health/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/kajabi/invite/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/kajabi/reprocess/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/kajabi/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/kajabi/test/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/meta/cohorts/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/meta/rate-limits/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/referrals/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/slo/summary/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/storage/retention/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/submissions/[id]/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/submissions/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/admin/users/route.ts"
+    },
+    {
+      "path": "apps/admin/.next/types/app/api/csp-report/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/analytics/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/analytics-optimized/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/badges/assign/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/badges/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/exports/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/kajabi/health/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/kajabi/invite/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/kajabi/reprocess/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/kajabi/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/kajabi/test/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/meta/cohorts/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/meta/rate-limits/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/referrals/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/slo/summary/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/storage/retention/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/submissions/[id]/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/submissions/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/admin/users/route.ts"
+    },
+    {
+      "path": "apps/admin/app/api/csp-report/route.ts"
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { NextRequest } from 'next/server'
 
 // Mock Prisma client used by the route
+const queryRawMock = vi.fn()
 vi.mock('@elevate/db/client', () => {
   const submission = {
     count: vi.fn(async ({ where }: { where?: Record<string, unknown> }) => {
@@ -19,7 +20,7 @@ vi.mock('@elevate/db/client', () => {
       { cohort: '2024', _count: { id: 5 } },
     ]),
   }
-  return { prisma: { submission, user } }
+  return { prisma: { submission, user, $queryRaw: queryRawMock } }
 })
 
 // Mock safe logger to avoid requiring built dist
@@ -29,6 +30,12 @@ vi.mock('@elevate/logging/safe-server', () => ({
     warn: () => {},
     error: () => {},
   }),
+}))
+
+// Mock rate limiter to avoid header/IP dependence
+vi.mock('@elevate/security', async () => ({
+  withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
+  publicApiRateLimiter: {},
 }))
 
 function makeRequest(url: string): NextRequest & {
@@ -51,6 +58,11 @@ describe('GET /api/metrics cache headers', () => {
   })
 
   it('sets Cache-Control and returns StageMetricsDTO for stage=explore', async () => {
+    queryRawMock.mockResolvedValueOnce([{ delta_points: 8 }, { delta_points: 12 }])
+    queryRawMock.mockResolvedValueOnce([
+      { month: '2025-01', submissions: 3, approvals: 2 },
+      { month: '2025-02', submissions: 7, approvals: 4 },
+    ])
     const req = makeRequest('http://localhost/api/metrics?stage=explore')
     const { GET } = await import('../app/api/metrics/route')
     const res = await GET(req)

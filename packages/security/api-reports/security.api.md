@@ -88,6 +88,7 @@ export function createSecurityMiddleware(options?: SecurityMiddlewareOptions): N
 
 // @public (undocumented)
 export interface CSPOptions {
+    addReportTo?: boolean;
     // (undocumented)
     allowedDomains?: {
         clerk?: string[];

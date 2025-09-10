@@ -1,0 +1,3392 @@
+[
+  {
+    "path": ".changeset/README.md",
+    "size": 2278,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": ".changeset/setup-changesets.md",
+    "size": 618,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "AGENTS.md",
+    "size": 5278,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "apps/admin/agents.md",
+    "size": 3134,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "apps/admin/agents.md",
+    "size": 3134,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "apps/admin/README.md",
+    "size": 1808,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "apps/admin/README.md",
+    "size": 1808,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "apps/web/.clerk/.tmp/README.md",
+    "size": 213,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "apps/web/.clerk/.tmp/README.md",
+    "size": 213,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "apps/web/agents.md",
+    "size": 3156,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "apps/web/agents.md",
+    "size": 3156,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "archive/deprecated-docs/DEPLOYMENT_GUIDE.md",
+    "size": 5766,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 2
+  },
+  {
+    "path": "archive/deprecated-docs/VERCEL_DEPLOYMENT_GUIDE.md",
+    "size": 8828,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 5
+  },
+  {
+    "path": "archive/legacy/MIGRATION_STATUS_REPORT.md",
+    "size": 7232,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "archive/legacy/MIGRATION_SUMMARY.md",
+    "size": 5885,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "archive/legacy/PHASE_4_SUMMARY.md",
+    "size": 11325,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "archive/legacy/PROJECT_STATUS.md",
+    "size": 4918,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "archive/migrations/logging-migration-plan.md",
+    "size": 15278,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 6
+  },
+  {
+    "path": "archive/migrations/README.md",
+    "size": 2103,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "archive/planning/plan/about.md",
+    "size": 5348,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "archive/planning/plan/plan1.md",
+    "size": 21197,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "archive/planning/plan/plan2.md",
+    "size": 16216,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 3
+  },
+  {
+    "path": "archive/planning/plan/PROJECT_TRACKER.md",
+    "size": 3677,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "BUILDING.md",
+    "size": 15156,
+    "title": "Build Strategy and Package Architecture",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-09",
+    "tags": "[build, typescript, monorepo, architecture]",
+    "link_count": 0
+  },
+  {
+    "path": "DEPLOYMENT_GUIDE.md",
+    "size": 510,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 4
+  },
+  {
+    "path": "DEPLOYMENT.md",
+    "size": 8111,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 10
+  },
+  {
+    "path": "docs/admin-flows.md",
+    "size": 623,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/admin-flows.md",
+    "size": 623,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/admin/ADMIN_GUIDE.md",
+    "size": 1913,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/admin/ADMIN_GUIDE.md",
+    "size": 1913,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/API_ENVELOPES.md",
+    "size": 1506,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/API_ENVELOPES.md",
+    "size": 1506,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/api-coverage-validation.md",
+    "size": 4662,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/api-coverage-validation.md",
+    "size": 4662,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/API.md",
+    "size": 9062,
+    "title": "API Reference - Actual Endpoints",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[api, endpoints, reference]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/API.md",
+    "size": 9062,
+    "title": "API Reference - Actual Endpoints",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[api, endpoints, reference]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/api/index.md",
+    "size": 11324,
+    "title": "API Usage Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[api, client, openapi, envelopes]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/api/index.md",
+    "size": 11324,
+    "title": "API Usage Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[api, client, openapi, envelopes]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/architecture/adr/ADR-0001-template.md",
+    "size": 2600,
+    "title": "ADR-0001: Architecture Decision Record Template",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[adr, template, architecture]",
+    "link_count": 2
+  },
+  {
+    "path": "docs/architecture/adr/ADR-0001-template.md",
+    "size": 2600,
+    "title": "ADR-0001: Architecture Decision Record Template",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[adr, template, architecture]",
+    "link_count": 2
+  },
+  {
+    "path": "docs/architecture/overview.md",
+    "size": 7983,
+    "title": "Architecture Overview",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[architecture, system-design, overview]",
+    "link_count": 4
+  },
+  {
+    "path": "docs/architecture/overview.md",
+    "size": 7983,
+    "title": "Architecture Overview",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[architecture, system-design, overview]",
+    "link_count": 4
+  },
+  {
+    "path": "docs/badges.md",
+    "size": 900,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/badges.md",
+    "size": 900,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/BUILD_ARTIFACT_POLICY.md",
+    "size": 7924,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/BUILD_ARTIFACT_POLICY.md",
+    "size": 7924,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/BUILD_QUICK_REFERENCE.md",
+    "size": 1621,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "docs/BUILD_QUICK_REFERENCE.md",
+    "size": 1621,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "docs/bundle-analysis.md",
+    "size": 7165,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 4
+  },
+  {
+    "path": "docs/bundle-analysis.md",
+    "size": 7165,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 4
+  },
+  {
+    "path": "docs/canonical-routing-strategy.md",
+    "size": 4990,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/canonical-routing-strategy.md",
+    "size": 4990,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/changesets-setup.md",
+    "size": 2104,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/changesets-setup.md",
+    "size": 2104,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/CONTRIBUTING-DOCS.md",
+    "size": 2075,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "docs/CONTRIBUTING-DOCS.md",
+    "size": 2075,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "docs/CONTRIBUTING.md",
+    "size": 11284,
+    "title": "Contribution Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[contributing, development, documentation, pr-template]",
+    "link_count": 10
+  },
+  {
+    "path": "docs/CONTRIBUTING.md",
+    "size": 11284,
+    "title": "Contribution Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[contributing, development, documentation, pr-template]",
+    "link_count": 10
+  },
+  {
+    "path": "docs/copy/home.md",
+    "size": 1358,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/copy/home.md",
+    "size": 1358,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/csrf-protection.md",
+    "size": 14642,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 4
+  },
+  {
+    "path": "docs/csrf-protection.md",
+    "size": 14642,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 4
+  },
+  {
+    "path": "docs/database-management.md",
+    "size": 11047,
+    "title": "Database Schema Management",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-09",
+    "tags": "[database, schema, prisma, migrations]",
+    "link_count": 2
+  },
+  {
+    "path": "docs/database-management.md",
+    "size": 11047,
+    "title": "Database Schema Management",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-09",
+    "tags": "[database, schema, prisma, migrations]",
+    "link_count": 2
+  },
+  {
+    "path": "docs/DATABASE.md",
+    "size": 4928,
+    "title": "Database Schema - Actual Prisma Models",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[database, schema, prisma]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/DATABASE.md",
+    "size": 4928,
+    "title": "Database Schema - Actual Prisma Models",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[database, schema, prisma]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/decisions.md",
+    "size": 1174,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/decisions.md",
+    "size": 1174,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/DEPLOYMENT.md",
+    "size": 11785,
+    "title": "Deployment Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[deployment, vercel, operations]",
+    "link_count": 3
+  },
+  {
+    "path": "docs/DEPLOYMENT.md",
+    "size": 11785,
+    "title": "Deployment Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[deployment, vercel, operations]",
+    "link_count": 3
+  },
+  {
+    "path": "docs/DEV_TROUBLESHOOTING.md",
+    "size": 1979,
+    "title": "Development Troubleshooting & Patterns",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[dev, turbopack, clerk, next-intl]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/DEV_TROUBLESHOOTING.md",
+    "size": 1979,
+    "title": "Development Troubleshooting & Patterns",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[dev, turbopack, clerk, next-intl]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/development.md",
+    "size": 10501,
+    "title": "Core Developer Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[development, setup, build, debug]",
+    "link_count": 6
+  },
+  {
+    "path": "docs/development.md",
+    "size": 10501,
+    "title": "Core Developer Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[development, setup, build, debug]",
+    "link_count": 6
+  },
+  {
+    "path": "docs/DOCS_TRANSFORMATION_SUMMARY.md",
+    "size": 6437,
+    "title": "Documentation Transformation Summary",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[documentation, transformation, summary]",
+    "link_count": 12
+  },
+  {
+    "path": "docs/DOCS_TRANSFORMATION_SUMMARY.md",
+    "size": 6437,
+    "title": "Documentation Transformation Summary",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[documentation, transformation, summary]",
+    "link_count": 12
+  },
+  {
+    "path": "docs/DOCUMENTS_ORGANIZATION_PLAN.md",
+    "size": 7106,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/DOCUMENTS_ORGANIZATION_PLAN.md",
+    "size": 7106,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/error-handling.md",
+    "size": 13111,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 8
+  },
+  {
+    "path": "docs/error-handling.md",
+    "size": 13111,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 8
+  },
+  {
+    "path": "docs/generated/routes.md",
+    "size": 5134,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/generated/routes.md",
+    "size": 5134,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/HEADER_COMPOSITION.md",
+    "size": 1011,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/HEADER_COMPOSITION.md",
+    "size": 1011,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/i18n-bundle-optimization-summary.md",
+    "size": 7594,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/i18n-bundle-optimization-summary.md",
+    "size": 7594,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/ia.md",
+    "size": 720,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/ia.md",
+    "size": 720,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/INTERNAL_ENDPOINTS.md",
+    "size": 876,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/INTERNAL_ENDPOINTS.md",
+    "size": 876,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/kajabi-integration.md",
+    "size": 5110,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/kajabi-integration.md",
+    "size": 5110,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/LEAN_DOCS_PLAN.md",
+    "size": 4960,
+    "title": "Lean Documentation Plan - Radical Consolidation",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[documentation, consolidation, lean]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/LEAN_DOCS_PLAN.md",
+    "size": 4960,
+    "title": "Lean Documentation Plan - Radical Consolidation",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[documentation, consolidation, lean]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/activity-canon.md",
+    "size": 809,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/activity-canon.md",
+    "size": 809,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/activity-examples.md",
+    "size": 722,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/activity-examples.md",
+    "size": 722,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/agent-tracker.md",
+    "size": 7822,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/agent-tracker.md",
+    "size": 7822,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/amplify.md",
+    "size": 2631,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/amplify.md",
+    "size": 2631,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/badges.md",
+    "size": 1319,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/badges.md",
+    "size": 1319,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/ci-checklist.md",
+    "size": 721,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/ci-checklist.md",
+    "size": 721,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/config.md",
+    "size": 557,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/config.md",
+    "size": 557,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/dev-stubs.md",
+    "size": 695,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/dev-stubs.md",
+    "size": 695,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/errors-and-openapi.md",
+    "size": 940,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/errors-and-openapi.md",
+    "size": 940,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/glossary.md",
+    "size": 447,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/glossary.md",
+    "size": 447,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/handoff.md",
+    "size": 5924,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/handoff.md",
+    "size": 5924,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/identity-and-referrals.md",
+    "size": 1544,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/identity-and-referrals.md",
+    "size": 1544,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/invariants.md",
+    "size": 903,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/invariants.md",
+    "size": 903,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/kajabi-learn.md",
+    "size": 2350,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/kajabi-learn.md",
+    "size": 2350,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/migration-playbook.md",
+    "size": 985,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/migration-playbook.md",
+    "size": 985,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/monitoring-and-slos.md",
+    "size": 545,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/monitoring-and-slos.md",
+    "size": 545,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/ops-and-reliability.md",
+    "size": 2123,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/ops-and-reliability.md",
+    "size": 2123,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/privacy-and-retention.md",
+    "size": 1024,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/privacy-and-retention.md",
+    "size": 1024,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/README.md",
+    "size": 2049,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/README.md",
+    "size": 2049,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/referrals-implementation-tracker.md",
+    "size": 1839,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/referrals-implementation-tracker.md",
+    "size": 1839,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/reviewer-rubric.md",
+    "size": 741,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/reviewer-rubric.md",
+    "size": 741,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/schema-index-deltas.md",
+    "size": 1707,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/schema-index-deltas.md",
+    "size": 1707,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/spec-drift-guard.md",
+    "size": 526,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/spec-drift-guard.md",
+    "size": 526,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/stats-and-counters.md",
+    "size": 2057,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/stats-and-counters.md",
+    "size": 2057,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/submissions-fsm.md",
+    "size": 1241,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/submissions-fsm.md",
+    "size": 1241,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/tests.md",
+    "size": 825,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/tests.md",
+    "size": 825,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/threat-model.md",
+    "size": 723,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/leaps/threat-model.md",
+    "size": 723,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/logging-best-practices.md",
+    "size": 28053,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 11
+  },
+  {
+    "path": "docs/logging-best-practices.md",
+    "size": 28053,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 11
+  },
+  {
+    "path": "docs/logging-migration-plan.md",
+    "size": 15278,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 6
+  },
+  {
+    "path": "docs/logging-migration-plan.md",
+    "size": 15278,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 6
+  },
+  {
+    "path": "docs/LOGGING.md",
+    "size": 1020,
+    "title": "Logging in Next.js Route Handlers",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[logging, nextjs, server]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/LOGGING.md",
+    "size": 1020,
+    "title": "Logging in Next.js Route Handlers",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[logging, nextjs, server]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/MATERIALIZED_VIEWS_OPTIMIZATION.md",
+    "size": 11849,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 3
+  },
+  {
+    "path": "docs/MATERIALIZED_VIEWS_OPTIMIZATION.md",
+    "size": 11849,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 3
+  },
+  {
+    "path": "docs/OBSERVABILITY_SETUP.md",
+    "size": 12967,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/OBSERVABILITY_SETUP.md",
+    "size": 12967,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/onboarding.md",
+    "size": 8393,
+    "title": "Engineering Onboarding",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[onboarding, new-hire, setup]",
+    "link_count": 12
+  },
+  {
+    "path": "docs/onboarding.md",
+    "size": 8393,
+    "title": "Engineering Onboarding",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[onboarding, new-hire, setup]",
+    "link_count": 12
+  },
+  {
+    "path": "docs/OPS_RUNBOOK.md",
+    "size": 1973,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/OPS_RUNBOOK.md",
+    "size": 1973,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/PERFORMANCE_OPTIMIZATION_REPORT.md",
+    "size": 11507,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/PERFORMANCE_OPTIMIZATION_REPORT.md",
+    "size": 11507,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/points-and-badges.md",
+    "size": 4080,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/points-and-badges.md",
+    "size": 4080,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/policies.md",
+    "size": 718,
+    "title": "Privacy & Publication Policies",
+    "owner": "platform-team",
+    "status": "draft",
+    "last_reviewed": "2025-09-09",
+    "tags": "[privacy, policies, security]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/policies.md",
+    "size": 718,
+    "title": "Privacy & Publication Policies",
+    "owner": "platform-team",
+    "status": "draft",
+    "last_reviewed": "2025-09-09",
+    "tags": "[privacy, policies, security]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/qa/STAGING_VALIDATION.md",
+    "size": 3317,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/qa/STAGING_VALIDATION.md",
+    "size": 3317,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/qa/VALIDATION_REPORT_TEMPLATE.md",
+    "size": 717,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/qa/VALIDATION_REPORT_TEMPLATE.md",
+    "size": 717,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/rca-text-lint-and-type-safety.md",
+    "size": 4057,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/rca-text-lint-and-type-safety.md",
+    "size": 4057,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/README.md",
+    "size": 5040,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 72
+  },
+  {
+    "path": "docs/README.md",
+    "size": 5040,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 72
+  },
+  {
+    "path": "docs/referral-local-setup.md",
+    "size": 2272,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "docs/referral-local-setup.md",
+    "size": 2272,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "docs/referral-validation-checklist.md",
+    "size": 7927,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/referral-validation-checklist.md",
+    "size": 7927,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/research.md",
+    "size": 14500,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/research.md",
+    "size": 14500,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/roles-permissions.md",
+    "size": 698,
+    "title": "Roles & Permissions",
+    "owner": "platform-team",
+    "status": "draft",
+    "last_reviewed": "2025-09-09",
+    "tags": "[roles, permissions, security, auth]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/roles-permissions.md",
+    "size": 698,
+    "title": "Roles & Permissions",
+    "owner": "platform-team",
+    "status": "draft",
+    "last_reviewed": "2025-09-09",
+    "tags": "[roles, permissions, security, auth]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/ROUTES.md",
+    "size": 1443,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/ROUTES.md",
+    "size": 1443,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/runbooks/deploy.md",
+    "size": 7145,
+    "title": "Deployment Runbook",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[deployment, operations, runbook]",
+    "link_count": 1
+  },
+  {
+    "path": "docs/runbooks/deploy.md",
+    "size": 7145,
+    "title": "Deployment Runbook",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[deployment, operations, runbook]",
+    "link_count": 1
+  },
+  {
+    "path": "docs/scoring.md",
+    "size": 854,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/scoring.md",
+    "size": 854,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/security/index.md",
+    "size": 15017,
+    "title": "Security & Privacy Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[security, privacy, rbac, pii, rls]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/security/index.md",
+    "size": 15017,
+    "title": "Security & Privacy Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[security, privacy, rbac, pii, rls]",
+    "link_count": 0
+  },
+  {
+    "path": "docs/SITEMAP.md",
+    "size": 24659,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 170
+  },
+  {
+    "path": "docs/SITEMAP.md",
+    "size": 24659,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 170
+  },
+  {
+    "path": "docs/SSR.md",
+    "size": 1565,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/SSR.md",
+    "size": 1565,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/TURBO_CACHE.md",
+    "size": 8409,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 4
+  },
+  {
+    "path": "docs/TURBO_CACHE.md",
+    "size": 8409,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 4
+  },
+  {
+    "path": "docs/TURBO_REMOTE_CACHE.md",
+    "size": 8117,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 2
+  },
+  {
+    "path": "docs/TURBO_REMOTE_CACHE.md",
+    "size": 8117,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 2
+  },
+  {
+    "path": "docs/type-safety.md",
+    "size": 10282,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/type-safety.md",
+    "size": 10282,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/ui-registry.md",
+    "size": 8498,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/ui-registry.md",
+    "size": 8498,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/webhooks/kajabi.md",
+    "size": 610,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "docs/webhooks/kajabi.md",
+    "size": 610,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "ENV_MANAGEMENT.md",
+    "size": 31025,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "ESLINT.md",
+    "size": 3759,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "fixtures/consumer-next15/README.md",
+    "size": 1635,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "fixtures/consumer-node/README.md",
+    "size": 1673,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "fixtures/README.md",
+    "size": 3373,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/api-client/api-reports/api-client.api.md",
+    "size": 1079,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/api-client/api-reports/api-client.api.md",
+    "size": 1079,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/api-client/temp/api-client.api.md",
+    "size": 1079,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/api-client/temp/api-client.api.md",
+    "size": 1079,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/auth/api-reports/auth.api.md",
+    "size": 1416,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/auth/api-reports/auth.api.md",
+    "size": 1416,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/auth/auth.api.md",
+    "size": 3716,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/auth/auth.api.md",
+    "size": 3716,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/auth/temp/auth.api.md",
+    "size": 1416,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/auth/temp/auth.api.md",
+    "size": 1416,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/config/api-reports/config.api.md",
+    "size": 9837,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/config/api-reports/config.api.md",
+    "size": 9837,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/config/config.api.md",
+    "size": 10429,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/config/config.api.md",
+    "size": 10429,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/config/temp/config.api.md",
+    "size": 9837,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/config/temp/config.api.md",
+    "size": 9837,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/db/api-reports/db.api.md",
+    "size": 22020,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/db/api-reports/db.api.md",
+    "size": 22020,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/db/db.api.md",
+    "size": 22142,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/db/db.api.md",
+    "size": 22142,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/db/docs/LOGGING_BEST_PRACTICES.md",
+    "size": 9045,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/db/docs/LOGGING_BEST_PRACTICES.md",
+    "size": 9045,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/db/docs/README.md",
+    "size": 2196,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 3
+  },
+  {
+    "path": "packages/db/docs/README.md",
+    "size": 2196,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 3
+  },
+  {
+    "path": "packages/db/INDEX_STRATEGY.md",
+    "size": 10708,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/db/INDEX_STRATEGY.md",
+    "size": 10708,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/db/MIGRATIONS.md",
+    "size": 8912,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/db/MIGRATIONS.md",
+    "size": 8912,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/db/migrations/20250904122305_add_triggers_constraints/README.md",
+    "size": 7209,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/db/migrations/20250904122305_add_triggers_constraints/README.md",
+    "size": 7209,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/db/migrations/20250904123000_optimize_attachments/README.md",
+    "size": 4089,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/db/migrations/20250904123000_optimize_attachments/README.md",
+    "size": 4089,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/db/MONITORING.md",
+    "size": 42501,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 10
+  },
+  {
+    "path": "packages/db/MONITORING.md",
+    "size": 42501,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 10
+  },
+  {
+    "path": "packages/db/OPERATIONS.md",
+    "size": 18799,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 10
+  },
+  {
+    "path": "packages/db/OPERATIONS.md",
+    "size": 18799,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 10
+  },
+  {
+    "path": "packages/db/README.md",
+    "size": 9876,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 4
+  },
+  {
+    "path": "packages/db/README.md",
+    "size": 9876,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 4
+  },
+  {
+    "path": "packages/db/SECURITY.md",
+    "size": 60451,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 10
+  },
+  {
+    "path": "packages/db/SECURITY.md",
+    "size": 60451,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 10
+  },
+  {
+    "path": "packages/db/temp/db.api.md",
+    "size": 22020,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/db/temp/db.api.md",
+    "size": 22020,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/db/TROUBLESHOOTING.md",
+    "size": 32868,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 10
+  },
+  {
+    "path": "packages/db/TROUBLESHOOTING.md",
+    "size": 32868,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 10
+  },
+  {
+    "path": "packages/emails/api-reports/emails.api.md",
+    "size": 2302,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/emails/api-reports/emails.api.md",
+    "size": 2302,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/emails/emails.api.md",
+    "size": 3632,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/emails/emails.api.md",
+    "size": 3632,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/emails/temp/emails.api.md",
+    "size": 2302,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/emails/temp/emails.api.md",
+    "size": 2302,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/http/api-reports/http.api.md",
+    "size": 5362,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/http/api-reports/http.api.md",
+    "size": 5362,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/http/http.api.md",
+    "size": 10935,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/http/http.api.md",
+    "size": 10935,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/http/temp/http.api.md",
+    "size": 5362,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/http/temp/http.api.md",
+    "size": 5362,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/integrations/api-reports/integrations.api.md",
+    "size": 3144,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/integrations/api-reports/integrations.api.md",
+    "size": 3144,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/integrations/integrations.api.md",
+    "size": 2625,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/integrations/integrations.api.md",
+    "size": 2625,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/integrations/README.md",
+    "size": 2624,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/integrations/README.md",
+    "size": 2624,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/integrations/temp/integrations.api.md",
+    "size": 3144,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/integrations/temp/integrations.api.md",
+    "size": 3144,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/logging/README.md",
+    "size": 15490,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/logging/README.md",
+    "size": 15490,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/logic/logic.api.md",
+    "size": 4283,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/logic/logic.api.md",
+    "size": 4283,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/logic/temp/logic.api.md",
+    "size": 4283,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/logic/temp/logic.api.md",
+    "size": 4283,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/openapi/CHANGELOG.md",
+    "size": 138,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/openapi/CHANGELOG.md",
+    "size": 138,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/openapi/openapi.api.md",
+    "size": 148510,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/openapi/openapi.api.md",
+    "size": 148510,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/openapi/README.md",
+    "size": 8533,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/openapi/README.md",
+    "size": 8533,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/openapi/temp/openapi.api.md",
+    "size": 356,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/openapi/temp/openapi.api.md",
+    "size": 356,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/security/api-reports/security.api.md",
+    "size": 11603,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/security/api-reports/security.api.md",
+    "size": 11603,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/security/MIGRATION.md",
+    "size": 13123,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 5
+  },
+  {
+    "path": "packages/security/MIGRATION.md",
+    "size": 13123,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 5
+  },
+  {
+    "path": "packages/security/README.md",
+    "size": 12337,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/security/README.md",
+    "size": 12337,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/security/security.api.md",
+    "size": 12560,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/security/security.api.md",
+    "size": 12560,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/security/temp/security.api.md",
+    "size": 11603,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/security/temp/security.api.md",
+    "size": 11603,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/storage/api-reports/storage.api.md",
+    "size": 2223,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/storage/api-reports/storage.api.md",
+    "size": 2223,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/storage/storage.api.md",
+    "size": 1968,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/storage/storage.api.md",
+    "size": 1968,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/storage/temp/storage.api.md",
+    "size": 2223,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/storage/temp/storage.api.md",
+    "size": 2223,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/types/api-reports/types.api.md",
+    "size": 433069,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/types/api-reports/types.api.md",
+    "size": 433069,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/types/ORM-LEAKAGE-MIGRATION.md",
+    "size": 3749,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/types/ORM-LEAKAGE-MIGRATION.md",
+    "size": 3749,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/types/temp/types.api.md",
+    "size": 433069,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/types/temp/types.api.md",
+    "size": 433069,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/types/types.api.md",
+    "size": 334351,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/types/types.api.md",
+    "size": 334351,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/ui/api-reports/ui.api.md",
+    "size": 31325,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/ui/api-reports/ui.api.md",
+    "size": 31325,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/ui/AUDIT_REPORT.md",
+    "size": 6719,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/ui/AUDIT_REPORT.md",
+    "size": 6719,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/ui/MIGRATION_GUIDE.md",
+    "size": 7575,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/ui/MIGRATION_GUIDE.md",
+    "size": 7575,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/ui/MIGRATION_PLAN.md",
+    "size": 9376,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/ui/MIGRATION_PLAN.md",
+    "size": 9376,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/ui/README.md",
+    "size": 3336,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/ui/README.md",
+    "size": 3336,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/ui/REGISTRY_LOCK.md",
+    "size": 1669,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/ui/REGISTRY_LOCK.md",
+    "size": 1669,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/ui/TAILWIND_SETUP.md",
+    "size": 2423,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/ui/TAILWIND_SETUP.md",
+    "size": 2423,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "packages/ui/temp/ui.api.md",
+    "size": 31325,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/ui/temp/ui.api.md",
+    "size": 31325,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/ui/ui.api.md",
+    "size": 31301,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "packages/ui/ui.api.md",
+    "size": 31301,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "README.md",
+    "size": 3072,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 10
+  },
+  {
+    "path": "scripts/db/README.md",
+    "size": 3470,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "scripts/SCRIPTS_MANAGEMENT_PLAN.md",
+    "size": 10885,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "scripts/secrets/README.md",
+    "size": 2110,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 1
+  },
+  {
+    "path": "SECRETS_MANAGEMENT.md",
+    "size": 25163,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 16
+  },
+  {
+    "path": "tests/README.md",
+    "size": 10318,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 0
+  },
+  {
+    "path": "VALIDATION_SYSTEMS.md",
+    "size": 9958,
+    "title": "Validation Systems - Phase 4 Implementation",
+    "owner": "platform-team",
+    "status": "active",
+    "last_reviewed": "2025-09-10",
+    "tags": "[validation, quality, ci, build]",
+    "link_count": 2
+  },
+  {
+    "path": "VERCEL_DEPLOYMENT_GUIDE.md",
+    "size": 517,
+    "title": "",
+    "owner": "",
+    "status": "",
+    "last_reviewed": "",
+    "tags": [],
+    "link_count": 4
+  }
+]

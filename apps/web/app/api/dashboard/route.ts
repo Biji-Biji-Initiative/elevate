@@ -104,7 +104,7 @@ export const GET = withApiErrorHandling(
 
     // Referral attribution and signup bonus (idempotent)
     try {
-      const c = cookies()
+      const c = await cookies()
       const refCookie = c.get?.('ref')?.value
       if (refCookie && user) {
         // Require explicit user_type confirmation before awarding referral points
@@ -140,17 +140,16 @@ export const GET = withApiErrorHandling(
             Array.isArray(currentRef) && currentRef[0]?.referred_by_user_id
           if (!alreadyReferred) {
             // Set referred_by_user_id
-            await prisma.$executeRawUnsafe(
-              'UPDATE users SET referred_by_user_id = $1 WHERE id = $2 AND referred_by_user_id IS NULL',
-              referrer.id,
-              user.id,
-            )
-            // Award referrer points (+2 educator, +1 student) with monthly cap 50
+            await prisma.$executeRaw`
+              UPDATE users SET referred_by_user_id = ${referrer.id}
+              WHERE id = ${user.id} AND referred_by_user_id IS NULL
+            `
+            // Award referrer points (educators only) with monthly cap 50
             const referee = await prisma.user.findUnique({
               where: { id: user.id },
               select: { user_type: true },
             })
-            const delta = referee?.user_type === 'STUDENT' ? 1 : 2
+            const delta = referee?.user_type === 'EDUCATOR' ? 2 : 0
             const externalId = `referral:signup:${user.id}`
             const existing = await prisma.pointsLedger.findFirst({
               where: { external_event_id: externalId },
@@ -188,14 +187,13 @@ export const GET = withApiErrorHandling(
               }
               // Record referral event using raw SQL for compatibility (table may be optional)
               try {
-                await prisma.$executeRawUnsafe(
-                  'INSERT INTO referral_events (referrer_user_id, referee_user_id, event_type, external_event_id, source) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING',
-                  referrer.id,
-                  user.id,
-                  'signup',
-                  externalId,
-                  'cookie',
-                )
+                await prisma.$executeRaw`
+                  INSERT INTO referral_events (referrer_user_id, referee_user_id, event_type, external_event_id, source)
+                  VALUES (${referrer.id}, ${
+                  user.id
+                }, ${'signup'}, ${externalId}, ${'cookie'})
+                  ON CONFLICT DO NOTHING
+                `
               } catch {
                 // ignore unique conflict
               }

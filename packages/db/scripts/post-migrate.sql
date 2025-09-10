@@ -95,9 +95,15 @@ ON submissions(user_id, created_at DESC)
 WHERE activity_code = 'AMPLIFY' AND created_at >= CURRENT_DATE - INTERVAL '7 days';
 
 -- Certificate hash uniqueness enforcement (LEARN stage)
+-- Historical (camelCase) payload key support
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_learn_certificate_deduplication
 ON submissions((payload->>'certificateHash'), status)
 WHERE activity_code = 'LEARN' AND status IN ('PENDING', 'APPROVED') AND payload->>'certificateHash' IS NOT NULL;
+
+-- Canonical (snake_case) payload key support per current DTO mapper
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_learn_certificate_deduplication_snake
+ON submissions((payload->>'certificate_hash'), status)
+WHERE activity_code = 'LEARN' AND status IN ('PENDING', 'APPROVED') AND payload->>'certificate_hash' IS NOT NULL;
 
 -- Duplicate submission detection across activities
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_submissions_content_fingerprint

@@ -37,7 +37,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const email = user?.emailAddresses?.[0]?.emailAddress
   const name = user?.fullName ?? undefined
   const publicMetadata = parseClerkPublicMetadata(user?.publicMetadata)
-  const role = safeParseRole(publicMetadata.role)
+  let role = safeParseRole(publicMetadata.role)
+
+  // Development-time override: allow developers to access admin by listing
+  // their email in NEXT_PUBLIC_ADMIN_EMAILS (comma-separated). This avoids
+  // manual metadata edits during local setup and never applies in production.
+  if (process.env.NODE_ENV === 'development' && email) {
+    const csv = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').toLowerCase()
+    if (csv.length > 0) {
+      const allow = new Set(
+        csv
+          .split(',')
+          .map((e) => e.trim())
+          .filter(Boolean),
+      )
+      if (allow.has(email.toLowerCase())) {
+        role = 'superadmin'
+      }
+    }
+  }
 
   const contextValue: AuthContextValue = {
     isLoaded,

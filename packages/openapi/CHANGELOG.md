@@ -1,5 +1,8 @@
-# @elevate/openapi
+---
+status: deprecated
+---
 
-## Unreleased
-- document Option B stats counters and regenerate SDK
-- define error envelope schema and regenerate SDK
+## Archived Document
+
+> This document has been archived and moved to `archive/packages-legacy/openapi/CHANGELOG.md`.
+> See central docs hub: [docs/README.md](../../docs/README.md).

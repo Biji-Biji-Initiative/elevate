@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 
 import Image from 'next/image'
 import Link from 'next/link'
@@ -53,13 +53,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const didFetch = useRef(false)
 
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true)
       const api = getApiClient()
       const result = await api.getDashboardDTO()
-      // Pre-check user type confirmation and redirect if needed
+      // Post sign-in role check: redirect to onboarding if not confirmed
       try {
         const meRes = await fetch('/api/profile/me')
         if (meRes.ok) {
@@ -81,7 +82,8 @@ export default function DashboardPage() {
   }, [router, withLocale])
 
   useEffect(() => {
-    if (isLoaded && userId) {
+    if (!didFetch.current && isLoaded && userId) {
+      didFetch.current = true
       void fetchDashboardData()
     }
   }, [isLoaded, userId, fetchDashboardData])
@@ -390,28 +392,55 @@ export default function DashboardPage() {
                       View Public Profile
                     </Button>
                   </Link>
-                  <Link href={withLocale('/dashboard/explore')} className="block">
-                    <Button variant="ghost" className="w-full text-left justify-start">
+                  <Link
+                    href={withLocale('/dashboard/explore')}
+                    className="block"
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full text-left justify-start"
+                    >
                       Start Explore
                     </Button>
                   </Link>
-                  <Link href={withLocale('/dashboard/amplify')} className="block">
-                    <Button variant="ghost" className="w-full text-left justify-start">
+                  <Link
+                    href={withLocale('/dashboard/amplify')}
+                    className="block"
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full text-left justify-start"
+                    >
                       Submit Amplify Evidence
                     </Button>
                   </Link>
-                  <Link href={withLocale('/dashboard/amplify/invite')} className="block">
-                    <Button variant="ghost" className="w-full text-left justify-start">
+                  <Link
+                    href={withLocale('/dashboard/amplify/invite')}
+                    className="block"
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full text-left justify-start"
+                    >
                       Invite Peers/Students
                     </Button>
                   </Link>
-                  <Link href={withLocale('/dashboard/present')} className="block">
-                    <Button variant="ghost" className="w-full text-left justify-start">
+                  <Link
+                    href={withLocale('/dashboard/present')}
+                    className="block"
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full text-left justify-start"
+                    >
                       Submit LinkedIn Post
                     </Button>
                   </Link>
                   <Link href={withLocale('/dashboard/shine')} className="block">
-                    <Button variant="ghost" className="w-full text-left justify-start">
+                    <Button
+                      variant="ghost"
+                      className="w-full text-left justify-start"
+                    >
                       Submit Innovation
                     </Button>
                   </Link>

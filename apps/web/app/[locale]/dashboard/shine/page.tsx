@@ -103,8 +103,8 @@ export default function ShineFormPage() {
       }
 
       const payload = {
-        idea_title: String(data.idea_title),
-        idea_summary: String(data.idea_summary),
+        ideaTitle: String(data.idea_title),
+        ideaSummary: String(data.idea_summary),
         attachments: successfulUploads.map((f) => f.path).filter(Boolean),
       }
 
@@ -143,6 +143,13 @@ export default function ShineFormPage() {
             submissions receive special recognition and showcase opportunities.
           </p>
         </div>
+
+        <Alert className="mb-6">
+          <AlertTitle>Tips</AlertTitle>
+          <AlertDescription>
+            Write a clear title and a concise summary. Attach mockups or slides to strengthen your idea.
+          </AlertDescription>
+        </Alert>
 
         {submitStatus && (
           <Alert

@@ -19,14 +19,14 @@ services:
       POSTGRES_PASSWORD: password
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       # Persist database data between container restarts
       - postgres_data:/var/lib/postgresql/data
       # Initialize database with any SQL scripts (optional)
       - ./scripts/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d elevate_leaps"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d elevate_leaps']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,26 +40,26 @@ services:
       -c effective_cache_size=1GB
 
   # Optional: PgAdmin for database management (uncomment to use)
-  # pgadmin:
-  #   image: dpage/pgadmin4:latest
-  #   container_name: elevate-pgadmin
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - postgres
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: admin@elevate.local
-  #     PGADMIN_DEFAULT_PASSWORD: admin
-  #     PGADMIN_CONFIG_SERVER_MODE: 'False'
-  #   ports:
-  #     - "5050:80"
-  #   volumes:
-  #     - pgadmin_data:/var/lib/pgadmin
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: elevate-pgadmin
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - '5050:80'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
 
 volumes:
   postgres_data:
     name: elevate_postgres_data
-  # pgadmin_data:
-  #   name: elevate_pgadmin_data
+  pgadmin_data:
+    name: elevate_pgadmin_data
 
 networks:
   default:

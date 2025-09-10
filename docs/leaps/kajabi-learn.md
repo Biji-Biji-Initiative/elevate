@@ -4,8 +4,8 @@ Objective: Award +10 for each course completion tag, capped at 20 total per user
 
 Tags
 
-- elevate-ai-1-completed → +10
-- elevate-ai-2-completed → +10
+- Default: `elevate-ai-1-completed` (+10) and `elevate-ai-2-completed` (+10)
+- Override (optional): set `KAJABI_LEARN_TAGS` to a comma-separated list to match your Kajabi configuration (e.g., `elevate-ai-1-completed,elevate-ai-2-completed`).
 
 Webhook contract (recommended JSON)
 
@@ -62,3 +62,7 @@ Reconciliation UI (admin)
 
 - Tag removal events do not revoke points or badges (ledger is immutable; Starter is sticky).
 - Removals are recorded for audit and reconciliation only; no compensating entries are created for removals.
+## Configuration
+
+- `KAJABI_BASE_URL` (optional): Site-scoped API base (e.g., `https://academy.mereka.my/api`); if unset, defaults to `https://api.kajabi.com`.
+- `KAJABI_LEARN_TAGS` (optional): Comma-separated completion tags. If unset, defaults to the two tags above.

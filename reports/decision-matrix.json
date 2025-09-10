@@ -1,0 +1,2714 @@
+[
+  {
+    "path": ".changeset/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": ".changeset/setup-changesets.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "AGENTS.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "apps/admin/agents.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "apps/admin/agents.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "apps/admin/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "apps/admin/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "apps/web/.clerk/.tmp/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "apps/web/.clerk/.tmp/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "apps/web/agents.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "apps/web/agents.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "archive/deprecated-docs/DEPLOYMENT_GUIDE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/deprecated-docs/VERCEL_DEPLOYMENT_GUIDE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/legacy/MIGRATION_STATUS_REPORT.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/legacy/MIGRATION_SUMMARY.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/legacy/PHASE_4_SUMMARY.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/legacy/PROJECT_STATUS.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/migrations/logging-migration-plan.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/migrations/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/planning/plan/about.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/planning/plan/plan1.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/planning/plan/plan2.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "archive/planning/plan/PROJECT_TRACKER.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "archive",
+    "reason": "Already archived"
+  },
+  {
+    "path": "BUILDING.md",
+    "title": "Build Strategy and Package Architecture",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "DEPLOYMENT_GUIDE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "DEPLOYMENT.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "docs/admin-flows.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/admin-flows.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/admin/ADMIN_GUIDE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/admin/ADMIN_GUIDE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/API_ENVELOPES.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/API_ENVELOPES.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/api-coverage-validation.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/api-coverage-validation.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/API.md",
+    "title": "API Reference - Actual Endpoints",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/API.md",
+    "title": "API Reference - Actual Endpoints",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/api/index.md",
+    "title": "API Usage Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/api/index.md",
+    "title": "API Usage Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/architecture/adr/ADR-0001-template.md",
+    "title": "ADR-0001: Architecture Decision Record Template",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/architecture/adr/ADR-0001-template.md",
+    "title": "ADR-0001: Architecture Decision Record Template",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/architecture/overview.md",
+    "title": "Architecture Overview",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/architecture/overview.md",
+    "title": "Architecture Overview",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/badges.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/badges.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/BUILD_ARTIFACT_POLICY.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/BUILD_ARTIFACT_POLICY.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/BUILD_QUICK_REFERENCE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/BUILD_QUICK_REFERENCE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/bundle-analysis.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/bundle-analysis.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/canonical-routing-strategy.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/canonical-routing-strategy.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/changesets-setup.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/changesets-setup.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/CONTRIBUTING-DOCS.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/CONTRIBUTING-DOCS.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/CONTRIBUTING.md",
+    "title": "Contribution Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/CONTRIBUTING.md",
+    "title": "Contribution Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/copy/home.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/copy/home.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/csrf-protection.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/csrf-protection.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/database-management.md",
+    "title": "Database Schema Management",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/database-management.md",
+    "title": "Database Schema Management",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/DATABASE.md",
+    "title": "Database Schema - Actual Prisma Models",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/DATABASE.md",
+    "title": "Database Schema - Actual Prisma Models",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/decisions.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/decisions.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/DEPLOYMENT.md",
+    "title": "Deployment Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/DEPLOYMENT.md",
+    "title": "Deployment Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/DEV_TROUBLESHOOTING.md",
+    "title": "Development Troubleshooting & Patterns",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/DEV_TROUBLESHOOTING.md",
+    "title": "Development Troubleshooting & Patterns",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/development.md",
+    "title": "Core Developer Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/development.md",
+    "title": "Core Developer Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/DOCS_TRANSFORMATION_SUMMARY.md",
+    "title": "Documentation Transformation Summary",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/DOCS_TRANSFORMATION_SUMMARY.md",
+    "title": "Documentation Transformation Summary",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/DOCUMENTS_ORGANIZATION_PLAN.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/DOCUMENTS_ORGANIZATION_PLAN.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/error-handling.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/error-handling.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/generated/routes.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/generated/routes.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/HEADER_COMPOSITION.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/HEADER_COMPOSITION.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/i18n-bundle-optimization-summary.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/i18n-bundle-optimization-summary.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/ia.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/ia.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/INTERNAL_ENDPOINTS.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/INTERNAL_ENDPOINTS.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/kajabi-integration.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/kajabi-integration.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/LEAN_DOCS_PLAN.md",
+    "title": "Lean Documentation Plan - Radical Consolidation",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/LEAN_DOCS_PLAN.md",
+    "title": "Lean Documentation Plan - Radical Consolidation",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/activity-canon.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/activity-canon.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/activity-examples.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/activity-examples.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/agent-tracker.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/agent-tracker.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/amplify.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/amplify.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/badges.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/badges.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/ci-checklist.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/ci-checklist.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/config.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/config.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/dev-stubs.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/dev-stubs.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/errors-and-openapi.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/errors-and-openapi.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/glossary.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/glossary.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/handoff.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/handoff.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/identity-and-referrals.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/identity-and-referrals.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/invariants.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/invariants.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/kajabi-learn.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/kajabi-learn.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/migration-playbook.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/migration-playbook.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/monitoring-and-slos.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/monitoring-and-slos.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/ops-and-reliability.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/ops-and-reliability.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/privacy-and-retention.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/privacy-and-retention.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "docs/leaps/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "docs/leaps/referrals-implementation-tracker.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/referrals-implementation-tracker.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/reviewer-rubric.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/reviewer-rubric.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/schema-index-deltas.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/schema-index-deltas.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/spec-drift-guard.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/spec-drift-guard.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/stats-and-counters.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/stats-and-counters.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/submissions-fsm.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/submissions-fsm.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/tests.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/tests.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/threat-model.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/leaps/threat-model.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/logging-best-practices.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/logging-best-practices.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/logging-migration-plan.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/logging-migration-plan.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/LOGGING.md",
+    "title": "Logging in Next.js Route Handlers",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/LOGGING.md",
+    "title": "Logging in Next.js Route Handlers",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/MATERIALIZED_VIEWS_OPTIMIZATION.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/MATERIALIZED_VIEWS_OPTIMIZATION.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/OBSERVABILITY_SETUP.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/OBSERVABILITY_SETUP.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/onboarding.md",
+    "title": "Engineering Onboarding",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/onboarding.md",
+    "title": "Engineering Onboarding",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/OPS_RUNBOOK.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/OPS_RUNBOOK.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/PERFORMANCE_OPTIMIZATION_REPORT.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/PERFORMANCE_OPTIMIZATION_REPORT.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/points-and-badges.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/points-and-badges.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/policies.md",
+    "title": "Privacy & Publication Policies",
+    "owner": "platform-team",
+    "status": "draft",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/policies.md",
+    "title": "Privacy & Publication Policies",
+    "owner": "platform-team",
+    "status": "draft",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/qa/STAGING_VALIDATION.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/qa/STAGING_VALIDATION.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/qa/VALIDATION_REPORT_TEMPLATE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/qa/VALIDATION_REPORT_TEMPLATE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/rca-text-lint-and-type-safety.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/rca-text-lint-and-type-safety.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/referral-local-setup.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/referral-local-setup.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/referral-validation-checklist.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/referral-validation-checklist.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/research.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/research.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/roles-permissions.md",
+    "title": "Roles & Permissions",
+    "owner": "platform-team",
+    "status": "draft",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/roles-permissions.md",
+    "title": "Roles & Permissions",
+    "owner": "platform-team",
+    "status": "draft",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/ROUTES.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/ROUTES.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/runbooks/deploy.md",
+    "title": "Deployment Runbook",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/runbooks/deploy.md",
+    "title": "Deployment Runbook",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/scoring.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/scoring.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/security/index.md",
+    "title": "Security & Privacy Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/security/index.md",
+    "title": "Security & Privacy Guide",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "docs/SITEMAP.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/SITEMAP.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/SSR.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/SSR.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/TURBO_CACHE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/TURBO_CACHE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/TURBO_REMOTE_CACHE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/TURBO_REMOTE_CACHE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/type-safety.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/type-safety.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/ui-registry.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/ui-registry.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/webhooks/kajabi.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "docs/webhooks/kajabi.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Candidate to merge into core set"
+  },
+  {
+    "path": "ENV_MANAGEMENT.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "ESLINT.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "fixtures/consumer-next15/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "fixtures/consumer-node/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "fixtures/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/api-client/api-reports/api-client.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/api-client/api-reports/api-client.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/api-client/temp/api-client.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/api-client/temp/api-client.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/auth/api-reports/auth.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/auth/api-reports/auth.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/auth/auth.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/auth/auth.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/auth/temp/auth.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/auth/temp/auth.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/config/api-reports/config.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/config/api-reports/config.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/config/config.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/config/config.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/config/temp/config.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/config/temp/config.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/api-reports/db.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/db/api-reports/db.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/db/db.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/db.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/docs/LOGGING_BEST_PRACTICES.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/docs/LOGGING_BEST_PRACTICES.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/docs/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/db/docs/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/db/INDEX_STRATEGY.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/INDEX_STRATEGY.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/MIGRATIONS.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/MIGRATIONS.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/migrations/20250904122305_add_triggers_constraints/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/db/migrations/20250904122305_add_triggers_constraints/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/db/migrations/20250904123000_optimize_attachments/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/db/migrations/20250904123000_optimize_attachments/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/db/MONITORING.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/MONITORING.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/OPERATIONS.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/OPERATIONS.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/db/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/db/SECURITY.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/SECURITY.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/temp/db.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/temp/db.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/TROUBLESHOOTING.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/db/TROUBLESHOOTING.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/emails/api-reports/emails.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/emails/api-reports/emails.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/emails/emails.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/emails/emails.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/emails/temp/emails.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/emails/temp/emails.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/http/api-reports/http.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/http/api-reports/http.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/http/http.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/http/http.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/http/temp/http.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/http/temp/http.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/integrations/api-reports/integrations.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/integrations/api-reports/integrations.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/integrations/integrations.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/integrations/integrations.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/integrations/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/integrations/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/integrations/temp/integrations.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/integrations/temp/integrations.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/logging/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/logging/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/logic/logic.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/logic/logic.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/logic/temp/logic.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/logic/temp/logic.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/openapi/CHANGELOG.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/openapi/CHANGELOG.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/openapi/openapi.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/openapi/openapi.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/openapi/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/openapi/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/openapi/temp/openapi.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/openapi/temp/openapi.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/security/api-reports/security.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/security/api-reports/security.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/security/MIGRATION.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/security/MIGRATION.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/security/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/security/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/security/security.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/security/security.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/security/temp/security.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/security/temp/security.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/storage/api-reports/storage.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/storage/api-reports/storage.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/storage/storage.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/storage/storage.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/storage/temp/storage.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/storage/temp/storage.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/types/api-reports/types.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/types/api-reports/types.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/types/ORM-LEAKAGE-MIGRATION.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/types/ORM-LEAKAGE-MIGRATION.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/types/temp/types.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/types/temp/types.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/types/types.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/types/types.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/api-reports/ui.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/ui/api-reports/ui.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Generated API report"
+  },
+  {
+    "path": "packages/ui/AUDIT_REPORT.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/AUDIT_REPORT.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/MIGRATION_GUIDE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/MIGRATION_GUIDE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/MIGRATION_PLAN.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/MIGRATION_PLAN.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/ui/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "packages/ui/REGISTRY_LOCK.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/REGISTRY_LOCK.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/TAILWIND_SETUP.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/TAILWIND_SETUP.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/temp/ui.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/temp/ui.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/ui.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "packages/ui/ui.api.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package-local doc"
+  },
+  {
+    "path": "README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "scripts/db/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "scripts/SCRIPTS_MANAGEMENT_PLAN.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "scripts/secrets/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "SECRETS_MANAGEMENT.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  },
+  {
+    "path": "tests/README.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "keep",
+    "reason": "Package README"
+  },
+  {
+    "path": "VALIDATION_SYSTEMS.md",
+    "title": "Validation Systems - Phase 4 Implementation",
+    "owner": "platform-team",
+    "status": "active",
+    "action": "keep",
+    "reason": "Core canonical doc"
+  },
+  {
+    "path": "VERCEL_DEPLOYMENT_GUIDE.md",
+    "title": "",
+    "owner": "",
+    "status": "",
+    "action": "merge",
+    "reason": "Likely duplicate or out-of-scope; map to core"
+  }
+]

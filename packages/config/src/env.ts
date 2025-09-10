@@ -43,6 +43,17 @@ export const EnvSchema = z.object({
 
   KAJABI_API_KEY: z.string().optional(),
   KAJABI_CLIENT_SECRET: z.string().optional(),
+  KAJABI_BASE_URL: z
+    .string()
+    .url('KAJABI_BASE_URL must be a valid URL (e.g., https://academy.mereka.my/api)')
+    .optional(),
+  // Comma-separated list of Learn completion tags (lowercased)
+  KAJABI_LEARN_TAGS: z
+    .string()
+    .transform((v) => v.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean))
+    .optional(),
+  // Optional human-readable offer name to resolve to numeric id via v1 API
+  KAJABI_OFFER_NAME: z.string().optional(),
 
   // Application Settings
   NEXT_PUBLIC_SITE_URL: z.string()
@@ -118,6 +129,12 @@ export const WebEnvSchema = EnvSchema.extend({
   KAJABI_WEBHOOK_SECRET: z.string()
     .min(16, "Kajabi webhook secret is required for web app (min 16 chars)"),
 
+  // Optional override for Learn completion tags at runtime
+  KAJABI_LEARN_TAGS: z
+    .string()
+    .transform((v) => v.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean))
+    .optional(),
+
   CLERK_WEBHOOK_SECRET: z.string()
     .min(1, "CLERK_WEBHOOK_SECRET is required for web app webhooks")
     .startsWith("whsec_", "Clerk webhook secret must start with 'whsec_'"),
@@ -136,6 +153,8 @@ export const AdminEnvSchema = EnvSchema.pick({
   DEBUG: true,
   KAJABI_API_KEY: true,
   KAJABI_CLIENT_SECRET: true,
+  KAJABI_BASE_URL: true,
+  KAJABI_OFFER_NAME: true,
 }).required({
   NODE_ENV: true,
 })

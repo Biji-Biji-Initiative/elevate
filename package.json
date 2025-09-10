@@ -9,6 +9,7 @@
     "fixtures/*"
   ],
   "scripts": {
+    "check": "pnpm run lint && pnpm run type-check",
     "dev": "node scripts/env/enforce-root-env.mjs && node scripts/env/sync-db-env-to-prisma.mjs && node scripts/env/exec-dev-with-root-env.mjs",
     "dev:apps": "concurrently \"pnpm -F web dev --turbo\" \"pnpm -F elevate-admin dev --turbo\"",
     "dev:web": "pnpm -F web dev --turbo",
@@ -87,6 +88,7 @@
     "lint:packages": "eslint packages/ --max-warnings 0",
     "lint:check": "pnpm run lint:packages && pnpm run lint:apps",
     "test": "vitest --config tests/vitest.config.ts",
+    "test:fast": "SKIP_DB_TESTS=1 vitest --config tests/vitest.config.ts",
     "test:watch": "vitest --config tests/vitest.config.ts --watch",
     "test:coverage": "vitest --config tests/vitest.config.ts --coverage",
     "test:integration": "vitest --config tests/vitest.config.ts tests/integration",
@@ -130,6 +132,9 @@
     "verify:all": "node scripts/validate-all.mjs",
     "verify:docs": "node scripts/validate-docs.mjs",
     "qa:validate:staging": "tsx scripts/qa/validate-staging.ts",
+    "qa:kajabi:v1": "tsx scripts/qa/kajabi-v1-offer-grant.ts",
+    "qa:kajabi:webhook": "tsx scripts/qa/send-kajabi-webhook.ts",
+    "qa:kajabi:e2e": "tsx scripts/qa/kajabi-e2e.ts",
     "docs:sitemap": "node scripts/generate-docs-sitemap.mjs",
     "lint:fix:verify": "node scripts/lint-fix-verify.mjs",
     "api:extract": "pnpm -r --filter @elevate/* --filter=!@elevate/admin-core --filter=!@elevate/logic run api:extract",
@@ -153,6 +158,7 @@
     "@playwright/test": "^1.40.0",
     "@size-limit/preset-big-lib": "^11.2.0",
     "@types/node": "^22.10.5",
+    "@vitest/coverage-v8": "^3.2.4",
     "concurrently": "^9.1.4",
     "dotenv": "^17.2.2",
     "eslint": "^9.0.0",
@@ -164,6 +170,8 @@
     "eslint-plugin-react-hooks": "^5.1.2",
     "eslint-plugin-turbo": "^2.5.6",
     "glob": "^10.3.10",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
     "next": "15.5.2",
     "openapi-typescript": "^7.9.1",
     "playwright": "^1.40.0",
@@ -179,9 +187,7 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
     "webpack-bundle-analyzer": "^4.10.2",
-    "zod": "^3.25.76",
-    "husky": "^9.1.7",
-    "lint-staged": "^15.2.10"
+    "zod": "^3.25.76"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs,cjs}": [

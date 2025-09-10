@@ -63,6 +63,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Resolve first learn tag from env (fallback to default)
+    const envTags = (process.env.KAJABI_LEARN_TAGS || '')
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+    const firstTag = envTags[0] || 'elevate-ai-1-completed'
+
     // Create test event payload (simulating real Kajabi webhook)
     const testEventData = {
       event_id: eventId,
@@ -76,7 +83,7 @@ export async function POST(request: NextRequest) {
           last_name: user.name?.split(' ').slice(1).join(' ') || 'User',
         },
         tag: {
-          name: 'LEARN_COMPLETED',
+          name: firstTag,
           id: 'test_tag_123',
         },
       },

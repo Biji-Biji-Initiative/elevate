@@ -55,7 +55,15 @@ export async function GET(request: NextRequest) {
       const stats = platformStats?.[0]
       if (!stats) throw new Error('materialized views unavailable')
 
-      const byStage = formatActivityBreakdown(stats.activity_breakdown)
+      const byStageUpper = formatActivityBreakdown(stats.activity_breakdown)
+      const empty = { total: 0, approved: 0, pending: 0, rejected: 0 }
+      const byStage = {
+        learn: byStageUpper.LEARN ?? empty,
+        explore: byStageUpper.EXPLORE ?? empty,
+        amplify: byStageUpper.AMPLIFY ?? empty,
+        present: byStageUpper.PRESENT ?? empty,
+        shine: byStageUpper.SHINE ?? empty,
+      }
       const topCohorts = formatCohortPerformanceStats(cohortStats)
       const monthlyGrowth = formatMonthlyGrowthStats(monthlyStats)
       const studentsImpacted = amplifyData?.[0]?.total_students || 0

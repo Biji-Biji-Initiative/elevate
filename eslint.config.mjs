@@ -61,6 +61,8 @@ export default [
       '**/__tests__/**',
       'packages/**/scripts/**',
       'packages/**/seed.ts',
+      // Generated OpenAPI SDK (lint noise acceptable; source is zod-to-openapi)
+      'packages/openapi/src/sdk.ts',
     ],
   },
 
@@ -274,7 +276,11 @@ export default [
       'import/no-unresolved': [
         'error',
         {
-          ignore: ['^@elevate/ui/styles/', '^@elevate/openapi($|/.*)'],
+          ignore: [
+            '^@elevate/ui/styles/',
+            '^@elevate/openapi($|/.*)',
+            '^server-only$',
+          ],
         },
       ],
       'import/no-cycle': 'error',
@@ -301,6 +307,31 @@ export default [
         'error',
         {
           patterns: ['@elevate/*/src/*', '@elevate/*/dist/*'],
+        },
+      ],
+    },
+  },
+
+  // Admin client boundaries: discourage using @elevate/admin-core in client UI
+  {
+    files: [
+      'apps/admin/app/**/ClientPage.tsx',
+      'apps/admin/app/**/client.tsx',
+      'apps/admin/app/**/client.jsx',
+      'apps/admin/app/[locale]/**/page.tsx',
+    ],
+    rules: {
+      // Warn (not error) to avoid breaking existing pages during migration
+      'no-restricted-imports': [
+        'warn',
+        {
+          paths: [
+            {
+              name: '@elevate/admin-core',
+              message:
+                'Avoid using @elevate/admin-core in client components. Prefer server-only services (apps/admin/lib/services/*) and pass DTOs into client shells.',
+            },
+          ],
         },
       ],
     },
@@ -550,6 +581,19 @@ export default [
       '@typescript-eslint/no-unsafe-argument': 'off',
       // Allow console.error for error logging
       'no-console': 'off',
+    },
+  },
+
+  // Admin app UI pages: relax unsafe rules where UI projections and state setters trigger false positives
+  {
+    files: ['apps/admin/app/**/page.tsx'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-inferrable-types': 'off',
     },
   },
 

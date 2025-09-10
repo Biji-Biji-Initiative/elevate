@@ -269,6 +269,9 @@ packages/*/
 # All tests
 pnpm test
 
+# Fast unit-only tests (no DB required)
+pnpm test:fast           # Runs unit tests with SKIP_DB_TESTS=1
+
 # Specific test types
 pnpm test:unit             # Unit tests only
 pnpm test:integration      # Integration tests
@@ -305,6 +308,32 @@ describe('User API', () => {
     expect(user.id).toBeDefined()
   })
 })
+```
+
+### DB-less Test Mode
+
+In environments where a PostgreSQL instance is not reachable (e.g., sandboxed CI or local agents), you can run a fast subset of tests without a database:
+
+```bash
+# Only run unit tests that avoid DB/network
+SKIP_DB_TESTS=1 pnpm test
+
+# Or use the convenience script
+pnpm test:fast
+```
+
+When `SKIP_DB_TESTS` is enabled:
+
+- Global DB setup/teardown is skipped.
+- Integration/performance/e2e suites are excluded.
+- The test pool uses a thread-based worker to avoid process management restrictions.
+
+Run the full suite locally with your Supabase/Postgres running:
+
+```bash
+export TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:54322/postgres
+pnpm db:migrate && pnpm db:seed
+pnpm test
 ```
 
 ## Debugging

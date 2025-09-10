@@ -33,14 +33,20 @@ import {
   type AnalyticsQuery,
 } from '@elevate/types/admin-api-types'
 
-import { AdminApiClient, getAuthToken } from './api-client'
+import { AdminApiClient } from './api-client'
 import { cleanQueryParams } from './utils'
 
-// Helper to get authenticated API client without hard dependency on Next/Clerk
-async function getApiClient() {
-  const token = await getAuthToken().catch(() => undefined)
+// Helper to get API client. Avoids server-only imports so this file remains
+// safe to use from Client Components. Authentication is handled by cookies
+// via Clerk middleware; a Bearer token is optional and intentionally omitted
+// in client environments to prevent bundling server-only modules.
+function getApiClient() {
+  const isServer = typeof window === 'undefined'
+  const token = isServer ? undefined : undefined
   return new AdminApiClient({
-    baseUrl: process.env.NEXT_PUBLIC_SITE_URL,
+    // Use same-origin relative paths to avoid cross-origin/port mismatches.
+    // Explicitly pass empty baseUrl so any global NEXT_PUBLIC_SITE_URL is ignored.
+    baseUrl: '',
     token,
   })
 }
@@ -94,7 +100,7 @@ function validateAndExtract<T>(
 export const adminActions = {
   async getCohorts(): Promise<string[]> {
     try {
-      const api = await getApiClient()
+      const api = getApiClient()
       const response = await api.getAdminCohorts()
       return validateAndExtract(response, CohortsResponseSchema, 'getCohorts')
         .cohorts
@@ -110,7 +116,7 @@ export const adminActions = {
       const validatedParams = SubmissionsQuerySchema.parse(params)
       const cleanedParams = cleanQueryParams(validatedParams)
 
-      const api = await getApiClient()
+      const api = getApiClient()
       const response = await api.getAdminSubmissions(cleanedParams)
       return validateAndExtract(
         response,
@@ -129,7 +135,7 @@ export const adminActions = {
     pointAdjustment?: number
   }): Promise<{ message: string; pointsAwarded?: number }> {
     try {
-      const api = await getApiClient()
+      const api = getApiClient()
       const response = await api.reviewSubmission(body)
       return validateAndExtract(
         response,
@@ -151,7 +157,7 @@ export const adminActions = {
     errors: Array<{ submissionId: string; error: string }>
   }> {
     try {
-      const api = await getApiClient()
+      const api = getApiClient()
       const response = await api.bulkReview(body)
       return validateAndExtract(
         response,
@@ -167,7 +173,7 @@ export const adminActions = {
     id: string,
   ): Promise<{ submission: AdminSubmission; evidence?: string }> {
     try {
-      const api = await getApiClient()
+      const api = getApiClient()
       const response = await api.getAdminSubmissionById(id)
       return validateAndExtract(
         response,
@@ -186,7 +192,7 @@ export const adminActions = {
       const validatedParams = UsersQuerySchema.parse(params)
       const cleanedParams = cleanQueryParams(validatedParams)
 
-      const api = await getApiClient()
+      const api = getApiClient()
       const response = await api.getAdminUsers(cleanedParams)
       return validateAndExtract(response, UsersListResponseSchema, 'getUsers')
     } catch (error) {
@@ -203,7 +209,7 @@ export const adminActions = {
     handle?: string
   }): Promise<{ message: string; user: AdminUser }> {
     try {
-      const api = await getApiClient()
+      const api = getApiClient()
       const response = await api.updateAdminUser(body)
       return validateAndExtract(
         response,
@@ -224,7 +230,7 @@ export const adminActions = {
     errors: Array<{ userId: string; error: string }>
   }> {
     try {
-      const api = await getApiClient()
+      const api = getApiClient()
       const response = await api.bulkUpdateAdminUsers(body)
       return validateAndExtract(
         response,
@@ -238,7 +244,7 @@ export const adminActions = {
 
   async getBadges(includeStats = true): Promise<{ badges: AdminBadge[] }> {
     try {
-      const api = await getApiClient()
+      const api = getApiClient()
       const params = includeStats
         ? ({ includeStats: 'true' } as const)
         : undefined
@@ -257,7 +263,7 @@ export const adminActions = {
     icon_url?: string
   }): Promise<{ message: string }> {
     try {
-      const api = await getApiClient()
+      const api = getApiClient()
       const response = await api.createAdminBadge(body)
       return validateAndExtract(
         response,
@@ -277,7 +283,7 @@ export const adminActions = {
     icon_url?: string
   }): Promise<{ message: string }> {
     try {
-      const api = await getApiClient()
+      const api = getApiClient()
       const response = await api.updateAdminBadge(body)
       return validateAndExtract(
         response,
@@ -406,11 +412,22 @@ export const adminActions = {
     }
   },
 
-  async getKajabiHealth(): Promise<{ healthy: boolean; hasKey: boolean; hasSecret: boolean }> {
+  async getKajabiHealth(): Promise<{
+    healthy: boolean
+    hasKey: boolean
+    hasSecret: boolean
+  }> {
     try {
       const api = await getApiClient()
       const response = await api.getAdminKajabiHealth()
-      const schema = z.object({ success: z.literal(true), data: z.object({ healthy: z.boolean(), hasKey: z.boolean(), hasSecret: z.boolean() }) })
+      const schema = z.object({
+        success: z.literal(true),
+        data: z.object({
+          healthy: z.boolean(),
+          hasKey: z.boolean(),
+          hasSecret: z.boolean(),
+        }),
+      })
       const parsed = schema.parse(response)
       return parsed.data
     } catch (error) {
@@ -418,11 +435,23 @@ export const adminActions = {
     }
   },
 
-  async inviteKajabi(body: { userId?: string; email?: string; name?: string; offerId?: string | number }): Promise<{ invited: boolean; contactId?: number; withOffer: boolean }> {
+  async inviteKajabi(body: {
+    userId?: string
+    email?: string
+    name?: string
+    offerId?: string | number
+  }): Promise<{ invited: boolean; contactId?: number; withOffer: boolean }> {
     try {
       const api = await getApiClient()
       const response = await api.postAdminKajabiInvite(body)
-      const schema = z.object({ success: z.literal(true), data: z.object({ invited: z.boolean(), contactId: z.number().optional(), withOffer: z.boolean() }) })
+      const schema = z.object({
+        success: z.literal(true),
+        data: z.object({
+          invited: z.boolean(),
+          contactId: z.number().optional(),
+          withOffer: z.boolean(),
+        }),
+      })
       const parsed = schema.parse(response)
       return parsed.data
     } catch (error) {
@@ -430,11 +459,21 @@ export const adminActions = {
     }
   },
 
-  async enforceStorageRetention(body: { userId: string; days?: number }): Promise<{ userId: string; days: number; deleted: number }> {
+  async enforceStorageRetention(body: {
+    userId: string
+    days?: number
+  }): Promise<{ userId: string; days: number; deleted: number }> {
     try {
       const api = await getApiClient()
       const response = await api.postAdminStorageRetention(body)
-      const schema = z.object({ success: z.literal(true), data: z.object({ userId: z.string(), days: z.number(), deleted: z.number() }) })
+      const schema = z.object({
+        success: z.literal(true),
+        data: z.object({
+          userId: z.string(),
+          days: z.number(),
+          deleted: z.number(),
+        }),
+      })
       const parsed = schema.parse(response)
       return parsed.data
     } catch (error) {

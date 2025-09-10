@@ -46,7 +46,7 @@ The Elevate secrets management system provides:
 
 The secrets management system integrates with the existing three-layer environment strategy:
 
-```
+````
 
 ### Documentation & Sample Keys (Avoid False Positives)
 
@@ -57,12 +57,14 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<your-clerk-publishable-key>
 CLERK_SECRET_KEY=<your-clerk-secret-key>
 RESEND_API_KEY=<your-resend-api-key>
 OPENAI_API_KEY=<your-openai-api-key>
-```
+````
 
 This prevents secret scanners from flagging docs and keeps CI green while conveying the intent clearly.
+
 1. Repository Defaults (.env.defaults) - Safe defaults, version controlled
-2. Environment Specific (.env.production) - Environment config, version controlled  
+2. Environment Specific (.env.production) - Environment config, version controlled
 3. Local Overrides (.env.local) - Secrets and overrides, gitignored
+
 ```
 
 ### Encrypted Vault Layer
@@ -70,31 +72,35 @@ This prevents secret scanners from flagging docs and keeps CI green while convey
 A fourth layer provides encrypted secret storage:
 
 ```
-4. Encrypted Vaults (.secrets/*.vault) - AES-256-GCM encrypted secrets
+
+4. Encrypted Vaults (.secrets/\*.vault) - AES-256-GCM encrypted secrets
+
 ```
 
 ### Directory Structure
 
 ```
+
 elevate/
-├── .secrets/                     # Encrypted vault directory
-│   ├── development.vault         # Development environment secrets
-│   ├── staging.vault            # Staging environment secrets
-│   ├── production.vault         # Production environment secrets
-│   └── rotation.log             # Password rotation audit log
-├── .env-local/                   # Local development directory
-│   └── README.md                # Setup instructions
-├── scripts/secrets/              # Secret management tools
-│   ├── vault-manager.js         # Core vault operations
-│   ├── setup-dev-secrets.sh     # Development setup script
-│   ├── team-share.sh            # Team distribution tools
-│   ├── rotate-secrets.sh        # Password rotation tools
-│   └── emergency-response.sh    # Incident response procedures
-├── .env.defaults                # Repository defaults (committed)
-├── .env.production              # Production config (committed)
-├── .env.local                   # Local secrets (gitignored)
-└── .secrets-allowlist.json      # Secret scanner allowlist
-```
+├── .secrets/ # Encrypted vault directory
+│ ├── development.vault # Development environment secrets
+│ ├── staging.vault # Staging environment secrets
+│ ├── production.vault # Production environment secrets
+│ └── rotation.log # Password rotation audit log
+├── .env-local/ # Local development directory
+│ └── README.md # Setup instructions
+├── scripts/secrets/ # Secret management tools
+│ ├── vault-manager.js # Core vault operations
+│ ├── setup-dev-secrets.sh # Development setup script
+│ ├── team-share.sh # Team distribution tools
+│ ├── rotate-secrets.sh # Password rotation tools
+│ └── emergency-response.sh # Incident response procedures
+├── .env.defaults # Repository defaults (committed)
+├── .env.production # Production config (committed)
+├── .env.local # Local secrets (gitignored)
+└── .secrets-allowlist.json # Secret scanner allowlist
+
+````
 
 ## Quick Start
 
@@ -104,9 +110,10 @@ elevate/
    ```bash
    # Receive the team secrets package
    # Extract to your project root
-   ```
+````
 
 2. **Run the onboarding script**:
+
    ```bash
    ./scripts/secrets/setup-dev-secrets.sh development onboard
    ```
@@ -122,6 +129,7 @@ elevate/
 ### For Existing Team Members
 
 1. **Standard setup**:
+
    ```bash
    ./scripts/secrets/setup-dev-secrets.sh development
    ```
@@ -136,28 +144,31 @@ elevate/
 ### Daily Development
 
 1. **Start development**:
+
    ```bash
    # Ensure secrets are current
    ./scripts/secrets/setup-dev-secrets.sh development
-   
+
    # Start development servers
    pnpm dev
    ```
 
 2. **Validate environment**:
+
    ```bash
    # Check environment variables
    pnpm env:validate
-   
+
    # Scan for accidental secret leaks
    pnpm verify:secrets
    ```
 
 3. **Before committing**:
+
    ```bash
    # Always run secret scan before commits
    node scripts/scan-secrets.js --verbose
-   
+
    # Validate code quality
    pnpm verify:code-quality
    ```
@@ -223,10 +234,12 @@ Add to `.github/workflows/deploy.yml`:
 #### Railway Deployment
 
 Set environment variables:
+
 - `SECRETS_VAULT_PRODUCTION`: Base64 encoded vault content
 - `VAULT_MASTER_PASSWORD_PRODUCTION`: Master password
 
 Build command:
+
 ```bash
 echo "$SECRETS_VAULT_PRODUCTION" | base64 -d > .secrets/production.vault && \
 VAULT_MASTER_PASSWORD="$VAULT_MASTER_PASSWORD_PRODUCTION" \
@@ -272,9 +285,9 @@ pnpm build
 
 For each environment (`development`, `staging`, `production`):
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `SECRETS_VAULT_ENV` | Base64 encoded vault file | `eyJlbmNyeXB0ZWQ...` |
+| Variable                    | Description               | Example              |
+| --------------------------- | ------------------------- | -------------------- |
+| `SECRETS_VAULT_ENV`         | Base64 encoded vault file | `eyJlbmNyeXB0ZWQ...` |
 | `VAULT_MASTER_PASSWORD_ENV` | Vault decryption password | `SecurePassword123!` |
 
 ### Build Scripts
@@ -293,6 +306,7 @@ Add to `package.json`:
 ### Vercel Configuration
 
 `vercel.json`:
+
 ```json
 {
   "buildCommand": "node scripts/setup-ci-secrets.js production && pnpm build",
@@ -340,18 +354,9 @@ Create `.secrets-allowlist.json`:
 
 ```json
 {
-  "files": [
-    "tests/fixtures/example.test.js",
-    "docs/api-examples.md"
-  ],
-  "patterns": [
-    "tests/mock-data.js:api-key",
-    "docs/examples.md:token"
-  ],
-  "hashes": [
-    "a1b2c3d4e5f6g7h8",
-    "x9y8z7w6v5u4t3s2"
-  ]
+  "files": ["tests/fixtures/example.test.js", "docs/api-examples.md"],
+  "patterns": ["tests/mock-data.js:api-key", "docs/examples.md:token"],
+  "hashes": ["a1b2c3d4e5f6g7h8", "x9y8z7w6v5u4t3s2"]
 }
 ```
 
@@ -375,31 +380,34 @@ Create `.secrets-allowlist.json`:
 ### New Developer Setup
 
 1. **Prerequisites**:
+
    - Node.js 18+ installed
    - Git access to repository
    - Team lead contact for passwords
 
 2. **Initial Setup**:
+
    ```bash
    # Clone repository
    git clone [repository-url]
    cd elevate
-   
+
    # Install dependencies
    pnpm install
-   
+
    # Run onboarding
    ./scripts/secrets/setup-dev-secrets.sh development onboard
    ```
 
 3. **Verification**:
+
    ```bash
    # Check environment
    pnpm env:validate
-   
+
    # Test development servers
    pnpm dev
-   
+
    # Verify secret scanner works
    pnpm verify:secrets
    ```
@@ -407,6 +415,7 @@ Create `.secrets-allowlist.json`:
 ### Team Lead Setup
 
 1. **Create initial vaults**:
+
    ```bash
    # For each environment
    node scripts/secrets/vault-manager.js create development
@@ -415,6 +424,7 @@ Create `.secrets-allowlist.json`:
    ```
 
 2. **Generate team package**:
+
    ```bash
    ./scripts/secrets/team-share.sh package all ./team-secrets-package
    ```
@@ -526,11 +536,13 @@ Practice emergency procedures regularly:
 ### Development
 
 1. **Environment Separation**:
+
    - Use separate credentials for each environment
    - Never use production secrets in development
    - Regularly validate environment configurations
 
 2. **Secret Hygiene**:
+
    - Run secret scans before every commit
    - Use meaningful names for environment variables
    - Document required secrets in `.env.defaults`
@@ -543,11 +555,13 @@ Practice emergency procedures regularly:
 ### Operations
 
 1. **Monitoring**:
+
    - Monitor secret usage patterns
    - Alert on unusual access patterns
    - Regular security assessments
 
 2. **Backup and Recovery**:
+
    - Secure backup of vault files
    - Test recovery procedures regularly
    - Document disaster recovery plans
@@ -560,11 +574,13 @@ Practice emergency procedures regularly:
 ### Team Management
 
 1. **Onboarding**:
+
    - Standardized security training
    - Clear documentation and procedures
    - Mentor assignment for new team members
 
 2. **Ongoing Education**:
+
    - Regular security awareness training
    - Share security best practices
    - Learn from security incidents
@@ -649,13 +665,13 @@ Add custom patterns to `scripts/scan-secrets.js`:
 
 ```javascript
 const CUSTOM_PATTERNS = [
-  { 
-    re: /your-custom-pattern/gi, 
-    why: 'Description of pattern', 
+  {
+    re: /your-custom-pattern/gi,
+    why: 'Description of pattern',
     severity: 'high',
-    category: 'custom'
-  }
-];
+    category: 'custom',
+  },
+]
 ```
 
 ### CI/CD Issues
@@ -810,33 +826,33 @@ system-compromise # Infrastructure compromise
 
 #### Core Configuration
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `VAULT_MASTER_PASSWORD` | Master password for vault operations | - | Yes |
-| `NODE_ENV` | Environment name | `development` | No |
-| `VAULT_OLD_PASSWORD` | Old password for rotation | - | For rotation |
-| `VAULT_NEW_PASSWORD` | New password for rotation | - | For rotation |
+| Variable                | Description                          | Default       | Required     |
+| ----------------------- | ------------------------------------ | ------------- | ------------ |
+| `VAULT_MASTER_PASSWORD` | Master password for vault operations | -             | Yes          |
+| `NODE_ENV`              | Environment name                     | `development` | No           |
+| `VAULT_OLD_PASSWORD`    | Old password for rotation            | -             | For rotation |
+| `VAULT_NEW_PASSWORD`    | New password for rotation            | -             | For rotation |
 
 #### CI/CD Integration
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `SECRETS_VAULT_PRODUCTION` | Base64 encoded vault | `eyJlbmNyeXB0...` |
-| `SECRETS_VAULT_STAGING` | Base64 encoded vault | `eyJlbmNyeXB0...` |
-| `SECRETS_VAULT_DEVELOPMENT` | Base64 encoded vault | `eyJlbmNyeXB0...` |
-| `VAULT_MASTER_PASSWORD_PRODUCTION` | Production password | `SecurePass123!` |
-| `VAULT_MASTER_PASSWORD_STAGING` | Staging password | `SecurePass123!` |
-| `VAULT_MASTER_PASSWORD_DEVELOPMENT` | Development password | `SecurePass123!` |
+| Variable                            | Description          | Example           |
+| ----------------------------------- | -------------------- | ----------------- |
+| `SECRETS_VAULT_PRODUCTION`          | Base64 encoded vault | `eyJlbmNyeXB0...` |
+| `SECRETS_VAULT_STAGING`             | Base64 encoded vault | `eyJlbmNyeXB0...` |
+| `SECRETS_VAULT_DEVELOPMENT`         | Base64 encoded vault | `eyJlbmNyeXB0...` |
+| `VAULT_MASTER_PASSWORD_PRODUCTION`  | Production password  | `SecurePass123!`  |
+| `VAULT_MASTER_PASSWORD_STAGING`     | Staging password     | `SecurePass123!`  |
+| `VAULT_MASTER_PASSWORD_DEVELOPMENT` | Development password | `SecurePass123!`  |
 
 #### Emergency Response
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `EMERGENCY_DRILL` | Enable drill mode | `true` |
-| `SLACK_WEBHOOK_URL` | Slack notifications | `https://hooks.slack.com/...` |
-| `EMAIL_NOTIFICATION_LIST` | Email alerts | `team@company.com` |
-| `EMERGENCY_CONTACT` | Primary contact | `security@company.com` |
-| `CICD_PLATFORM` | CI/CD platform | `vercel` |
+| Variable                  | Description         | Example                       |
+| ------------------------- | ------------------- | ----------------------------- |
+| `EMERGENCY_DRILL`         | Enable drill mode   | `true`                        |
+| `SLACK_WEBHOOK_URL`       | Slack notifications | `https://hooks.slack.com/...` |
+| `EMAIL_NOTIFICATION_LIST` | Email alerts        | `team@company.com`            |
+| `EMERGENCY_CONTACT`       | Primary contact     | `security@company.com`        |
+| `CICD_PLATFORM`           | CI/CD platform      | `vercel`                      |
 
 ### File Structure Reference
 
@@ -869,24 +885,28 @@ elevate/
 ### Security Checklist
 
 #### Daily Operations
+
 - [ ] Run secret scan before commits (`pnpm verify:secrets`)
 - [ ] Validate environment before development (`pnpm env:validate`)
 - [ ] Use environment-specific credentials
 - [ ] Keep local environment files secure (600 permissions)
 
 #### Weekly Reviews
+
 - [ ] Check rotation log for overdue passwords
 - [ ] Review incident log for security issues
 - [ ] Validate team member access is appropriate
 - [ ] Update security documentation as needed
 
 #### Monthly Tasks
+
 - [ ] Audit vault access patterns
 - [ ] Test emergency response procedures (drill mode)
 - [ ] Review and update allowlist for false positives
 - [ ] Security training and awareness updates
 
 #### Quarterly Requirements
+
 - [ ] Rotate all vault passwords (maximum 90 days)
 - [ ] Conduct full security assessment
 - [ ] Update incident response procedures
@@ -903,7 +923,7 @@ For questions or issues with secrets management:
 
 ### Additional Resources
 
-- [Project Documentation](plan2.md) - Complete project requirements
+- [Project Documentation](archive/planning/plan/plan2.md) - Complete project requirements
 - [Environment Validation](scripts/validate-env.js) - Environment configuration
 - [Build System](package.json) - Available scripts and commands
 - [Security Scanning](scripts/scan-secrets.js) - Secret detection system

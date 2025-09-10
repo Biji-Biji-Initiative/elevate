@@ -81,8 +81,19 @@ export class KajabiClient {
     this.apiKey = apiKey
     this.clientSecret = clientSecret
 
+    const baseEnv = process.env.KAJABI_BASE_URL?.trim()
+    const siteEnv = process.env.KAJABI_SITE?.trim()
+    // Allow overriding base URL via env to support site-scoped APIs.
+    // Accept either a full URL (https://foo/api) or a bare hostname (academy.mereka.my).
+    let baseURL = 'https://api.kajabi.com'
+    if (baseEnv) {
+      baseURL = baseEnv
+    } else if (siteEnv) {
+      baseURL = siteEnv.startsWith('http') ? siteEnv : `https://${siteEnv}`
+    }
+
     this.client = axios.create({
-      baseURL: 'https://api.kajabi.com',
+      baseURL,
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',

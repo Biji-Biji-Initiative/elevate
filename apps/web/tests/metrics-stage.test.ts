@@ -14,9 +14,15 @@ vi.mock('@elevate/db/client', () => ({
   },
 }))
 
+// Mock rate limiter to avoid header/IP dependence
+vi.mock('@elevate/security', async () => ({
+  withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
+  publicApiRateLimiter: {},
+}))
+
 function makeRequest(url: string): NextRequest {
   const u = new URL(url)
-  return { url: u.toString(), nextUrl: u } as unknown as NextRequest
+  return { url: u.toString(), nextUrl: u, headers: new Headers() } as unknown as NextRequest
 }
 
 describe('GET /api/metrics', () => {
@@ -40,4 +46,3 @@ describe('GET /api/metrics', () => {
     expect(body?.success).toBe(true)
   })
 })
-

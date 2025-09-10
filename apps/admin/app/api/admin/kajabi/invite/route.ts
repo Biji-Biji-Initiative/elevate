@@ -71,11 +71,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       const effectiveOfferId = offerId ?? process.env.KAJABI_OFFER_ID
 
-      // Execute enrollment + optional offer grant
+      // Execute enrollment + optional offer grant (v2 client)
       const result = await enrollUserInKajabi(email, name, {
-        ...(effectiveOfferId !== undefined
-          ? { offerId: effectiveOfferId }
-          : {}),
+        ...(effectiveOfferId !== undefined ? { offerId: effectiveOfferId } : {}),
       })
 
       // Upsert Kajabi contact id onto user if we have a user record
@@ -84,6 +82,99 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           where: { id: user.id },
           data: { kajabi_contact_id: String(result.contactId) },
         })
+      }
+
+      // Fallback/ensure grant via Kajabi v1 OAuth JSON:API if offer provided
+      // This supports resolving Offer name → numeric id and grant relationships
+      let offerIdResolved: string | number | undefined = effectiveOfferId
+      let contactIdResolved: string | number | undefined = result.contactId
+      try {
+        if (effectiveOfferId !== undefined) {
+          const clientId = process.env.KAJABI_API_KEY
+          const clientSecret = process.env.KAJABI_CLIENT_SECRET
+          if (clientId && clientSecret) {
+            // OAuth token
+            const tokenRes = await fetch('https://api.kajabi.com/v1/oauth/token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({
+                grant_type: 'client_credentials',
+                client_id: clientId,
+                client_secret: clientSecret,
+              }),
+            })
+            const tokenJson = (await tokenRes.json().catch(() => ({}))) as { access_token?: string }
+            const accessToken = tokenJson?.access_token
+            if (accessToken) {
+              const api = async (path: string, method = 'GET', body?: unknown) =>
+                fetch(`https://api.kajabi.com/v1${path}`, {
+                  method,
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    'Content-Type': 'application/vnd.api+json',
+                    Accept: 'application/vnd.api+json',
+                  },
+                  body: body ? JSON.stringify(body) : undefined,
+                })
+
+              // Resolve contact id if missing
+              if (!contactIdResolved) {
+                const list = await api('/contacts')
+                const listJson = (await list.json().catch(() => ({}))) as any
+                const found = Array.isArray(listJson?.data)
+                  ? listJson.data.find((c: any) => c?.attributes?.email?.toLowerCase() === email.toLowerCase())
+                  : null
+                contactIdResolved = found?.id
+                if (!contactIdResolved) {
+                  // Create with site relationship
+                  const sites = await api('/sites')
+                  const siteJson = (await sites.json().catch(() => ({}))) as any
+                  const siteId = Array.isArray(siteJson?.data) ? siteJson.data[0]?.id : undefined
+                  const [firstName, ...rest] = name.split(' ')
+                  const lastName = rest.join(' ')
+                  const crt = await api('/contacts', 'POST', {
+                    data: {
+                      type: 'contacts',
+                      attributes: { email, first_name: firstName, last_name: lastName },
+                      ...(siteId
+                        ? { relationships: { site: { data: { type: 'sites', id: siteId } } } }
+                        : {}),
+                    },
+                  })
+                  const crtJson = (await crt.json().catch(() => ({}))) as any
+                  contactIdResolved = crtJson?.data?.id
+                }
+              }
+
+              // Resolve offer id if provided as name/slug
+              if (typeof effectiveOfferId === 'string' && !/^\d+$/.test(effectiveOfferId)) {
+                const off = await api('/offers')
+                const offJson = (await off.json().catch(() => ({}))) as any
+                const data = Array.isArray(offJson?.data) ? offJson.data : []
+                const match = data.find((o: any) => {
+                  const a = o?.attributes || {}
+                  const candidates = [a.name, a.title, a.product_title, a.product?.title, a.offer_title]
+                  return candidates?.some((v: any) => typeof v === 'string' && v.toLowerCase() === String(effectiveOfferId).toLowerCase())
+                })
+                if (match?.id) offerIdResolved = match.id
+              }
+
+              // Attempt grant via relationships if we have both ids
+              if (contactIdResolved && offerIdResolved) {
+                let rel = await api(`/contacts/${contactIdResolved}/relationships/offers`, 'POST', {
+                  data: [{ type: 'offers', id: String(offerIdResolved) }],
+                })
+                if (!rel.ok) {
+                  rel = await api(`/offers/${offerIdResolved}/relationships/contacts`, 'POST', {
+                    data: [{ type: 'contacts', id: String(contactIdResolved) }],
+                  })
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        logger.warn('Kajabi v1 grant fallback failed', { error: e instanceof Error ? e.message : String(e) })
       }
 
       const meta: Prisma.InputJsonValue = {
@@ -117,13 +208,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       logger.info('Kajabi invite sent', {
         email,
-        contactId: result.contactId,
+        contactId: result.contactId || contactIdResolved,
         withOffer: !!effectiveOfferId,
+        offerIdResolved,
       })
       const res = createSuccessResponse({
         invited: true,
-        contactId: result.contactId,
+        contactId: result.contactId || contactIdResolved,
         withOffer: !!effectiveOfferId,
+        offerIdResolved,
       })
       recordApiAvailability('/api/admin/kajabi/invite', 'POST', 200)
       recordApiResponseTime('/api/admin/kajabi/invite', 'POST', Date.now() - start, 200)

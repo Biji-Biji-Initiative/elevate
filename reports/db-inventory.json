@@ -1,0 +1,22 @@
+{
+  "models": [
+    "User",
+    "Activity",
+    "Submission",
+    "PointsLedger",
+    "Badge",
+    "EarnedBadge",
+    "LearnTagGrant",
+    "KajabiEvent",
+    "SubmissionAttachment",
+    "AuditLog",
+    "ReferralEvent"
+  ],
+  "enums": [
+    "Role",
+    "UserType",
+    "SubmissionStatus",
+    "Visibility",
+    "LedgerSource"
+  ]
+}

@@ -12,7 +12,9 @@ import {
   createSubmission,
   createSubmissionAttachment,
   type Prisma,
+  Prisma as SQL,
 } from '@elevate/db'
+import { prisma } from '@elevate/db/client'
 import {
   createSuccessResponse,
   withApiErrorHandling,
@@ -183,6 +185,26 @@ export const POST = withCSRFProtection(
         }
       }
 
+      // Additional LEARN idempotency by certificate_hash if provided
+      if (validatedData.activityCode === LEARN) {
+        const certHash = (dbPayload as unknown as Record<string, unknown>)['certificate_hash']
+        if (typeof certHash === 'string' && certHash.length > 0) {
+          const dupRows = await prisma.$queryRaw<{ count: bigint }[]>(
+            SQL.sql`SELECT COUNT(*)::bigint AS count FROM submissions WHERE user_id = ${userId} AND activity_code = 'LEARN' AND status IN ('PENDING','APPROVED') AND (payload->>'certificate_hash') = ${certHash}`,
+          )
+          const dupCount = Number(dupRows?.[0]?.count ?? 0)
+          if (dupCount > 0) {
+            throw new ValidationError(
+              new z.ZodError([
+                { code: 'custom', message: 'Duplicate certificate detected', path: ['payload', 'certificateUrl'] },
+              ]),
+              'Duplicate LEARN evidence not allowed',
+              context.traceId,
+            )
+          }
+        }
+      }
+
       // For Amplify submissions, check 7-day rolling limits
       if (validatedData.activityCode === AMPLIFY) {
         const sevenDaysAgo = new Date()
@@ -310,6 +332,16 @@ export const POST = withCSRFProtection(
         }
       }
 
+      const potentialPoints =
+        validatedData.activityCode === AMPLIFY
+          ? (() => {
+              const payloadObj = dbPayload as unknown as { peers_trained?: number; students_trained?: number }
+              const peers = Number(payloadObj.peers_trained ?? 0)
+              const students = Number(payloadObj.students_trained ?? 0)
+              return computeAmplifyPoints(peers, students)
+            })()
+          : activity.default_points
+
       const response = createSuccessResponse(
         {
           id: submission.id,
@@ -317,7 +349,7 @@ export const POST = withCSRFProtection(
           status: submission.status,
           visibility: submission.visibility,
           createdAt: submission.created_at,
-          potentialPoints: activity.default_points,
+          potentialPoints,
         },
         201,
       )

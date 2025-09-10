@@ -5,7 +5,11 @@
  * HSTS, frame protection, and other security measures.
  */
 
-import { NextResponse, NextRequest, type NextMiddleware } from 'next/server'
+import {
+  NextResponse,
+  type NextRequest,
+  type NextMiddleware,
+} from 'next/server'
 
 import {
   generateNonce,
@@ -146,7 +150,11 @@ export function createCSPReportHandler(
     logToConsole?: boolean
     logToDB?: boolean
     alertOnSeverity?: 'low' | 'medium' | 'high'
-    onViolation?: (violation: Record<string, unknown> & { severity?: 'low' | 'medium' | 'high' }) => void
+    onViolation?: (
+      violation: Record<string, unknown> & {
+        severity?: 'low' | 'medium' | 'high'
+      },
+    ) => void
   } = {},
 ) {
   const {
@@ -163,11 +171,7 @@ export function createCSPReportHandler(
       // Parse the CSP violation report
       const raw: unknown = await request.json()
 
-      if (
-        !raw ||
-        typeof raw !== 'object' ||
-        !('csp-report' in raw)
-      ) {
+      if (!raw || typeof raw !== 'object' || !('csp-report' in raw)) {
         return NextResponse.json(
           { error: 'Invalid report format' },
           { status: 400 },
@@ -181,7 +185,9 @@ export function createCSPReportHandler(
           { status: 400 },
         )
       }
-      const severity = classifyViolationSeverity(violation as Record<string, unknown>)
+      const severity = classifyViolationSeverity(
+        violation as Record<string, unknown>,
+      )
 
       // Log to console if enabled
       if (logToConsole) {
@@ -192,11 +198,23 @@ export function createCSPReportHandler(
             ? 'warn'
             : 'info'
         console[logLevel]('CSP Violation:', {
-          uri: String((violation as { ['document-uri']?: unknown })['document-uri'] ?? ''),
-          directive: String((violation as { ['violated-directive']?: unknown })['violated-directive'] ?? ''),
-          blockedUri: String((violation as { ['blocked-uri']?: unknown })['blocked-uri'] ?? ''),
-          sourceFile: String((violation as { ['source-file']?: unknown })['source-file'] ?? ''),
-          lineNumber: String((violation as { ['line-number']?: unknown })['line-number'] ?? ''),
+          uri: String(
+            (violation as { ['document-uri']?: unknown })['document-uri'] ?? '',
+          ),
+          directive: String(
+            (violation as { ['violated-directive']?: unknown })[
+              'violated-directive'
+            ] ?? '',
+          ),
+          blockedUri: String(
+            (violation as { ['blocked-uri']?: unknown })['blocked-uri'] ?? '',
+          ),
+          sourceFile: String(
+            (violation as { ['source-file']?: unknown })['source-file'] ?? '',
+          ),
+          lineNumber: String(
+            (violation as { ['line-number']?: unknown })['line-number'] ?? '',
+          ),
           severity,
           timestamp: new Date().toISOString(),
         })
@@ -215,8 +233,14 @@ export function createCSPReportHandler(
 
       // Alert for high severity violations
       if (severity === alertOnSeverity) {
-        const directive = String((violation as { ['violated-directive']?: unknown })['violated-directive'] ?? '')
-        const blocked = String((violation as { ['blocked-uri']?: unknown })['blocked-uri'] ?? '')
+        const directive = String(
+          (violation as { ['violated-directive']?: unknown })[
+            'violated-directive'
+          ] ?? '',
+        )
+        const blocked = String(
+          (violation as { ['blocked-uri']?: unknown })['blocked-uri'] ?? '',
+        )
         console.error(`HIGH SEVERITY CSP VIOLATION: ${directive} - ${blocked}`)
         // You could send alerts to monitoring services here
       }
@@ -235,9 +259,16 @@ export function createCSPReportHandler(
 /**
  * Classify CSP violation severity
  */
-function classifyViolationSeverity(violation: Record<string, unknown>): 'low' | 'medium' | 'high' {
-  const directive = String((violation as { ['violated-directive']?: unknown })['violated-directive'] ?? '')
-  const blockedUri = String((violation as { ['blocked-uri']?: unknown })['blocked-uri'] ?? '')
+function classifyViolationSeverity(
+  violation: Record<string, unknown>,
+): 'low' | 'medium' | 'high' {
+  const directive = String(
+    (violation as { ['violated-directive']?: unknown })['violated-directive'] ??
+      '',
+  )
+  const blockedUri = String(
+    (violation as { ['blocked-uri']?: unknown })['blocked-uri'] ?? '',
+  )
 
   // High severity: script injections, dangerous protocols
   if (directive.includes('script-src')) {
@@ -281,15 +312,15 @@ function classifyViolationSeverity(violation: Record<string, unknown>): 'low' | 
  */
 export const securityConfig = {
   development: {
-    reportOnly: true,
+    // In development, enforce CSP to avoid noisy browser warnings and to
+    // surface violations early. The directives already allow dev tooling
+    // (e.g., 'unsafe-eval' for Next.js) when isDevelopment=true.
+    reportOnly: false,
     isDevelopment: true,
     enableReporting: false,
     logViolations: true,
     allowedDomains: {
-      external: [
-        'http://localhost:3000',
-        'http://localhost:3001',
-      ],
+      external: ['http://localhost:3000', 'http://localhost:3001'],
     },
   } as SecurityMiddlewareOptions,
 
@@ -342,44 +373,37 @@ export function withSecurity(
   middleware: NextMiddleware,
   securityOptions?: SecurityMiddlewareOptions,
 ): NextMiddleware {
-  const securityMiddleware = createSecurityMiddleware(securityOptions)
-
   return function combinedMiddleware(
     request: NextRequest,
     event: Parameters<NextMiddleware>[1],
   ) {
-    // Apply security headers first
-    const securityResponse = securityMiddleware(request, event)
+    // Run app middleware FIRST so framework middlewares (e.g. Clerk) can
+    // annotate the request. Do not reconstruct the request.
+    const result = middleware(request, event)
 
-    // If security middleware returns a response, combine with original middleware
-    if (securityResponse instanceof NextResponse) {
-      // Create request with nonce header if it exists
-      const nonceHeader = securityResponse.headers.get('x-csp-nonce')
-      const modifiedHeaders = new Headers(request.headers)
-      if (nonceHeader) {
-        modifiedHeaders.set('x-csp-nonce', nonceHeader)
+    // Normalize to a NextResponse to attach headers
+    const response =
+      result instanceof NextResponse ? result : NextResponse.next()
+
+    // Generate security headers and attach to the response only (no request overrides)
+    const nonce = generateNonce()
+    const headers = generateSecurityHeaders({
+      ...(securityOptions || {}),
+      nonce,
+    })
+
+    Object.entries(headers).forEach(([k, v]) => {
+      if (typeof v === 'string') {
+        response.headers.set(k, v)
       }
+    })
+    response.headers.set('x-csp-nonce', nonce)
+    response.headers.set(
+      'Cache-Control',
+      'no-cache, no-store, must-revalidate, private',
+    )
 
-      const modifiedRequest = new NextRequest(request, {
-        headers: modifiedHeaders,
-      })
-
-      const originalResponse = middleware(modifiedRequest, event)
-
-      // If original middleware returns a response, combine headers
-      if (originalResponse instanceof NextResponse) {
-        // Copy security headers to the original response
-        securityResponse.headers.forEach((value, key) => {
-          originalResponse.headers.set(key, value)
-        })
-        return originalResponse
-      }
-
-      return securityResponse
-    }
-
-    // If security middleware doesn't return a response, just apply original middleware
-    return middleware(request, event)
+    return response
   }
 }
 

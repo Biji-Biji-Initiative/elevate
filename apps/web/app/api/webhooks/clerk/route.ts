@@ -207,6 +207,8 @@ export async function POST(req: NextRequest) {
               avatar_url: image_url || null,
               role: userRole,
               user_type: userType,
+              // Defer confirmation to onboarding page
+              user_type_confirmed: false,
             },
           })
 
@@ -260,6 +262,70 @@ export async function POST(req: NextRequest) {
                     meta: grantMeta,
                   },
                 })
+
+                // Fallback: if grant failed or offerId is non-numeric, try Kajabi v1 JSON:API
+                if (!result.success || !/^\d+$/.test(offerId)) {
+                  try {
+                    const clientId = process.env.KAJABI_API_KEY
+                    const clientSecret = process.env.KAJABI_CLIENT_SECRET
+                    const offerName = process.env.KAJABI_OFFER_NAME
+                    if (clientId && clientSecret) {
+                      const tokenRes = await fetch('https://api.kajabi.com/v1/oauth/token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({
+                          grant_type: 'client_credentials',
+                          client_id: clientId,
+                          client_secret: clientSecret,
+                        }),
+                      })
+                      const tokenJson = (await tokenRes.json().catch(() => ({}))) as { access_token?: string }
+                      const accessToken = tokenJson?.access_token
+                      if (accessToken) {
+                        const api = async (path: string, method = 'GET', body?: unknown) =>
+                          fetch(`https://api.kajabi.com/v1${path}`, {
+                            method,
+                            headers: {
+                              Authorization: `Bearer ${accessToken}`,
+                              'Content-Type': 'application/vnd.api+json',
+                              Accept: 'application/vnd.api+json',
+                            },
+                            body: body ? JSON.stringify(body) : null,
+                          })
+
+                        // Resolve numeric offer id if possible by name
+                        let resolvedOfferId: string | undefined = /^\d+$/.test(offerId)
+                          ? offerId
+                          : undefined
+                        if (!resolvedOfferId && offerName) {
+                          const off = await api('/offers')
+                          const offJson = (await off.json().catch(() => ({}))) as any
+                          const data = Array.isArray(offJson?.data) ? offJson.data : []
+                          const match = data.find((o: any) => {
+                            const a = o?.attributes || {}
+                            const candidates = [a.name, a.title, a.product_title, a.product?.title, a.offer_title]
+                            return candidates?.some((v: any) => typeof v === 'string' && v.toLowerCase() === offerName.toLowerCase())
+                          })
+                          if (match?.id) resolvedOfferId = String(match.id)
+                        }
+
+                        if (resolvedOfferId) {
+                          // Attempt grant
+                          let rel = await api(`/contacts/${kajabiContact.id}/relationships/offers`, 'POST', {
+                            data: [{ type: 'offers', id: resolvedOfferId }],
+                          })
+                          if (!rel.ok) {
+                            rel = await api(`/offers/${resolvedOfferId}/relationships/contacts`, 'POST', {
+                              data: [{ type: 'contacts', id: String(kajabiContact.id) }],
+                            })
+                          }
+                        }
+                      }
+                    }
+                  } catch {
+                    // ignore fallback errors
+                  }
+                }
               }
 
               // Create audit log for Kajabi enrollment
