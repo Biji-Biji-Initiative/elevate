@@ -9,8 +9,21 @@ import { useForm } from 'react-hook-form'
 import { useFormSubmission, useFileUpload } from '@elevate/forms'
 import { SHINE } from '@elevate/types'
 import { ShineSchema, type ShineInput } from '@elevate/types/schemas'
-import { Button, Input, Textarea, Card, Alert, AlertTitle, AlertDescription } from '@elevate/ui'
-import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
+import {
+  Button,
+  Input,
+  Textarea,
+  Card,
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from '@elevate/ui'
+import {
+  FormField,
+  LoadingSpinner,
+  FileUpload,
+  FileList,
+} from '@elevate/ui/blocks'
 
 import { getApiClient } from '../../../../lib/api-client'
 import { toMessage } from '../../../lib/error-utils'
@@ -19,11 +32,21 @@ export default function ShineFormPage() {
   const { userId } = useAuth()
   const [makePublic, setMakePublic] = useState(true) // Default to public for Shine
 
-  const { isSubmitting, submitStatus, handleSubmit: handleFormSubmit } = useFormSubmission({
-    successMessage: 'Innovation idea submitted successfully! Your idea is now under review for recognition.'
+  const {
+    isSubmitting,
+    submitStatus,
+    handleSubmit: handleFormSubmit,
+  } = useFormSubmission({
+    successMessage:
+      'Innovation idea submitted successfully! Your idea is now under review for recognition.',
   })
-  
-  const { uploadedFiles, handleFileSelect: handleFileUpload, removeFile, successfulUploads } = useFileUpload({
+
+  const {
+    uploadedFiles,
+    handleFileSelect: handleFileUpload,
+    removeFile,
+    successfulUploads,
+  } = useFileUpload({
     maxFiles: 3,
     onUpload: async (files) => {
       const uploadPromises = files.map(async (file) => {
@@ -43,7 +66,7 @@ export default function ShineFormPage() {
         }
       })
       return Promise.all(uploadPromises)
-    }
+    },
   })
 
   const {
@@ -51,22 +74,26 @@ export default function ShineFormPage() {
     handleSubmit,
     setValue,
     watch,
-    formState: { errors }
+    formState: { errors },
   } = useForm<ShineInput>({
-    resolver: zodResolver(ShineSchema)
+    resolver: zodResolver(ShineSchema),
   })
 
-  const watchedTitle = watch('ideaTitle')
-  const watchedSummary = watch('ideaSummary')
+  const watchedTitle = watch('idea_title')
+  const watchedSummary = watch('idea_summary')
 
   const handleFileSelect = async (files: File[]) => {
     const results = await handleFileUpload(files)
-    setValue('attachment', results.length > 0 ? results.map(r => r.path) : undefined)
+    const paths = results.map((r) => r.path).filter(Boolean) as string[]
+    setValue('attachments', paths.length > 0 ? paths : undefined)
   }
 
   const handleFileRemove = (index: number) => {
     removeFile(index)
-    setValue('attachment', successfulUploads.length > 0 ? successfulUploads.map(f => f.path) : undefined)
+    const paths = successfulUploads
+      .map((f) => f.path)
+      .filter(Boolean) as string[]
+    setValue('attachments', paths.length > 0 ? paths : undefined)
   }
 
   const onSubmit = async (data: ShineInput) => {
@@ -76,24 +103,28 @@ export default function ShineFormPage() {
       }
 
       const payload = {
-        ideaTitle: String(data.ideaTitle),
-        ideaSummary: String(data.ideaSummary),
-        attachments: successfulUploads.length > 0 ? successfulUploads.map(f => f.path) : undefined
+        idea_title: String(data.idea_title),
+        idea_summary: String(data.idea_summary),
+        attachments: successfulUploads.map((f) => f.path).filter(Boolean),
       }
 
       const api = getApiClient()
       await api.createSubmission({
         activityCode: SHINE,
         payload,
-        attachments: successfulUploads.map(f => f.path),
-        visibility: makePublic ? 'PUBLIC' : 'PRIVATE'
+        attachments: successfulUploads.map((f) => f.path),
+        visibility: makePublic ? 'PUBLIC' : 'PRIVATE',
       })
     })
   }
 
   const errMsg = (value: unknown): string | undefined => {
     if (typeof value === 'string') return value
-    if (value && typeof value === 'object' && 'message' in (value as Record<string, unknown>)) {
+    if (
+      value &&
+      typeof value === 'object' &&
+      'message' in (value as Record<string, unknown>)
+    ) {
       const m = (value as Record<string, unknown>).message
       return typeof m === 'string' ? m : undefined
     }
@@ -104,18 +135,23 @@ export default function ShineFormPage() {
     <main style={{ padding: 24, fontFamily: 'system-ui' }}>
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Shine — Innovation & Recognition</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Shine — Innovation & Recognition
+          </h1>
           <p className="text-gray-600">
-            Share your innovative ideas for using AI in education. Outstanding submissions receive special recognition and showcase opportunities.
+            Share your innovative ideas for using AI in education. Outstanding
+            submissions receive special recognition and showcase opportunities.
           </p>
         </div>
 
         {submitStatus && (
-          <Alert 
-            variant={submitStatus.type === 'error' ? 'destructive' : 'default'} 
+          <Alert
+            variant={submitStatus.type === 'error' ? 'destructive' : 'default'}
             className="mb-6"
           >
-            <AlertTitle>{submitStatus.type === 'success' ? 'Success!' : 'Error'}</AlertTitle>
+            <AlertTitle>
+              {submitStatus.type === 'success' ? 'Success!' : 'Error'}
+            </AlertTitle>
             <AlertDescription>{String(submitStatus.message)}</AlertDescription>
           </Alert>
         )}
@@ -125,37 +161,41 @@ export default function ShineFormPage() {
             <FormField
               label="Innovation Title"
               required
-              error={errMsg(errors.ideaTitle)}
+              error={errMsg(errors.idea_title)}
               description="Give your innovation idea a compelling title (minimum 4 characters)"
             >
               <Input
-                {...register('ideaTitle')}
+                {...register('idea_title')}
                 placeholder="e.g. AI-Powered Personalized Learning Pathways"
               />
               <div className="text-right text-sm text-gray-500 mt-1">
-                {(watchedTitle?.length || 0)}/4 characters minimum
+                {watchedTitle?.length || 0}/4 characters minimum
               </div>
             </FormField>
 
             <FormField
               label="Innovation Summary"
               required
-              error={errMsg(errors.ideaSummary)}
+              error={errMsg(errors.idea_summary)}
               description="Describe your innovative approach, implementation, and impact (minimum 50 characters)"
             >
               <Textarea
-                {...register('ideaSummary')}
+                {...register('idea_summary')}
                 placeholder="Describe your innovative idea: What problem does it solve? How did you implement it? What was the impact on learning? What makes it unique and scalable?"
                 rows={8}
               />
               <div className="text-right text-sm text-gray-500 mt-1">
-                {(watchedSummary?.length || 0)}/50 characters minimum
+                {watchedSummary?.length || 0}/50 characters minimum
               </div>
             </FormField>
 
             <FormField
               label="Supporting Documents (Optional)"
-              error={uploadedFiles.some(f => f.error) ? 'Some files failed to upload' : undefined}
+              error={
+                uploadedFiles.some((f) => f.error)
+                  ? 'Some files failed to upload'
+                  : undefined
+              }
               description="Upload presentations, prototypes, research, or other materials that showcase your innovation"
             >
               <FileUpload
@@ -165,10 +205,7 @@ export default function ShineFormPage() {
                 maxFiles={3}
                 disabled={isSubmitting}
               />
-              <FileList 
-                files={uploadedFiles} 
-                onRemove={handleFileRemove}
-              />
+              <FileList files={uploadedFiles} onRemove={handleFileRemove} />
             </FormField>
 
             <div className="border border-gray-200 rounded-lg p-4">
@@ -180,20 +217,24 @@ export default function ShineFormPage() {
                   onChange={(e) => setMakePublic(e.target.checked)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="makePublic" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="makePublic"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Make this innovation visible on my public profile
                 </label>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Recommended: Showcase your innovation to inspire other educators and increase recognition opportunities.
+                Recommended: Showcase your innovation to inspire other educators
+                and increase recognition opportunities.
               </p>
             </div>
 
             <div className="pt-4 border-t border-gray-200">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={
-                  isSubmitting || 
+                  isSubmitting ||
                   (watchedTitle?.length || 0) < 4 ||
                   (watchedSummary?.length || 0) < 50
                 }
@@ -213,7 +254,9 @@ export default function ShineFormPage() {
         </Card>
 
         <div className="mt-6 text-sm text-gray-500">
-          <h3 className="font-medium text-gray-700 mb-2">What Makes a Great Shine Submission?</h3>
+          <h3 className="font-medium text-gray-700 mb-2">
+            What Makes a Great Shine Submission?
+          </h3>
           <ul className="space-y-1">
             <li>• Novel approach to using AI in education</li>
             <li>• Clear evidence of positive student impact</li>
@@ -223,19 +266,30 @@ export default function ShineFormPage() {
           </ul>
 
           <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded">
-            <h4 className="font-medium text-purple-800 text-sm">Recognition Opportunities</h4>
+            <h4 className="font-medium text-purple-800 text-sm">
+              Recognition Opportunities
+            </h4>
             <div className="text-xs text-purple-700 mt-1">
-              Outstanding Shine submissions may be featured in program showcases, Microsoft events, and educational publications. Top innovators receive special recognition and networking opportunities.
+              Outstanding Shine submissions may be featured in program
+              showcases, Microsoft events, and educational publications. Top
+              innovators receive special recognition and networking
+              opportunities.
             </div>
           </div>
 
           <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded">
-            <h4 className="font-medium text-gray-700 text-sm">Evaluation Criteria</h4>
+            <h4 className="font-medium text-gray-700 text-sm">
+              Evaluation Criteria
+            </h4>
             <div className="text-xs text-gray-600 mt-1">
-              <strong>Innovation:</strong> Uniqueness and creativity of approach<br/>
-              <strong>Impact:</strong> Evidence of improved learning outcomes<br/>
-              <strong>Scalability:</strong> Potential for broader adoption<br/>
-              <strong>Documentation:</strong> Quality of explanation and evidence
+              <strong>Innovation:</strong> Uniqueness and creativity of approach
+              <br />
+              <strong>Impact:</strong> Evidence of improved learning outcomes
+              <br />
+              <strong>Scalability:</strong> Potential for broader adoption
+              <br />
+              <strong>Documentation:</strong> Quality of explanation and
+              evidence
             </div>
           </div>
         </div>

@@ -8,7 +8,7 @@ import { Button } from '../components/ui/button'
 export interface Column<T, V = unknown> {
   key: keyof T | string
   header: string
-  render?: (row: T, value?: V) => React.ReactNode
+  render?: (row: T) => React.ReactNode
   sortable?: boolean
   width?: string
   accessor?: (row: T) => V
@@ -264,7 +264,7 @@ export function DataTable<T extends Record<string, unknown> = Record<string, unk
                         ? column.accessor(row)
                         : getNestedValue(row, String(column.key))
                       const cellValue = column.render
-                        ? column.render(row, value as never)
+                        ? column.render(row)
                         : value
                       
                       const displayValue = cellValue === null || cellValue === undefined 

@@ -20,9 +20,8 @@ import { getServerApiClient } from '../../../../lib/api-client'
 
 import type { Metadata } from 'next'
 
-interface ProfilePageProps {
-  params: { handle: string }
-}
+// Next 15 app router sometimes expects PageProps.params to be a Promise in build workers
+type ProfilePageProps = { params: Promise<{ handle: string }> }
 
 interface UserProfile {
   id: string
@@ -62,7 +61,18 @@ async function fetchUserProfile(handle: string): Promise<UserProfile | null> {
   try {
     const api = await getServerApiClient()
     const res = await api.getProfile(handle)
-    const raw = res.data as unknown
+    // The API may return a success envelope: { success, data }
+    // Be tolerant in case the client ever returns raw DTO
+    const hasData = (v: unknown): v is { data: unknown } =>
+      !!v && typeof v === 'object' && 'data' in v
+    const payload: unknown = hasData(res) ? res.data : res
+    const raw =
+      payload &&
+      typeof payload === 'object' &&
+      'success' in payload &&
+      (payload as { success?: boolean }).success
+        ? (payload as { data?: unknown }).data
+        : payload
     if (
       raw &&
       typeof raw === 'object' &&
@@ -427,7 +437,11 @@ export async function generateMetadata({
   }
 }
 
-export default async function PublicProfile({ params }: ProfilePageProps) {
+export default async function PublicProfile({
+  params,
+}: {
+  params: Promise<{ handle: string }>
+}) {
   const { handle } = await params
 
   return (

@@ -30,6 +30,9 @@ const isPublicRoute = createRouteMatcher([
 
 // Main admin middleware with internationalization, authentication, and role checking
 const adminMiddleware = clerkMiddleware(async (auth, req) => {
+  // Establish Clerk context for all non-static requests to avoid downstream auth() detection errors
+  await auth()
+
   // Bypass API routes; route handlers enforce JSON auth semantics
   if (req.nextUrl.pathname.startsWith('/api/')) return NextResponse.next()
 

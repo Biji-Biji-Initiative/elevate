@@ -4,6 +4,7 @@ export default baseTsup({
   entry: [
     'src/index.ts',
     'src/schemas.ts',
+    'src/activity-canon.ts',
     'src/query-schemas.ts',
     'src/admin-schemas.ts',
     'src/admin-api-types.ts',

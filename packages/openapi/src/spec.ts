@@ -90,6 +90,124 @@ registry.registerPath({
   },
 })
 
+// Admin: Kajabi health
+registry.registerPath({
+  method: 'get',
+  path: '/api/admin/kajabi/health',
+  description: 'Check Kajabi connectivity and environment presence',
+  summary: 'Kajabi Health',
+  tags: ['Admin'],
+  security: [{ ClerkAuth: [] }],
+  responses: {
+    200: {
+      description: 'OK',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema.extend({
+            data: z.object({
+              healthy: z.boolean(),
+              hasKey: z.boolean(),
+              hasSecret: z.boolean(),
+            }),
+          }),
+        },
+      },
+    },
+  },
+})
+
+// Admin: Kajabi invite
+registry.registerPath({
+  method: 'post',
+  path: '/api/admin/kajabi/invite',
+  description: 'Force-enroll a user in Kajabi by userId or email and optionally grant an offer',
+  summary: 'Kajabi Invite',
+  tags: ['Admin'],
+  security: [{ ClerkAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            userId: z.string().optional(),
+            email: z.string().email().optional(),
+            name: z.string().optional(),
+            offerId: z.union([z.string(), z.number()]).optional(),
+          }).refine((v) => !!v.userId || !!v.email, { message: 'userId or email is required' }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Invitation sent',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema.extend({
+            data: z.object({ invited: z.boolean(), contactId: z.number().optional(), withOffer: z.boolean() }),
+          }),
+        },
+      },
+    },
+    400: { description: 'Invalid', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    502: { description: 'Upstream error', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+})
+
+// Admin: Storage retention
+registry.registerPath({
+  method: 'post',
+  path: '/api/admin/storage/retention',
+  description: 'Enforce evidence retention policy for a user',
+  summary: 'Storage Retention',
+  tags: ['Admin'],
+  security: [{ ClerkAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({ userId: z.string(), days: z.coerce.number().int().min(1).max(3650).optional() }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Retention enforced',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema.extend({
+            data: z.object({ userId: z.string(), days: z.number(), deleted: z.number() }),
+          }),
+        },
+      },
+    },
+    400: { description: 'Invalid', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+})
+
+// Admin: SLO summary (internal)
+registry.registerPath({
+  method: 'get',
+  path: '/api/admin/slo/summary',
+  description: 'Get SLO summary or a specific SLO status (internal admin use)',
+  summary: 'SLO Summary',
+  tags: ['Admin'],
+  security: [{ ClerkAuth: [] }],
+  request: {
+    query: z.object({ slo: z.string().optional() }),
+  },
+  responses: {
+    200: {
+      description: 'OK',
+      content: { 'application/json': { schema: SuccessResponseSchema } },
+    },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+})
+
 // Public: Stage metrics
 registry.registerPath({
   method: 'get',
@@ -125,6 +243,55 @@ registry.registerPath({
     },
     404: {
       description: 'Not found',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+    },
+  },
+})
+
+// Admin: Referrals list
+registry.registerPath({
+  method: 'get',
+  path: '/api/admin/referrals',
+  description: 'List referral events with filters',
+  summary: 'Admin Referrals',
+  tags: ['Admin'],
+  security: [{ ClerkAuth: [] }],
+  request: {
+    query: z.object({
+      referrerId: z.string().optional(),
+      refereeId: z.string().optional(),
+      email: z.string().email().optional(),
+      month: z.string().regex(/^\d{4}-\d{2}$/).optional().openapi({ example: '2025-09' }),
+      limit: z.number().int().min(1).max(200).optional().openapi({ example: 50 }),
+      offset: z.number().int().min(0).optional().openapi({ example: 0 }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'OK',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema.extend({
+            data: z.object({
+              referrals: z.array(
+                z.object({
+                  id: z.string(),
+                  eventType: z.string(),
+                  source: z.string().nullable().optional(),
+                  createdAt: z.string().datetime(),
+                  externalEventId: z.string().nullable().optional(),
+                  referrer: z.object({ id: z.string(), name: z.string(), email: z.string() }),
+                  referee: z.object({ id: z.string(), name: z.string(), email: z.string(), user_type: z.enum(['EDUCATOR', 'STUDENT']) }),
+                }),
+              ),
+              pagination: z.object({ total: z.number().int(), limit: z.number().int(), offset: z.number().int(), pages: z.number().int() }),
+            }),
+          }),
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
       content: { 'application/json': { schema: ErrorResponseSchema } },
     },
   },
@@ -195,6 +362,32 @@ registry.registerPath({
           schema: ErrorResponseSchema,
         },
       },
+    },
+  },
+})
+
+// Referrals: Get invite link for current user
+registry.registerPath({
+  method: 'get',
+  path: '/api/referrals/link',
+  description: 'Get or allocate a referral code and share link for the current user',
+  summary: 'My Referral Link',
+  tags: ['Referrals'],
+  security: [{ ClerkAuth: [] }],
+  responses: {
+    200: {
+      description: 'OK',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema.extend({
+            data: z.object({ refCode: z.string(), link: z.string().url() }),
+          }),
+        },
+      },
+    },
+    401: {
+      description: 'Unauthorized',
+      content: { 'application/json': { schema: ErrorResponseSchema } },
     },
   },
 })
@@ -1138,12 +1331,13 @@ registry.registerComponent('securitySchemes', 'WebhookSignature', {
 // Generate OpenAPI specification
 const generator = new OpenApiGeneratorV31(registry.definitions)
 
-export const openApiSpec: OpenAPIObject = generator.generateDocument({
-  openapi: '3.1.0',
-  info: {
-    version: '1.0.0',
-    title: 'MS Elevate LEAPS Tracker API',
-    description: `
+export function getOpenApiSpec(): OpenAPIObject {
+  return generator.generateDocument({
+    openapi: '3.1.0',
+    info: {
+      version: '1.0.0',
+      title: 'MS Elevate LEAPS Tracker API',
+      description: `
 # MS Elevate LEAPS Tracker API
 
 This API powers the Microsoft Elevate Indonesia program, enabling educators to track their journey through the LEAPS framework (Learn, Explore, Amplify, Present, Shine).
@@ -1200,64 +1394,64 @@ All endpoints return consistent error response format with appropriate HTTP stat
 
 For API support, contact the development team or refer to the project documentation.
     `,
-    license: {
-      name: 'Private',
-      url: 'https://github.com/microsoft/elevate',
+      license: {
+        name: 'Private',
+        url: 'https://github.com/microsoft/elevate',
+      },
+      contact: {
+        name: 'MS Elevate Team',
+        email: 'elevate-support@microsoft.com',
+      },
     },
-    contact: {
-      name: 'MS Elevate Team',
-      email: 'elevate-support@microsoft.com',
-    },
-  },
-  servers: [
-    {
-      url: 'https://leaps.mereka.org',
-      description: 'Production server',
-    },
-    {
-      url: 'https://leaps-staging.mereka.org',
-      description: 'Staging server',
-    },
-    {
-      url: 'http://localhost:3000',
-      description: 'Development server',
-    },
-  ],
-  tags: [
-    {
-      name: 'Submissions',
-      description: 'LEAPS activity submission management',
-    },
-    {
-      name: 'Files',
-      description: 'Evidence file upload and management',
-    },
-    {
-      name: 'Public',
-      description: 'Public endpoints (leaderboard, profiles)',
-    },
-    {
-      name: 'Dashboard',
-      description: 'User dashboard and progress tracking',
-    },
-    {
-      name: 'Badges',
-      description: 'User badge management and achievement tracking',
-    },
-    {
-      name: 'Admin',
-      description: 'Administrative endpoints for reviewers',
-    },
-    {
-      name: 'Webhooks',
-      description: 'External service integration webhooks',
-    },
-    {
-      name: 'System',
-      description: 'Health checks and system status',
-    },
-  ],
-})
+    servers: [
+      {
+        url: 'https://leaps.mereka.org',
+        description: 'Production server',
+      },
+      {
+        url: 'https://leaps-staging.mereka.org',
+        description: 'Staging server',
+      },
+      {
+        url: 'http://localhost:3000',
+        description: 'Development server',
+      },
+    ],
+    tags: [
+      {
+        name: 'Submissions',
+        description: 'LEAPS activity submission management',
+      },
+      {
+        name: 'Files',
+        description: 'Evidence file upload and management',
+      },
+      {
+        name: 'Public',
+        description: 'Public endpoints (leaderboard, profiles)',
+      },
+      {
+        name: 'Dashboard',
+        description: 'User dashboard and progress tracking',
+      },
+      {
+        name: 'Badges',
+        description: 'User badge management and achievement tracking',
+      },
+      {
+        name: 'Admin',
+        description: 'Administrative endpoints for reviewers',
+      },
+      {
+        name: 'Webhooks',
+        description: 'External service integration webhooks',
+      },
+      {
+        name: 'System',
+        description: 'Health checks and system status',
+      },
+    ],
+  })
+}
 
-// Export for direct use
-export default openApiSpec
+// Note: openApiSpec constant intentionally not exported to avoid API Extractor bug

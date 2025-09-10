@@ -59,7 +59,25 @@ const defaultNavItems: NavItem[] = [
     label: 'Exports',
     icon: '📁',
     roles: ['admin', 'superadmin']
-  }
+  },
+  {
+    href: '/admin/kajabi',
+    label: 'Kajabi Integration',
+    icon: '🔗',
+    roles: ['admin', 'superadmin']
+  },
+  {
+    href: '/admin/storage',
+    label: 'Storage & Retention',
+    icon: '🗄️',
+    roles: ['admin', 'superadmin']
+  },
+  {
+    href: '/admin/ops',
+    label: 'Ops Dashboard',
+    icon: '🛠️',
+    roles: ['admin', 'superadmin']
+  },
 ]
 
 export function AdminLayout({
@@ -117,11 +135,17 @@ export function AdminLayout({
         <nav className="mt-8">
           <div className="px-4 space-y-2">
             {filteredNavItems.map((item) => {
-              const isActive = pathname === item.href
+              // Infer locale from first path segment (e.g., /en/..., /id/...)
+              const match = pathname?.match(/^\/(\w{2})(?:\b|\/)/)
+              const localePrefix = match ? `/${match[1]}` : ''
+              const localizedHref = localePrefix
+                ? `${localePrefix}${item.href.replace(/^\/admin/, '')}`
+                : item.href
+              const isActive = pathname === localizedHref
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={localizedHref}
                   onClick={() => setSidebarOpen(false)}
                   className={`
                     flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors
@@ -205,18 +229,23 @@ export function AdminLayout({
 }
 
 function getPageTitle(pathname: string): string {
+  // Strip locale prefix if present (e.g., /en, /id)
+  const noLocale = pathname.replace(/^\/(\w{2})(?=\b|\/)/, '') || pathname
   const titles: Record<string, string> = {
     '/admin': 'Dashboard',
     '/admin/submissions': 'Review Queue',
     '/admin/users': 'User Management',
     '/admin/badges': 'Badge Management',
-    '/admin/exports': 'Data Exports'
+    '/admin/exports': 'Data Exports',
+    '/admin/kajabi': 'Kajabi Integration',
+    '/admin/storage': 'Storage & Retention',
+    '/admin/ops': 'Ops Dashboard'
   }
   
   // Handle dynamic routes
-  if (pathname.startsWith('/admin/review/')) {
+  if (noLocale.startsWith('/admin/review/')) {
     return 'Review Submission'
   }
   
-  return titles[pathname] || 'Admin Console'
+  return titles[noLocale] || 'Admin Console'
 }

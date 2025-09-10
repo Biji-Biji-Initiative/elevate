@@ -1,57 +1,66 @@
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'crypto'
 
-import type { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server'
 
-import { requireRole } from '@elevate/auth/server-helpers';
-import { prisma, type Prisma } from '@elevate/db';
+import { requireRole } from '@elevate/auth/server-helpers'
+import { prisma, type Prisma } from '@elevate/db'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
-import { KajabiTestSchema, buildAuditMeta } from '@elevate/types'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { KajabiTestSchema, buildAuditMeta, toPrismaJson } from '@elevate/types'
 
-export const runtime = 'nodejs';
-
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
-  try {
+  return withRateLimit(request, adminRateLimiter, async () => {
+    try {
     // Check admin role
-    await requireRole('admin');
+    await requireRole('admin')
 
-    const body: unknown = await request.json();
+    const body: unknown = await request.json()
     const parsed = KajabiTestSchema.safeParse(body)
     if (!parsed.success) {
       return createErrorResponse(new Error('Invalid request body'), 400)
     }
-    const { user_email, course_name = 'Test Course - Admin Console' } = parsed.data;
+    const { user_email, course_name = 'Test Course - Admin Console' } =
+      parsed.data
 
-    const email = user_email.toLowerCase().trim();
+    const email = user_email.toLowerCase().trim()
 
     // Find user by email
     const user = await prisma.user.findUnique({
-      where: { email }
-    });
+      where: { email },
+    })
 
     if (!user) {
-      return createErrorResponse(new Error('User not found for email: ' + email), 404)
+      return createErrorResponse(
+        new Error('User not found for email: ' + email),
+        404,
+      )
     }
 
     // Generate unique event ID
-    const eventId = `test_${randomUUID()}`;
+    const eventId = `test_${randomUUID()}`
 
     // Check if user already has LEARN points from Kajabi
     const existingLedgerEntry = await prisma.pointsLedger.findFirst({
       where: {
         user_id: user.id,
         activity_code: 'LEARN',
-        external_source: 'kajabi'
-      }
-    });
+        external_source: 'kajabi',
+      },
+    })
 
     // Award points for LEARN activity
     const learnActivity = await prisma.activity.findUnique({
-      where: { code: 'LEARN' }
-    });
+      where: { code: 'LEARN' },
+    })
 
     if (!learnActivity) {
-      return createErrorResponse(new Error('LEARN activity not found in database'), 500)
+      return createErrorResponse(
+        new Error('LEARN activity not found in database'),
+        500,
+      )
     }
 
     // Create test event payload (simulating real Kajabi webhook)
@@ -64,16 +73,16 @@ export async function POST(request: NextRequest) {
           id: 'test_contact_' + Date.now(),
           email: user_email,
           first_name: user.name?.split(' ')[0] || 'Test',
-          last_name: user.name?.split(' ').slice(1).join(' ') || 'User'
+          last_name: user.name?.split(' ').slice(1).join(' ') || 'User',
         },
         tag: {
           name: 'LEARN_COMPLETED',
-          id: 'test_tag_123'
-        }
+          id: 'test_tag_123',
+        },
       },
       source: 'admin_test',
-      test_mode: true
-    };
+      test_mode: true,
+    }
 
     // Start transaction for atomic operation
     const result = await prisma.$transaction(async (tx) => {
@@ -84,10 +93,11 @@ export async function POST(request: NextRequest) {
           activity_code: 'LEARN',
           source: 'MANUAL',
           delta_points: learnActivity.default_points,
+          event_time: new Date(),
           external_source: 'kajabi',
-          external_event_id: eventId
-        }
-      });
+          external_event_id: eventId,
+        },
+      })
 
       // Create submission record for audit trail
       const submission = await tx.submission.create({
@@ -104,20 +114,26 @@ export async function POST(request: NextRequest) {
             course_name: course_name,
             auto_approved: true,
             source: 'test_admin',
-            test_mode: true
-          }
-        }
-      });
+            test_mode: true,
+          },
+        },
+      })
 
       // Store the test event
       const kajabiEvent = await tx.kajabiEvent.create({
         data: {
           id: eventId,
-          payload: testEventData,
-          processed_at: new Date(),
-          user_match: user.id
-        }
-      });
+          // align to new schema fields
+          event_id: eventId,
+          tag_name_raw: 'LEARN_COMPLETED',
+          tag_name_norm: 'LEARN_COMPLETED',
+          contact_id: testEventData.data.contact.id,
+          email: email,
+          created_at_utc: new Date(),
+          status: 'processed',
+          raw: toPrismaJson(testEventData) as Prisma.InputJsonValue,
+        },
+      })
 
       // Create audit log
       const auditLog = await tx.auditLog.create({
@@ -125,16 +141,19 @@ export async function POST(request: NextRequest) {
           actor_id: 'admin_test',
           action: 'KAJABI_TEST_EVENT_CREATED',
           target_id: user.id,
-          meta: buildAuditMeta({ entityType: 'kajabi', entityId: eventId }, {
-            event_id: eventId,
-            tag_name: 'LEARN_COMPLETED',
-            course_name: course_name,
-            points_awarded: learnActivity.default_points,
-            test_mode: true,
-            created_at: new Date().toISOString()
-          }) as Prisma.InputJsonValue
-        }
-      });
+          meta: buildAuditMeta(
+            { entityType: 'kajabi', entityId: eventId },
+            {
+              event_id: eventId,
+              tag_name: 'LEARN_COMPLETED',
+              course_name: course_name,
+              points_awarded: learnActivity.default_points,
+              test_mode: true,
+              created_at: new Date().toISOString(),
+            },
+          ) as Prisma.InputJsonValue,
+        },
+      })
 
       return {
         user_id: user.id,
@@ -146,18 +165,23 @@ export async function POST(request: NextRequest) {
         points_entry_id: pointsEntry.id,
         kajabi_event_id: kajabiEvent.id,
         audit_log_id: auditLog.id,
-        existing_kajabi_points: existingLedgerEntry ? existingLedgerEntry.delta_points : 0
-      };
-    });
+        existing_kajabi_points: existingLedgerEntry
+          ? existingLedgerEntry.delta_points
+          : 0,
+      }
+    })
+
+    const logger = await getSafeServerLogger('admin-kajabi')
+    logger.info('Created Kajabi test event', { event_id: result.event_id, user_id: result.user_id })
 
     return createSuccessResponse({
       message: 'Test Kajabi event created successfully',
       test_mode: true,
       timestamp: new Date().toISOString(),
-      ...result
+      ...result,
     })
-
-  } catch (error) {
-    return createErrorResponse(error, 500);
-  }
+    } catch (error) {
+      return createErrorResponse(error, 500)
+    }
+  })
 }

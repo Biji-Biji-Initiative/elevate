@@ -5,11 +5,9 @@
  * All public subpaths are re-exported here for a single API surface
  */
 
-// Re-export spec and schemas
-export { openApiSpec } from './spec'
-export * from './schemas'
-
-// Re-export SDK (avoiding conflicts with client types)
+// Main entrypoint is intentionally minimal for API Extractor compatibility.
+// Rich surfaces are available via subpath exports: /schemas, /sdk, /client, /examples.
+export { getOpenApiSpec } from './spec'
 export {
   ElevateAPIClient,
   type SubmissionPayload,
@@ -17,12 +15,6 @@ export {
   type SubmissionStatus,
   type Visibility,
 } from './sdk'
-
-// Re-export client types (OpenAPI generated)
-export type { paths, components, operations, webhooks } from './client'
-
-// Re-export examples
-export * from './examples'
 
 // Type helpers for API responses
 export type APIResponse<T = unknown> = {

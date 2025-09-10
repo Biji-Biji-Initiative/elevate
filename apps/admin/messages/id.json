@@ -30,8 +30,22 @@
     "exports": "Ekspor Data",
     "settings": "Pengaturan",
     "badges": "Manajemen Badge",
-    "kajabi": "Integrasi Kajabi",
-    "logout": "Keluar"
+  "kajabi": "Integrasi Kajabi",
+  "storage": "Penyimpanan & Retensi",
+  "ops": "Dashboard Operasional",
+  "referrals": "Rujukan",
+  "logout": "Keluar"
+  },
+  "storage": {
+    "title": "Penyimpanan & Retensi",
+    "enforce": "Terapkan Retensi",
+    "user_id": "ID Pengguna",
+    "days": "Hari"
+  },
+  "ops": {
+    "title": "Dashboard Operasional",
+    "slo_summary": "Ringkasan SLO",
+    "refresh": "Muat Ulang"
   },
   "dashboard": {
     "title": "Dashboard Admin",
@@ -138,7 +152,44 @@
     "webhook_status": "Status Webhook",
     "recent_events": "Event Terbaru",
     "reconciliation": "Rekonsiliasi Data",
-    "test_webhook": "Test Webhook"
+    "test_webhook": "Uji Webhook",
+    "health_invitation": "Kesehatan & Undangan",
+    "check_health": "Periksa Kesehatan Kajabi",
+    "user_id_optional": "ID Pengguna (opsional)",
+    "email_optional": "Email (opsional)",
+    "name_optional": "Nama (opsional)",
+    "offer_id_optional": "ID Penawaran (opsional)",
+    "send_invite": "Kirim Undangan / Beri Penawaran",
+    "invite_success": "Undangan telah dikirim.",
+    "status_line": "Status: {status} · API Key: {key} · Secret: {secret}",
+    "test_started": "Mengirim webhook uji…",
+    "test_success_header": "Uji Berhasil!",
+    "reprocess_started": "Memproses ulang…",
+    "reprocess_success": "Diproses ulang event {id}…"
+  },
+  "ops": {
+    "title": "Dashboard Operasional",
+    "slo_summary": "Ringkasan SLO",
+    "refresh": "Muat Ulang"
+  },
+  "storage": {
+    "title": "Penyimpanan & Retensi",
+    "enforce": "Terapkan Retensi",
+    "user_id": "ID Pengguna",
+    "days": "Hari"
+  },
+  "dashboard": {
+    "quick": {
+      "integration": "Kesehatan & Undangan Kajabi",
+      "integration_desc": "Kelola pendaftaran dan penawaran",
+      "integration_label": "Integrasi",
+      "storage": "Retensi Bukti",
+      "storage_desc": "Terapkan retensi per pengguna",
+      "ops": "Ringkasan SLO",
+      "ops_desc": "Pantau kesehatan API & tren",
+      "storage_label": "Penyimpanan",
+      "ops_label": "Operasional"
+    }
   },
   "errors": {
     "something_went_wrong": "Terjadi kesalahan",

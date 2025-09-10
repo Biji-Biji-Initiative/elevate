@@ -276,6 +276,34 @@ export class AdminApiClient {
       { method: 'POST', body: JSON.stringify(body) },
     )
   }
+
+  async getAdminKajabiHealth() {
+    return this.request<paths['/api/admin/kajabi/health']['get']['responses']['200']['content']['application/json']>(
+      '/api/admin/kajabi/health',
+    )
+  }
+
+  async postAdminKajabiInvite(
+    body: NonNullable<
+      paths['/api/admin/kajabi/invite']['post']['requestBody']
+    >['content']['application/json'],
+  ) {
+    return this.request<paths['/api/admin/kajabi/invite']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/kajabi/invite',
+      { method: 'POST', body: JSON.stringify(body) },
+    )
+  }
+
+  async postAdminStorageRetention(
+    body: NonNullable<
+      paths['/api/admin/storage/retention']['post']['requestBody']
+    >['content']['application/json'],
+  ) {
+    return this.request<paths['/api/admin/storage/retention']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/storage/retention',
+      { method: 'POST', body: JSON.stringify(body) },
+    )
+  }
 }
 
 // Auth token provider (pluggable to avoid hard dependency on Clerk in libraries)

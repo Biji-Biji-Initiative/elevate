@@ -7,10 +7,17 @@ Caching
 Evidence storage & serving
 
 - Private bucket; uploads via server; signed URL TTL ≤ 1h for reviewers
-- AV scan upon upload; reject infected files
+- AV scan upon upload; reject infected files. The storage layer ships a stub scanner (EICAR heuristic) gated by `AV_SCAN_ENABLED=true` and a `scanFileBufferForVirus` hook for integration with a real scanner (e.g., ClamAV, Cloud AV). See `packages/storage/src/index.ts`.
 - File type allow‑list (e.g., pdf, jpg, png, csv)
-- Serve as attachment; disable inline PDF rendering; strip EXIF from thumbnails
+- Serve as attachment; disable inline PDF rendering; strip EXIF from thumbnails. The files API sets `Content-Disposition: attachment` and security headers.
 - Retention: evidence 24 months; raw Kajabi 12 months (then anonymize)
+
+Implementation notes
+
+- Signed URLs: `getSignedUrl(path, 3600)` with TTL override support; multiple via `getMultipleSignedUrls`.
+- Retention helper: `enforceUserRetention(userId, cutoff)` deletes objects older than cutoff under `evidence/<user>/<activity>`.
+- Scheduled retention: `GET /api/cron/enforce-retention?days=730&limit=200&offset=0` (auth via `Authorization: Bearer $CRON_SECRET`) processes users in batches.
+- Internal SLO summary: `GET /api/slo` gated by `ENABLE_INTERNAL_ENDPOINTS=1` and `INTERNAL_METRICS_TOKEN` header.
 
 Indexes & performance
 

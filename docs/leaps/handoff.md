@@ -37,8 +37,20 @@ The repository now contains a substantial portion of the LEAPS points-and-badges
 - `user_type` mirrored to Clerk `publicMetadata` on upserts.
 - Submission route blocks STUDENT accounts; referral helper rejects self/circular referrals.
 
+### Invitations / Kajabi Enrollment
+- On `user.created` webhook: create/update Kajabi contact, persist `kajabi_contact_id`, and (if configured) grant `KAJABI_OFFER_ID`. All attempts are audit logged.
+- Best-effort enrollment also runs on first dashboard access (non-blocking); updates `kajabi_contact_id` when available.
+- Admin routes added:
+  - `GET /api/admin/kajabi/health` — connectivity and env presence check (`KAJABI_API_KEY`, `KAJABI_CLIENT_SECRET`).
+  - `POST /api/admin/kajabi/invite` — force enroll and optionally grant offer for a user/email.
+
+### Referrals & LEARN (Option B)
+- LEARN form has been removed; points and completion come exclusively from Kajabi tags (10+10, cap 20).
+- User-facing referrals for AMPLIFY: generic invite link `/?ref=<code>`; the invitee chooses Educator/Student during onboarding. Signup bonus awards to referrer (+2 educator, +1 student) on first dashboard load after role selection.
+- Middleware captures `ref` cookie; dashboard handler resolves and awards idempotently under `AMPLIFY` in `points_ledger` with a 50 points/month cap.
+
 ### OpenAPI & Errors
-- Introduced standardized `ErrorEnvelope` schema and regenerated OpenAPI SDK (still awaiting clean build).
+- Introduced standardized `ErrorEnvelope` schema and regenerated OpenAPI SDK; API Extractor root export fixed.
 
 ## Testing & Known Issues
 
@@ -66,7 +78,7 @@ The repository now contains a substantial portion of the LEAPS points-and-badges
    - Resolve `@elevate/openapi/sdk` path issues affecting web lint/tests.
    - Fix `@elevate/types` test suite imports (`../src/query-schemas`, etc.).
    - Provide `@elevate/types/errors` module or adjust imports so `test:db` passes.
-   - Address API extractor build failure in `@elevate/openapi`.
+   - API Extractor root build fixed; regenerate SDK consumers accordingly.
 
 4. **Verify Badge/Cap Edge Cases**
    - Additional tests for idempotency, cap windows around midnight, and org timezone changes (see `docs/leaps/tests.md`).
@@ -83,7 +95,7 @@ The repository now contains a substantial portion of the LEAPS points-and-badges
 ## Recommended Next Steps for New Engineer
 1. Fix failing tests and lint errors, especially for `@elevate/types`, `web`, and `@elevate/openapi`.
 2. Implement Ops & Reliability tasks (storage policies, rate limits, monitoring).
-3. Build out the Activity Canon as the single source of truth for codes and point rules.
+3. Build out the Activity Canon as the single source of truth for codes and point rules and ensure all award paths consume it.
 4. Ensure OpenAPI SDK builds cleanly and publish updated package.
 5. Complete migration playbook and verify counters parity.
 

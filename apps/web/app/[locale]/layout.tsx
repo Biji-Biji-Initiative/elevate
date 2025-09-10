@@ -207,8 +207,8 @@ export default async function LocaleLayout({ children, params }: Props) {
                   {
                     '@type': 'HowToStep',
                     name: 'Learn',
-                    text: 'Complete AI for Educators course and upload certificate',
-                    url: 'https://leaps.mereka.org/dashboard/learn',
+                    text: 'Complete AI for Educators course (Kajabi completion tags award points automatically)',
+                    url: 'https://leaps.mereka.org/metrics/learn',
                   },
                   {
                     '@type': 'HowToStep',

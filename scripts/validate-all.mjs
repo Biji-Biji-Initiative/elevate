@@ -152,9 +152,20 @@ async function main() {
       const level = check.critical ? 'CRITICAL' : 'WARNING'
       logError(`${check.name} failed (${duration}s) - ${level}`)
       
-      // Show relevant error output
+      // Show relevant error output (normalize buffers/arrays to string)
       if (result.output) {
-        const lines = result.output.split('\n')
+        const toStringSafe = (val) => {
+          if (!val) return ''
+          if (Array.isArray(val)) {
+            return val
+              .map((v) => (typeof v === 'string' ? v : v?.toString?.() ?? ''))
+              .join('\n')
+          }
+          if (typeof val === 'string') return val
+          return val?.toString?.() ?? ''
+        }
+        const outputStr = toStringSafe(result.output)
+        const lines = outputStr.split('\n')
         const relevantLines = lines
           .filter(line => 
             line.includes('error') || 

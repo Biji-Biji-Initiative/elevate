@@ -4,25 +4,23 @@
 
 ```ts
 
-import { CreateBatchSuccessResponse } from 'resend';
-import { CreateEmailResponseSuccess } from 'resend';
-import * as React_2 from 'react';
+import ApprovalNotificationEmail from './templates/approval-notification';
+import RejectionNotificationEmail from './templates/rejection-notification';
+import SubmissionConfirmationEmail from './templates/submission-confirmation';
+import WeeklyProgressEmail from './templates/weekly-progress';
+import WelcomeEmail from './templates/welcome';
 
-// Warning: (ae-forgotten-export) The symbol "ApprovalNotificationEmailProps" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const ApprovalNotificationEmail: ({ name, activityName, pointsAwarded, reviewerNote, totalPoints, leaderboardPosition, dashboardUrl, leaderboardUrl }: ApprovalNotificationEmailProps) => React_2.JSX.Element;
+export { ApprovalNotificationEmail }
 
 // @public (undocumented)
 export function isValidEmail(email: string): boolean;
 
-// Warning: (ae-forgotten-export) The symbol "RejectionNotificationEmailProps" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const RejectionNotificationEmail: ({ name, activityName, reviewerNote, dashboardUrl, supportUrl }: RejectionNotificationEmailProps) => React_2.JSX.Element;
+export { RejectionNotificationEmail }
 
 // @public (undocumented)
-export function sendApprovalNotificationEmail(to: string, name: string, activityName: string, pointsAwarded: number, reviewerNote: string | undefined, totalPoints: number, leaderboardPosition: number, dashboardUrl: string, leaderboardUrl: string): Promise<CreateEmailResponseSuccess>;
+export function sendApprovalNotificationEmail(to: string, name: string, activityName: string, pointsAwarded: number, reviewerNote: string | undefined, totalPoints: number, leaderboardPosition: number, dashboardUrl: string, leaderboardUrl: string): Promise<{
+    id: string;
+}>;
 
 // @public (undocumented)
 export function sendBatchEmails(emails: Array<{
@@ -30,34 +28,35 @@ export function sendBatchEmails(emails: Array<{
     subject: string;
     html: string;
     text?: string;
-}>): Promise<CreateBatchSuccessResponse>;
+}>): Promise<{
+    ids: string[];
+} | null>;
 
 // @public (undocumented)
-export function sendRejectionNotificationEmail(to: string, name: string, activityName: string, reviewerNote: string, dashboardUrl: string, supportUrl: string): Promise<CreateEmailResponseSuccess>;
+export function sendRejectionNotificationEmail(to: string, name: string, activityName: string, reviewerNote: string, dashboardUrl: string, supportUrl: string): Promise<{
+    id: string;
+}>;
 
 // @public (undocumented)
-export function sendSubmissionConfirmationEmail(to: string, name: string, activityName: string, submissionDate: string, dashboardUrl: string): Promise<CreateEmailResponseSuccess>;
+export function sendSubmissionConfirmationEmail(to: string, name: string, activityName: string, submissionDate: string, dashboardUrl: string): Promise<{
+    id: string;
+}>;
 
 // @public (undocumented)
-export function sendWeeklyProgressEmail(to: string, name: string, weekStartDate: string, weekEndDate: string, totalPoints: number, pointsThisWeek: number, completedActivities: string[], pendingSubmissions: number, leaderboardPosition: number, nextSuggestedActivity: string, dashboardUrl: string, leaderboardUrl: string): Promise<CreateEmailResponseSuccess>;
+export function sendWeeklyProgressEmail(to: string, name: string, weekStartDate: string, weekEndDate: string, totalPoints: number, pointsThisWeek: number, completedActivities: string[], pendingSubmissions: number, leaderboardPosition: number, nextSuggestedActivity: string, dashboardUrl: string, leaderboardUrl: string): Promise<{
+    id: string;
+}>;
 
 // @public (undocumented)
-export function sendWelcomeEmail(to: string, name: string, dashboardUrl: string): Promise<CreateEmailResponseSuccess>;
+export function sendWelcomeEmail(to: string, name: string, dashboardUrl: string): Promise<{
+    id: string;
+}>;
 
-// Warning: (ae-forgotten-export) The symbol "SubmissionConfirmationEmailProps" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const SubmissionConfirmationEmail: ({ name, activityName, submissionDate, dashboardUrl }: SubmissionConfirmationEmailProps) => React_2.JSX.Element;
+export { SubmissionConfirmationEmail }
 
-// Warning: (ae-forgotten-export) The symbol "WeeklyProgressEmailProps" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const WeeklyProgressEmail: ({ name, weekStartDate, weekEndDate, totalPoints, pointsThisWeek, completedActivities, pendingSubmissions, leaderboardPosition, nextSuggestedActivity, dashboardUrl, leaderboardUrl }: WeeklyProgressEmailProps) => React_2.JSX.Element;
+export { WeeklyProgressEmail }
 
-// Warning: (ae-forgotten-export) The symbol "WelcomeEmailProps" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const WelcomeEmail: ({ name, dashboardUrl }: WelcomeEmailProps) => React_2.JSX.Element;
+export { WelcomeEmail }
 
 // (No @packageDocumentation comment for this package)
 

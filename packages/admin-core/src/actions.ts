@@ -405,6 +405,42 @@ export const adminActions = {
       throw new AdminClientError('Failed to reprocess Kajabi event', error)
     }
   },
+
+  async getKajabiHealth(): Promise<{ healthy: boolean; hasKey: boolean; hasSecret: boolean }> {
+    try {
+      const api = await getApiClient()
+      const response = await api.getAdminKajabiHealth()
+      const schema = z.object({ success: z.literal(true), data: z.object({ healthy: z.boolean(), hasKey: z.boolean(), hasSecret: z.boolean() }) })
+      const parsed = schema.parse(response)
+      return parsed.data
+    } catch (error) {
+      throw new AdminClientError('Failed to check Kajabi health', error)
+    }
+  },
+
+  async inviteKajabi(body: { userId?: string; email?: string; name?: string; offerId?: string | number }): Promise<{ invited: boolean; contactId?: number; withOffer: boolean }> {
+    try {
+      const api = await getApiClient()
+      const response = await api.postAdminKajabiInvite(body)
+      const schema = z.object({ success: z.literal(true), data: z.object({ invited: z.boolean(), contactId: z.number().optional(), withOffer: z.boolean() }) })
+      const parsed = schema.parse(response)
+      return parsed.data
+    } catch (error) {
+      throw new AdminClientError('Failed to send Kajabi invite', error)
+    }
+  },
+
+  async enforceStorageRetention(body: { userId: string; days?: number }): Promise<{ userId: string; days: number; deleted: number }> {
+    try {
+      const api = await getApiClient()
+      const response = await api.postAdminStorageRetention(body)
+      const schema = z.object({ success: z.literal(true), data: z.object({ userId: z.string(), days: z.number(), deleted: z.number() }) })
+      const parsed = schema.parse(response)
+      return parsed.data
+    } catch (error) {
+      throw new AdminClientError('Failed to enforce storage retention', error)
+    }
+  },
 }
 
 // Export types and utilities

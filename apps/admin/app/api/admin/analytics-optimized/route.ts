@@ -1,144 +1,151 @@
 import type { NextRequest } from 'next/server'
 
-import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, Prisma } from '@elevate/db'
-import { createSuccessResponse } from '@elevate/http'
+import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { computeApprovalRate, computeActivationRate } from '@elevate/logic'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import {
-  parseActivityCode,
-  AnalyticsQuerySchema,
-  type AnalyticsDateFilter,
-  // filters are computed inline; do not import unused types
-  type SubmissionStats,
-  type UserAnalyticsStats,
-  type PointsStats,
-  type BadgeStats,
-  type ReviewStats,
-  type StatusDistribution,
-  type ActivityDistribution,
-  // keep only used domain types
-  type RoleDistribution,
-  type CohortDistribution,
-  type PointsActivityDistribution,
-  type PointsDistributionStats,
-  type DailySubmissionStats,
-  type DailyRegistrationStats,
-  type RecentSubmission,
-  type RecentApproval,
-  type RecentUser,
-  type ReviewerPerformance,
-  type TopBadge,
-} from '@elevate/types'
+import { parseActivityCode, AnalyticsQuerySchema } from '@elevate/types'
+import type {
+  SubmissionStats,
+  UserAnalyticsStats,
+  PointsStats,
+  BadgeStats,
+  ReviewStats,
+  StatusDistribution,
+  ActivityDistribution,
+  RoleDistribution,
+  CohortDistribution,
+  PointsActivityDistribution,
+  PointsDistributionStats,
+  DailySubmissionStats,
+  DailyRegistrationStats,
+  RecentSubmission,
+  RecentApproval,
+  RecentUser,
+  ReviewerPerformance,
+  TopBadge,
+} from '@elevate/types/common'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
-  const logger: any = console
+  const logger = await getSafeServerLogger('admin-analytics-optimized')
   return withRateLimit(request, adminRateLimiter, async () => {
-  try {
-    await requireRole('reviewer')
-    const { searchParams } = new URL(request.url)
-    const parsed = AnalyticsQuerySchema.safeParse(Object.fromEntries(searchParams))
-    if (!parsed.success) {
-      return createErrorResponse(new Error('Invalid query'), 400)
-    }
-    const { startDate, endDate, cohort } = parsed.data
-    
-    // Build filters efficiently
-    const dateFilter: AnalyticsDateFilter = {}
-    if (startDate && endDate) {
-      dateFilter.created_at = {
-        gte: new Date(startDate),
-        lte: new Date(endDate)
+    try {
+      await requireRole('reviewer')
+      const { searchParams } = new URL(request.url)
+      const parsed = AnalyticsQuerySchema.safeParse(
+        Object.fromEntries(searchParams),
+      )
+      if (!parsed.success) {
+        return createErrorResponse(new Error('Invalid query'), 400)
       }
-    }
-    
-    // Use optimized single queries instead of multiple parallel queries
-    const [
-      overviewData,
-      distributionData,
-      trendsData,
-      recentActivityData,
-      performanceData
-    ] = await Promise.all([
-      // Single comprehensive overview query
-      getOptimizedOverview(dateFilter, cohort),
-      
-      // Single distribution query  
-      getOptimizedDistributions(dateFilter, cohort),
-      
-      // Single trends query
-      getOptimizedTrends(dateFilter, cohort),
-      
-      // Single recent activity query
-      getOptimizedRecentActivity(),
-      
-      // Single performance metrics query
-      getOptimizedPerformanceMetrics()
-    ])
-    
-    const res = createSuccessResponse({
-      overview: overviewData,
-      distributions: distributionData,
-      trends: trendsData,
-      recentActivity: recentActivityData,
-      performance: performanceData,
-      _meta: {
-        queryOptimized: true,
-        queryCount: 5,
-        source: 'optimized_analytics',
-        filters: { startDate, endDate, cohort }
+      const { startDate, endDate, cohort } = parsed.data
+
+      // Build filters efficiently
+      const dateFilter: { created_at?: { gte: Date; lte: Date } } = {}
+      if (startDate && endDate) {
+        dateFilter.created_at = {
+          gte: new Date(startDate),
+          lte: new Date(endDate),
+        }
       }
-    })
-    res.headers.set('Cache-Control', 'private, s-maxage=300')
-    res.headers.set('X-Analytics-Source', 'optimized-queries')
-    return res
-    
-  } catch (error) {
-    logger.error('Optimized analytics failed', error instanceof Error ? error : new Error(String(error)), {
-      operation: 'admin_analytics_optimized',
-    })
-    return createErrorResponse(error, 500)
-  }
+
+      // Use optimized single queries instead of multiple parallel queries
+      const [
+        overviewData,
+        distributionData,
+        trendsData,
+        recentActivityData,
+        performanceData,
+      ] = await Promise.all([
+        // Single comprehensive overview query
+        getOptimizedOverview(dateFilter, cohort),
+
+        // Single distribution query
+        getOptimizedDistributions(dateFilter, cohort),
+
+        // Single trends query
+        getOptimizedTrends(dateFilter, cohort),
+
+        // Single recent activity query
+        getOptimizedRecentActivity(),
+
+        // Single performance metrics query
+        getOptimizedPerformanceMetrics(),
+      ])
+
+      const res = createSuccessResponse({
+        overview: overviewData,
+        distributions: distributionData,
+        trends: trendsData,
+        recentActivity: recentActivityData,
+        performance: performanceData,
+        _meta: {
+          queryOptimized: true,
+          queryCount: 5,
+          source: 'optimized_analytics',
+          filters: { startDate, endDate, cohort },
+        },
+      })
+      res.headers.set('Cache-Control', 'private, s-maxage=300')
+      res.headers.set('X-Analytics-Source', 'optimized-queries')
+      return res
+    } catch (error) {
+      logger.error(
+        'Optimized analytics failed',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          operation: 'admin_analytics_optimized',
+        },
+      )
+      return createErrorResponse(error, 500)
+    }
   })
 }
 
 async function getOptimizedOverview(
-  dateFilter: AnalyticsDateFilter, 
-  cohort?: string
+  dateFilter: { created_at?: { gte: Date; lte: Date } },
+  cohort?: string,
 ) {
-  const cohortCondition = cohort && cohort !== 'ALL' ? Prisma.sql`AND u.cohort = ${cohort}` : Prisma.sql``
-  const dateCondition = dateFilter.created_at 
+  const cohortCondition =
+    cohort && cohort !== 'ALL'
+      ? Prisma.sql`AND u.cohort = ${cohort}`
+      : Prisma.sql``
+  const dateCondition = dateFilter.created_at
     ? Prisma.sql`AND s.created_at BETWEEN ${dateFilter.created_at.gte} AND ${dateFilter.created_at.lte}`
     : Prisma.sql``
-  
-  const result = await prisma.$queryRaw<Array<{
-    // Submission stats
-    total_submissions: bigint
-    pending_submissions: bigint  
-    approved_submissions: bigint
-    rejected_submissions: bigint
-    
-    // User stats
-    total_users: bigint
-    active_users: bigint
-    users_with_submissions: bigint
-    users_with_badges: bigint
-    
-    // Points stats
-    total_points: bigint | null
-    avg_points: number | null
-    
-    // Badge stats
-    total_badges_available: bigint
-    total_badges_earned: bigint
-    unique_badge_earners: bigint
-    
-    // Review stats
-    pending_reviews: bigint
-    avg_review_hours: number | null
-  }>>`
+
+  const result = await prisma.$queryRaw<
+    Array<{
+      // Submission stats
+      total_submissions: bigint
+      pending_submissions: bigint
+      approved_submissions: bigint
+      rejected_submissions: bigint
+
+      // User stats
+      total_users: bigint
+      active_users: bigint
+      users_with_submissions: bigint
+      users_with_badges: bigint
+
+      // Points stats
+      total_points: bigint | null
+      avg_points: number | null
+
+      // Badge stats
+      total_badges_available: bigint
+      total_badges_earned: bigint
+      unique_badge_earners: bigint
+
+      // Review stats
+      pending_reviews: bigint
+      avg_review_hours: number | null
+    }>
+  >`
     WITH base_data AS (
       SELECT 
         u.id as user_id,
@@ -154,7 +161,11 @@ async function getOptimizedOverview(
         eb.id as badge_earned_id
       FROM users u
       LEFT JOIN submissions s ON u.id = s.user_id ${dateCondition}
-      LEFT JOIN points_ledger pl ON u.id = pl.user_id ${dateFilter.created_at ? Prisma.sql`AND pl.created_at BETWEEN ${dateFilter.created_at.gte} AND ${dateFilter.created_at.lte}` : Prisma.sql``}
+      LEFT JOIN points_ledger pl ON u.id = pl.user_id ${
+        dateFilter.created_at
+          ? Prisma.sql`AND pl.created_at BETWEEN ${dateFilter.created_at.gte} AND ${dateFilter.created_at.lte}`
+          : Prisma.sql``
+      }
       LEFT JOIN earned_badges eb ON u.id = eb.user_id
       WHERE 1=1 ${cohortCondition}
     )
@@ -192,15 +203,18 @@ async function getOptimizedOverview(
       
     FROM base_data
   `
-  
+
   const data = result[0]
   if (!data) throw new Error('No analytics data available')
-  
+
   const totalSubmissions = Number(data.total_submissions)
   const approvedSubmissions = Number(data.approved_submissions)
   const rejectedSubmissions = Number(data.rejected_submissions)
-  const approvalRate = computeApprovalRate(approvedSubmissions, rejectedSubmissions)
-    
+  const approvalRate = computeApprovalRate(
+    approvedSubmissions,
+    rejectedSubmissions,
+  )
+
   const totalUsers = Number(data.total_users)
   const activeUsers = Number(data.active_users)
   const activationRate = computeActivationRate(activeUsers, totalUsers)
@@ -211,53 +225,59 @@ async function getOptimizedOverview(
       pending: Number(data.pending_submissions),
       approved: approvedSubmissions,
       rejected: rejectedSubmissions,
-      approvalRate: Math.round(approvalRate * 100) / 100
+      approvalRate: Math.round(approvalRate * 100) / 100,
     } as SubmissionStats,
-    
+
     users: {
       total: totalUsers,
       active: activeUsers,
       withSubmissions: Number(data.users_with_submissions),
       withBadges: Number(data.users_with_badges),
-      activationRate: Math.round(activationRate * 100) / 100
+      activationRate: Math.round(activationRate * 100) / 100,
     } as UserAnalyticsStats,
-    
+
     points: {
       totalAwarded: Number(data.total_points || 0),
       totalEntries: totalSubmissions,
-      avgPerEntry: Math.round(Number(data.avg_points || 0) * 100) / 100
+      avgPerEntry: Math.round(Number(data.avg_points || 0) * 100) / 100,
     } as PointsStats,
-    
+
     badges: {
       totalBadges: Number(data.total_badges_available),
       totalEarned: Number(data.total_badges_earned),
-      uniqueEarners: Number(data.unique_badge_earners)
+      uniqueEarners: Number(data.unique_badge_earners),
     } as BadgeStats,
-    
+
     reviews: {
       pendingReviews: Number(data.pending_reviews),
-      avgReviewTimeHours: Math.round(Number(data.avg_review_hours || 0) * 100) / 100
-    } as ReviewStats
+      avgReviewTimeHours:
+        Math.round(Number(data.avg_review_hours || 0) * 100) / 100,
+    } as ReviewStats,
   }
 }
 
 async function getOptimizedDistributions(
-  dateFilter: AnalyticsDateFilter,
-  cohort?: string
+  dateFilter: { created_at?: { gte: Date; lte: Date } },
+  cohort?: string,
 ) {
-  const cohortCondition = cohort && cohort !== 'ALL' ? Prisma.sql`AND u.cohort = ${cohort}` : Prisma.sql``
-  const dateCondition = dateFilter.created_at 
+  const cohortCondition =
+    cohort && cohort !== 'ALL'
+      ? Prisma.sql`AND u.cohort = ${cohort}`
+      : Prisma.sql``
+  const dateCondition = dateFilter.created_at
     ? Prisma.sql`AND s.created_at BETWEEN ${dateFilter.created_at.gte} AND ${dateFilter.created_at.lte}`
     : Prisma.sql``
 
   // Single query for all distributions
-  const distributionData = await prisma.$queryRaw<Array<{
-    category: string
-    item: string
-    item_name: string | null
-    count: bigint
-    points: bigint | null
-  }>>`
+  const distributionData = await prisma.$queryRaw<
+    Array<{
+      category: string
+      item: string
+      item_name: string | null
+      count: bigint
+      points: bigint | null
+    }>
+  >`
     -- Submission status distribution
     SELECT 
       'status' as category,
@@ -296,7 +316,11 @@ async function getOptimizedDistributions(
       COUNT(*) as count,
       NULL::bigint as points
     FROM users u
-    WHERE 1=1 ${cohort && cohort !== 'ALL' ? Prisma.sql`AND u.cohort = ${cohort}` : Prisma.sql``}
+    WHERE 1=1 ${
+      cohort && cohort !== 'ALL'
+        ? Prisma.sql`AND u.cohort = ${cohort}`
+        : Prisma.sql``
+    }
     GROUP BY u.role
     ORDER BY count DESC
     
@@ -324,39 +348,53 @@ async function getOptimizedDistributions(
       SUM(pl.delta_points) as points
     FROM points_ledger pl
     JOIN activities a ON pl.activity_code = a.code
-    ${cohort && cohort !== 'ALL' ? Prisma.sql`JOIN users u ON pl.user_id = u.id AND u.cohort = ${cohort}` : Prisma.sql``}
-    WHERE 1=1 ${dateFilter.created_at ? Prisma.sql`AND pl.created_at BETWEEN ${dateFilter.created_at.gte} AND ${dateFilter.created_at.lte}` : Prisma.sql``}
+    ${
+      cohort && cohort !== 'ALL'
+        ? Prisma.sql`JOIN users u ON pl.user_id = u.id AND u.cohort = ${cohort}`
+        : Prisma.sql``
+    }
+    WHERE 1=1 ${
+      dateFilter.created_at
+        ? Prisma.sql`AND pl.created_at BETWEEN ${dateFilter.created_at.gte} AND ${dateFilter.created_at.lte}`
+        : Prisma.sql``
+    }
     GROUP BY pl.activity_code, a.name
     ORDER BY points DESC
   `
-  
+
   // Process results into typed distributions
   const statusDist: StatusDistribution[] = []
   const activityDist: ActivityDistribution[] = []
   const roleDist: RoleDistribution[] = []
   const cohortDist: CohortDistribution[] = []
   const pointsActivityDist: PointsActivityDistribution[] = []
-  
-  distributionData.forEach(row => {
+
+  distributionData.forEach((row) => {
     const count = Number(row.count)
     const points = Number(row.points || 0)
-    
+
     switch (row.category) {
       case 'status':
-        statusDist.push({ status: row.item as 'PENDING' | 'APPROVED' | 'REJECTED', count })
+        statusDist.push({
+          status: row.item as 'PENDING' | 'APPROVED' | 'REJECTED',
+          count,
+        })
         break
       case 'activity':
         const activityCode = parseActivityCode(row.item)
         if (activityCode) {
-          activityDist.push({ 
-            activity: activityCode, 
-            activityName: row.item_name || 'Unknown', 
-            count 
+          activityDist.push({
+            activity: activityCode,
+            activityName: row.item_name || 'Unknown',
+            count,
           })
         }
         break
       case 'role':
-        roleDist.push({ role: row.item as 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN', count })
+        roleDist.push({
+          role: row.item as 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN',
+          count,
+        })
         break
       case 'cohort':
         cohortDist.push({ cohort: row.item, count })
@@ -368,35 +406,40 @@ async function getOptimizedDistributions(
             activity: pointsActivityCode,
             activityName: row.item_name || 'Unknown',
             totalPoints: points,
-            entries: count
+            entries: count,
           })
         }
         break
     }
   })
-  
+
   return {
     submissionsByStatus: statusDist,
     submissionsByActivity: activityDist,
     usersByRole: roleDist,
     usersByCohort: cohortDist,
     pointsByActivity: pointsActivityDist,
-    pointsDistribution: await getPointsDistribution(dateFilter, cohort) // This needs a separate query
+    pointsDistribution: await getPointsDistribution(dateFilter, cohort), // This needs a separate query
   }
 }
 
 async function getPointsDistribution(
-  dateFilter: AnalyticsDateFilter,
-  cohort?: string
+  dateFilter: { created_at?: { gte: Date; lte: Date } },
+  cohort?: string,
 ): Promise<PointsDistributionStats> {
-  const cohortJoin = cohort && cohort !== 'ALL' ? Prisma.sql`JOIN users u ON pl.user_id = u.id AND u.cohort = ${cohort}` : Prisma.sql``
-  const dateCondition = dateFilter.created_at 
+  const cohortJoin =
+    cohort && cohort !== 'ALL'
+      ? Prisma.sql`JOIN users u ON pl.user_id = u.id AND u.cohort = ${cohort}`
+      : Prisma.sql``
+  const dateCondition = dateFilter.created_at
     ? Prisma.sql`AND pl.created_at BETWEEN ${dateFilter.created_at.gte} AND ${dateFilter.created_at.lte}`
     : Prisma.sql``
-    
-  const result = await prisma.$queryRaw<Array<{
-    user_total_points: number
-  }>>`
+
+  const result = await prisma.$queryRaw<
+    Array<{
+      user_total_points: number
+    }>
+  >`
     SELECT SUM(pl.delta_points) as user_total_points
     FROM points_ledger pl
     ${cohortJoin}
@@ -404,58 +447,69 @@ async function getPointsDistribution(
     GROUP BY pl.user_id
     ORDER BY user_total_points DESC
   `
-  
-  const totals = result.map(r => r.user_total_points).filter(t => t > 0)
-  
+
+  const totals = result.map((r) => r.user_total_points).filter((t) => t > 0)
+
   if (totals.length === 0) {
     return {
       totalUsers: 0,
       max: 0,
       min: 0,
       avg: 0,
-      percentiles: []
+      percentiles: [],
     }
   }
-  
-  const percentiles = [10, 25, 50, 75, 90, 95, 99].map(p => {
+
+  const percentiles = [10, 25, 50, 75, 90, 95, 99].map((p) => {
     const index = Math.floor((p / 100) * (totals.length - 1))
     return {
       percentile: p,
-      value: totals[index] || 0
+      value: totals[index] || 0,
     }
   })
-  
+
   return {
     totalUsers: totals.length,
     max: totals[0] || 0,
     min: totals[totals.length - 1] || 0,
-    avg: Math.round((totals.reduce((sum, val) => sum + val, 0) / totals.length) * 100) / 100,
-    percentiles
+    avg:
+      Math.round(
+        (totals.reduce((sum, val) => sum + val, 0) / totals.length) * 100,
+      ) / 100,
+    percentiles,
   }
 }
 
 async function getOptimizedTrends(
-  dateFilter: AnalyticsDateFilter,
-  cohort?: string
+  dateFilter: { created_at?: { gte: Date; lte: Date } },
+  cohort?: string,
 ) {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  
+
   const startDate = dateFilter.created_at?.gte || thirtyDaysAgo
   const endDate = dateFilter.created_at?.lte || new Date()
-  
-  const cohortJoin = cohort && cohort !== 'ALL' ? Prisma.sql`JOIN users u ON s.user_id = u.id AND u.cohort = ${cohort}` : Prisma.sql``
-  const cohortUserJoin = cohort && cohort !== 'ALL' ? Prisma.sql`WHERE u.cohort = ${cohort}` : Prisma.sql`WHERE 1=1`
-  
+
+  const cohortJoin =
+    cohort && cohort !== 'ALL'
+      ? Prisma.sql`JOIN users u ON s.user_id = u.id AND u.cohort = ${cohort}`
+      : Prisma.sql``
+  const cohortUserJoin =
+    cohort && cohort !== 'ALL'
+      ? Prisma.sql`WHERE u.cohort = ${cohort}`
+      : Prisma.sql`WHERE 1=1`
+
   const [submissionTrends, userTrends] = await Promise.all([
     // Daily submission trends
-    prisma.$queryRaw<Array<{
-      date: string
-      total: bigint
-      approved: bigint
-      rejected: bigint
-      pending: bigint
-    }>>`
+    prisma.$queryRaw<
+      Array<{
+        date: string
+        total: bigint
+        approved: bigint
+        rejected: bigint
+        pending: bigint
+      }>
+    >`
       SELECT 
         DATE(s.created_at) as date,
         COUNT(*) as total,
@@ -468,12 +522,14 @@ async function getOptimizedTrends(
       GROUP BY DATE(s.created_at)
       ORDER BY date
     `,
-    
+
     // Daily user registration trends
-    prisma.$queryRaw<Array<{
-      date: string
-      count: bigint
-    }>>`
+    prisma.$queryRaw<
+      Array<{
+        date: string
+        count: bigint
+      }>
+    >`
       SELECT 
         DATE(u.created_at) as date,
         COUNT(*) as count
@@ -481,40 +537,42 @@ async function getOptimizedTrends(
       ${cohortUserJoin} AND u.created_at BETWEEN ${startDate} AND ${endDate}
       GROUP BY DATE(u.created_at)
       ORDER BY date
-    `
+    `,
   ])
-  
+
   return {
-    submissionsByDate: submissionTrends.map(row => ({
+    submissionsByDate: submissionTrends.map((row) => ({
       date: row.date,
       total: Number(row.total),
       approved: Number(row.approved),
       rejected: Number(row.rejected),
-      pending: Number(row.pending)
+      pending: Number(row.pending),
     })) as DailySubmissionStats[],
-    
-    userRegistrationsByDate: userTrends.map(row => ({
+
+    userRegistrationsByDate: userTrends.map((row) => ({
       date: row.date,
-      count: Number(row.count)
-    })) as DailyRegistrationStats[]
+      count: Number(row.count),
+    })) as DailyRegistrationStats[],
   }
 }
 
 async function getOptimizedRecentActivity() {
   // Single query for all recent activity
-  const recentData = await prisma.$queryRaw<Array<{
-    category: string
-    id: string
-    user_name: string
-    user_handle: string
-    user_email: string | null
-    user_role: string | null
-    activity_code: string | null
-    activity_name: string | null
-    status: string | null
-    created_at: Date
-    updated_at: Date | null
-  }>>`
+  const recentData = await prisma.$queryRaw<
+    Array<{
+      category: string
+      id: string
+      user_name: string
+      user_handle: string
+      user_email: string | null
+      user_role: string | null
+      activity_code: string | null
+      activity_name: string | null
+      status: string | null
+      created_at: Date
+      updated_at: Date | null
+    }>
+  >`
     -- Recent submissions
     SELECT 
       'submission' as category,
@@ -575,15 +633,17 @@ async function getOptimizedRecentActivity() {
     ORDER BY u.created_at DESC
     LIMIT 10
   `
-  
+
   const submissions: RecentSubmission[] = []
   const approvals: RecentApproval[] = []
   const users: RecentUser[] = []
-  
-  recentData.forEach(row => {
+
+  recentData.forEach((row) => {
     switch (row.category) {
       case 'submission':
-        const submissionActivityCode = parseActivityCode(row.activity_code || '')
+        const submissionActivityCode = parseActivityCode(
+          row.activity_code || '',
+        )
         if (submissionActivityCode) {
           submissions.push({
             id: row.id,
@@ -591,18 +651,17 @@ async function getOptimizedRecentActivity() {
             activity_code: submissionActivityCode,
             status: row.status as 'PENDING' | 'APPROVED' | 'REJECTED',
             created_at: row.created_at,
-            updated_at: row.updated_at || row.created_at,
             user: {
               name: row.user_name,
-              handle: row.user_handle
+              handle: row.user_handle,
             },
             activity: {
-              name: row.activity_name || 'Unknown'
-            }
+              name: row.activity_name || 'Unknown',
+            },
           })
         }
         break
-        
+
       case 'approval':
         const approvalActivityCode = parseActivityCode(row.activity_code || '')
         if (approvalActivityCode) {
@@ -611,36 +670,39 @@ async function getOptimizedRecentActivity() {
             user_id: row.id, // Note: This should be user_id from the query
             activity_code: approvalActivityCode,
             status: row.status as 'PENDING' | 'APPROVED' | 'REJECTED',
-            created_at: row.created_at,
             updated_at: row.updated_at || row.created_at,
             user: {
               name: row.user_name,
-              handle: row.user_handle
+              handle: row.user_handle,
             },
             activity: {
-              name: row.activity_name || 'Unknown'
-            }
+              name: row.activity_name || 'Unknown',
+            },
           })
         }
         break
-        
+
       case 'user':
         users.push({
           id: row.id,
           name: row.user_name,
           handle: row.user_handle,
           email: row.user_email || '',
-          role: row.user_role as 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN',
-          created_at: row.created_at
+          role: row.user_role as
+            | 'PARTICIPANT'
+            | 'REVIEWER'
+            | 'ADMIN'
+            | 'SUPERADMIN',
+          created_at: row.created_at,
         })
         break
     }
   })
-  
+
   return {
     submissions: submissions.slice(0, 10),
-    approvals: approvals.slice(0, 10), 
-    users: users.slice(0, 10)
+    approvals: approvals.slice(0, 10),
+    users: users.slice(0, 10),
   }
 }
 
@@ -648,15 +710,17 @@ async function getOptimizedPerformanceMetrics() {
   // Get reviewer performance and top badges in a single query when possible
   const [reviewerPerformance, topBadges] = await Promise.all([
     // Reviewer performance
-    prisma.$queryRaw<Array<{
-      id: string
-      name: string
-      handle: string
-      role: string
-      approved: bigint
-      rejected: bigint
-      total: bigint
-    }>>`
+    prisma.$queryRaw<
+      Array<{
+        id: string
+        name: string
+        handle: string
+        role: string
+        approved: bigint
+        rejected: bigint
+        total: bigint
+      }>
+    >`
       SELECT 
         u.id,
         u.name,
@@ -673,16 +737,18 @@ async function getOptimizedPerformanceMetrics() {
       HAVING COUNT(*) > 0
       ORDER BY total DESC
     `,
-    
+
     // Top badges
-    prisma.$queryRaw<Array<{
-      badge_code: string
-      badge_name: string
-      badge_description: string
-      badge_criteria: unknown
-      badge_icon_url: string | null
-      earned_count: bigint
-    }>>`
+    prisma.$queryRaw<
+      Array<{
+        badge_code: string
+        badge_name: string
+        badge_description: string
+        badge_criteria: unknown
+        badge_icon_url: string | null
+        earned_count: bigint
+      }>
+    >`
       SELECT 
         b.code as badge_code,
         b.name as badge_name,
@@ -695,29 +761,29 @@ async function getOptimizedPerformanceMetrics() {
       GROUP BY b.code, b.name, b.description, b.criteria, b.icon_url
       ORDER BY earned_count DESC
       LIMIT 10
-    `
+    `,
   ])
-  
+
   return {
-    reviewers: reviewerPerformance.map(r => ({
+    reviewers: reviewerPerformance.map((r) => ({
       id: r.id,
       name: r.name,
       handle: r.handle,
       role: r.role,
       approved: Number(r.approved),
       rejected: Number(r.rejected),
-      total: Number(r.total)
+      total: Number(r.total),
     })) as ReviewerPerformance[],
-    
-    topBadges: topBadges.map(b => ({
+
+    topBadges: topBadges.map((b) => ({
       badge: {
         code: b.badge_code,
         name: b.badge_name,
         description: b.badge_description,
         criteria: b.badge_criteria || {},
-        icon_url: b.badge_icon_url || ''
+        icon_url: b.badge_icon_url || '',
       },
-      earnedCount: Number(b.earned_count)
-    })) as TopBadge[]
+      earnedCount: Number(b.earned_count),
+    })) as TopBadge[],
   }
 }

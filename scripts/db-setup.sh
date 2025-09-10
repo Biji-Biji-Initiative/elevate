@@ -18,6 +18,9 @@ if [ -z "$DATABASE_URL" ]; then
     exit 1
 fi
 
+echo "🔄 Syncing Prisma environment..."
+node scripts/env/sync-db-env-to-prisma.mjs || true
+
 echo "📊 Checking database connection..."
 
 # Test database connection
@@ -32,6 +35,9 @@ fi
 
 echo "🔧 Pushing database schema..."
 pnpm db:push
+
+echo "🧩 Ensuring required extensions..."
+pnpm exec prisma db execute --stdin --schema=packages/db/schema.prisma <<< "CREATE EXTENSION IF NOT EXISTS citext;" || true
 
 echo "🌱 Seeding initial data..."
 pnpm db:seed
@@ -57,6 +63,9 @@ echo "✅ All SQL migrations applied"
 
 echo "🔄 Refreshing materialized views..."
 pnpm exec prisma db execute --stdin --schema=packages/db/schema.prisma <<< "SELECT refresh_leaderboards();" || echo "⚠️  Could not refresh views (function may not exist yet)"
+
+echo "🏗️  Running post-migration concurrent index operations..."
+./packages/db/scripts/run-post-migrate.sh || echo "⚠️  Post-migration script reported issues; indexes may already exist"
 
 echo "✅ Database setup complete!"
 echo ""

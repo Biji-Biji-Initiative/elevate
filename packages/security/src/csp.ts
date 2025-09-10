@@ -70,6 +70,8 @@ export function buildCSPDirectives(options: CSPOptions = {}): string {
     'https://img.clerk.com',
     'https://api.clerk.dev',
     'https://*.clerk.com',
+    'https://in-redbird-62.clerk.accounts.dev', // Specific Clerk instance domain
+    'https://*.clerk.accounts.dev', // All Clerk account domains
     ...(allowedDomains.clerk || []),
   ]
 
@@ -346,19 +348,23 @@ export function validateCSPConfig(options: CSPOptions): {
     const external = options.allowedDomains.external
     for (const domain of external) {
       // Allow WebSocket protocols
-      if (!domain.startsWith('https://') && 
-          !domain.startsWith('http://') && 
-          !domain.startsWith('ws://') && 
-          !domain.startsWith('wss://')) {
+      if (
+        !domain.startsWith('https://') &&
+        !domain.startsWith('http://') &&
+        !domain.startsWith('ws://') &&
+        !domain.startsWith('wss://')
+      ) {
         errors.push(
           `External domain "${domain}" should include protocol (https://, http://, ws://, or wss://)`,
         )
       }
-      if (domain.includes('*') && 
-          !domain.startsWith('https://*.') && 
-          !domain.startsWith('http://*.') &&
-          !domain.startsWith('ws://*.') &&
-          !domain.startsWith('wss://*.')) {
+      if (
+        domain.includes('*') &&
+        !domain.startsWith('https://*.') &&
+        !domain.startsWith('http://*.') &&
+        !domain.startsWith('ws://*.') &&
+        !domain.startsWith('wss://*.')
+      ) {
         errors.push(
           `Wildcard domain "${domain}" should be properly formatted (e.g., https://*.example.com)`,
         )

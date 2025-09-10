@@ -13,11 +13,15 @@ const withNextIntl = createNextIntlPlugin('./i18n.ts')
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 })
+const repoRoot = path.join(__dirname, '../..')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Remove X-Powered-By header for security
   poweredByHeader: false,
+
+  // Ensure Next.js treats the monorepo root correctly for server tracing
+  outputFileTracingRoot: repoRoot,
 
   // React 19 and Next.js 15 configuration with Turbopack
   experimental: {
@@ -37,6 +41,8 @@ const nextConfig = {
 
   // Turbopack configuration: rely on package entrypoints only
   turbopack: {
+    // Pin the Turbopack root to the monorepo root (must match outputFileTracingRoot)
+    root: repoRoot,
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
   },
 
@@ -102,12 +108,7 @@ const nextConfig = {
         destination: '/u/:handle',
         permanent: true,
       },
-      // Redirect API profile route if accessed directly (should only be used internally)
-      {
-        source: '/api/profile/:handle',
-        destination: '/u/:handle',
-        permanent: true,
-      },
+      // Do not redirect /api/profile to pages; profile JSON is served by an API route
     ]
   },
 

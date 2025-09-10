@@ -5,40 +5,47 @@
 
 import * as Sentry from '@sentry/nextjs'
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
+{
+  const dsn = process.env.SENTRY_DSN
+  const release = process.env.VERCEL_GIT_COMMIT_SHA
+  const environment = process.env.VERCEL_ENV || process.env.NODE_ENV
 
-  // Adjust this value in production, or use tracesSampler for greater control
-  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.05 : 1.0,
+  const options: Sentry.VercelEdgeOptions = {
+    // Adjust this value in production, or use tracesSampler for greater control
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.05 : 1.0,
 
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: process.env.NODE_ENV === 'development',
+    // Setting this option to true will print useful information to the console while you're setting up Sentry.
+    debug: process.env.NODE_ENV === 'development',
 
-  enabled: Boolean(process.env.SENTRY_DSN),
+    enabled: Boolean(dsn),
 
-  // Edge runtime has limited integrations
-  integrations: [],
+    // Edge runtime has limited integrations
+    integrations: [],
 
-  // Release tracking
-  release: process.env.VERCEL_GIT_COMMIT_SHA,
-  environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+    environment,
 
-  // Custom tags for edge runtime
-  initialScope: {
-    tags: {
-      component: 'web-edge',
-      runtime: 'edge',
+    // Custom tags for edge runtime
+    initialScope: {
+      tags: {
+        component: 'web-edge',
+        runtime: 'edge',
+      },
     },
-  },
 
-  // Minimal error filtering for edge runtime
-  beforeSend(event) {
-    // Add edge-specific context
-    event.tags = {
-      ...event.tags,
-      edge_runtime: true,
-    }
+    // Minimal error filtering for edge runtime
+    beforeSend(event) {
+      // Add edge-specific context
+      event.tags = {
+        ...event.tags,
+        edge_runtime: true,
+      }
 
-    return event
-  },
-})
+      return event
+    },
+  }
+
+  if (dsn) options.dsn = dsn
+  if (release) options.release = release
+
+  Sentry.init(options)
+}

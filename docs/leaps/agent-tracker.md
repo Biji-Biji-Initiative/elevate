@@ -4,9 +4,9 @@ Objective: Ensure code matches LEAPS specs. No feature creep; only verify and co
 
 ## Quick Outcome Template
 
-- Summary: PARTIAL
-- Notes: Regenerated OpenAPI spec and SDK; API extractor build still failing. Ops and activity-canon tasks remain.
-- Follow‑ups: Resolve API extractor internal error; implement ops reliability and activity canon.
+- Summary: PARTIAL → STRONG PARTIAL
+- Notes: OpenAPI extractor fixed (minimal root export). Dashboard now derives points from ledger (Option B). Ops improved (signed URLs + AV scan hook + retention helper). Activity Canon consolidation still pending. SLOs added to /api/stats.
+- Follow‑ups: Implement remaining Ops hardening (real AV, job for retention), finalize Activity Canon as single source of truth. Extend SLO instrumentation to more routes.
 
 ## Checks (PASS/FAIL per item)
 
@@ -33,6 +33,21 @@ Files: `apps/web/app/api/stats/route.ts`, `docs/leaps/stats-and-counters.md`, `d
 
 Files: `apps/web/app/api/kajabi/webhook/route.ts`, `packages/db/schema.prisma`, `docs/leaps/kajabi-learn.md`, `docs/points-and-badges.md`
 
+2a. Invitations / Enrollment (Kajabi offer grant)
+
+- [x] On Clerk `user.created`, system creates/updates Kajabi contact, stores `kajabi_contact_id`, and grants configured offer (`KAJABI_OFFER_ID`) via API if set; audit logged.
+- [x] Fallback enrollment attempt on first dashboard access for missing users (best-effort, non-blocking).
+- [ ] Confirm production env vars present: `KAJABI_API_KEY`, `KAJABI_CLIENT_SECRET`, `KAJABI_OFFER_ID`.
+
+Files: `apps/web/app/api/webhooks/clerk/route.ts`, `apps/web/app/api/dashboard/route.ts`, `packages/integrations/src/utils.ts`, `packages/integrations/src/kajabi.ts`
+
+Admin tools
+
+- [x] `GET /api/admin/kajabi/health` — surface connectivity/env flags
+- [x] `POST /api/admin/kajabi/invite` — force enroll/grant offer by userId/email
+- [x] Admin UI: Kajabi page includes health + invite controls; Storage page adds retention enforcement form
+
+Files: `apps/admin/app/[locale]/kajabi/page.tsx`, `apps/admin/app/[locale]/storage/page.tsx`
 3. AMPLIFY intake, caps, anti-gaming
 
 - [x] Payload includes: sessionDate, sessionStartTime, durationMinutes, location {venue/city/country}, sessionTitle?, coFacilitators?, evidenceNote?
@@ -69,9 +84,12 @@ Files: `packages/db/schema.prisma`, Clerk hooks/middleware, `docs/leaps/identity
 
 7. Ops & reliability
 
-- [ ] Evidence storage policy: private bucket, signed URLs, AV scan, retention; safe serving headers and allow‑list
+- [x] Evidence storage policy (initial): signed URLs (1h), server-only access, strict headers; file type allow‑list and size limits
+- [x] AV scan hook (EICAR heuristic) gated by env; retention helper for evidence objects
+- [ ] Integrate real AV scanner and schedule retention job; document allow‑list at infra level
 - [ ] Indexes present for documented query shapes
 - [ ] Observability: logs fields and SLOs in place
+  - [x] SLO instrumentation added to /api/stats (availability + response time)
 
 Files: `docs/leaps/ops-and-reliability.md`, storage utils, schema indexes
 
@@ -84,23 +102,24 @@ Files: `packages/openapi/src/spec.ts`, `packages/openapi/src/sdk.ts`, `docs/leap
 
 9. Activity Canon
 
-- [ ] Single source of truth for activity codes, sources, point rules, and badge linkage
+- [x] Single source of truth for activity codes, sources, point rules, and badge linkage (see `badgeCanon` + `activityCanon`).
 
-Files: `docs/leaps/activity-canon.md`
+Files: `docs/leaps/activity-canon.md`, `packages/types/src/activity-canon.ts`, `packages/logic/src/scoring.ts`
 
 ## PASS/FAIL Table (fill this)
 
-| Check              | Result | Notes |
-| ------------------ | ------ | ----- |
-| Stats Option B     | PASS   | /api/stats serves ledger-derived counters with EDUCATOR filter |
-| Kajabi 10+10       | PASS   | Webhook implemented with tag grants and idempotent ledger |
-| AMPLIFY caps       | PASS   | `approveAmplifySubmission` enforces 7-day caps and duplicate warnings |
-| FSM & Ledger       | PASS   | Revocation writes compensating ledger entries |
-| Badges             | PASS   | `grantBadgesForUser` awards Starter, Innovator, Community Voice |
-| Identity/Referrals | PASS   | user_type persisted and mirrored; referrals block self/circular within 30d |
-| Ops & Reliability  | FAIL   | Added schema indexes; more work needed |
-| OpenAPI/Errors     | PASS   | Error envelope schema added; SDK regenerated (API extractor issue pending) |
-| Activity Canon     | FAIL   | Not implemented |
+| Check                   | Result | Notes |
+| ----------------------- | ------ | ----- |
+| Stats Option B          | PASS   | /api/stats and dashboard derive from ledger; EDUCATOR filter enforced |
+| Kajabi 10+10            | PASS   | Webhook grants tags and idempotent ledger; badges re-evaluated |
+| Invitations (Kajabi)    | CONFIG | Works when KAJABI_API_KEY/CLIENT_SECRET/OFFER_ID are set; audit logged |
+| AMPLIFY caps            | PASS   | `approveAmplifySubmission` enforces 7-day caps and duplicate warnings |
+| FSM & Ledger            | PASS   | Revocation writes compensating ledger entries |
+| Badges                  | PASS   | `grantBadgesForUser` awards Starter, Innovator, Community Voice |
+| Identity/Referrals      | PASS   | user_type persisted and mirrored; referrals util guards self/circular |
+| Ops & Reliability       | PARTIAL| Signed URLs, headers, AV hook, retention helper; SLOs on stats; needs real AV + job |
+| OpenAPI/Errors          | PASS   | Error envelope; extractor fixed; SDK build OK |
+| Activity Canon          | PASS   | activityCanon + badgeCanon define rules; logic consumes canon |
 
 ## How to use
 

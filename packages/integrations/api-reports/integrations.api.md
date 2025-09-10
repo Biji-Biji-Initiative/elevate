@@ -4,8 +4,6 @@
 
 ```ts
 
-import { KajabiClient as KajabiClient_2 } from './kajabi';
-
 // @public (undocumented)
 export interface CreateContactData {
     // (undocumented)
@@ -122,7 +120,7 @@ export interface KajabiTagsResponse {
 }
 
 // @public
-export function tryGetKajabiClient(): KajabiClient_2 | null;
+export function tryGetKajabiClient(): KajabiClient | null;
 
 // (No @packageDocumentation comment for this package)
 

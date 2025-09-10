@@ -20,8 +20,10 @@ Sentry.init({
   integrations: [],
 
   // Release tracking
-  release: process.env.VERCEL_GIT_COMMIT_SHA,
-  environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+  ...(process.env.VERCEL_GIT_COMMIT_SHA
+    ? { release: process.env.VERCEL_GIT_COMMIT_SHA }
+    : {}),
+  environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
 
   // Custom tags for admin edge runtime
   initialScope: {

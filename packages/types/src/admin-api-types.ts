@@ -14,7 +14,6 @@ import {
   SubmissionStatusEnum,
   VisibilityEnum,
   RoleEnum,
-  PaginationSchema
 } from './domain-constants'
 import { SubmissionPayloadSchema } from './submission-payloads'
 import { KajabiTagEventSchema } from './webhooks'
@@ -24,8 +23,15 @@ import { KajabiTagEventSchema } from './webhooks'
 export { ActivityCodeEnum, SubmissionStatusEnum, VisibilityEnum, RoleEnum }
 
 // Base schemas
-// Note: Use the canonical PaginationSchema from common.ts to avoid duplicate symbol conflicts
-// Use imported PaginationSchema
+// Note: Canonical request PaginationSchema comes from domain-constants (page, limit, offset)
+// For responses, define a dedicated schema including total and pages for UI needs
+
+export const PaginationResponseSchema = z.object({
+  page: z.number().int().min(1),
+  limit: z.number().int().min(1).max(100),
+  total: z.number().int().min(0),
+  pages: z.number().int().min(0),
+})
 
 export const ActivitySchema = z.object({
   code: ActivityCodeSchema,
@@ -71,7 +77,7 @@ export const SubmissionsListResponseSchema = z.object({
   success: z.literal(true),
   data: z.object({
     submissions: z.array(AdminSubmissionSchema),
-    pagination: PaginationSchema,
+    pagination: PaginationResponseSchema,
   }),
 })
 
@@ -106,7 +112,7 @@ export const UsersListResponseSchema = z.object({
   success: z.literal(true),
   data: z.object({
     users: z.array(AdminUserSchema),
-    pagination: PaginationSchema,
+    pagination: PaginationResponseSchema,
   }),
 })
 
@@ -393,7 +399,7 @@ export type AdminUser = z.infer<typeof AdminUserSchema>
 export type AdminBadge = z.infer<typeof AdminBadgeSchema>
 export type KajabiEvent = z.infer<typeof KajabiEventSchema>
 export type KajabiStats = z.infer<typeof KajabiStatsSchema>
-export type Pagination = z.infer<typeof PaginationSchema>
+export type Pagination = z.infer<typeof PaginationResponseSchema>
 export type OverviewStats = z.infer<typeof OverviewStatsSchema>
 export type Distributions = z.infer<typeof DistributionsSchema>
 export type Trends = z.infer<typeof TrendsSchema>

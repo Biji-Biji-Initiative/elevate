@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 
-
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
@@ -20,7 +19,12 @@ import {
   AlertTitle,
   AlertDescription,
 } from '@elevate/ui'
-import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
+import {
+  FormField,
+  LoadingSpinner,
+  FileUpload,
+  FileList,
+} from '@elevate/ui/blocks'
 
 import { getApiClient } from '../../../../lib/api-client'
 
@@ -29,11 +33,20 @@ export default function PresentFormPage() {
   const { userId } = useAuth()
   const [makePublic, setMakePublic] = useState(false)
 
-  const { isSubmitting, submitStatus, handleSubmit: handleFormSubmit } = useFormSubmission({
-    successMessage: 'LinkedIn post submitted successfully! You could earn 20 points once approved.'
+  const {
+    isSubmitting,
+    submitStatus,
+    handleSubmit: handleFormSubmit,
+  } = useFormSubmission({
+    successMessage:
+      'LinkedIn post submitted successfully! You could earn 20 points once approved.',
   })
-  
-  const { uploadedFiles, handleFileSelect: handleFileUpload, removeFile } = useFileUpload({
+
+  const {
+    uploadedFiles,
+    handleFileSelect: handleFileUpload,
+    removeFile,
+  } = useFileUpload({
     maxFiles: 1,
     onUpload: async (files) => {
       if (files.length === 0 || !files[0]) return []
@@ -46,12 +59,14 @@ export default function PresentFormPage() {
       const api = getApiClient()
       const result = await api.uploadFile(file, PRESENT)
 
-      return [{
-        file,
-        path: result.data.path,
-        hash: result.data.hash,
-      }]
-    }
+      return [
+        {
+          file,
+          path: result.data.path,
+          hash: result.data.hash,
+        },
+      ]
+    },
   })
 
   const {
@@ -77,8 +92,9 @@ export default function PresentFormPage() {
 
   const handleFileSelect = async (files: File[]) => {
     const results = await handleFileUpload(files)
-    if (results.length > 0) {
-      setValue('screenshot_url', results[0].path)
+    const first = results[0]
+    if (first && first.path) {
+      setValue('screenshot_url', first.path)
     }
   }
 

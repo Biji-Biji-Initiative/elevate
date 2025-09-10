@@ -1,337 +1,213 @@
-# Database Schema Documentation
+---
+title: Database Schema - Actual Prisma Models
+owner: platform-team
+status: active
+last_reviewed: 2025-09-10
+tags: [database, schema, prisma]
+---
 
-> Generated on 2025-09-02T13:52:38.043Z
-> Source: `packages/db/schema.prisma`
+## Database Schema - Actual Prisma Models
+
+Complete database schema based on the **real** Prisma schema at `packages/db/schema.prisma`.
 
 ## Overview
 
-This document describes the database schema for the MS Elevate LEAPS Tracker application. The schema is defined using Prisma ORM and serves as the single source of truth for database structure.
-
-## Configuration
-
-### Datasource
-- **Provider**: "postgresql"
-- **URL**: Environment variable `DATABASE_URL`
-
-### Generator
-- **Provider**: "prisma-client-js"
-
-## Enums
-
-### Role
-
-| Value | Description |
-|-------|-------------|
-| `PARTICIPANT` | Default role for educators |
-| `REVIEWER` | Can review and approve submissions |
-| `ADMIN` | Full administrative access |
-| `SUPERADMIN` | System-level administrative access |
-
-### SubmissionStatus
-
-| Value | Description |
-|-------|-------------|
-| `PENDING` | Awaiting review |
-| `APPROVED` | Accepted and points awarded |
-| `REJECTED` | Rejected with review notes |
-
-### Visibility
-
-| Value | Description |
-|-------|-------------|
-| `PUBLIC` | Visible on public profiles and leaderboard |
-| `PRIVATE` | Only visible to user and reviewers |
-
-### LedgerSource
-
-| Value | Description |
-|-------|-------------|
-| `MANUAL` | Manually adjusted by admin |
-| `WEBHOOK` | Automatic via Kajabi webhook |
-| `FORM` | Through submission approval process |
-
-## Models
-
-### User
-
-Represents application users synced from Clerk authentication service.
-
-#### Fields
-
-| Field | Type | Attributes | Description |
-|-------|------|------------|-------------|
-| `id` | `String` | 🔑 Primary Key | Unique identifier, mirrors Clerk user ID |
-| `handle` | `String` | 🔐 Unique | Unique username/handle for public profile URLs |
-| `name` | `String` |  |  |
-| `email` | `String` | 🔐 Unique |  |
-| `avatar_url` | `String??` |  |  |
-| `role` | `Role` | ⚙️ Default |  |
-| `school` | `String??` |  |  |
-| `cohort` | `String??` |  |  |
-| `kajabi_contact_id` | `String??` | 🔐 Unique | Kajabi contact ID for webhook matching |
-| `created_at` | `DateTime` | ⚙️ Default |  |
-| `submissions` | `Submission[][]` |  |  |
-| `ledger` | `PointsLedger[][]` |  |  |
-| `earned_badges` | `EarnedBadge[][]` |  |  |
-
-#### Indexes
-
-- `@@map("users")`
-
-### Activity
-
-Defines the 5 LEAPS framework activities (Learn, Explore, Amplify, Present, Shine).
-
-#### Fields
-
-| Field | Type | Attributes | Description |
-|-------|------|------------|-------------|
-| `code` | `String` | 🔑 Primary Key |  |
-| `name` | `String` |  |  |
-| `default_points` | `Int` |  | Standard points awarded for this activity |
-| `submissions` | `Submission[][]` |  |  |
-| `ledger` | `PointsLedger[][]` |  |  |
-
-#### Indexes
-
-- `@@map("activities")`
-
-### Submission
-
-Evidence submissions for LEAPS activities with review workflow.
-
-#### Fields
-
-| Field | Type | Attributes | Description |
-|-------|------|------------|-------------|
-| `id` | `String` | 🔑 Primary Key, ⚙️ Default |  |
-| `user_id` | `String` |  |  |
-| `user` | `User` | 🔗 Relation |  |
-| `activity_code` | `String` |  |  |
-| `activity` | `Activity` | 🔗 Relation |  |
-| `status` | `SubmissionStatus` | ⚙️ Default |  |
-| `visibility` | `Visibility` | ⚙️ Default | Controls public/private visibility on profiles |
-| `payload` | `Json` |  | Activity-specific submission data (JSON) |
-| `attachments` | `Json` |  | Array of file storage paths |
-| `reviewer_id` | `String??` |  |  |
-| `review_note` | `String??` |  |  |
-| `created_at` | `DateTime` | ⚙️ Default |  |
-| `updated_at` | `DateTime` |  |  |
-
-#### Indexes
-
-- `@@index([user_id, activity_code])`
-- `@@map("submissions")`
-
-#### Relations
-
-- **user**: User who created this submission
-- **activity**: LEAPS activity this submission is for
-
-### PointsLedger
-
-Append-only ledger tracking all point changes for audit trail.
-
-#### Fields
-
-| Field | Type | Attributes | Description |
-|-------|------|------------|-------------|
-| `id` | `String` | 🔑 Primary Key, ⚙️ Default |  |
-| `user_id` | `String` |  |  |
-| `user` | `User` | 🔗 Relation |  |
-| `activity_code` | `String` |  |  |
-| `activity` | `Activity` | 🔗 Relation |  |
-| `source` | `LedgerSource` |  |  |
-| `delta_points` | `Int` |  | Point change (positive or negative) |
-| `external_source` | `String??` |  |  |
-| `external_event_id` | `String??` | 🔐 Unique | Unique ID for idempotent webhook processing |
-| `created_at` | `DateTime` | ⚙️ Default |  |
-
-#### Indexes
-
-- `@@index([user_id, activity_code])`
-- `@@map("points_ledger")`
-
-#### Relations
-
-- **user**: User these points belong to
-- **activity**: Activity these points were earned for
-
-### Badge
-
-Achievement badges that users can earn based on criteria.
-
-#### Fields
-
-| Field | Type | Attributes | Description |
-|-------|------|------------|-------------|
-| `code` | `String` | 🔑 Primary Key |  |
-| `name` | `String` |  |  |
-| `description` | `String` |  |  |
-| `criteria` | `Json` |  |  |
-| `icon_url` | `String??` |  |  |
-| `earned_badges` | `EarnedBadge[][]` |  |  |
-
-#### Indexes
-
-- `@@map("badges")`
-
-### EarnedBadge
-
-Junction table tracking which badges users have earned.
-
-#### Fields
-
-| Field | Type | Attributes | Description |
-|-------|------|------------|-------------|
-| `id` | `String` | 🔑 Primary Key, ⚙️ Default |  |
-| `user_id` | `String` |  |  |
-| `user` | `User` | 🔗 Relation |  |
-| `badge_code` | `String` |  |  |
-| `badge` | `Badge` | 🔗 Relation |  |
-| `earned_at` | `DateTime` | ⚙️ Default |  |
-
-#### Indexes
-
-- `@@unique([user_id, badge_code])`
-- `@@index([badge_code])`
-- `@@map("earned_badges")`
-
-#### Relations
-
-- **user**: Related user
-- **badge**: Related badge
-
-### KajabiEvent
-
-Webhook events from Kajabi for automatic Learn activity credit.
-
-#### Fields
-
-| Field | Type | Attributes | Description |
-|-------|------|------------|-------------|
-| `id` | `String` | 🔑 Primary Key |  |
-| `received_at` | `DateTime` | ⚙️ Default |  |
-| `payload` | `Json` |  |  |
-| `processed_at` | `DateTime??` |  |  |
-| `user_match` | `String??` |  |  |
-
-#### Indexes
-
-- `@@map("kajabi_events")`
-
-### AuditLog
-
-System audit trail for administrative actions and changes.
-
-#### Fields
-
-| Field | Type | Attributes | Description |
-|-------|------|------------|-------------|
-| `id` | `String` | 🔑 Primary Key, ⚙️ Default |  |
-| `actor_id` | `String` |  |  |
-| `action` | `String` |  |  |
-| `target_id` | `String??` |  |  |
-| `meta` | `Json??` |  |  |
-| `created_at` | `DateTime` | ⚙️ Default |  |
-
-#### Indexes
-
-- `@@index([actor_id, created_at])`
-- `@@map("audit_log")`
-
-## Security & Access Control
-
-### Row Level Security (RLS)
-
-All tables have Row Level Security enabled with the following policies:
-
-#### Users Table
-- Users can view and update their own profile
-- Public profiles are viewable by all authenticated users
-- Only admins can create/delete users
-
-#### Submissions Table
-- Users can create and view their own submissions
-- Users can update their own pending submissions
-- Reviewers can view all submissions for review
-- Public submissions are viewable by all users
-
-#### Points Ledger
-- Users can view their own points history
-- Reviewers can view all points for audit purposes
-- Points entries are append-only (immutable)
-
-#### Audit Log
-- Only admins can view audit logs
-- All users can create audit entries for their actions
-- Audit logs are append-only for integrity
-
-### Authentication Functions
-
-- `auth.get_user_role()`: Extract user role from JWT token
-- `auth.is_admin()`: Check admin privileges
-- `auth.is_reviewer()`: Check reviewer privileges
-- `auth.get_user_id()`: Get current user ID from JWT
-
-## Views & Materialized Views
-
-### Leaderboard Views
-
-#### `leaderboard_totals`
-All-time leaderboard with public submissions only.
-
-#### `leaderboard_30d`  
-30-day rolling leaderboard for recent activity.
-
-#### `user_points_summary`
-Points breakdown per user by activity type.
-
-### Metrics Views
-
-#### `public_submission_metrics`
-Aggregated submission statistics without personal data.
-
-All views respect RLS policies and only show appropriate data based on user permissions.
-
-## Functions
-
-### `get_user_total_points(target_user_id TEXT)`
-Returns total points for a user with permission checking.
-- Users can get their own points
-- Admins can get any user's points
-- Returns NULL for unauthorized access
-
-### `refresh_leaderboards()`
-Refreshes materialized views for leaderboard data.
-- Run after bulk point changes
-- Typically called post-deployment
-
-## Migration Management
-
-### Schema Source of Truth
-
-Prisma schema (`packages/db/schema.prisma`) serves as the canonical definition. All database changes should:
-
-1. Start with Prisma schema updates
-2. Generate migrations using provided scripts
-3. Apply and test migrations
-4. Update documentation
-
-### Migration Scripts
-
-- `scripts/db/generate-migrations.sh`: Create SQL migrations from Prisma
-- `scripts/db/check-drift.sh`: Detect schema drift
-- `scripts/db/sync-supabase.sh`: Sync Supabase migrations
-
-### Best Practices
-
-1. Always update Prisma schema first
-2. Test migrations locally before deploying
-3. Create backups before major schema changes
-4. Use append-only patterns for audit data
-5. Maintain referential integrity with foreign keys
+- **Database**: PostgreSQL via Supabase
+- **ORM**: Prisma Client
+- **Models**: 11 core models
+- **Location**: `packages/db/schema.prisma`
+
+## Core Models
+
+### User (Educators)
+
+```prisma
+model User {
+  id                String   @id
+  handle            String   @unique
+  name              String
+  email             String   @unique
+  avatar_url        String?
+  role              Role     @default(PARTICIPANT)
+  user_type         UserType @default(EDUCATOR)
+  school            String?
+  cohort            String?
+  kajabi_contact_id String?  @unique
+  created_at        DateTime @default(now())
+
+  // Relations
+  earned_badges        EarnedBadge[]
+  ledger              PointsLedger[]
+  learn_tag_grants    LearnTagGrant[]
+  submissions         Submission[]
+  reviewed_submissions Submission[] @relation("ReviewedSubmissions")
+}
+
+enum Role {
+  PARTICIPANT  // Default for educators
+  REVIEWER     // Can approve submissions
+  ADMIN        // Full admin access
+  SUPERADMIN   // System administration
+}
+```
+
+### Submissions (Evidence)
+
+```prisma
+model Submission {
+  id              String           @id @default(cuid())
+  user_id         String
+  activity_code   String
+  status          SubmissionStatus @default(PENDING)
+  visibility      Visibility       @default(PRIVATE)
+  payload         Json             // Evidence data
+  attachments_rel SubmissionAttachment[]
+  reviewer_id     String?
+  review_note     String?
+  created_at      DateTime         @default(now())
+  updated_at      DateTime         @updatedAt
+}
+
+enum SubmissionStatus {
+  PENDING   // Awaiting review
+  APPROVED  // Approved by reviewer
+  REJECTED  // Rejected by reviewer
+}
+```
+
+### Points System
+
+```prisma
+model PointsLedger {
+  id                String       @id @default(cuid())
+  user_id           String
+  activity_code     String
+  source            LedgerSource
+  delta_points      Int          // Points awarded/deducted
+  external_source   String?      // "kajabi", "manual"
+  external_event_id String?
+  event_time        DateTime
+  meta              Json         @default("{}")
+  created_at        DateTime     @default(now())
+}
+
+enum LedgerSource {
+  SUBMISSION_APPROVAL  // From approved submission
+  KAJABI_WEBHOOK      // From Kajabi course completion
+  MANUAL_ADJUSTMENT   // Admin adjustment
+  BADGE_AWARD         // From badge award
+}
+```
+
+### Activities (LEAPS Stages)
+
+```prisma
+model Activity {
+  code           String @id
+  name           String
+  default_points Int
+}
+```
+
+**Standard Activities:**
+
+- `learn` - Complete AI course (20 points)
+- `explore` - Apply AI in classroom (50 points)
+- `amplify` - Run training session (variable points)
+- `present` - Share story on LinkedIn (20 points)
+- `shine` - Recognition activity
+
+### Kajabi Integration
+
+```prisma
+model KajabiEvent {
+  id             String   @id @default(cuid())
+  event_id       String   // Kajabi event ID
+  tag_name_raw   String   // Original tag name
+  tag_name_norm  String   @db.Citext
+  contact_id     String   // Kajabi contact ID
+  email          String?
+  created_at_utc DateTime
+  status         String   // Processing status
+  raw            Json     // Full webhook payload
+}
+
+model LearnTagGrant {
+  user_id   String
+  tag_name  String   @db.Citext
+  granted_at DateTime @default(now())
+}
+```
+
+## Database Commands
+
+```bash
+# Generate Prisma client
+pnpm db:generate
+
+# Run migrations (dev)
+pnpm db:migrate
+
+# Deploy migrations (prod)
+pnpm db:migrate:prod
+
+# Push schema changes (dev only)
+pnpm db:push
+
+# Seed with test data
+pnpm db:seed
+
+# Open Prisma Studio
+pnpm db:studio
+
+# Check schema drift
+pnpm db:check-drift
+
+# Reset database (dev only)
+pnpm db:reset
+```
+
+## Common Queries
+
+### User Points Total
+
+```typescript
+const totalPoints = await prisma.pointsLedger.aggregate({
+  where: { user_id: userId },
+  _sum: { delta_points: true },
+})
+```
+
+### Leaderboard
+
+```typescript
+const leaderboard = await prisma.$queryRaw`
+  SELECT u.handle, u.name, SUM(pl.delta_points) as total_points
+  FROM users u
+  LEFT JOIN points_ledger pl ON u.id = pl.user_id  
+  GROUP BY u.id, u.handle, u.name
+  ORDER BY total_points DESC
+  LIMIT 20
+`
+```
+
+### Pending Reviews
+
+```typescript
+const pending = await prisma.submission.findMany({
+  where: { status: 'PENDING' },
+  include: { user: true, activity: true },
+  orderBy: { created_at: 'asc' },
+})
+```
+
+## Security
+
+- **Row Level Security**: Supabase policies restrict data access
+- **PII Protection**: Email, name, school are restricted fields
+- **File Security**: Attachments use signed URLs
+- **Audit Logging**: All admin actions logged
 
 ---
 
-*This documentation is auto-generated from the Prisma schema. Last updated: 2025-09-02T13:52:38.044Z*
+_Schema reflects actual production database as of 2025-09-10._

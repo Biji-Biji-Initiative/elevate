@@ -21,6 +21,11 @@ export interface LeaderboardTableProps {
   showSearch?: boolean
   showPagination?: boolean
   getProfilePath?: (handle: string) => string
+  Link?: React.ComponentType<{
+    href: string
+    className?: string
+    children: React.ReactNode
+  }>
 }
 
 export function LeaderboardTable({
@@ -31,6 +36,7 @@ export function LeaderboardTable({
   showSearch = true,
   showPagination = true,
   getProfilePath,
+  Link,
 }: LeaderboardTableProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -220,6 +226,7 @@ export function LeaderboardTable({
               showRank: true,
               compact: true,
               ...(getProfilePath && { getProfilePath }),
+              ...(Link && { Link }),
             }
             return <ProfileCard key={entry.user.id} {...profileCardProps} />
           })}

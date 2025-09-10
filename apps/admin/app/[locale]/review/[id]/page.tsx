@@ -1,23 +1,25 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-
 import { useRouter } from 'next/navigation'
 
-import { adminClient, AdminClientError, type AdminSubmission } from '@/lib/admin-client'
-import { handleApiError } from '@/lib/error-utils'
-import { withRoleGuard } from '@elevate/auth/context'
-import { Button , Textarea, Input, Alert } from '@elevate/ui'
-import { StatusBadge, ConfirmModal } from '@elevate/ui/blocks'
+import { toMsg } from '@/lib/errors'
 
-function ReviewSubmissionPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+// centralized error helper
+import { adminActions } from '@elevate/admin-core'
+import { withRoleGuard } from '@elevate/auth/context'
+import type { AdminSubmission } from '@elevate/types/admin-api-types'
+import { Button, Textarea, Input, Alert } from '@elevate/ui'
+import { StatusBadge, ConfirmModal } from '@elevate/ui/blocks'
+ 
+
+type PageProps = { params: Promise<{ id: string }> }
+
+ 
+
+function ReviewSubmissionPage({ params }: PageProps) {
   const router = useRouter()
   const [submission, setSubmission] = useState<AdminSubmission | null>(null)
-  const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,23 +30,39 @@ function ReviewSubmissionPage({
     action: 'approve' | 'reject'
   }>({
     isOpen: false,
-    action: 'approve'
+    action: 'approve',
   })
 
-  const submissionId = params.id
+  const [submissionId, setSubmissionId] = useState<string>('')
+
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      try {
+        const p = await params
+        if (active) setSubmissionId(p.id)
+      } catch {
+        // ignore
+      }
+    }
+    void load()
+    return () => {
+      active = false
+    }
+  }, [params])
 
   const fetchSubmission = useCallback(async () => {
     if (!submissionId) return
     setLoading(true)
     setError(null)
     try {
-      const data = await adminClient.getSubmissionById(submissionId)
-      setSubmission(data.submission)
-      setEvidenceUrl(data.evidence || null)
-      setReviewNote(data.submission.review_note || '')
+      const { submission: sub } = await adminActions.getSubmissionById(
+        submissionId,
+      )
+      setSubmission(sub)
+      setReviewNote(sub.review_note || '')
     } catch (error: unknown) {
-      setError(handleApiError(error, 'Fetch submission'))
-      // Don't automatically redirect on error, let user decide
+      setError(toMsg('Fetch submission', error))
     } finally {
       setLoading(false)
     }
@@ -58,17 +76,30 @@ function ReviewSubmissionPage({
 
   const getBasePoints = (): number => {
     if (!submission) return 0
-    
+
     if (submission.activity.code === 'AMPLIFY') {
       // Type guard for AMPLIFY payload
-      const isAmplifyPayload = (payload: unknown): payload is { peers_trained: number; students_trained: number } => {
+      const isAmplifyPayload = (
+        payload: unknown,
+      ): payload is { peers_trained: number; students_trained: number } => {
         if (typeof payload !== 'object' || payload === null) return false
-        const obj = payload as { peers_trained?: unknown; students_trained?: unknown }
-        return typeof obj.peers_trained === 'number' && typeof obj.students_trained === 'number'
+        const obj = payload as {
+          peers_trained?: unknown
+          students_trained?: unknown
+        }
+        return (
+          typeof obj.peers_trained === 'number' &&
+          typeof obj.students_trained === 'number'
+        )
       }
-      
-      const amplifyPayload = isAmplifyPayload(submission.payload) ? submission.payload : { peers_trained: 0, students_trained: 0 }
-      return Math.min(amplifyPayload.peers_trained, 50) * 2 + Math.min(amplifyPayload.students_trained, 200) * 1
+
+      const amplifyPayload = isAmplifyPayload(submission.payload)
+        ? submission.payload
+        : { peers_trained: 0, students_trained: 0 }
+      return (
+        Math.min(amplifyPayload.peers_trained, 50) * 2 +
+        Math.min(amplifyPayload.students_trained, 200) * 1
+      )
     }
 
     return submission.activity.default_points || 0
@@ -79,28 +110,35 @@ function ReviewSubmissionPage({
 
     setProcessing(true)
     setError(null)
-    
+
     try {
-      const reviewData: Parameters<typeof adminClient.reviewSubmission>[0] = {
+      const reviewData: {
+        submissionId: string
+        action: 'approve' | 'reject'
+        reviewNote?: string
+        pointAdjustment?: number
+      } = {
         submissionId,
         action,
+        ...(reviewNote.trim() ? { reviewNote: reviewNote.trim() } : {}),
+        ...(pointAdjustment === ''
+          ? {}
+          : { pointAdjustment: Number(pointAdjustment) }),
       }
-      if (reviewNote.trim()) reviewData.reviewNote = reviewNote.trim()
-      if (pointAdjustment !== '') reviewData.pointAdjustment = Number(pointAdjustment)
-      
-      await adminClient.reviewSubmission(reviewData)
+
+      await adminActions.reviewSubmission(reviewData)
       await fetchSubmission()
       setConfirmModal({ isOpen: false, action: 'approve' })
     } catch (error: unknown) {
-      setError(handleApiError(error, 'Process review'))
+      setError(toMsg('Process review', error))
     } finally {
       setProcessing(false)
     }
   }
 
-  const renderPayloadField = (key: string, value: unknown): React.ReactNode => {
+  const renderPayloadField = (_: string, value: unknown): React.ReactNode => {
     if (value === null || value === undefined) return '-'
-    
+
     if (typeof value === 'object') {
       return (
         <pre className="text-sm bg-gray-50 p-2 rounded overflow-auto">
@@ -108,7 +146,7 @@ function ReviewSubmissionPage({
         </pre>
       )
     }
-    
+
     if (typeof value === 'string' && value.length > 100) {
       return (
         <div className="text-sm">
@@ -116,8 +154,12 @@ function ReviewSubmissionPage({
         </div>
       )
     }
-    
-    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+
+    if (
+      typeof value === 'string' ||
+      typeof value === 'number' ||
+      typeof value === 'boolean'
+    ) {
       return <span className="text-sm">{String(value)}</span>
     }
     return <span className="text-sm">-</span>
@@ -134,7 +176,9 @@ function ReviewSubmissionPage({
         {files.map((att) => (
           <div key={att.id} className="flex items-center space-x-2">
             <span className="text-sm text-gray-600">📎</span>
-            <span className="text-sm">{att.path.split('/').pop() || att.path}</span>
+            <span className="text-sm">
+              {att.path.split('/').pop() || att.path}
+            </span>
             <Button
               variant="ghost"
               style={{ padding: '2px 8px', fontSize: '12px' }}
@@ -175,8 +219,8 @@ function ReviewSubmissionPage({
         )}
         <div className="text-center py-12">
           <p className="text-gray-500">Submission not found</p>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={() => router.push('/admin/submissions')}
             style={{ marginTop: '16px' }}
           >
@@ -195,7 +239,9 @@ function ReviewSubmissionPage({
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold text-gray-900">Review Submission</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Review Submission
+          </h1>
           <Button
             variant="ghost"
             onClick={() => router.push('/admin/submissions')}
@@ -204,7 +250,8 @@ function ReviewSubmissionPage({
           </Button>
         </div>
         <p className="text-gray-600">
-          Reviewing {submission.activity.name} submission by {submission.user.name}
+          Reviewing {submission.activity.name} submission by{' '}
+          {submission.user.name}
         </p>
       </div>
 
@@ -214,23 +261,37 @@ function ReviewSubmissionPage({
           {/* Submission Details */}
           <div className="bg-white border rounded-lg p-6">
             <h2 className="text-lg font-semibold mb-4">Submission Details</h2>
-            
+
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <span className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </span>
                 <StatusBadge status={submission.status} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
+                <span className="block text-sm font-medium text-gray-700 mb-1">
+                  Visibility
+                </span>
                 <StatusBadge status={submission.visibility} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Submitted</label>
-                <p className="text-sm">{new Date(submission.created_at).toLocaleString()}</p>
+                <span className="block text-sm font-medium text-gray-700 mb-1">
+                  Submitted
+                </span>
+                <p className="text-sm">
+                  {new Date(submission.created_at).toLocaleString()}
+                </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
-                <p className="text-sm">{submission.updated_at ? new Date(submission.updated_at).toLocaleString() : 'Never'}</p>
+                <span className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Updated
+                </span>
+                <p className="text-sm">
+                  {submission.updated_at
+                    ? new Date(submission.updated_at).toLocaleString()
+                    : 'Never'}
+                </p>
               </div>
             </div>
 
@@ -239,9 +300,11 @@ function ReviewSubmissionPage({
               <h3 className="font-medium text-gray-900">Submission Data</h3>
               {Object.entries(submission.payload || {}).map(([key, value]) => (
                 <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
-                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                  </label>
+                  <span className="block text-sm font-medium text-gray-700 mb-1 capitalize">
+                    {key
+                      .replace(/([A-Z])/g, ' $1')
+                      .replace(/^./, (str) => str.toUpperCase())}
+                  </span>
                   {renderPayloadField(key, value)}
                 </div>
               ))}
@@ -281,12 +344,16 @@ function ReviewSubmissionPage({
               </div>
               {submission.user.school && (
                 <div>
-                  <span className="text-gray-600">{submission.user.school}</span>
+                  <span className="text-gray-600">
+                    {submission.user.school}
+                  </span>
                 </div>
               )}
               {submission.user.cohort && (
                 <div>
-                  <span className="text-gray-600">Cohort: {submission.user.cohort}</span>
+                  <span className="text-gray-600">
+                    Cohort: {submission.user.cohort}
+                  </span>
                 </div>
               )}
             </div>
@@ -310,9 +377,12 @@ function ReviewSubmissionPage({
           {submission.status === 'PENDING' && (
             <div className="bg-white border rounded-lg p-4 space-y-4">
               <h3 className="font-semibold">Review Actions</h3>
-              
+
               <div>
-                <label htmlFor="point-adjustment" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="point-adjustment"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Point Adjustment (Optional)
                 </label>
                 <Input
@@ -320,7 +390,11 @@ function ReviewSubmissionPage({
                   type="number"
                   placeholder={`Base: ${basePoints}`}
                   value={pointAdjustment}
-                  onChange={(e) => setPointAdjustment(e.target.value === '' ? '' : Number(e.target.value))}
+                  onChange={(e) =>
+                    setPointAdjustment(
+                      e.target.value === '' ? '' : Number(e.target.value),
+                    )
+                  }
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Max ±{maxAdjustment} points ({Math.round(20)}% of base)
@@ -328,7 +402,10 @@ function ReviewSubmissionPage({
               </div>
 
               <div>
-                <label htmlFor="review-notes" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="review-notes"
+                  className="block text sm font-medium text-gray-700 mb-1"
+                >
                   Review Notes
                 </label>
                 <Textarea
@@ -343,22 +420,26 @@ function ReviewSubmissionPage({
               <div className="space-y-2">
                 <Button
                   variant="default"
-                  style={{ 
+                  style={{
                     width: '100%',
-                    backgroundColor: '#16a34a'
+                    backgroundColor: '#16a34a',
                   }}
-                  onClick={() => setConfirmModal({ isOpen: true, action: 'approve' })}
+                  onClick={() =>
+                    setConfirmModal({ isOpen: true, action: 'approve' })
+                  }
                   disabled={processing}
                 >
                   Approve Submission
                 </Button>
                 <Button
                   variant="default"
-                  style={{ 
+                  style={{
                     width: '100%',
-                    backgroundColor: '#dc2626'
+                    backgroundColor: '#dc2626',
                   }}
-                  onClick={() => setConfirmModal({ isOpen: true, action: 'reject' })}
+                  onClick={() =>
+                    setConfirmModal({ isOpen: true, action: 'reject' })
+                  }
                   disabled={processing}
                 >
                   Reject Submission
@@ -376,10 +457,10 @@ function ReviewSubmissionPage({
                   <span className="text-gray-600">Status: </span>
                   <StatusBadge status={submission.status} size="sm" />
                 </div>
-                {submission.reviewer_id && (
+                {submission.reviewer && (
                   <div>
                     <span className="text-gray-600">Reviewed by: </span>
-                    <span>{submission.reviewer_id}</span>
+                    <span>{submission.reviewer.id}</span>
                   </div>
                 )}
                 {submission.review_note && (
@@ -399,7 +480,9 @@ function ReviewSubmissionPage({
         isOpen={confirmModal.isOpen}
         onClose={() => setConfirmModal({ isOpen: false, action: 'approve' })}
         onConfirm={() => handleReview(confirmModal.action)}
-        title={`${confirmModal.action === 'approve' ? 'Approve' : 'Reject'} Submission`}
+        title={`${
+          confirmModal.action === 'approve' ? 'Approve' : 'Reject'
+        } Submission`}
         message={`Are you sure you want to ${confirmModal.action} this submission?`}
         confirmText={confirmModal.action === 'approve' ? 'Approve' : 'Reject'}
         isLoading={processing}
@@ -408,4 +491,8 @@ function ReviewSubmissionPage({
   )
 }
 
-export default withRoleGuard(ReviewSubmissionPage, ['reviewer', 'admin', 'superadmin'])
+export default withRoleGuard(ReviewSubmissionPage, [
+  'reviewer',
+  'admin',
+  'superadmin',
+])

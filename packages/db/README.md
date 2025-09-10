@@ -2,6 +2,8 @@
 
 Database package for the MS Elevate LEAPS Tracker application. Provides type-safe database access, schema management, and migration tooling using Prisma.
 
+> 📚 **Documentation**: See [Database Hub](../../docs/README.md#backend--database) for comprehensive guides on schema, migrations, and operations.
+
 ## Features
 
 - **Type-safe database operations** via Prisma Client
@@ -126,6 +128,69 @@ DIRECT_URL="postgresql://user:pass@host:5432/elevate_dev"
 | `pnpm db:seed`          | Seed database with default data        |
 | `pnpm db:studio`        | Open Prisma Studio GUI                 |
 | `pnpm db:push`          | Push schema changes (dev only)         |
+
+### Leaderboard Search Indexes (Trigram)
+
+The web leaderboard supports partial text search on `name`/`school` using `ILIKE`. To keep search fast at scale we enable `pg_trgm` and add GIN trigram indexes on the materialized views. These are created in `scripts/post-migrate.sql` and run automatically after Prisma migrations.
+
+To apply:
+
+```
+pnpm -C elevate -F @elevate/db db:migrate
+```
+
+### EXPLAIN Helpers
+
+Validate query plans used by the app with EXPLAIN on representative queries:
+
+```sql
+-- Leaderboard totals with name search
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT lb.user_id, lb.handle, lb.name, lb.school, lb.total_points
+FROM leaderboard_totals lb
+WHERE name ILIKE '%ahmad%' OR handle ILIKE '%ahmad%' OR school ILIKE '%jakarta%'
+ORDER BY lb.total_points DESC, COALESCE(lb.last_activity_at, '1970-01-01'::timestamp) DESC
+LIMIT 20 OFFSET 0;
+
+-- 30d leaderboard search
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT lb.user_id, lb.handle, lb.name, lb.school, lb.total_points
+FROM leaderboard_30d lb
+WHERE name ILIKE '%ahmad%' OR handle ILIKE '%ahmad%' OR school ILIKE '%jakarta%'
+ORDER BY lb.total_points DESC, COALESCE(lb.last_activity_at, '1970-01-01'::timestamp) DESC
+LIMIT 20 OFFSET 0;
+
+-- Stage metrics time series
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT
+  TO_CHAR(created_at, 'YYYY-MM') AS month,
+  COUNT(*)::int AS submissions,
+  COUNT(*) FILTER (WHERE status = 'APPROVED')::int AS approvals
+FROM submissions
+WHERE activity_code = 'LEARN'
+GROUP BY 1
+ORDER BY 1;
+```
+
+Expect GIN trgm index scans for the name/school filters and appropriate sort strategies on ordered columns.
+
+### Backfill Learn Tag Grants
+
+We provide a supervised backfill script to populate `learn_tag_grants` from Kajabi events (tag names: `elevate-ai-1-completed`, `elevate-ai-2-completed`).
+
+- Dry run (prints planned inserts):
+
+```
+pnpm -C elevate -F @elevate/db db:backfill-learn-tags --limit 1000 --offset 0
+```
+
+- Apply changes:
+
+```
+pnpm -C elevate -F @elevate/db db:backfill-learn-tags --apply --limit 1000 --offset 0
+```
+
+The script is idempotent and only inserts grants that do not already exist.
 
 ## Testing
 

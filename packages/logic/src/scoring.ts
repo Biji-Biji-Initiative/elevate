@@ -1,12 +1,14 @@
 import type { Prisma } from '@elevate/db'
 import type { ActivityCode, AmplifyInput } from '@elevate/types'
+import { activityCanon, badgeCanon } from '@elevate/types/activity-canon'
 
 export function computePoints(activity: ActivityCode, payload: unknown): number {
   switch (activity) {
     case 'LEARN':
-      return 20
+      // LEARN points are sourced from tags via webhook; cap is 20 total
+      return activityCanon.learn.cap
     case 'EXPLORE':
-      return 50
+      return activityCanon.explore.onApproved
     case 'AMPLIFY': {
       const amplifyPayload = payload as AmplifyInput
       const peers = Number((amplifyPayload as { peers_trained?: unknown })?.peers_trained ?? 0)
@@ -14,10 +16,13 @@ export function computePoints(activity: ActivityCode, payload: unknown): number 
       // Caps (proposal) — enforce upstream in validation too
       const capPeers = Math.min(peers, 50)
       const capStudents = Math.min(students, 200)
-      return capPeers * 2 + capStudents * 1
+      return (
+        capPeers * activityCanon.amplify.peersCoefficient +
+        capStudents * activityCanon.amplify.studentsCoefficient
+      )
     }
     case 'PRESENT':
-      return 20
+      return activityCanon.present.onApproved
     case 'SHINE':
       return 0
     default:
@@ -39,26 +44,27 @@ export async function grantBadgesForUser(tx: Prisma.TransactionClient, userId: s
     const tags = await tx.learnTagGrant.findMany({
       where: {
         user_id: userId,
-        tag_name: { in: ['elevate-ai-1-completed', 'elevate-ai-2-completed'] },
+        tag_name: { in: [...badgeCanon.STARTER.requiresTags] },
       },
       select: { tag_name: true },
     })
     const tagSet = new Set(tags.map((t) => t.tag_name.toLowerCase()))
-    if (tagSet.has('elevate-ai-1-completed') && tagSet.has('elevate-ai-2-completed')) {
+    const [t1, t2] = badgeCanon.STARTER.requiresTags
+    if (tagSet.has(t1) && tagSet.has(t2)) {
       toInsert.push('STARTER')
     }
   }
 
   if (!have.has('IN_CLASS_INNOVATOR')) {
     const exploreCount = await tx.submission.count({
-      where: { user_id: userId, activity_code: 'EXPLORE', status: 'APPROVED' },
+      where: { user_id: userId, activity_code: badgeCanon.IN_CLASS_INNOVATOR.requiresApprovedActivity, status: 'APPROVED' },
     })
     if (exploreCount > 0) toInsert.push('IN_CLASS_INNOVATOR')
   }
 
   if (!have.has('COMMUNITY_VOICE')) {
     const presentCount = await tx.submission.count({
-      where: { user_id: userId, activity_code: 'PRESENT', status: 'APPROVED' },
+      where: { user_id: userId, activity_code: badgeCanon.COMMUNITY_VOICE.requiresApprovedActivity, status: 'APPROVED' },
     })
     if (presentCount > 0) toInsert.push('COMMUNITY_VOICE')
   }

@@ -53,10 +53,7 @@ export class ErrorTestFactory {
     return new ConflictError(message)
   }
 
-  static createRateLimitError(
-    limit = 100,
-    windowMs = 60000,
-  ): RateLimitError {
+  static createRateLimitError(limit = 100, windowMs = 60000): RateLimitError {
     return new RateLimitError(limit, windowMs, 30)
   }
 
@@ -112,11 +109,11 @@ export class MockResponseHelper {
     }
     if (code) response.code = code
     if (details) response.details = details
-    
+
     // Use string matcher signatures but keep them typed as unknown to satisfy TS without test globals
     response.timestamp = expect.any(String) as unknown
     response.traceId = expect.any(String) as unknown
-    
+
     return response
   }
 
@@ -127,11 +124,12 @@ export class MockResponseHelper {
       code: 'VALIDATION_ERROR',
       // Type assertion for test matcher functions
       details: expect.arrayContaining(
-        fields.map((field) =>
-          expect.objectContaining({
-            path: [field],
-            message: expect.any(String) as unknown,
-          }) as unknown,
+        fields.map(
+          (field) =>
+            expect.objectContaining({
+              path: [field],
+              message: expect.any(String) as unknown,
+            }) as unknown,
         ),
       ) as unknown,
       timestamp: expect.any(String) as unknown,

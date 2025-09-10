@@ -1,45 +1,81 @@
-import type { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server'
 
-import { requireRole } from '@elevate/auth/server-helpers';
+import { requireRole } from '@elevate/auth/server-helpers'
 // Use database service layer instead of direct Prisma
-import { 
+import {
   findKajabiEvents,
   getKajabiEventStats,
-  getKajabiPointsAwarded
-} from '@elevate/db';
+  getKajabiPointsAwarded,
+} from '@elevate/db'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
+
+function getStringField(obj: unknown, key: string): string | undefined {
+  if (obj && typeof obj === 'object' && key in (obj as Record<string, unknown>)) {
+    const v = (obj as Record<string, unknown>)[key]
+    return typeof v === 'string' ? v : undefined
+  }
+  return undefined
+}
+
+function getObjectField<T extends object = Record<string, unknown>>(
+  obj: unknown,
+  key: string,
+): T | undefined {
+  if (obj && typeof obj === 'object' && key in (obj as Record<string, unknown>)) {
+    const v = (obj as Record<string, unknown>)[key]
+    return v && typeof v === 'object' ? (v as T) : undefined
+  }
+  return undefined
+}
 
 export async function GET(request: NextRequest) {
   return withRateLimit(request, adminRateLimiter, async () => {
-  try {
-    // Check admin role
-    await requireRole('admin');
+    try {
+      // Check admin role
+      await requireRole('admin')
 
-    // Fetch Kajabi events using service layer
-    const [events, stats, pointsAwarded] = await Promise.all([
-      findKajabiEvents(50),
-      getKajabiEventStats(),
-      getKajabiPointsAwarded()
-    ]);
+      // Fetch Kajabi events using service layer
+      const [events, stats, pointsAwarded] = await Promise.all([
+        findKajabiEvents(50),
+        getKajabiEventStats(),
+        getKajabiPointsAwarded(),
+      ])
 
-    return createSuccessResponse({
-      events: events.map(event => ({
-        id: event.id,
-        received_at: event.received_at,
-        processed_at: event.processed_at,
-        user_match: event.user_match,
-        payload: event.payload,
-      })),
-      stats: {
-        ...stats,
-        points_awarded: pointsAwarded,
-      },
-    })
-  } catch (error) {
-    return createErrorResponse(error, 500);
-  }
+      const mapped = events.map((event) => {
+        const received_at =
+          getStringField(event, 'created_at_utc') ||
+          getStringField(event, 'received_at') ||
+          new Date().toISOString()
+        const processed_at = getStringField(event, 'processed_at') ?? null
+        const status = getStringField(event, 'status')
+        const user_match = getStringField(event, 'user_match') ?? null
+        const payload = getObjectField(event, 'raw') ?? getObjectField(event, 'payload') ?? {}
+
+        return {
+          id: String((event as { id: string }).id),
+          received_at,
+          processed_at: processed_at ?? (status && status !== 'queued_unmatched' ? new Date().toISOString() : null),
+          user_match,
+          payload,
+        }
+      })
+
+      const logger = await getSafeServerLogger('admin-kajabi')
+      logger.info('Fetched Kajabi events', { count: mapped.length })
+
+      return createSuccessResponse({
+        events: mapped,
+        stats: {
+          ...stats,
+          points_awarded: pointsAwarded,
+        },
+      })
+    } catch (error) {
+      return createErrorResponse(error, 500)
+    }
   })
 }

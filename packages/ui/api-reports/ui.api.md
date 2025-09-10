@@ -517,7 +517,7 @@ export interface LeaderboardPreviewProps {
 }
 
 // @public (undocumented)
-export function LeaderboardTable({ data, period, loading, onPeriodChange, showSearch, showPagination, getProfilePath, }: LeaderboardTableProps): React_3.JSX.Element;
+export function LeaderboardTable({ data, period, loading, onPeriodChange, showSearch, showPagination, getProfilePath, Link, }: LeaderboardTableProps): React_3.JSX.Element;
 
 // @public (undocumented)
 export interface LeaderboardTableProps {
@@ -525,6 +525,12 @@ export interface LeaderboardTableProps {
     data: readonly LeaderboardEntryDTO[];
     // (undocumented)
     getProfilePath?: (handle: string) => string;
+    // (undocumented)
+    Link?: React_3.ComponentType<{
+        href: string;
+        className?: string;
+        children: React_3.ReactNode;
+    }>;
     // (undocumented)
     loading?: boolean;
     // (undocumented)

@@ -8,6 +8,7 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 
 import { BadgeCriteriaSchema } from '@elevate/types/common';
+import { StatsResponseDTOSchema } from '@elevate/types/dto-mappers';
 import { SubmissionPayloadSchema as _SubmissionPayloadSchema } from '@elevate/types/submission-payloads';
 import { KajabiTagEventSchema } from '@elevate/types/webhooks';
 
@@ -306,20 +307,12 @@ export const StageStatsSchema = z.object({
   rejected: z.number().int(),
 })
 
-export const PlatformStatsResponseSchema = z.object({
-  success: z.literal(true),
-  data: z.object({
-    counters: z.object({
-      educators_learning: z.number().int(),
-      peers_students_reached: z.number().int(),
-      stories_shared: z.number().int(),
-      micro_credentials: z.number().int(),
-      mce_certified: z.number().int(),
-    }),
+export const PlatformStatsResponseSchema = z
+  .object({
+    success: z.literal(true),
+    data: StatsResponseDTOSchema,
   })
-}).openapi({
-  title: 'Platform Stats Response',
-})
+  .openapi({ title: 'Platform Stats Response' })
 
 export const StageMetricsResponseSchema = z.object({
   success: z.literal(true),

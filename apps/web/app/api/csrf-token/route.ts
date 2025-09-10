@@ -2,7 +2,13 @@ import type { NextRequest } from 'next/server'
 
 import { auth } from '@clerk/nextjs/server'
 
-import { createSuccessResponse, createErrorResponse, withApiErrorHandling, AuthenticationError, type ApiContext } from '@elevate/http'
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  withApiErrorHandling,
+  AuthenticationError,
+  type ApiContext,
+} from '@elevate/http'
 import { generateCSRFToken } from '@elevate/security/csrf'
 
 export const runtime = 'nodejs'
@@ -15,7 +21,7 @@ export const runtime = 'nodejs'
  * This endpoint is used by the useCSRFToken React hook.
  */
 export const GET = withApiErrorHandling(
-  async (request: NextRequest, context: ApiContext) => {
+  async (_request: NextRequest, context: ApiContext) => {
     const { userId } = await auth()
 
     // Require authentication for CSRF token generation
@@ -34,9 +40,8 @@ export const GET = withApiErrorHandling(
       })
     } catch (error) {
       return createErrorResponse(
-        'Failed to generate CSRF token',
+        new Error('Failed to generate CSRF token'),
         500,
-        'CSRF_GENERATION_FAILED',
         context.traceId,
       )
     }

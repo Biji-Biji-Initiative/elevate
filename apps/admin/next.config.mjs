@@ -13,11 +13,15 @@ const withNextIntl = createNextIntlPlugin('./i18n.ts')
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 })
+const repoRoot = path.join(__dirname, '../..')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Remove X-Powered-By header for security
   poweredByHeader: false,
+
+  // Ensure Next.js treats the monorepo root correctly to avoid picking parent lockfiles/configs
+  outputFileTracingRoot: repoRoot,
 
   // React 19 and Next.js 15 configuration with Turbopack
   experimental: {
@@ -29,7 +33,6 @@ const nextConfig = {
       '@elevate/ui',
       '@elevate/types',
       '@elevate/auth',
-      '@elevate/admin-core',
       '@radix-ui/react-dialog',
       '@radix-ui/react-select',
       'lucide-react',
@@ -41,6 +44,8 @@ const nextConfig = {
 
   // Turbopack configuration: rely on package entrypoints only
   turbopack: {
+    // Must match outputFileTracingRoot
+    root: repoRoot,
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
   },
 

@@ -1,19 +1,33 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import type { ACTIVITY_CODES, SUBMISSION_STATUSES } from '@elevate/types'
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Alert } from '@elevate/ui'
+
+import { toMsg } from '@/lib/errors'
+import { adminActions } from '@elevate/admin-core'
 import { withRoleGuard } from '@elevate/auth/context'
-import { adminClient } from '@/lib/admin-client'
-import { handleApiError } from '@/lib/error-utils'
+import type { ACTIVITY_CODES, SUBMISSION_STATUSES } from '@elevate/types'
+import {
+  Button,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Alert,
+} from '@elevate/ui'
+
+ 
 
 interface ExportFilters {
   startDate: string
   endDate: string
-  activity: 'ALL' | typeof ACTIVITY_CODES[number]
-  status: 'ALL' | typeof SUBMISSION_STATUSES[number]
+  activity: 'ALL' | (typeof ACTIVITY_CODES)[number]
+  status: 'ALL' | (typeof SUBMISSION_STATUSES)[number]
   cohort: string
 }
+
+type ExportType = 'submissions' | 'users' | 'leaderboard' | 'points'
 
 function ExportsPage() {
   const [filters, setFilters] = useState<ExportFilters>({
@@ -21,9 +35,9 @@ function ExportsPage() {
     endDate: '',
     activity: 'ALL',
     status: 'ALL',
-    cohort: 'ALL'
+    cohort: 'ALL',
   })
-  
+
   const [loading, setLoading] = useState<Record<string, boolean>>({})
   const [cohorts, setCohorts] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -31,92 +45,114 @@ function ExportsPage() {
   useEffect(() => {
     const fetchCohorts = async () => {
       try {
-        const cohortData = await adminClient.getCohorts()
-        setCohorts(cohortData)
+        const cohortData = await adminActions.getCohorts()
+        setCohorts(Array.isArray(cohortData) ? cohortData : [])
       } catch (error: unknown) {
-        // Cohorts are optional for UI, don't break on fetch failure
-        console.warn('Failed to fetch cohorts:', handleApiError(error, 'Cohort fetch'))
+        setError(toMsg('Cohort fetch', error))
       }
     }
     void fetchCohorts()
   }, [])
 
-  const handleExport = async (type: 'submissions' | 'users' | 'leaderboard' | 'points') => {
-    setLoading(prev => ({ ...prev, [type]: true }))
+  const handleExport = async (type: ExportType) => {
+    setLoading((prev) => ({ ...prev, [type]: true }))
     setError(null)
-    
+
     try {
       const params = new URLSearchParams({
         type,
         format: 'csv',
         ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value && value !== 'ALL')
-        )
+          Object.entries(filters).filter(
+            ([_, value]) => value && value !== 'ALL',
+          ),
+        ),
       })
 
       const response = await fetch(`/api/admin/exports?${params}`)
-      
+
       if (response.ok) {
         // Trigger download
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        
+
         // Get filename from response headers
         const contentDisposition = response.headers.get('content-disposition')
         const match = contentDisposition?.match(/filename="(.+)"/)
         const filename = match?.[1] || `${type}-export.csv`
         a.download = filename
-        
+
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else {
         try {
-          const data = await response.json() as { error?: string; message?: string }
-          setError(`Export failed: ${data.error || data.message || 'Unknown error'}`)
+          const data = (await response.json()) as {
+            error?: string
+            message?: string
+          }
+          setError(
+            `Export failed: ${data.error || data.message || 'Unknown error'}`,
+          )
         } catch {
-          setError(`Export failed: HTTP ${response.status} ${response.statusText}`)
+          setError(
+            `Export failed: HTTP ${response.status} ${response.statusText}`,
+          )
         }
       }
     } catch (error: unknown) {
-      setError(handleApiError(error, 'Export data'))
+      setError(toMsg('Export data', error))
     } finally {
-      setLoading(prev => ({ ...prev, [type]: false }))
+      setLoading((prev) => ({ ...prev, [type]: false }))
     }
   }
 
-  const exportItems = [
+  const exportItems: Array<{
+    id: ExportType
+    title: string
+    description: string
+    icon: string
+    supportedFilters: Array<keyof ExportFilters>
+  }> = [
     {
       id: 'submissions',
       title: 'Submissions Export',
-      description: 'Export all submission data with user details, status, and review information',
+      description:
+        'Export all submission data with user details, status, and review information',
       icon: '📝',
-      supportedFilters: ['startDate', 'endDate', 'activity', 'status', 'cohort']
+      supportedFilters: [
+        'startDate',
+        'endDate',
+        'activity',
+        'status',
+        'cohort',
+      ],
     },
     {
       id: 'users',
       title: 'Users Export',
-      description: 'Export user data with roles, points, submission counts, and badge counts',
+      description:
+        'Export user data with roles, points, submission counts, and badge counts',
       icon: '👥',
-      supportedFilters: ['cohort']
+      supportedFilters: ['cohort'],
     },
     {
       id: 'leaderboard',
       title: 'Leaderboard Export',
       description: 'Export current leaderboard rankings with point totals',
       icon: '🏆',
-      supportedFilters: ['cohort']
+      supportedFilters: ['cohort'],
     },
     {
       id: 'points',
       title: 'Points Ledger Export',
       description: 'Export complete points transaction history',
       icon: '💯',
-      supportedFilters: ['startDate', 'endDate', 'cohort']
-    }
+      supportedFilters: ['startDate', 'endDate', 'cohort'],
+    },
   ]
 
   return (
@@ -128,37 +164,66 @@ function ExportsPage() {
       )}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Data Exports</h1>
-        <p className="text-gray-600">Export system data to CSV files for analysis and reporting</p>
+        <p className="text-gray-600">
+          Export system data to CSV files for analysis and reporting
+        </p>
       </div>
 
       {/* Global Filters */}
       <div className="bg-white p-6 rounded-lg border mb-6">
         <h2 className="text-lg font-semibold mb-4">Export Filters</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
-            <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <label
+              htmlFor="start-date"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Start Date
+            </label>
             <Input
               id="start-date"
               type="date"
               value={filters.startDate}
-              onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, startDate: e.target.value }))
+              }
             />
           </div>
 
           <div>
-            <label htmlFor="end-date" className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <label
+              htmlFor="end-date"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              End Date
+            </label>
             <Input
               id="end-date"
               type="date"
               value={filters.endDate}
-              onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, endDate: e.target.value }))
+              }
             />
           </div>
 
           <div>
-            <label htmlFor="activity-select" className="block text-sm font-medium text-gray-700 mb-1">Activity</label>
-            <Select value={filters.activity} onValueChange={(value) => setFilters(prev => ({ ...prev, activity: value }))}>
+            <label
+              htmlFor="activity-select"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Activity
+            </label>
+            <Select
+              value={filters.activity}
+              onValueChange={(value) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  activity: value as ExportFilters['activity'],
+                }))
+              }
+            >
               <SelectTrigger id="activity-select">
                 <SelectValue placeholder="Select activity" />
               </SelectTrigger>
@@ -174,8 +239,21 @@ function ExportsPage() {
           </div>
 
           <div>
-            <label htmlFor="status-select" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
+            <label
+              htmlFor="status-select"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Status
+            </label>
+            <Select
+              value={filters.status}
+              onValueChange={(value) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  status: value as ExportFilters['status'],
+                }))
+              }
+            >
               <SelectTrigger id="status-select">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
@@ -189,15 +267,27 @@ function ExportsPage() {
           </div>
 
           <div>
-            <label htmlFor="cohort-select" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
-            <Select value={filters.cohort} onValueChange={(value) => setFilters(prev => ({ ...prev, cohort: value }))}>
+            <label
+              htmlFor="cohort-select"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Cohort
+            </label>
+            <Select
+              value={filters.cohort}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, cohort: value }))
+              }
+            >
               <SelectTrigger id="cohort-select">
                 <SelectValue placeholder="Select cohort" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Cohorts</SelectItem>
                 {cohorts.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -206,8 +296,9 @@ function ExportsPage() {
 
         <div className="mt-4">
           <p className="text-sm text-gray-600">
-            Set global filters that will be applied to all exports (where applicable).
-            Individual export cards show which filters are supported.
+            Set global filters that will be applied to all exports (where
+            applicable). Individual export cards show which filters are
+            supported.
           </p>
         </div>
       </div>
@@ -215,13 +306,20 @@ function ExportsPage() {
       {/* Export Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {exportItems.map((item) => (
-          <div key={item.id} className="bg-white p-6 rounded-lg border hover:shadow-md transition-shadow">
+          <div
+            key={item.id}
+            className="bg-white p-6 rounded-lg border hover:shadow-md transition-shadow"
+          >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="text-3xl">{item.icon}</div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{item.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {item.description}
+                  </p>
                 </div>
               </div>
             </div>
@@ -246,7 +344,9 @@ function ExportsPage() {
               disabled={loading[item.id]}
               style={{ width: '100%' }}
             >
-              {loading[item.id] ? 'Exporting...' : `Export ${item.title.split(' ')[0]}`}
+              {loading[item.id]
+                ? 'Exporting...'
+                : `Export ${item.title.split(' ')[0]}`}
             </Button>
           </div>
         ))}
@@ -255,11 +355,14 @@ function ExportsPage() {
       {/* Export History */}
       <div className="mt-8 bg-white p-6 rounded-lg border">
         <h2 className="text-lg font-semibold mb-4">Recent Exports</h2>
-        
+
         <div className="text-center py-8 text-gray-500">
           <div className="text-4xl mb-4">📊</div>
           <p>Export history is not yet implemented.</p>
-          <p className="text-sm mt-2">Future versions will show recent export activity and allow re-downloading files.</p>
+          <p className="text-sm mt-2">
+            Future versions will show recent export activity and allow
+            re-downloading files.
+          </p>
         </div>
       </div>
 
@@ -269,9 +372,16 @@ function ExportsPage() {
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• Large exports may take several minutes to process</li>
           <li>• Date filters use submission/creation timestamps</li>
-          <li>• All exports include audit trail information where applicable</li>
-          <li>• Files are automatically named with timestamp and filters applied</li>
-          <li>• Sensitive data (like email addresses) may be limited based on your role</li>
+          <li>
+            • All exports include audit trail information where applicable
+          </li>
+          <li>
+            • Files are automatically named with timestamp and filters applied
+          </li>
+          <li>
+            • Sensitive data (like email addresses) may be limited based on your
+            role
+          </li>
         </ul>
       </div>
     </div>

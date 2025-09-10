@@ -17,13 +17,13 @@ Sentry.init({
   enabled: Boolean(process.env.SENTRY_DSN),
 
   // Node.js integrations (lean set to satisfy types)
-  integrations: [
-    Sentry.httpIntegration(),
-  ],
+  integrations: [Sentry.httpIntegration()],
 
   // Release tracking
-  release: process.env.VERCEL_GIT_COMMIT_SHA,
-  environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+  ...(process.env.VERCEL_GIT_COMMIT_SHA
+    ? { release: process.env.VERCEL_GIT_COMMIT_SHA }
+    : {}),
+  environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'development',
 
   // Error filtering and enhancement
   beforeSend(event) {

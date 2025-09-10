@@ -1,3 +1,11 @@
+---
+title: Build Strategy and Package Architecture
+owner: platform-team
+status: active
+last_reviewed: 2025-09-09
+tags: [build, typescript, monorepo, architecture]
+---
+
 # Build Strategy and Package Architecture (Production-Grade Blueprint)
 
 This document is the authoritative blueprint for building, publishing, and consuming packages in this monorepo. It codifies long-term decisions and guardrails used by modern teams at scale.

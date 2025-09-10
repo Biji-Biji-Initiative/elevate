@@ -1016,7 +1016,7 @@ export function transformPayloadAPIToDB(
 
 export function transformPayloadDBToAPI(
   activityCode: string,
-  payload: Record<string, unknown>,
+  payload: unknown,
 ):
   | LearnPayloadAPI
   | ExplorePayloadAPI
@@ -1026,7 +1026,7 @@ export function transformPayloadDBToAPI(
   switch (activityCode) {
     case ACTIVITY_CODES[0]: {
       // LEARN
-      const parsed = LearnSchema.safeParse(payload)
+      const parsed = LearnSchema.safeParse(payload as Record<string, unknown>)
       if (!parsed.success) throw new Error('Invalid LEARN DB payload shape')
       const cleanedData: LearnPayloadDB = {
         provider: parsed.data.provider,
@@ -1043,7 +1043,7 @@ export function transformPayloadDBToAPI(
     }
     case ACTIVITY_CODES[1]: {
       // EXPLORE
-      const parsed = ExploreSchema.safeParse(payload)
+      const parsed = ExploreSchema.safeParse(payload as Record<string, unknown>)
       if (!parsed.success) throw new Error('Invalid EXPLORE DB payload shape')
       const cleanedData: ExplorePayloadDB = {
         reflection: parsed.data.reflection,
@@ -1057,7 +1057,7 @@ export function transformPayloadDBToAPI(
     }
     case ACTIVITY_CODES[2]: {
       // AMPLIFY
-      const parsed = AmplifySchema.safeParse(payload)
+      const parsed = AmplifySchema.safeParse(payload as Record<string, unknown>)
       if (!parsed.success) throw new Error('Invalid AMPLIFY DB payload shape')
       const cleanedData: AmplifyPayloadDB = {
         peers_trained: parsed.data.peers_trained,
@@ -1070,7 +1070,7 @@ export function transformPayloadDBToAPI(
     }
     case ACTIVITY_CODES[3]: {
       // PRESENT
-      const parsed = PresentSchema.safeParse(payload)
+      const parsed = PresentSchema.safeParse(payload as Record<string, unknown>)
       if (!parsed.success) throw new Error('Invalid PRESENT DB payload shape')
       const cleanedData: PresentPayloadDB = {
         linkedin_url: parsed.data.linkedin_url,
@@ -1083,7 +1083,7 @@ export function transformPayloadDBToAPI(
     }
     case ACTIVITY_CODES[4]: {
       // SHINE
-      const parsed = ShineSchema.safeParse(payload)
+      const parsed = ShineSchema.safeParse(payload as Record<string, unknown>)
       if (!parsed.success) throw new Error('Invalid SHINE DB payload shape')
       const cleanedData: ShinePayloadDB = {
         idea_title: parsed.data.idea_title,

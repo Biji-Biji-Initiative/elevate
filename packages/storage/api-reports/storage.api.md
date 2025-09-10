@@ -16,6 +16,9 @@ export const ALLOWED_FILE_TYPES: {
 export function deleteEvidenceFile(path: string): Promise<void>;
 
 // @public (undocumented)
+export function enforceUserRetention(userId: string, cutoff: Date): Promise<number>;
+
+// @public (undocumented)
 export function fileExists(path: string): Promise<boolean>;
 
 // @public (undocumented)
@@ -60,6 +63,12 @@ export function saveEvidenceFile(file: File, userId: string, activityCode: strin
     hash: string;
     url?: string;
 }>;
+
+// @public (undocumented)
+export function scanFileBufferForVirus(buffer: ArrayBuffer): {
+    clean: boolean;
+    threat?: string;
+};
 
 // @public (undocumented)
 export function validateFile(file: File): void;

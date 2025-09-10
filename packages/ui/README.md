@@ -2,6 +2,8 @@
 
 Shared UI component library for the MS Elevate project, built on top of shadcn/ui and Tailwind CSS.
 
+> 📚 **Documentation**: See [UI Hub](../../docs/README.md#ui--frontend) for comprehensive guides on components, registry, and styling.
+
 ## Overview
 
 This package provides a centralized collection of UI components used across the web and admin applications. It combines shadcn/ui components with custom components specific to the Elevate project.
@@ -9,6 +11,7 @@ This package provides a centralized collection of UI components used across the 
 ## Components
 
 ### shadcn/ui Components
+
 - **Alert** - Notification alerts with variants
 - **Badge** - Status badges and labels
 - **Button** - Interactive buttons with multiple variants
@@ -22,6 +25,7 @@ This package provides a centralized collection of UI components used across the 
 - **Textarea** - Multi-line text inputs
 
 ### Custom Components
+
 - **FileUpload** - File upload with drag & drop and progress
 - **LoadingSpinner** - Loading indicators and overlays
 - **FormField** - Enhanced form field wrapper
@@ -31,9 +35,9 @@ This package provides a centralized collection of UI components used across the 
 This package is already configured in the monorepo workspace. Import components like this:
 
 ```tsx
-import { Button, Card, Alert } from "@elevate/ui"
-import { FileUpload, LoadingSpinner } from "@elevate/ui"
-import { cn } from "@elevate/ui/lib/utils"
+import { Button, Card, Alert } from '@elevate/ui'
+import { FileUpload, LoadingSpinner } from '@elevate/ui'
+import { cn } from '@elevate/ui/lib/utils'
 ```
 
 ## Development
@@ -72,6 +76,7 @@ packages/ui/
 Components use Tailwind CSS with CSS variables for theming. The design system follows the "new-york" style from shadcn/ui with custom color variables defined in `src/globals.css`.
 
 ### CSS Variables
+
 ```css
 :root {
   --background: 0 0% 100%;
@@ -93,11 +98,13 @@ See the main UI registry documentation for detailed instructions.
 ## Dependencies
 
 ### Peer Dependencies
+
 - React 18+
 - React DOM 18+
 
 ### Core Dependencies
-- @radix-ui/* - Primitive UI components
+
+- @radix-ui/\* - Primitive UI components
 - class-variance-authority - Variant-based styling
 - clsx - Conditional classnames
 - lucide-react - Icon library

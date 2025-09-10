@@ -52,16 +52,50 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     return NextResponse.next()
   }
 
-  // Handle API routes without i18n
-  if (pathname.startsWith('/api/')) {
-    // Let API handlers enforce auth if needed
-    return NextResponse.next()
+  // Call auth() for all non-static requests to ensure Clerk context is established
+  // This prevents "auth() was called but Clerk can't detect usage of clerkMiddleware()" in downstream handlers
+  await auth()
+
+  // Handle referral capture early for any route (including public pages)
+  try {
+    const url = new URL(request.url)
+    const ref = url.searchParams.get('ref')
+    if (ref && ref.length <= 64) {
+      const cookies = request.cookies
+      const { userId } = await auth()
+      // If unauthenticated and not already on sign-in/up, redirect to localized sign-up
+      const isAuthPage = /\/sign-in|\/sign-up/.test(pathname)
+      if (!userId && !isAuthPage) {
+        const localeMatch = pathname.match(/^\/(en|id)(\/|$)/)
+        const locale = localeMatch ? localeMatch[1] : defaultLocale
+        const redirectUrl = new URL(`/${locale}/sign-up`, url)
+        const res = NextResponse.redirect(redirectUrl)
+        if (!cookies.get('ref')) {
+          res.cookies.set('ref', ref, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 90 })
+        }
+        return res
+      }
+      // Otherwise, just set cookie and continue
+      const res = NextResponse.next()
+      if (!cookies.get('ref')) {
+        res.cookies.set('ref', ref, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 90 })
+      }
+      if (pathname.startsWith('/api/')) return res
+      const intlResponse = intlMiddleware(request)
+      if (isPublicRoute(request)) return intlResponse
+    }
+  } catch (err) {
+    // Ignore referral cookie errors
+    console.warn('Referral cookie handling failed', err)
   }
+
+  // Handle API routes without i18n; allow handlers to enforce auth explicitly
+  if (pathname.startsWith('/api/')) return NextResponse.next()
 
   // Handle i18n for page routes
   const intlResponse = intlMiddleware(request)
 
-  // Check authentication for protected routes
+  // Check authentication for protected page routes
   if (!isPublicRoute(request)) {
     const { userId, redirectToSignIn } = await auth()
     if (!userId) return redirectToSignIn()

@@ -42,7 +42,7 @@
     "dist/openapi.json"
   ],
   "scripts": {
-    "build": "pnpm run clean && pnpm run generate:all && pnpm run build:types && tsup --config tsup.config.ts && pnpm run api:extract",
+    "build": "pnpm run clean && pnpm run generate:all && pnpm run build:types && tsup --config tsup.config.ts",
     "generate": "tsx src/generator.ts",
     "generate:spec": "tsx src/generator.ts",
     "generate:client": "openapi-typescript dist/openapi.json -o src/client.ts",

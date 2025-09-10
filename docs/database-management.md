@@ -1,4 +1,12 @@
-# Database Schema Management
+---
+title: Database Schema Management
+owner: platform-team
+status: active
+last_reviewed: 2025-09-09
+tags: [database, schema, prisma, migrations]
+---
+
+## Database Schema Management
 
 This document describes the database schema management system that enforces Prisma as the single source of truth for database structure.
 
@@ -54,24 +62,24 @@ pnpm db:test-rls
 
 ### Core Management
 
-| Script | Description | Usage |
-|--------|-------------|-------|
-| `pnpm db:check-drift` | Detect schema drift | Run before deployments |
-| `pnpm db:generate-sql` | Generate SQL migrations from Prisma | After schema changes |
-| `pnpm db:sync-supabase` | Sync Supabase with Prisma schema | Major schema updates |
-| `pnpm db:docs` | Generate schema documentation | After schema changes |
-| `pnpm db:test-rls` | Test RLS policies | Before deployments |
+| Script                  | Description                         | Usage                  |
+| ----------------------- | ----------------------------------- | ---------------------- |
+| `pnpm db:check-drift`   | Detect schema drift                 | Run before deployments |
+| `pnpm db:generate-sql`  | Generate SQL migrations from Prisma | After schema changes   |
+| `pnpm db:sync-supabase` | Sync Supabase with Prisma schema    | Major schema updates   |
+| `pnpm db:docs`          | Generate schema documentation       | After schema changes   |
+| `pnpm db:test-rls`      | Test RLS policies                   | Before deployments     |
 
 ### Existing Scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm db:generate` | Generate Prisma client |
-| `pnpm db:migrate` | Run Prisma migrations (dev) |
-| `pnpm db:push` | Push schema to database |
-| `pnpm db:seed` | Seed database with test data |
-| `pnpm db:studio` | Open Prisma Studio |
-| `pnpm db:reset` | Reset database and re-run migrations |
+| Script             | Description                          |
+| ------------------ | ------------------------------------ |
+| `pnpm db:generate` | Generate Prisma client               |
+| `pnpm db:migrate`  | Run Prisma migrations (dev)          |
+| `pnpm db:push`     | Push schema to database              |
+| `pnpm db:seed`     | Seed database with test data         |
+| `pnpm db:studio`   | Open Prisma Studio                   |
+| `pnpm db:reset`    | Reset database and re-run migrations |
 
 ## File Structure
 
@@ -161,18 +169,18 @@ SELECT auth.get_user_id();
 Generates realistic test data:
 
 ```typescript
-import { DatabaseFixtures } from '@/packages/db/tests/fixtures';
+import { DatabaseFixtures } from '@/packages/db/tests/fixtures'
 
-const fixtures = new DatabaseFixtures(prisma);
+const fixtures = new DatabaseFixtures(prisma)
 
 // Generate test user
 const user = await fixtures.createTestUser({
   handle: 'testuser',
-  role: Role.ADMIN
-});
+  role: Role.ADMIN,
+})
 
 // Create test scenarios
-await fixtures.createTestScenario('leaderboard');
+await fixtures.createTestScenario('leaderboard')
 ```
 
 ### Available Test Scenarios
@@ -185,19 +193,19 @@ await fixtures.createTestScenario('leaderboard');
 ### Test Utilities
 
 ```typescript
-import { TestDatabase, DatabaseAssertions } from '@/packages/db/tests/helpers';
+import { TestDatabase, DatabaseAssertions } from '@/packages/db/tests/helpers'
 
-const testDb = new TestDatabase();
-const assertions = new DatabaseAssertions(testDb.prisma);
+const testDb = new TestDatabase()
+const assertions = new DatabaseAssertions(testDb.prisma)
 
 // Verify user exists
-await assertions.assertUserExists(userId);
+await assertions.assertUserExists(userId)
 
 // Check points balance
-await assertions.assertPointsBalance(userId, 150);
+await assertions.assertPointsBalance(userId, 150)
 
 // Verify submission status
-await assertions.assertSubmissionStatus(submissionId, 'APPROVED');
+await assertions.assertSubmissionStatus(submissionId, 'APPROVED')
 ```
 
 ## Migration Best Practices
@@ -205,6 +213,7 @@ await assertions.assertSubmissionStatus(submissionId, 'APPROVED');
 ### Safe Migration Patterns
 
 ✅ **DO**:
+
 - Add new columns with default values
 - Create new tables
 - Add indexes (with `CONCURRENTLY` in production)
@@ -212,6 +221,7 @@ await assertions.assertSubmissionStatus(submissionId, 'APPROVED');
 - Use `ALTER TABLE ADD COLUMN` for new optional fields
 
 ❌ **DON'T** (without careful planning):
+
 - Drop tables or columns
 - Change column types that could lose data
 - Add NOT NULL constraints without defaults
@@ -253,11 +263,11 @@ The system includes performance monitoring:
 
 ```javascript
 // Benchmark query performance
-const { PerformanceHelper } = require('@/packages/db/tests/helpers');
-const perf = new PerformanceHelper(prisma);
+const { PerformanceHelper } = require('@/packages/db/tests/helpers')
+const perf = new PerformanceHelper(prisma)
 
-const { avgDuration } = await perf.benchmarkLeaderboard();
-console.log(`Average leaderboard query: ${avgDuration}ms`);
+const { avgDuration } = await perf.benchmarkLeaderboard()
+console.log(`Average leaderboard query: ${avgDuration}ms`)
 ```
 
 ## Troubleshooting
@@ -265,6 +275,7 @@ console.log(`Average leaderboard query: ${avgDuration}ms`);
 ### Common Issues
 
 **Schema Drift Detected**:
+
 ```bash
 # Check what's different
 pnpm db:check-drift
@@ -274,6 +285,7 @@ pnpm db:push
 ```
 
 **RLS Policy Failures**:
+
 ```bash
 # Test specific policies
 pnpm db:test-rls
@@ -283,6 +295,7 @@ cat supabase/migrations/00002_auth_policies.sql
 ```
 
 **Migration Failures**:
+
 ```bash
 # Check migration syntax
 ./scripts/db/generate-migrations.sh test_migration --no-apply
@@ -318,12 +331,12 @@ psql $DATABASE_URL -c "\\d+ users"
 
 ### Access Control
 
-| Role | Permissions |
-|------|-------------|
-| `PARTICIPANT` | Own data + public content |
-| `REVIEWER` | All submissions + point management |
-| `ADMIN` | Full access except system functions |
-| `SUPERADMIN` | Complete system access |
+| Role          | Permissions                         |
+| ------------- | ----------------------------------- |
+| `PARTICIPANT` | Own data + public content           |
+| `REVIEWER`    | All submissions + point management  |
+| `ADMIN`       | Full access except system functions |
+| `SUPERADMIN`  | Complete system access              |
 
 ## Deployment Strategy
 
@@ -372,4 +385,4 @@ For questions about database schema management:
 3. Run the troubleshooting commands above
 4. Consult the team's development guidelines
 
-*This system ensures database integrity, security, and maintainability while providing a smooth developer experience.*
+_This system ensures database integrity, security, and maintainability while providing a smooth developer experience._

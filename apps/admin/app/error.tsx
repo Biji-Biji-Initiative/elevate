@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 
 import Link from 'next/link'
 
+import { getClientLogger } from '@elevate/logging/client'
 import { Button, Alert, AlertTitle, AlertDescription } from '@elevate/ui'
 
 interface ErrorProps {
@@ -13,9 +14,13 @@ interface ErrorProps {
 
 export default function Error({ error, reset }: ErrorProps) {
   useEffect(() => {
-    // Log the error to console in development
-    // In production, this would be sent to an error tracking service
-    console.error('Admin App Error:', error)
+    // Structured client-side logging (dev only by default)
+    try {
+      const logger = getClientLogger().forPage('admin-error-boundary')
+      logger.error('Admin App Error', error)
+    } catch {
+      // no-op
+    }
   }, [error])
 
   return (

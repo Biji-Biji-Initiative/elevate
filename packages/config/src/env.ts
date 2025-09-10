@@ -150,14 +150,20 @@ function withAliases(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 }
 
 // Enhanced parsing with detailed error reporting and fail-fast behavior
+export function parseEnv(env: NodeJS.ProcessEnv): z.infer<typeof EnvSchema>
 export function parseEnv<TOutput>(
   env: NodeJS.ProcessEnv,
-  schema: z.ZodType<TOutput> = EnvSchema as unknown as z.ZodType<TOutput>,
-): TOutput {
+  schema: z.ZodType<TOutput>,
+): TOutput
+export function parseEnv<TOutput>(
+  env: NodeJS.ProcessEnv,
+  schema?: z.ZodType<TOutput>,
+): unknown {
   const normalized = withAliases(env)
-  
+
   try {
-    const parsed = schema.parse(normalized)
+    const used = (schema ?? EnvSchema) as z.ZodType<unknown>
+    const parsed = used.parse(normalized)
     return parsed
   } catch (error) {
     if (error instanceof z.ZodError) {

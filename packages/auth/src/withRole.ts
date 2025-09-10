@@ -1,6 +1,13 @@
 import { auth } from '@clerk/nextjs/server'
 
-import { parseClerkPublicMetadata, parseClerkEmailAddress, safeParseRole, hasRole, type RoleName, type AuthUser } from './types'
+import {
+  parseClerkPublicMetadata,
+  parseClerkEmailAddress,
+  safeParseRole,
+  hasRole,
+  type RoleName,
+  type AuthUser,
+} from './types'
 
 /**
  * Get current authenticated user with role information
@@ -9,12 +16,14 @@ import { parseClerkPublicMetadata, parseClerkEmailAddress, safeParseRole, hasRol
 export async function getCurrentUser(): Promise<AuthUser | null> {
   const { userId, sessionClaims } = await auth()
   if (!userId) return null
-  
+
   const publicMetadata = parseClerkPublicMetadata(sessionClaims?.publicMetadata)
   const role = safeParseRole(publicMetadata.role)
   const email = parseClerkEmailAddress(sessionClaims?.primaryEmailAddress)
-  const name = `${sessionClaims?.firstName ?? ''} ${sessionClaims?.lastName ?? ''}`.trim()
-  
+  const name = `${sessionClaims?.firstName ?? ''} ${
+    sessionClaims?.lastName ?? ''
+  }`.trim()
+
   return {
     userId,
     role,
@@ -32,14 +41,16 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 export async function requireRole(minRole: RoleName): Promise<AuthUser> {
   const user = await getCurrentUser()
   if (!user) throw new RoleError('Authentication required', 401)
-  
+
   if (!hasRole(user.role, minRole)) {
-    throw new RoleError(`Insufficient permissions: requires ${minRole} role or higher`, 403)
+    throw new RoleError(
+      `Insufficient permissions: requires ${minRole} role or higher`,
+      403,
+    )
   }
-  
+
   return user
 }
-
 
 /**
  * HOF to create role-protected API handlers
@@ -49,13 +60,16 @@ export async function requireRole(minRole: RoleName): Promise<AuthUser> {
  */
 export function withRoleProtection<T extends unknown[], R>(
   minRole: RoleName,
-  handler: (user: AuthUser, ...args: T) => R | Promise<R>
+  handler: (user: AuthUser, ...args: T) => R | Promise<R>,
 ) {
   return async (...args: T): Promise<R> => {
     const user = await requireRole(minRole)
     return handler(user, ...args)
   }
 }
+
+// Backward-compatible alias used across apps
+export { withRoleProtection as withRole }
 
 /**
  * Role-based middleware for API routes

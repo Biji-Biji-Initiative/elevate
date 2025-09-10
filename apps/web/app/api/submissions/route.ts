@@ -3,18 +3,53 @@ import type { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
 
-import { findUserById, findActivityByCode, findSubmissionsByUserAndActivity, countSubmissionsByUserAndActivity, findSubmissionsWithPagination, createSubmission, createSubmissionAttachment, type Submission } from '@elevate/db'
-
-// Import DTO transformers
-import { createSuccessResponse, withApiErrorHandling, type ApiContext } from '@elevate/http'
-import { getServerLogger } from '@elevate/logging/server'
+import {
+  findUserById,
+  findActivityByCode,
+  findSubmissionsByUserAndActivity,
+  findSubmissionsWithFilters,
+  findSubmissionsWithPagination,
+  createSubmission,
+  createSubmissionAttachment,
+  type Prisma,
+} from '@elevate/db'
+import {
+  createSuccessResponse,
+  withApiErrorHandling,
+  type ApiContext,
+} from '@elevate/http'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import {
+  recordApiAvailability,
+  recordApiResponseTime,
+} from '@elevate/logging/slo-monitor'
 import { withCSRFProtection } from '@elevate/security/csrf'
-import { submissionRateLimiter, withRateLimit } from '@elevate/security/rate-limiter'
+import {
+  submissionRateLimiter,
+  withRateLimit,
+} from '@elevate/security/rate-limiter'
 import { sanitizeSubmissionPayload } from '@elevate/security/sanitizer'
-import { SubmissionCreateRequestSchema, parseActivityCode, parseSubmissionStatus, parseAmplifyPayload, parseSubmissionPayload, AuthenticationError, AuthorizationError, NotFoundError, ValidationError, SubmissionLimitError, LEARN, AMPLIFY, VISIBILITY_OPTIONS, SUBMISSION_STATUSES, type SubmissionWhereClause } from '@elevate/types'
-import { transformPayloadAPIToDB, transformPayloadDBToAPI } from '@elevate/types/dto-mappers'
-
- 
+import {
+  SubmissionCreateRequestSchema,
+  parseActivityCode,
+  parseSubmissionStatus,
+  parseAmplifyPayload,
+  parseSubmissionPayload,
+  AuthenticationError,
+  AuthorizationError,
+  NotFoundError,
+  ValidationError,
+  SubmissionLimitError,
+  LEARN,
+  AMPLIFY,
+  VISIBILITY_OPTIONS,
+  SUBMISSION_STATUSES,
+} from '@elevate/types'
+import { activityCanon } from '@elevate/types/activity-canon'
+import {
+  transformPayloadAPIToDB,
+  transformPayloadDBToAPI,
+} from '@elevate/types/dto-mappers'
 
 export const runtime = 'nodejs'
 
@@ -25,7 +60,11 @@ export const POST = withCSRFProtection(
   withApiErrorHandling(async (request: NextRequest, context: ApiContext) => {
     // Apply rate limiting for submissions
     return withRateLimit(request, submissionRateLimiter, async () => {
-      const logger = getServerLogger().forRequestWithHeaders(request)
+      const sloStart = Date.now()
+      const baseLogger = await getSafeServerLogger('submissions')
+      const logger = baseLogger.forRequestWithHeaders
+        ? baseLogger.forRequestWithHeaders(request)
+        : baseLogger
       const t0 = Date.now()
       const { userId } = await auth()
 
@@ -106,7 +145,7 @@ export const POST = withCSRFProtection(
       }
 
       // Check for existing pending/approved submissions for certain activities
-      if ([LEARN].includes(validatedData.activityCode)) {
+      if (validatedData.activityCode === LEARN) {
         const existingSubmissions = await findSubmissionsByUserAndActivity(
           userId,
           validatedData.activityCode,
@@ -114,7 +153,20 @@ export const POST = withCSRFProtection(
         )
 
         if (existingSubmissions.length > 0) {
-          const existingSubmission = existingSubmissions[0]
+          const [existingSubmission] = existingSubmissions
+          if (!existingSubmission) {
+            throw new ValidationError(
+              new z.ZodError([
+                {
+                  code: 'custom',
+                  message: 'Existing submission not found',
+                  path: ['activityCode'],
+                },
+              ]),
+              'Duplicate submission not allowed',
+              context.traceId,
+            )
+          }
           throw new ValidationError(
             new z.ZodError([
               {
@@ -136,34 +188,48 @@ export const POST = withCSRFProtection(
         const sevenDaysAgo = new Date()
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-        const recentSubmissions = await countSubmissionsByUserAndActivity(
-          userId,
-          AMPLIFY,
-          { gte: sevenDaysAgo },
-        )
+        const recentSubmissions = await findSubmissionsWithFilters({
+          where: {
+            user_id: userId,
+            activity_code: AMPLIFY,
+            created_at: { gte: sevenDaysAgo },
+          },
+          orderBy: { created_at: 'desc' },
+          select: {
+            id: true,
+            payload: true,
+          },
+        })
 
         // Calculate total peers and students trained in last 7 days
         const totalPeers = recentSubmissions.reduce(
-          (sum: number, sub: Submission) => {
-            // Transform DB payload (snake_case) to API (camelCase) before parsing
-            const apiPayload = transformPayloadDBToAPI(AMPLIFY, sub.payload)
-            const parsedPayload = parseAmplifyPayload({
+          (sum: number, sub: { id: string; payload: unknown }) => {
+            const parsed = parseAmplifyPayload({
               activityCode: AMPLIFY,
-              data: apiPayload,
+              data: sub.payload,
             })
-            return sum + (parsedPayload?.data.peersTrained || 0)
+            const peers =
+              (parsed && typeof parsed === 'object' && parsed !== null
+                ? (parsed as { data?: { peers_trained?: number } }).data
+                    ?.peers_trained
+                : 0) || 0
+            return sum + peers
           },
           0,
         )
 
         const totalStudents = recentSubmissions.reduce(
-          (sum: number, sub: Submission) => {
-            const apiPayload = transformPayloadDBToAPI(AMPLIFY, sub.payload)
-            const parsedPayload = parseAmplifyPayload({
+          (sum: number, sub: { id: string; payload: unknown }) => {
+            const parsed = parseAmplifyPayload({
               activityCode: AMPLIFY,
-              data: apiPayload,
+              data: sub.payload,
             })
-            return sum + (parsedPayload?.data.studentsTrained || 0)
+            const students =
+              (parsed && typeof parsed === 'object' && parsed !== null
+                ? (parsed as { data?: { students_trained?: number } }).data
+                    ?.students_trained
+                : 0) || 0
+            return sum + students
           },
           0,
         )
@@ -171,7 +237,7 @@ export const POST = withCSRFProtection(
         // Parse the new submission payload
         const newPayload = parseAmplifyPayload({
           activityCode: AMPLIFY,
-          data: validatedData.payload,
+          data: dbPayload,
         })
         if (!newPayload) {
           throw new ValidationError(
@@ -187,23 +253,26 @@ export const POST = withCSRFProtection(
           )
         }
 
-        const newPeers = newPayload.data.peersTrained || 0
-        const newStudents = newPayload.data.studentsTrained || 0
+        const newPeers = newPayload.data.peers_trained || 0
+        const newStudents = newPayload.data.students_trained || 0
 
-        if (totalPeers + newPeers > 50) {
+        if (totalPeers + newPeers > activityCanon.amplify.limits.weeklyPeers) {
           throw new SubmissionLimitError(
             'Peer training',
             totalPeers + newPeers,
-            50,
+            activityCanon.amplify.limits.weeklyPeers,
             context.traceId,
           )
         }
 
-        if (totalStudents + newStudents > 200) {
+        if (
+          totalStudents + newStudents >
+          activityCanon.amplify.limits.weeklyStudents
+        ) {
           throw new SubmissionLimitError(
             'Student training',
             totalStudents + newStudents,
-            200,
+            activityCanon.amplify.limits.weeklyStudents,
             context.traceId,
           )
         }
@@ -213,7 +282,8 @@ export const POST = withCSRFProtection(
       const submission = await createSubmission({
         user_id: userId,
         activity_code: validatedData.activityCode,
-        payload: dbPayload,
+        // Cast via unknown to satisfy exactOptionalPropertyTypes with Prisma JSON
+        payload: dbPayload as unknown as Prisma.InputJsonValue,
         visibility: validatedData.visibility || VISIBILITY_OPTIONS[0], // PRIVATE
       })
 
@@ -230,10 +300,8 @@ export const POST = withCSRFProtection(
           try {
             await createSubmissionAttachment({
               submission_id: submission.id,
-              filename: path.split('/').pop() || path,
-              path: path,
-              mime_type: 'application/octet-stream', // Default, should be determined from file
-              size_bytes: 0, // Would need to be determined from actual file
+              path,
+              hash: null,
             })
           } catch (error) {
             // Skip duplicates silently
@@ -258,6 +326,13 @@ export const POST = withCSRFProtection(
         userId,
         durationMs: Date.now() - t0,
       })
+      recordApiAvailability('/api/submissions', 'POST', 201)
+      recordApiResponseTime(
+        '/api/submissions',
+        'POST',
+        Date.now() - sloStart,
+        201,
+      )
       return response
     })
   }),
@@ -265,6 +340,7 @@ export const POST = withCSRFProtection(
 
 export const GET = withApiErrorHandling(
   async (request: NextRequest, _context: ApiContext) => {
+    const sloStart = Date.now()
     const { userId } = await auth()
 
     if (!userId) {
@@ -277,7 +353,7 @@ export const GET = withApiErrorHandling(
     const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100)
     const offset = Math.max(parseInt(url.searchParams.get('offset') || '0'), 0)
 
-    const whereClause: SubmissionWhereClause = {
+    const whereClause: Prisma.SubmissionWhereInput = {
       user_id: userId,
     }
 
@@ -295,7 +371,10 @@ export const GET = withApiErrorHandling(
       }
     }
 
-    const logger = getServerLogger().forRequestWithHeaders(request)
+    const baseLogger = await getSafeServerLogger('submissions')
+    const logger = baseLogger.forRequestWithHeaders
+      ? baseLogger.forRequestWithHeaders(request)
+      : baseLogger
     const t0 = Date.now()
     const { submissions, totalCount } = await findSubmissionsWithPagination(
       whereClause,
@@ -335,6 +414,8 @@ export const GET = withApiErrorHandling(
       offset,
       durationMs: Date.now() - t0,
     })
+    recordApiAvailability('/api/submissions', 'GET', 200)
+    recordApiResponseTime('/api/submissions', 'GET', Date.now() - sloStart, 200)
     return resp
   },
 )

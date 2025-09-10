@@ -1,6 +1,7 @@
+import { cookies } from 'next/headers'
 import type { NextRequest } from 'next/server'
 
-import { auth } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 
 import { prisma } from '@elevate/db/client'
 import {
@@ -8,14 +9,18 @@ import {
   withApiErrorHandling,
   type ApiContext,
 } from '@elevate/http'
-import { AuthenticationError, NotFoundError } from '@elevate/types/errors'
-import { clerkClient } from '@clerk/nextjs/server'
 import { enrollUserInKajabi } from '@elevate/integrations'
+import {
+  recordApiAvailability,
+  recordApiResponseTime,
+} from '@elevate/logging/slo-monitor'
+import { AuthenticationError } from '@elevate/types/errors'
 
 export const runtime = 'nodejs'
 
 export const GET = withApiErrorHandling(
-  async (_request: NextRequest, context: ApiContext) => {
+  async (_request: NextRequest, _context: ApiContext) => {
+    const start = Date.now()
     const { userId } = await auth()
 
     if (!userId) {
@@ -97,8 +102,119 @@ export const GET = withApiErrorHandling(
       }
     }
 
+    // Referral attribution and signup bonus (idempotent)
+    try {
+      const c = cookies()
+      const refCookie = c.get?.('ref')?.value
+      if (refCookie && user) {
+        // Require explicit user_type confirmation before awarding referral points
+        const confirmRows = await prisma.$queryRaw<
+          { user_type_confirmed: boolean }[]
+        >`
+          SELECT user_type_confirmed FROM users WHERE id = ${user.id}::text
+        `
+        const confirmed =
+          Array.isArray(confirmRows) && !!confirmRows[0]?.user_type_confirmed
+        if (!confirmed) {
+          // Skip awarding until user picks their role
+          throw new Error('USER_TYPE_NOT_CONFIRMED')
+        }
+        // Resolve referrer by handle, email, or ref_code
+        // Use raw SQL to support optional columns not present in Prisma types (e.g., ref_code)
+        const refRows = await prisma.$queryRaw<{ id: string }[]>`
+          SELECT id FROM users
+          WHERE handle = ${refCookie} OR email = ${refCookie} OR ref_code = ${refCookie}
+          LIMIT 1
+        `
+        const referrer =
+          Array.isArray(refRows) && refRows[0] ? { id: refRows[0].id } : null
+        if (referrer && referrer.id !== user.id) {
+          // If not already referred, set and award
+          // Read via raw query (column added via migration; may not be in Prisma types yet)
+          const currentRef = await prisma.$queryRaw<
+            { referred_by_user_id: string | null }[]
+          >`
+            SELECT referred_by_user_id FROM users WHERE id = ${user.id}::text
+          `
+          const alreadyReferred =
+            Array.isArray(currentRef) && currentRef[0]?.referred_by_user_id
+          if (!alreadyReferred) {
+            // Set referred_by_user_id
+            await prisma.$executeRawUnsafe(
+              'UPDATE users SET referred_by_user_id = $1 WHERE id = $2 AND referred_by_user_id IS NULL',
+              referrer.id,
+              user.id,
+            )
+            // Award referrer points (+2 educator, +1 student) with monthly cap 50
+            const referee = await prisma.user.findUnique({
+              where: { id: user.id },
+              select: { user_type: true },
+            })
+            const delta = referee?.user_type === 'STUDENT' ? 1 : 2
+            const externalId = `referral:signup:${user.id}`
+            const existing = await prisma.pointsLedger.findFirst({
+              where: { external_event_id: externalId },
+            })
+            if (!existing) {
+              const now = new Date()
+              const monthStart = new Date(
+                Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0),
+              )
+              const awardedThisMonthAgg = await prisma.pointsLedger.aggregate({
+                _sum: { delta_points: true },
+                where: {
+                  user_id: referrer.id,
+                  external_source: 'referral',
+                  event_time: { gte: monthStart },
+                },
+              })
+              const awardedThisMonth =
+                awardedThisMonthAgg._sum.delta_points || 0
+              const remaining = Math.max(0, 50 - awardedThisMonth)
+              const grant = Math.min(remaining, delta)
+              if (grant > 0) {
+                await prisma.pointsLedger.create({
+                  data: {
+                    user_id: referrer.id,
+                    activity_code: 'AMPLIFY',
+                    source: 'FORM',
+                    delta_points: grant,
+                    external_source: 'referral',
+                    external_event_id: externalId,
+                    event_time: new Date(),
+                    meta: { referee_id: user.id },
+                  },
+                })
+              }
+              // Record referral event using raw SQL for compatibility (table may be optional)
+              try {
+                await prisma.$executeRawUnsafe(
+                  'INSERT INTO referral_events (referrer_user_id, referee_user_id, event_type, external_event_id, source) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING',
+                  referrer.id,
+                  user.id,
+                  'signup',
+                  externalId,
+                  'cookie',
+                )
+              } catch {
+                // ignore unique conflict
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // best-effort; do not block dashboard
+    }
+
     // Get all user data in parallel for better performance
-    const [pointsResult, submissions, earnedBadges] = await Promise.all([
+    const [
+      pointsResult,
+      submissions,
+      earnedBadges,
+      pointsByActivityRaw,
+      learnGrantsCount,
+    ] = await Promise.all([
       // Get user's total points
       prisma.pointsLedger.aggregate({
         where: { user_id: userId },
@@ -126,9 +242,25 @@ export const GET = withApiErrorHandling(
           earned_at: 'desc',
         },
       }),
+      // Sum points per activity from points_ledger (Option B)
+      prisma.pointsLedger.groupBy({
+        by: ['activity_code'],
+        where: { user_id: userId },
+        _sum: { delta_points: true },
+      }),
+      // Learn completion proxy: check tag grants for user
+      prisma.learnTagGrant.count({ where: { user_id: userId } }),
     ])
 
     const totalPoints = pointsResult._sum.delta_points || 0
+
+    const pointsByActivity = pointsByActivityRaw.reduce<Record<string, number>>(
+      (acc, row) => {
+        acc[row.activity_code] = Math.max(0, row._sum.delta_points || 0)
+        return acc
+      },
+      {},
+    )
 
     // Group submissions by activity
     const submissionsByActivity = submissions.reduce<
@@ -159,9 +291,8 @@ export const GET = withApiErrorHandling(
         (s) => s.status === 'REJECTED',
       )
 
-      // Calculate points earned from this activity
-      const activityPoints =
-        approvedSubmissions.length * activity.default_points
+      // Calculate points earned from this activity via ledger (Option B)
+      const activityPoints = pointsByActivity[activity.code] || 0
 
       return {
         activityCode: activity.code,
@@ -175,7 +306,11 @@ export const GET = withApiErrorHandling(
           rejected: rejectedSubmissions.length,
         },
         latestSubmission: activitySubmissions[0] || null,
-        hasCompleted: approvedSubmissions.length > 0,
+        // Treat LEARN completion as presence of any Learn tag grants; others by approved submissions
+        hasCompleted:
+          activity.code === 'LEARN'
+            ? learnGrantsCount > 0
+            : approvedSubmissions.length > 0,
       }
     })
 
@@ -189,7 +324,7 @@ export const GET = withApiErrorHandling(
       updatedAt: submission.updated_at,
     }))
 
-    return createSuccessResponse({
+    const res = createSuccessResponse({
       user: {
         id: user.id,
         name: user.name,
@@ -222,5 +357,8 @@ export const GET = withApiErrorHandling(
         completedStages: progress.filter((p) => p.hasCompleted).length,
       },
     })
+    recordApiAvailability('/api/dashboard', 'GET', 200)
+    recordApiResponseTime('/api/dashboard', 'GET', Date.now() - start, 200)
+    return res
   },
 )

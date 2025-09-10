@@ -268,3 +268,6 @@ Phase 3 – Guardrails and Tests (L)
 - Document deprecation policy and replacement flow for scripts.
 
 Deliverables of this plan are documentation‑only at this stage. Implementation requires explicit approval and will be performed in small, verifiable increments.
+
+
+

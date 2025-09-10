@@ -3,6 +3,8 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { SignedIn } from '@clerk/nextjs'
+
 import { MetricsChart, StatsGrid, PageLoading } from '@elevate/ui/blocks'
 
 import { getServerApiClient } from '../../../../lib/api-client'
@@ -86,7 +88,21 @@ async function fetchStageMetrics(stage: string): Promise<StageMetrics | null> {
     if (!isValidStage(stage)) return null
     const api = await getServerApiClient()
     const res = await api.getMetricsDTO({ stage })
-    return res.data as unknown as StageMetrics
+    const data: unknown = res.data
+    const isStageMetrics = (v: unknown): v is StageMetrics => {
+      if (!v || typeof v !== 'object') return false
+      const obj = v as Record<string, unknown>
+      return (
+        typeof obj.stage === 'string' &&
+        typeof obj.totalSubmissions === 'number' &&
+        typeof obj.approvedSubmissions === 'number' &&
+        typeof obj.pendingSubmissions === 'number' &&
+        typeof obj.rejectedSubmissions === 'number' &&
+        typeof obj.avgPointsEarned === 'number' &&
+        typeof obj.uniqueEducators === 'number'
+      )
+    }
+    return isStageMetrics(data) ? data : null
   } catch (_) {
     return null
   }
@@ -176,6 +192,30 @@ async function MetricsContent({
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Logged-in CTAs to take action */}
+        <SignedIn>
+          <div className="bg-white border rounded-lg p-4 flex flex-wrap gap-3">
+            {stage !== 'learn' && (
+              <Link
+                href={`/${locale}/dashboard/${stage}`}
+                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              >
+                {stage === 'explore' && 'Submit Exploration'}
+                {stage === 'amplify' && 'Submit Amplify Evidence'}
+                {stage === 'present' && 'Submit LinkedIn Post'}
+                {stage === 'shine' && 'Submit Innovation'}
+              </Link>
+            )}
+            {stage === 'amplify' && (
+              <Link
+                href={`/${locale}/dashboard/amplify/invite`}
+                className="px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700"
+              >
+                Invite Peers/Students
+              </Link>
+            )}
+          </div>
+        </SignedIn>
         {/* Key Statistics */}
         <StatsGrid
           stats={[

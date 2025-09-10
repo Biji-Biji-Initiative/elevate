@@ -1,71 +1,125 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server'
+
+import { Prisma } from '@prisma/client'
 
 import { prisma } from '@elevate/db/client'
-import type { ErrorEnvelope } from '@elevate/types'
+import { createErrorResponse, createSuccessResponse } from '@elevate/http'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import {
+  recordApiAvailability,
+  recordApiResponseTime,
+} from '@elevate/logging/slo-monitor'
+import {
+  formatActivityBreakdown,
+  formatCohortPerformanceStats,
+  formatMonthlyGrowthStats,
+} from '@elevate/logic'
+import { withRateLimit, publicApiRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs'
 
-function errorResponse(status: number, envelope: ErrorEnvelope) {
-  return NextResponse.json({ error: envelope }, { status })
-}
+export async function GET(request: NextRequest) {
+  return withRateLimit(request, publicApiRateLimiter, async () => {
+    const start = Date.now()
+    const logger = await getSafeServerLogger('stats')
+    try {
+      // Try optimized materialized views first
+      const [platformStats, cohortStats, monthlyStats, amplifyData] =
+        await Promise.all([
+          prisma.$queryRaw<Array<{ [key: string]: any }>>(Prisma.sql`
+            SELECT * FROM platform_stats_overview LIMIT 1
+          `),
+          prisma.$queryRaw<
+            Array<{
+              cohort_name: string
+              user_count: number
+              avg_points_per_user: number
+            }>
+          >(
+            Prisma.sql`SELECT cohort_name, user_count, avg_points_per_user FROM cohort_performance_stats ORDER BY avg_points_per_user DESC, user_count DESC LIMIT 10`,
+          ),
+          prisma.$queryRaw<
+            Array<{
+              month_label: string
+              new_educators: number
+              new_submissions: number
+            }>
+          >(
+            Prisma.sql`SELECT month_label, new_educators, new_submissions FROM monthly_growth_stats ORDER BY month DESC LIMIT 6`,
+          ),
+          prisma.$queryRaw<Array<{ total_students: number }>>(
+            Prisma.sql`SELECT COALESCE(SUM(CASE WHEN payload ? 'studentsTrained' THEN (payload->>'studentsTrained')::int ELSE 0 END), 0) as total_students FROM submissions WHERE activity_code = 'AMPLIFY' AND status = 'APPROVED'`,
+          ),
+        ])
 
-export async function GET(_request: NextRequest) {
-  try {
-    const [learners, amplifySubs, storiesShared, microCredentials] = await Promise.all([
-      prisma.learnTagGrant.groupBy({
-        by: ['user_id'],
-        where: { user: { user_type: 'EDUCATOR' } },
-      }),
-      prisma.submission.findMany({
-        where: {
-          activity_code: 'AMPLIFY',
-          status: 'APPROVED',
-          user: { user_type: 'EDUCATOR' },
-        },
-        select: { payload: true },
-      }),
-      prisma.submission.count({
-        where: {
-          activity_code: 'PRESENT',
-          status: 'APPROVED',
-          user: { user_type: 'EDUCATOR' },
-        },
-      }),
-      prisma.learnTagGrant.count({ where: { user: { user_type: 'EDUCATOR' } } }),
-    ])
+      const stats = platformStats?.[0]
+      if (!stats) throw new Error('materialized views unavailable')
 
-    let peers = 0
-    let students = 0
-    for (const sub of amplifySubs) {
-      const data: any = sub.payload
-      peers += data.peers_trained ?? 0
-      students += data.students_trained ?? 0
+      const byStage = formatActivityBreakdown(stats.activity_breakdown)
+      const topCohorts = formatCohortPerformanceStats(cohortStats)
+      const monthlyGrowth = formatMonthlyGrowthStats(monthlyStats)
+      const studentsImpacted = amplifyData?.[0]?.total_students || 0
+
+      const payload = {
+        totalEducators: Number(stats.total_educators || 0),
+        totalSubmissions: Number(stats.total_submissions || 0),
+        totalPoints: Number(stats.total_points_awarded || 0),
+        studentsImpacted,
+        byStage,
+        topCohorts,
+        monthlyGrowth,
+        badges: {
+          totalAwarded: Number(stats.total_badges_earned || 0),
+          uniqueBadges: Number(stats.total_badges_available || 0),
+          mostPopular: [],
+        },
+      }
+
+      const res = createSuccessResponse(payload)
+      res.headers.set(
+        'Cache-Control',
+        'public, s-maxage=1800, stale-while-revalidate=3600',
+      )
+      recordApiAvailability('/api/stats', 'GET', 200)
+      recordApiResponseTime('/api/stats', 'GET', Date.now() - start, 200)
+      return res
+    } catch (error) {
+      // Fallback to a minimal but correctly shaped DTO when views are not available
+      logger.warn('Falling back to basic stats', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+
+      try {
+        const [educators, totalSubmissions, totalPoints] = await Promise.all([
+          prisma.user.count({ where: { user_type: 'EDUCATOR' } }),
+          prisma.submission.count(),
+          prisma.pointsLedger.aggregate({ _sum: { delta_points: true } }),
+        ])
+        const res = createSuccessResponse({
+          totalEducators: educators,
+          totalSubmissions,
+          totalPoints: Number(totalPoints._sum.delta_points || 0),
+          studentsImpacted: 0,
+          byStage: {
+            learn: { total: 0, approved: 0, pending: 0, rejected: 0 },
+            explore: { total: 0, approved: 0, pending: 0, rejected: 0 },
+            amplify: { total: 0, approved: 0, pending: 0, rejected: 0 },
+            present: { total: 0, approved: 0, pending: 0, rejected: 0 },
+            shine: { total: 0, approved: 0, pending: 0, rejected: 0 },
+          },
+          topCohorts: [],
+          monthlyGrowth: [],
+          badges: { totalAwarded: 0, uniqueBadges: 0, mostPopular: [] },
+        })
+        res.headers.set('Cache-Control', 'public, s-maxage=300')
+        recordApiAvailability('/api/stats', 'GET', 200)
+        recordApiResponseTime('/api/stats', 'GET', Date.now() - start, 200)
+        return res
+      } catch (_e) {
+        recordApiAvailability('/api/stats', 'GET', 500)
+        recordApiResponseTime('/api/stats', 'GET', Date.now() - start, 500)
+        return createErrorResponse(new Error('Failed to fetch statistics'), 500)
+      }
     }
-
-    const body = {
-      success: true,
-      data: {
-        counters: {
-          educators_learning: learners.length,
-          peers_students_reached: peers + students,
-          stories_shared: storiesShared,
-          micro_credentials: microCredentials,
-          mce_certified: 0,
-        },
-      },
-    }
-    return NextResponse.json(body, {
-      status: 200,
-      headers: {
-        'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=60',
-      },
-    })
-  } catch (_err) {
-    return errorResponse(500, {
-      type: 'state',
-      code: 'STATS_FETCH_FAILED',
-      message: 'Failed to fetch statistics',
-    })
-  }
+  })
 }

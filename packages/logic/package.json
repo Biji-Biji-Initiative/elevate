@@ -35,6 +35,7 @@
   "dependencies": {
     "@elevate/db": "workspace:*",
     "@elevate/types": "workspace:*",
+    "@elevate/storage": "workspace:*",
     "zod": "^3.25.76"
   },
   "devDependencies": {

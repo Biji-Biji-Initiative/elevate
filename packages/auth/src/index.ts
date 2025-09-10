@@ -1,11 +1,3 @@
-// Server-side auth utilities
-export {
-  getCurrentUser,
-  requireRole,
-  withRoleProtection,
-  RoleError,
-} from './withRole'
-
 export {
   parseClerkPublicMetadata,
   parseClerkEmailAddress,
@@ -22,13 +14,14 @@ export {
   type AuthUser,
   type Permission,
 } from './types'
-
+// Re-export commonly used server helpers for convenience in server-only contexts
 export {
-  createProtectedApiHandler,
-  createProtectedAction,
-  validateAuth,
-  createErrorResponse,
-} from './server-helpers'
-
-// Note: Client-side auth utilities are now exported from './context' 
+  requireRole,
+  withRoleProtection as withRole,
+  RoleError,
+} from './withRole'
+// Note: Server-side utilities are available via subpath imports:
+//   - '@elevate/auth/server-helpers'
+//   - '@elevate/auth/withRole'
+// Client-side auth utilities are exported from './context'
 // Import them using: import { AuthProvider, useAuth, ... } from '@elevate/auth/context'

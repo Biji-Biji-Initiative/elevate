@@ -19,6 +19,14 @@
     "./safe-server": {
       "types": "./src/safe-server.ts",
       "import": "./src/safe-server.ts"
+    },
+    "./metrics": {
+      "types": "./dist/types/metrics.d.ts",
+      "import": "./dist/js/metrics.js"
+    },
+    "./slo-monitor": {
+      "types": "./dist/types/slo-monitor.d.ts",
+      "import": "./dist/js/slo-monitor.js"
     }
   },
   "main": "./dist/js/index.js",
@@ -46,7 +54,9 @@
     "vitest": "^3.2.4"
   },
   "sideEffects": false,
-  "engines": { "node": ">=20.11" },
+  "engines": {
+    "node": ">=20.11"
+  },
   "files": [
     "dist/js",
     "dist/types",
@@ -56,7 +66,9 @@
   ],
   "typesVersions": {
     "*": {
-      "*": ["dist/types/*"]
+      "*": [
+        "dist/types/*"
+      ]
     }
   }
 }

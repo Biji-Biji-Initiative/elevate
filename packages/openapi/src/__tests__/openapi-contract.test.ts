@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { openApiSpec } from '../spec'
+import { getOpenApiSpec } from '../spec'
 import {
   PlatformStatsResponseSchema,
   StageMetricsResponseSchema,
@@ -9,7 +9,8 @@ import {
 
 describe('OpenAPI contract', () => {
   it('includes public endpoints', () => {
-    const paths = openApiSpec.paths || {}
+    const spec = getOpenApiSpec()
+    const paths = spec.paths || {}
     expect(paths['/api/stats']).toBeDefined()
     expect(paths['/api/metrics']).toBeDefined()
     expect(paths['/api/profile/{handle}']).toBeDefined()
@@ -19,12 +20,23 @@ describe('OpenAPI contract', () => {
     const sample = {
       success: true,
       data: {
-        counters: {
-          educators_learning: 10,
-          peers_students_reached: 20,
-          stories_shared: 5,
-          micro_credentials: 15,
-          mce_certified: 0,
+        totalEducators: 100,
+        totalSubmissions: 250,
+        totalPoints: 12345,
+        studentsImpacted: 5000,
+        byStage: {
+          learn: { total: 50, approved: 40, pending: 5, rejected: 5 },
+          explore: { total: 50, approved: 35, pending: 10, rejected: 5 },
+          amplify: { total: 50, approved: 30, pending: 15, rejected: 5 },
+          present: { total: 50, approved: 25, pending: 20, rejected: 5 },
+          shine: { total: 50, approved: 20, pending: 25, rejected: 5 },
+        },
+        topCohorts: [{ name: 'Cohort-2024-A', count: 25, avgPoints: 120 }],
+        monthlyGrowth: [{ month: '2025-01', educators: 10, submissions: 25 }],
+        badges: {
+          totalAwarded: 300,
+          uniqueBadges: 10,
+          mostPopular: [{ code: 'FIRST', name: 'First Badge', count: 100 }],
         },
       },
     }
@@ -67,7 +79,12 @@ describe('OpenAPI contract', () => {
         earnedBadges: [
           {
             earnedAt: new Date().toISOString(),
-            badge: { code: 'FIRST', name: 'First', description: 'desc', iconUrl: null },
+            badge: {
+              code: 'FIRST',
+              name: 'First',
+              description: 'desc',
+              iconUrl: null,
+            },
           },
         ],
         submissions: [
@@ -101,9 +118,17 @@ describe('OpenAPI contract', () => {
       data: {
         users: [
           {
-            id: 'user_1', handle: 'educator', name: 'User', email: 'u@example.com', avatar_url: null,
-            role: 'PARTICIPANT', school: null, cohort: null, created_at: new Date().toISOString(),
-            _count: { submissions: 1, earned_badges: 0, ledger: 1 }, totalPoints: 20,
+            id: 'user_1',
+            handle: 'educator',
+            name: 'User',
+            email: 'u@example.com',
+            avatar_url: null,
+            role: 'PARTICIPANT',
+            school: null,
+            cohort: null,
+            created_at: new Date().toISOString(),
+            _count: { submissions: 1, earned_badges: 0, ledger: 1 },
+            totalPoints: 20,
           },
         ],
         pagination: { page: 1, limit: 50, total: 1, pages: 1 },

@@ -3,7 +3,7 @@
  * Ensures sensitive data is never logged in production environments
  */
 
-import type { ServerLogger, LogLevel as LoggingLogLevel } from '@elevate/logging/server'
+import type { SafeLogger } from '@elevate/logging/safe-server'
 
 export interface LogLevel {
   ERROR: 'error'
@@ -66,7 +66,7 @@ export class PIIRedactor {
       .replace(this.BASE64_PATTERN, '[BASE64_REDACTED]')
       // Tokens, keys, passwords
       .replace(this.TOKEN_PATTERN, (match, captured) =>
-        typeof captured === 'string' 
+        typeof captured === 'string'
           ? match.replace(captured, '[SENSITIVE_REDACTED]')
           : match,
       )
@@ -192,7 +192,7 @@ export class PIIRedactor {
  */
 export class SecureDatabaseLogger {
   private static instance: SecureDatabaseLogger
-  private logger: ServerLogger | null = null
+  private logger: SafeLogger | null = null
   private logLevel: keyof LogLevel = 'INFO'
 
   constructor() {
@@ -214,23 +214,8 @@ export class SecureDatabaseLogger {
     }
 
     try {
-      type LoggingModule = {
-        getServerLogger: (config: { name?: string; level?: LoggingLogLevel; pretty?: boolean }) => ServerLogger
-      }
-      const mod: unknown = await import('@elevate/logging/server')
-      const { getServerLogger } = mod as LoggingModule
-      const levelMap: Record<keyof LogLevel, LoggingLogLevel> = {
-        ERROR: 'error',
-        WARN: 'warn',
-        INFO: 'info',
-        DEBUG: 'debug',
-        DATABASE: 'debug',
-      }
-      this.logger = getServerLogger({
-        name: 'elevate-db',
-        level: levelMap[this.logLevel],
-        pretty: false, // Avoid pretty transports in worker contexts
-      })
+      const { getSafeServerLogger } = await import('@elevate/logging/safe-server')
+      this.logger = await getSafeServerLogger('elevate-db')
     } catch {
       // Fallback to console logging with structured format
       this.logger = null
@@ -278,7 +263,7 @@ export class SecureDatabaseLogger {
       // Remove any potential PII from context
       userId: context.userId ? `${context.userId.slice(0, 4)}****` : undefined,
       // Ensure error messages are redacted
-      error: context.error ? (PIIRedactor.redactPII(context.error) ?? '') : '',
+      error: context.error ? PIIRedactor.redactPII(context.error) ?? '' : '',
       duration: context.duration ?? 0,
       recordCount: context.recordCount ?? 0,
     }

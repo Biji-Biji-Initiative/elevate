@@ -1,5 +1,7 @@
 # MS Elevate LEAPS Tracker - Deployment Guide
 
+> ⚠️ **DEPRECATED**: This guide has been consolidated. See the canonical [Deployment Guide](../docs/DEPLOYMENT.md) for the most up-to-date information.
+
 ## Overview
 
 This guide covers the complete setup and deployment process for the MS Elevate LEAPS Tracker, including Supabase integration, email services, localization, and Vercel deployment.
@@ -59,7 +61,7 @@ pnpm run emails:dev # http://localhost:3002
 
 1. **Create Project**: Go to [supabase.com](https://supabase.com) and create a new project
 2. **Get Credentials**: Copy URL and service role key from Settings > API
-3. **Configure Storage**: 
+3. **Configure Storage**:
    ```sql
    -- Evidence bucket is created via migration
    -- Verify in Supabase dashboard > Storage
@@ -118,7 +120,7 @@ pnpm run emails:dev # http://localhost:3002
 ./scripts/deploy-web.sh production
 
 # Admin app (admin console)
-./scripts/deploy-admin.sh staging  
+./scripts/deploy-admin.sh staging
 ./scripts/deploy-admin.sh production
 ```
 
@@ -201,6 +203,7 @@ pnpm run db:studio
 ### Common Issues
 
 1. **Migration Errors**:
+
    ```bash
    # Reset and re-run migrations
    pnpm run db:reset
@@ -208,6 +211,7 @@ pnpm run db:studio
    ```
 
 2. **Build Failures**:
+
    ```bash
    # Clear cache and rebuild
    pnpm run clean
@@ -216,6 +220,7 @@ pnpm run db:studio
    ```
 
 3. **Email Not Sending**:
+
    - Check Resend API key and domain verification
    - Verify FROM_EMAIL domain matches verified domain
    - Check email service status

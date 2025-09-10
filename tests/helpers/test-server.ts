@@ -132,7 +132,7 @@ export async function executeApiRoute(
 export function createWebhookRequest(
   url: string,
   payload: Record<string, unknown>,
-  secret: string = 'test-webhook-secret-123'
+  secret = 'test-webhook-secret-123'
 ): NextRequest {
   const crypto = require('crypto')
   const body = JSON.stringify(payload)
@@ -155,7 +155,7 @@ export function createWebhookRequest(
 /**
  * Utility to wait for async operations in tests
  */
-export function waitForOperation(ms: number = 100): Promise<void> {
+export function waitForOperation(ms = 100): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
@@ -237,7 +237,7 @@ export const TestData = {
   })
 }
 
-export default {
+const testServerHelpers = {
   createMockRequest,
   mockAuthentication,
   clearAuthenticationMock,
@@ -247,3 +247,5 @@ export default {
   createMockFile,
   TestData
 }
+
+export default testServerHelpers

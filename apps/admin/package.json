@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "node scripts/dev.js --turbo",
     "build": "next build",
     "build:analyze": "ANALYZE=true next build",
     "start": "next start -p 3001",
@@ -25,6 +25,7 @@
     "@elevate/logic": "workspace:*",
     "@elevate/utils": "workspace:*",
     "@elevate/openapi": "workspace:*",
+    "@elevate/storage": "workspace:*",
     "@elevate/security": "workspace:*",
     "@elevate/types": "workspace:*",
     "@elevate/ui": "workspace:*",

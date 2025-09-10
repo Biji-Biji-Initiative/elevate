@@ -84,6 +84,7 @@ export {
   toJsonValue,
   toPrismaJson,
   buildAuditMeta,
+  BadgeSchema,
   parseRole,
   parseSubmissionStatus,
   parseActivityCode,
@@ -144,10 +145,10 @@ export {
 export type { HttpSuccess, HttpError } from './http'
 export * from './admin-schemas'
 // Export domain API response types - errors.ts is the source of truth
-export type { 
-  ApiSuccessResponse as ApiSuccess, 
+export type {
+  ApiSuccessResponse as ApiSuccess,
   ApiErrorResponse as ApiError,
-  ApiResponse
+  ApiResponse,
 } from './errors'
 export {
   ErrorCodes,

@@ -104,6 +104,7 @@ export default [
       react: {
         version: 'detect',
       },
+      'import/ignore': ['\\.css$'],
       'import/resolver': {
         typescript: {
           alwaysTryTypes: true,
@@ -113,7 +114,18 @@ export default [
             './packages/*/tsconfig.json',
           ],
         },
-        node: true,
+        node: {
+          extensions: [
+            '.js',
+            '.jsx',
+            '.ts',
+            '.tsx',
+            '.mjs',
+            '.cjs',
+            '.json',
+            '.css',
+          ],
+        },
       },
     },
   },
@@ -259,7 +271,12 @@ export default [
           pathGroupsExcludedImportTypes: ['react'],
         },
       ],
-      'import/no-unresolved': 'error',
+      'import/no-unresolved': [
+        'error',
+        {
+          ignore: ['^@elevate/ui/styles/', '^@elevate/openapi($|/.*)'],
+        },
+      ],
       'import/no-cycle': 'error',
       'import/no-self-import': 'error',
       'import/no-duplicates': 'error',
@@ -684,6 +701,25 @@ export default [
             'CallExpression[callee.object.name="NextResponse"][callee.property.name="json"]',
           message:
             'Use createSuccessResponse/createErrorResponse from @elevate/http for standardized envelopes.',
+        },
+      ],
+    },
+  },
+
+  // Guardrail: forbid direct server logger in Next.js route handlers
+  {
+    files: ['apps/**/app/api/**/*.ts', 'apps/**/app/api/**/*.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@elevate/logging/server',
+              message:
+                'Do not import @elevate/logging/server in route handlers. Use @elevate/logging/safe-server instead.',
+            },
+          ],
         },
       ],
     },

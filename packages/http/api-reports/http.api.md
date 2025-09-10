@@ -5,23 +5,12 @@
 ```ts
 
 import { AuthenticationError } from '@elevate/types/errors';
-import { AuthenticationError as AuthenticationError_2 } from '@elevate/types';
 import { AuthorizationError } from '@elevate/types/errors';
-import { AuthorizationError as AuthorizationError_2 } from '@elevate/types';
-import { ConflictError } from '@elevate/types';
 import { ElevateApiError } from '@elevate/types/errors';
-import { ElevateApiError as ElevateApiError_2 } from '@elevate/types';
 import { ErrorCode } from '@elevate/types/errors';
-import { ErrorCode as ErrorCode_2 } from '@elevate/types';
-import { ExternalServiceError } from '@elevate/types';
-import { FileValidationError } from '@elevate/types';
 import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { NotFoundError } from '@elevate/types';
-import { RateLimitError } from '@elevate/types';
-import { SubmissionLimitError } from '@elevate/types';
 import { ValidationError } from '@elevate/types/errors';
-import { ValidationError as ValidationError_2 } from '@elevate/types';
 import { z } from 'zod';
 
 // @public (undocumented)
@@ -66,120 +55,10 @@ export function cors(options?: {
 // @public (undocumented)
 export function createErrorResponse(error: unknown, fallbackStatus?: number, traceId?: string): NextResponse;
 
-// @public
-export function createMockContext(overrides?: Partial<{
-    traceId: string;
-    startTime: number;
-}>): {
-    traceId: string;
-    startTime: number;
-    request: Request;
-};
-
 // @public (undocumented)
 export function createSuccessResponse<T>(data: T, status?: number): NextResponse;
 
 export { ElevateApiError }
-
-// @public
-export class ErrorTestFactory {
-    // (undocumented)
-    static createAuthenticationError(message?: string): AuthenticationError_2;
-    // (undocumented)
-    static createAuthorizationError(message?: string): AuthorizationError_2;
-    // (undocumented)
-    static createConflictError(message?: string): ConflictError;
-    // (undocumented)
-    static createCustomError(message: string, code: ErrorCode_2, details?: unknown): ElevateApiError_2;
-    // (undocumented)
-    static createExternalServiceError(service?: string, operation?: string): ExternalServiceError;
-    // (undocumented)
-    static createFileValidationError(message?: string): FileValidationError;
-    // (undocumented)
-    static createNotFoundError(resource?: string, id?: string): NotFoundError;
-    // (undocumented)
-    static createRateLimitError(limit?: number, windowMs?: number): RateLimitError;
-    // (undocumented)
-    static createSubmissionLimitError(activityType?: string, currentCount?: number, maxAllowed?: number): SubmissionLimitError;
-    // (undocumented)
-    static createValidationError(fields?: string[]): ValidationError_2;
-}
-
-// @public
-export const ErrorTestScenarios: {
-    unauthenticated: {
-        description: string;
-        error: AuthenticationError_2;
-        expectedStatus: number;
-        expectedResponse: Record<string, unknown>;
-    };
-    insufficientPermissions: {
-        description: string;
-        error: AuthorizationError_2;
-        expectedStatus: number;
-        expectedResponse: Record<string, unknown>;
-    };
-    invalidRequestBody: {
-        description: string;
-        error: ValidationError_2;
-        expectedStatus: number;
-        expectedResponse: Record<string, unknown>;
-    };
-    missingRequiredFields: {
-        description: string;
-        error: ValidationError_2;
-        expectedStatus: number;
-        expectedResponse: Record<string, unknown>;
-    };
-    resourceNotFound: {
-        description: string;
-        error: NotFoundError;
-        expectedStatus: number;
-        expectedResponse: Record<string, unknown>;
-    };
-    resourceConflict: {
-        description: string;
-        error: ConflictError;
-        expectedStatus: number;
-        expectedResponse: Record<string, unknown>;
-    };
-    rateLimitExceeded: {
-        description: string;
-        error: RateLimitError;
-        expectedStatus: number;
-        expectedResponse: Record<string, unknown>;
-    };
-    submissionLimitExceeded: {
-        description: string;
-        error: SubmissionLimitError;
-        expectedStatus: number;
-        expectedResponse: Record<string, unknown>;
-    };
-    invalidFileType: {
-        description: string;
-        error: FileValidationError;
-        expectedStatus: number;
-        expectedResponse: Record<string, unknown>;
-    };
-    externalServiceError: {
-        description: string;
-        error: ExternalServiceError;
-        expectedStatus: number;
-        expectedResponse: Record<string, unknown>;
-    };
-    internalServerError: {
-        description: string;
-        error: Error;
-        expectedStatus: number;
-        expectedResponse: {
-            success: boolean;
-            error: unknown;
-            code: string;
-            timestamp: unknown;
-            traceId: unknown;
-        };
-    };
-};
 
 // @public (undocumented)
 export function forbidden(message?: string, traceId?: string): NextResponse;
@@ -195,19 +74,6 @@ export function isServerError(error: unknown): boolean;
 
 // @public (undocumented)
 export function logError(error: Error, traceId: string, context?: Record<string, unknown>): void;
-
-// @public
-export class MockResponseHelper {
-    // (undocumented)
-    static errorResponse(error: string, code?: string, details?: unknown): Record<string, unknown>;
-    // (undocumented)
-    static successResponse<T>(data: T): {
-        success: boolean;
-        data: T;
-    };
-    // (undocumented)
-    static validationErrorResponse(fields: string[]): Record<string, unknown>;
-}
 
 // @public (undocumented)
 export function notFound(resource: string, id?: string, traceId?: string): NextResponse;
@@ -240,22 +106,6 @@ export function securityHeaders(): (request: NextRequest, _context: ApiContext, 
 
 // @public (undocumented)
 export type SimpleHandler = (request: NextRequest) => Promise<NextResponse>;
-
-// @public
-export const TestDataGenerators: {
-    invalidJson: () => string;
-    invalidZodData: (schema: z.ZodSchema) => {} | null;
-    malformedFormData: () => FormData;
-    largePayload: (sizeInMB?: number) => string;
-    sqlInjectionAttempts: () => string[];
-    xssAttempts: () => string[];
-};
-
-// @public
-export function testErrorScenario(scenario: (typeof ErrorTestScenarios)[keyof typeof ErrorTestScenarios], response: {
-    status: number;
-    body: unknown;
-}): void;
 
 // @public (undocumented)
 export const TRACE_HEADER = "X-Trace-Id";

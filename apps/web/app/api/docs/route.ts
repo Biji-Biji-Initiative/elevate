@@ -1,10 +1,10 @@
 import { createSuccessResponse } from '@elevate/http'
-import { spec } from '@elevate/openapi'
+import { getOpenApiSpec } from '@elevate/openapi'
 
 export const runtime = 'nodejs'
 
 export async function GET() {
-  const res = createSuccessResponse(spec)
+  const res = createSuccessResponse(getOpenApiSpec())
   res.headers.set('Content-Type', 'application/json')
   res.headers.set('Cache-Control', 'public, max-age=3600')
   return res

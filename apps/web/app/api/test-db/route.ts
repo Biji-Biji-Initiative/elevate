@@ -24,14 +24,6 @@ export async function GET() {
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: message,
-        dbUrlStart: dbUrl?.substring(0, 30) || 'undefined',
-        nodeEnv: process.env.NODE_ENV,
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    )
+    return createErrorResponse(new Error(message), 500)
   }
 }

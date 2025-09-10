@@ -139,6 +139,24 @@ ON submissions(DATE(created_at), activity_code, status, user_id);
 -- ADVANCED SEARCH AND FILTERING
 -- =============================================================================
 
+-- Enable pg_trgm for trigram-based search optimization
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Improve ILIKE search on leaderboard materialized views
+-- Name search (supports partial matches)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_leaderboard_totals_name_trgm
+ON leaderboard_totals USING gin (name gin_trgm_ops);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_leaderboard_30d_name_trgm
+ON leaderboard_30d USING gin (name gin_trgm_ops);
+
+-- School search (supports partial matches)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_leaderboard_totals_school_trgm
+ON leaderboard_totals USING gin (school gin_trgm_ops);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_leaderboard_30d_school_trgm
+ON leaderboard_30d USING gin (school gin_trgm_ops);
+
 -- Full-text search for leaderboard entries
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_leaderboard_totals_search
 ON leaderboard_totals 

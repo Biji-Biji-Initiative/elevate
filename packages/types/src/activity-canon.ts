@@ -37,6 +37,10 @@ export const presentRules = {
 export const amplifyRules = {
   peersCoefficient: 2,
   studentsCoefficient: 1,
+  limits: {
+    weeklyPeers: 50,
+    weeklyStudents: 200,
+  },
 }
 
 export const activityCanon = {
@@ -56,5 +60,27 @@ export const ActivityCanonSchema = z.object({
   amplify: z.object({
     peersCoefficient: z.number().int().nonnegative(),
     studentsCoefficient: z.number().int().nonnegative(),
+    limits: z.object({
+      weeklyPeers: z.number().int().nonnegative(),
+      weeklyStudents: z.number().int().nonnegative(),
+    }),
   }),
 })
+
+// Badge canon — centralize badge linkage and criteria
+export const badgeCanon = {
+  STARTER: {
+    description: 'Earned when both Learn course tags are present',
+    requiresTags: ['elevate-ai-1-completed', 'elevate-ai-2-completed'] as const,
+  },
+  IN_CLASS_INNOVATOR: {
+    description: 'First approved EXPLORE submission',
+    requiresApprovedActivity: 'EXPLORE' as const,
+  },
+  COMMUNITY_VOICE: {
+    description: 'First approved PRESENT submission',
+    requiresApprovedActivity: 'PRESENT' as const,
+  },
+} as const
+
+export type BadgeCodeCanon = keyof typeof badgeCanon

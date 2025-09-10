@@ -2,14 +2,52 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 
-import type { UserRole } from '@elevate/types'
-import { Button, Input, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
-import { DataTable, StatusBadge, Modal, ConfirmModal, createColumns } from '@elevate/ui/blocks'
+import { adminActions } from '@elevate/admin-core'
 import { withRoleGuard } from '@elevate/auth/context'
-import { adminClient, type UsersQuery, type AdminUser } from '@/lib/admin-client'
-import { handleApiError } from '@/lib/error-utils'
+import type { UserRole } from '@elevate/types'
+import type { UsersQuery, AdminUser } from '@elevate/types/admin-api-types'
+import { toMsg } from '@/lib/errors'
+import { UserUI, toUserUI } from '@/lib/ui-types'
+import {
+  Button,
+  Input,
+  Alert,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@elevate/ui'
+import {
+  DataTable,
+  StatusBadge,
+  Modal,
+  ConfirmModal,
+  createColumns,
+} from '@elevate/ui/blocks'
+ 
+// Local admin client utilities
 
-type User = AdminUser
+// UI-safe projection to avoid unsafe/nullish access in renders
+type User = UserUI
+
+function toUser(u: AdminUser): User {
+  return {
+    id: u.id,
+    name: u.name ?? '',
+    handle: u.handle ?? '',
+    email: u.email ?? '',
+    school: u.school ?? '',
+    cohort: u.cohort ?? '',
+    role: (u.role ?? 'PARTICIPANT') as User['role'],
+    totalPoints: u.totalPoints ?? 0,
+    _count: {
+      submissions: u._count?.submissions ?? 0,
+      earned_badges: u._count?.earned_badges ?? 0,
+    },
+    created_at: u.created_at,
+  }
+}
 
 interface Filters {
   search: string
@@ -20,7 +58,7 @@ interface Filters {
 }
 
 function UsersPage() {
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<UserUI[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [cohorts, setCohorts] = useState<string[]>([])
@@ -28,15 +66,15 @@ function UsersPage() {
     page: 1,
     limit: 50,
     total: 0,
-    pages: 0
+    pages: 0,
   })
-  
+
   const [filters, setFilters] = useState<Filters>({
     search: '',
     role: 'ALL',
     cohort: 'ALL',
     sortBy: 'created_at',
-    sortOrder: 'desc'
+    sortOrder: 'desc',
   })
 
   // Modal states
@@ -44,7 +82,7 @@ function UsersPage() {
     isOpen: boolean
     user?: User
   }>({
-    isOpen: false
+    isOpen: false,
   })
 
   const [bulkRoleModal, setBulkRoleModal] = useState<{
@@ -52,7 +90,7 @@ function UsersPage() {
     targetRole: UserRole
   }>({
     isOpen: false,
-    targetRole: 'PARTICIPANT'
+    targetRole: 'PARTICIPANT',
   })
 
   const [editForm, setEditForm] = useState({
@@ -60,18 +98,22 @@ function UsersPage() {
     handle: '',
     school: '',
     cohort: '',
-    role: 'PARTICIPANT'
+    role: 'PARTICIPANT',
   })
 
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const columns = createColumns<User>()([
+  const columns = createColumns<UserUI>()([
     {
       key: 'name',
       header: 'User',
-      accessor: (row: User) => ({ name: row.name, handle: row.handle, email: row.email }),
-      render: (row: User) => {
+      accessor: (row: UserUI) => ({
+        name: row.name,
+        handle: row.handle,
+        email: row.email,
+      }),
+      render: (row: UserUI) => {
         const name = row.name ?? ''
         const handle = row.handle ?? ''
         const email = row.email ?? ''
@@ -88,69 +130,67 @@ function UsersPage() {
           </div>
         )
       },
-      width: '250px'
+      width: '250px',
     },
     {
       key: 'role',
       header: 'Role',
-      accessor: (row: User) => row.role,
-      render: (row: User) => <StatusBadge status={row.role} />,
-      width: '120px'
+      accessor: (row: UserUI) => row.role,
+      render: (row: UserUI) => <StatusBadge status={row.role} />,
+      width: '120px',
     },
     {
       key: 'school',
       header: 'School',
-      accessor: (row: User) => row.school ?? '',
-      render: (row: User) => (row.school && row.school.length > 0 ? row.school : '-') as string,
-      width: '150px'
+      accessor: (row: UserUI) => row.school ?? '',
+      render: (row: UserUI) =>
+        (row.school && row.school.length > 0 ? row.school : '-') as string,
+      width: '150px',
     },
     {
       key: 'cohort',
       header: 'Cohort',
-      accessor: (row: User) => row.cohort ?? '',
-      render: (row: User) => (row.cohort && row.cohort.length > 0 ? row.cohort : '-') as string,
-      width: '100px'
+      accessor: (row: UserUI) => row.cohort ?? '',
+      render: (row: UserUI) =>
+        (row.cohort && row.cohort.length > 0 ? row.cohort : '-') as string,
+      width: '100px',
     },
     {
       key: 'totalPoints',
       header: 'Points',
-      accessor: (row: User) => row.totalPoints,
-      render: (row: User) => (
+      accessor: (row: UserUI) => row.totalPoints,
+      render: (row: UserUI) => (
         <div className="text-right">
           <div className="font-medium">{row.totalPoints}</div>
         </div>
       ),
-      width: '80px'
+      width: '80px',
     },
     {
       key: '_count.submissions',
       header: 'Submissions',
-      accessor: (row: User) => row._count.submissions,
-      render: (row: User) => (
-        <div className="text-center">
-          {row._count.submissions}
-        </div>
+      accessor: (row: UserUI) => row._count.submissions,
+      render: (row: UserUI) => (
+        <div className="text-center">{row._count.submissions}</div>
       ),
-      width: '100px'
+      width: '100px',
     },
     {
       key: '_count.earned_badges',
       header: 'Badges',
-      accessor: (row: User) => row._count.earned_badges,
-      render: (row: User) => (
-        <div className="text-center">
-          {row._count.earned_badges}
-        </div>
+      accessor: (row: UserUI) => row._count.earned_badges,
+      render: (row: UserUI) => (
+        <div className="text-center">{row._count.earned_badges}</div>
       ),
-      width: '80px'
+      width: '80px',
     },
     {
       key: 'created_at',
       header: 'Joined',
-      accessor: (row: User) => row.created_at,
-      sortAccessor: (row: User) => new Date(row.created_at),
-      render: (_row: User, value?: string) => new Date(value ?? '').toLocaleDateString(),
-      width: '100px'
+      accessor: (row: UserUI) => row.created_at,
+      sortAccessor: (row: UserUI) => new Date(row.created_at),
+      render: (row: UserUI) => new Date(row.created_at).toLocaleDateString(),
+      width: '100px',
     },
     {
       key: 'actions',
@@ -170,8 +210,8 @@ function UsersPage() {
         </div>
       ),
       width: '80px',
-      sortable: false
-    }
+      sortable: false,
+    },
   ])
 
   const fetchUsers = useCallback(async () => {
@@ -182,20 +222,25 @@ function UsersPage() {
         limit: pagination.limit,
         sortBy: filters.sortBy as UsersQuery['sortBy'],
         sortOrder: filters.sortOrder,
-        role: filters.role !== 'ALL' ? (filters.role as UsersQuery['role']) : undefined,
+        role:
+          filters.role !== 'ALL'
+            ? (filters.role as UsersQuery['role'])
+            : undefined,
         search: filters.search || undefined,
         cohort: filters.cohort !== 'ALL' ? filters.cohort : undefined,
       }
 
-      const result = await adminClient.getUsers(params)
-      setUsers(result.users)
-      setPagination(prev => ({
+      const result = await adminActions.getUsers(params)
+      setUsers(result.users.map(toUserUI))
+      setPagination((prev) => ({
         ...prev,
         total: result.pagination.total,
-        pages: result.pagination.pages ?? Math.ceil(result.pagination.total / prev.limit),
+        pages:
+          result.pagination.pages ??
+          Math.ceil(result.pagination.total / prev.limit),
       }))
     } catch (error: unknown) {
-      setError(handleApiError(error, 'Fetch users'))
+      setError(toMsg('Fetch users', error))
     } finally {
       setLoading(false)
     }
@@ -208,11 +253,11 @@ function UsersPage() {
   useEffect(() => {
     const fetchCohorts = async () => {
       try {
-        const cohortData = await adminClient.getCohorts()
+        const cohortData = await adminActions.getCohorts()
         setCohorts(Array.isArray(cohortData) ? cohortData : [])
       } catch (error: unknown) {
-        // Cohorts are optional for UI, don't break on fetch failure
-        console.warn('Failed to fetch cohorts:', handleApiError(error, 'Cohort fetch'))
+        // Cohorts are optional; surface as non-blocking UI alert
+        setError(toMsg('Cohort fetch', error))
       }
     }
     void fetchCohorts()
@@ -221,12 +266,19 @@ function UsersPage() {
   // fetchUsers is now defined as useCallback above
 
   const handlePageChange = (page: number) => {
-    setPagination(prev => ({ ...prev, page }))
+    setPagination((prev) => ({ ...prev, page }))
   }
 
+  const isValidUserSortKey = (value: string): value is Filters['sortBy'] =>
+    value === 'created_at' || value === 'name' || value === 'email'
+
   const handleSort = (sortBy: string, sortOrder: 'asc' | 'desc') => {
-    setFilters(prev => ({ ...prev, sortBy, sortOrder }))
-    setPagination(prev => ({ ...prev, page: 1 }))
+    setFilters((prev) => ({
+      ...prev,
+      sortBy: isValidUserSortKey(sortBy) ? sortBy : prev.sortBy,
+      sortOrder,
+    }))
+    setPagination((prev) => ({ ...prev, page: 1 }))
   }
 
   const openEditModal = (user: User) => {
@@ -236,7 +288,7 @@ function UsersPage() {
       handle: user.handle,
       school: user.school || '',
       cohort: user.cohort || '',
-      role: user.role
+      role: user.role,
     })
   }
 
@@ -247,7 +299,7 @@ function UsersPage() {
       handle: '',
       school: '',
       cohort: '',
-      role: 'PARTICIPANT'
+      role: 'PARTICIPANT',
     })
   }
 
@@ -256,20 +308,33 @@ function UsersPage() {
 
     setProcessing(true)
     try {
-      const updateData: Parameters<typeof adminClient.updateUser>[0] = {
+      type UpdateUserBody = {
+        userId: string
+        name?: string
+        handle?: string
+        school?: string
+        cohort?: string
+        role?: 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
+      }
+      const updateData: UpdateUserBody = {
         userId: editModal.user.id,
       }
       if (editForm.name) updateData.name = editForm.name
       if (editForm.handle) updateData.handle = editForm.handle
       if (editForm.school) updateData.school = editForm.school
       if (editForm.cohort) updateData.cohort = editForm.cohort
-      if (editForm.role) updateData.role = editForm.role as 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
-      
-      await adminClient.updateUser(updateData)
+      if (editForm.role)
+        updateData.role = editForm.role as
+          | 'PARTICIPANT'
+          | 'REVIEWER'
+          | 'ADMIN'
+          | 'SUPERADMIN'
+
+      await adminActions.updateUser(updateData)
       await fetchUsers()
       closeEditModal()
-    } catch (error) {
-      setError('Failed to update user')
+    } catch (error: unknown) {
+      setError(toMsg('Failed to update user', error))
     } finally {
       setProcessing(false)
     }
@@ -280,12 +345,15 @@ function UsersPage() {
 
     setProcessing(true)
     try {
-      await adminClient.bulkUpdateUsers({ userIds: Array.from(selectedRows), role: bulkRoleModal.targetRole })
+      await adminActions.bulkUpdateUsers({
+        userIds: Array.from(selectedRows),
+        role: bulkRoleModal.targetRole,
+      })
       setSelectedRows(new Set())
       await fetchUsers()
       setBulkRoleModal({ isOpen: false, targetRole: 'PARTICIPANT' })
-    } catch (error) {
-      setError('Failed to update user roles')
+    } catch (error: unknown) {
+      setError(toMsg('Failed to update user roles', error))
     } finally {
       setProcessing(false)
     }
@@ -294,26 +362,50 @@ function UsersPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">User Management</h1>
-        <p className="text-gray-600">Manage user roles, profiles, and permissions</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          User Management
+        </h1>
+        <p className="text-gray-600">
+          Manage user roles, profiles, and permissions
+        </p>
       </div>
 
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg border mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div>
-            <label htmlFor="users-filter-search" className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <label
+              htmlFor="users-filter-search"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Search
+            </label>
             <Input
               id="users-filter-search"
               placeholder="Search by name, email, handle..."
               value={filters.search}
-              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, search: e.target.value }))
+              }
             />
           </div>
 
           <div>
-            <label htmlFor="users-filter-role" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-            <Select value={filters.role} onValueChange={(value) => setFilters(prev => ({ ...prev, role: value }))}>
+            <label
+              htmlFor="users-filter-role"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Role
+            </label>
+            <Select
+              value={filters.role}
+              onValueChange={(value) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  role: value as Filters['role'],
+                }))
+              }
+            >
               <SelectTrigger id="users-filter-role">
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
@@ -328,15 +420,27 @@ function UsersPage() {
           </div>
 
           <div>
-            <label htmlFor="users-filter-cohort" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
-            <Select value={filters.cohort} onValueChange={(value) => setFilters(prev => ({ ...prev, cohort: value }))}>
+            <label
+              htmlFor="users-filter-cohort"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Cohort
+            </label>
+            <Select
+              value={filters.cohort}
+              onValueChange={(value) =>
+                setFilters((prev) => ({ ...prev, cohort: value }))
+              }
+            >
               <SelectTrigger id="users-filter-cohort">
                 <SelectValue placeholder="Select cohort" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Cohorts</SelectItem>
                 {cohorts.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -357,7 +461,15 @@ function UsersPage() {
                 {selectedRows.size} users selected
               </span>
               <div className="space-x-2">
-                <Select value={bulkRoleModal.targetRole} onValueChange={(value) => setBulkRoleModal(prev => ({ ...prev, targetRole: value }))}>
+                <Select
+                  value={bulkRoleModal.targetRole}
+                  onValueChange={(value) =>
+                    setBulkRoleModal((prev) => ({
+                      ...prev,
+                      targetRole: value as UserRole,
+                    }))
+                  }
+                >
                   <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
@@ -370,7 +482,9 @@ function UsersPage() {
                 </Select>
                 <Button
                   variant="default"
-                  onClick={() => setBulkRoleModal(prev => ({ ...prev, isOpen: true }))}
+                  onClick={() =>
+                    setBulkRoleModal((prev) => ({ ...prev, isOpen: true }))
+                  }
                 >
                   Update Roles
                 </Button>
@@ -395,17 +509,18 @@ function UsersPage() {
           page: pagination.page,
           limit: pagination.limit,
           total: pagination.total,
-          onPageChange: handlePageChange
+          onPageChange: handlePageChange,
         }}
         selection={{
           selectedRows,
-          onSelectionChange: (selectedRows: Set<string | number>) => setSelectedRows(new Set(Array.from(selectedRows).map(String))),
-          getRowId: (row) => row.id
+          onSelectionChange: (selectedRows: Set<string | number>) =>
+            setSelectedRows(new Set(Array.from(selectedRows).map(String))),
+          getRowId: (row) => row.id,
         }}
         sorting={{
           sortBy: filters.sortBy,
           sortOrder: filters.sortOrder,
-          onSort: handleSort
+          onSort: handleSort,
         }}
         emptyMessage="No users found matching your criteria"
       />
@@ -418,7 +533,11 @@ function UsersPage() {
         size="md"
         actions={
           <div className="space-x-3">
-            <Button variant="ghost" onClick={closeEditModal} disabled={processing}>
+            <Button
+              variant="ghost"
+              onClick={closeEditModal}
+              disabled={processing}
+            >
               Cancel
             </Button>
             <Button
@@ -433,53 +552,96 @@ function UsersPage() {
       >
         <div className="space-y-4">
           <div>
-            <label htmlFor="edit-user-name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <label
+              htmlFor="edit-user-name"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Name
+            </label>
             <Input
               id="edit-user-name"
               value={editForm.name}
-              onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) =>
+                setEditForm((prev) => ({ ...prev, name: e.target.value }))
+              }
               placeholder="Full name"
             />
           </div>
 
           <div>
-            <label htmlFor="edit-user-handle" className="block text-sm font-medium text-gray-700 mb-1">Handle</label>
+            <label
+              htmlFor="edit-user-handle"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Handle
+            </label>
             <Input
               id="edit-user-handle"
               value={editForm.handle}
-              onChange={(e) => setEditForm(prev => ({ ...prev, handle: e.target.value }))}
+              onChange={(e) =>
+                setEditForm((prev) => ({ ...prev, handle: e.target.value }))
+              }
               placeholder="@username"
             />
           </div>
 
           <div>
-            <label htmlFor="edit-user-school" className="block text-sm font-medium text-gray-700 mb-1">School</label>
+            <label
+              htmlFor="edit-user-school"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              School
+            </label>
             <Input
               id="edit-user-school"
               value={editForm.school}
-              onChange={(e) => setEditForm(prev => ({ ...prev, school: e.target.value }))}
+              onChange={(e) =>
+                setEditForm((prev) => ({ ...prev, school: e.target.value }))
+              }
               placeholder="School name"
             />
           </div>
 
           <div>
-            <label htmlFor="edit-user-cohort" className="block text-sm font-medium text-gray-700 mb-1">Cohort</label>
-            <Select value={editForm.cohort} onValueChange={(value) => setEditForm(prev => ({ ...prev, cohort: value }))}>
+            <label
+              htmlFor="edit-user-cohort"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Cohort
+            </label>
+            <Select
+              value={editForm.cohort}
+              onValueChange={(value) =>
+                setEditForm((prev) => ({ ...prev, cohort: value }))
+              }
+            >
               <SelectTrigger id="edit-user-cohort">
                 <SelectValue placeholder="Select cohort" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">No Cohort</SelectItem>
                 {cohorts.map((c) => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <label htmlFor="edit-user-role" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-            <Select value={editForm.role} onValueChange={(value) => setEditForm(prev => ({ ...prev, role: value }))}>
+            <label
+              htmlFor="edit-user-role"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Role
+            </label>
+            <Select
+              value={editForm.role}
+              onValueChange={(value) =>
+                setEditForm((prev) => ({ ...prev, role: value }))
+              }
+            >
               <SelectTrigger id="edit-user-role">
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
@@ -497,7 +659,9 @@ function UsersPage() {
       {/* Bulk Role Update Modal */}
       <ConfirmModal
         isOpen={bulkRoleModal.isOpen}
-        onClose={() => setBulkRoleModal({ isOpen: false, targetRole: 'PARTICIPANT' })}
+        onClose={() =>
+          setBulkRoleModal({ isOpen: false, targetRole: 'PARTICIPANT' })
+        }
         onConfirm={handleBulkRoleUpdate}
         title="Update User Roles"
         message={`Are you sure you want to update ${selectedRows.size} users to ${bulkRoleModal.targetRole} role?`}

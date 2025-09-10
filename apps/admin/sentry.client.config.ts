@@ -8,7 +8,7 @@ import { getClerkUserFromWindow } from '@elevate/auth/window-clerk'
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || '',
-  
+
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
 
@@ -24,8 +24,11 @@ Sentry.init({
   ],
 
   // Release tracking
-  release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
-  environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV,
+  ...(process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA
+    ? { release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA }
+    : {}),
+  environment:
+    process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || 'development',
 
   // Error filtering
   beforeSend(event) {
@@ -44,12 +47,13 @@ Sentry.init({
     // Add admin user context from Clerk if available
     const user = getClerkUserFromWindow()
     if (user) {
-      Sentry.setUser({
-        id: user.id,
-        email: user.primaryEmailAddress?.emailAddress,
-        username: user.username,
-      })
-      
+      const sentryUser: { id?: string; email?: string; username?: string } = {}
+      if (user.id) sentryUser.id = user.id
+      const email = user.primaryEmailAddress?.emailAddress
+      if (email) sentryUser.email = email
+      if (user.username) sentryUser.username = user.username
+      Sentry.setUser(sentryUser)
+
       // Add admin role information if available
       const role = user.publicMetadata?.role
       if (role) {

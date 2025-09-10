@@ -44,7 +44,8 @@
     "db:studio": "prisma studio --schema=./schema.prisma",
     "db:seed": "tsx seed.ts",
     "db:reset": "pnpm db:migrate:reset --force && pnpm db:seed",
-    "db:check": "tsx scripts/check-migrations.ts"
+    "db:check": "tsx scripts/check-migrations.ts",
+    "db:backfill-learn-tags": "tsx scripts/backfill-learn-tag-grants.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",

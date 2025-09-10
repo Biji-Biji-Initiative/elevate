@@ -47,6 +47,19 @@ The Elevate secrets management system provides:
 The secrets management system integrates with the existing three-layer environment strategy:
 
 ```
+
+### Documentation & Sample Keys (Avoid False Positives)
+
+When documenting environment variables in READMEs or guides, use neutral placeholders instead of values that look like real keys (e.g., avoid prefixes like `pk_`, `sk_`, `whsec_`). Example:
+
+```bash
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<your-clerk-publishable-key>
+CLERK_SECRET_KEY=<your-clerk-secret-key>
+RESEND_API_KEY=<your-resend-api-key>
+OPENAI_API_KEY=<your-openai-api-key>
+```
+
+This prevents secret scanners from flagging docs and keeps CI green while conveying the intent clearly.
 1. Repository Defaults (.env.defaults) - Safe defaults, version controlled
 2. Environment Specific (.env.production) - Environment config, version controlled  
 3. Local Overrides (.env.local) - Secrets and overrides, gitignored

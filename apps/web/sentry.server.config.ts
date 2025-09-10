@@ -5,80 +5,85 @@
 
 import * as Sentry from '@sentry/nextjs'
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
+{
+  const dsn = process.env.SENTRY_DSN
+  const release = process.env.VERCEL_GIT_COMMIT_SHA
+  const environment = process.env.VERCEL_ENV || process.env.NODE_ENV
 
-  // Adjust this value in production, or use tracesSampler for greater control
-  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  const options: Sentry.NodeOptions = {
+    // Adjust this value in production, or use tracesSampler for greater control
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
 
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: process.env.NODE_ENV === 'development',
+    // Setting this option to true will print useful information to the console while you're setting up Sentry.
+    debug: process.env.NODE_ENV === 'development',
 
-  enabled: Boolean(process.env.SENTRY_DSN),
+    enabled: Boolean(dsn),
 
-  // Performance monitoring
-  enableTracing: true,
-  profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    // Performance profiling
+    profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
 
-  // Node.js specific integrations
-  integrations: [
-    Sentry.nodeProfilingIntegration(),
-    Sentry.httpIntegration({
-      tracing: true,
-    }),
-    Sentry.prismaIntegration(),
-  ],
+    // Node.js specific integrations
+    integrations: [Sentry.httpIntegration(), Sentry.prismaIntegration()],
 
-  // Release tracking
-  release: process.env.VERCEL_GIT_COMMIT_SHA,
-  environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
+    environment,
 
-  // Error filtering and enhancement
-  beforeSend(event, hint) {
-    // Add additional context for API errors
-    if (event.request?.url) {
-      event.tags = {
-        ...event.tags,
-        api_route: true,
+    // Error filtering and enhancement
+    beforeSend(event, hint) {
+      // Add additional context for API errors
+      if (event.request?.url) {
+        event.tags = {
+          ...event.tags,
+          api_route: true,
+        }
       }
-    }
 
-    // Filter out expected errors in development
-    if (process.env.NODE_ENV === 'development') {
-      if (hint.originalException?.message?.includes('ECONNREFUSED')) {
+      // Filter out expected errors in development
+      if (process.env.NODE_ENV === 'development') {
+        const originalException = hint?.originalException
+        const message =
+          originalException &&
+          typeof (originalException as { message?: unknown }).message ===
+            'string'
+            ? (originalException as { message: string }).message
+            : undefined
+        if (message && message.includes('ECONNREFUSED')) return null
+      }
+
+      return event
+    },
+
+    // Custom tags for server-side tracking
+    initialScope: {
+      tags: {
+        component: 'web-server',
+        runtime: process.env.NEXT_RUNTIME || 'nodejs',
+      },
+    },
+
+    // Breadcrumb filtering
+    beforeBreadcrumb(breadcrumb) {
+      // Filter out noisy breadcrumbs
+      if (breadcrumb.category === 'console' && breadcrumb.level === 'debug') {
         return null
       }
-    }
 
-    return event
-  },
-
-  // Custom tags for server-side tracking
-  initialScope: {
-    tags: {
-      component: 'web-server',
-      runtime: process.env.NEXT_RUNTIME || 'nodejs',
-    },
-  },
-
-  // Breadcrumb filtering
-  beforeBreadcrumb(breadcrumb) {
-    // Filter out noisy breadcrumbs
-    if (breadcrumb.category === 'console' && breadcrumb.level === 'debug') {
-      return null
-    }
-
-    // Enhance database breadcrumbs
-    if (breadcrumb.category === 'prisma') {
-      breadcrumb.data = {
-        ...breadcrumb.data,
-        timestamp: new Date().toISOString(),
+      // Enhance database breadcrumbs
+      if (breadcrumb.category === 'prisma') {
+        breadcrumb.data = {
+          ...breadcrumb.data,
+          timestamp: new Date().toISOString(),
+        }
       }
-    }
 
-    return breadcrumb
-  },
-})
+      return breadcrumb
+    },
+  }
+
+  if (dsn) options.dsn = dsn
+  if (release) options.release = release
+
+  Sentry.init(options)
+}
 
 // Global error handlers
 process.on('uncaughtException', (error) => {
@@ -90,7 +95,8 @@ process.on('uncaughtException', (error) => {
 })
 
 process.on('unhandledRejection', (reason) => {
-  Sentry.captureException(reason, {
+  const err = reason instanceof Error ? reason : new Error(String(reason))
+  Sentry.captureException(err, {
     tags: {
       errorType: 'unhandledRejection',
     },

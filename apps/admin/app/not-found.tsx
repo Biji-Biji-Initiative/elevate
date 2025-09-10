@@ -9,23 +9,25 @@ export default function NotFound() {
         <Alert className="mb-6">
           <AlertTitle>Page Not Found</AlertTitle>
           <AlertDescription>
-            The admin page you're looking for doesn't exist or you may not have access to it.
+            The admin page you&apos;re looking for doesn&apos;t exist or you may
+            not have access to it.
           </AlertDescription>
         </Alert>
-        
+
         <div className="space-y-3">
           <Button asChild className="w-full">
             <Link href="/admin">Back to Admin Dashboard</Link>
           </Button>
-          
+
           <Button asChild variant="outline" className="w-full">
             <Link href="/admin/submissions">View Submissions</Link>
           </Button>
         </div>
-        
+
         <div className="mt-6">
           <p className="text-sm text-gray-500 text-center">
-            Make sure you have the correct permissions to access this admin area.
+            Make sure you have the correct permissions to access this admin
+            area.
           </p>
         </div>
       </div>

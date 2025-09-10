@@ -30,8 +30,22 @@
     "exports": "Data Exports",
     "settings": "Settings",
     "badges": "Badge Management",
-    "kajabi": "Kajabi Integration",
-    "logout": "Logout"
+  "kajabi": "Kajabi Integration",
+  "storage": "Storage & Retention",
+  "ops": "Ops Dashboard",
+  "referrals": "Referrals",
+  "logout": "Logout"
+  },
+  "storage": {
+    "title": "Storage & Retention",
+    "enforce": "Enforce Retention",
+    "user_id": "User ID",
+    "days": "Days"
+  },
+  "ops": {
+    "title": "Ops Dashboard",
+    "slo_summary": "SLO Summary",
+    "refresh": "Refresh"
   },
   "dashboard": {
     "title": "Admin Dashboard",
@@ -138,7 +152,44 @@
     "webhook_status": "Webhook Status",
     "recent_events": "Recent Events",
     "reconciliation": "Data Reconciliation",
-    "test_webhook": "Test Webhook"
+    "test_webhook": "Test Webhook",
+    "health_invitation": "Health & Invitation",
+    "check_health": "Check Kajabi Health",
+    "user_id_optional": "User ID (optional)",
+    "email_optional": "Email (optional)",
+    "name_optional": "Name (optional)",
+    "offer_id_optional": "Offer ID (optional)",
+    "send_invite": "Send Invite / Grant Offer",
+    "invite_success": "Invitation sent.",
+    "status_line": "Status: {status} · API Key: {key} · Secret: {secret}",
+    "test_started": "Sending test webhook…",
+    "test_success_header": "Test Successful!",
+    "reprocess_started": "Reprocessing…",
+    "reprocess_success": "Reprocessed event {id}…"
+  },
+  "ops": {
+    "title": "Ops Dashboard",
+    "slo_summary": "SLO Summary",
+    "refresh": "Refresh"
+  },
+  "storage": {
+    "title": "Storage & Retention",
+    "enforce": "Enforce Retention",
+    "user_id": "User ID",
+    "days": "Days"
+  },
+  "dashboard": {
+    "quick": {
+      "integration": "Kajabi Health & Invite",
+      "integration_desc": "Manage enrollment and offers",
+      "integration_label": "Integration",
+      "storage": "Evidence Retention",
+      "storage_desc": "Enforce per-user retention",
+      "storage_label": "Storage",
+      "ops": "SLO Summary",
+      "ops_desc": "Monitor API health & trends",
+      "ops_label": "Operations"
+    }
   },
   "errors": {
     "something_went_wrong": "Something went wrong",

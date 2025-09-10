@@ -1,45 +1,50 @@
 import type { NextRequest } from 'next/server'
 
-import { requireRole, createErrorResponse } from '@elevate/auth/server-helpers'
+import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
-import { createSuccessResponse } from '@elevate/http'
+import { createSuccessResponse, createErrorResponse, notFound } from '@elevate/http'
+import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-  await requireRole('reviewer')
-    const { id } = params
-    
-    const submission = await prisma.submission.findUnique({
-      where: { id },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            handle: true,
-            school: true,
-            cohort: true
-          }
+  return withRateLimit(request, adminRateLimiter, async () => {
+    try {
+      await requireRole('reviewer')
+      const { id } = await params
+
+      const submission = await prisma.submission.findUnique({
+        where: { id },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              handle: true,
+              school: true,
+              cohort: true,
+            },
+          },
+          activity: true,
+          attachments_rel: true,
         },
-        activity: true,
-        attachments_rel: true
+      })
+
+      if (!submission) {
+        return notFound('Submission', id)
       }
-    })
-    
-    if (!submission) {
-      return createErrorResponse(new Error('Submission not found'), 404)
+
+      // Derive solely from relational attachments (JSON attachments deprecated)
+      const attachmentCount = submission.attachments_rel.length
+      return createSuccessResponse({
+        submission: { ...submission, attachmentCount },
+      })
+    } catch (error) {
+      return createErrorResponse(error, 500)
     }
-    
-    // Derive solely from relational attachments (JSON attachments deprecated)
-    const attachmentCount = submission.attachments_rel.length
-    return createSuccessResponse({ submission: { ...submission, attachmentCount } })
-  } catch (error) {
-    return createErrorResponse(error, 500)
-  }
+  })
 }

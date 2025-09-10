@@ -8,16 +8,16 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { createErrorResponse } from '@elevate/http'
-import { createCSPReportHandler } from '@elevate/security/security-middleware';
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { withRateLimit, publicApiRateLimiter } from '@elevate/security'
+import { createCSPReportHandler } from '@elevate/security/security-middleware'
 
-// Initialize logger
-type ServerLogger = import('@elevate/logging/server').ServerLogger
-let logger: ServerLogger | null = null;
+// Initialize logger safely for route handler
+let logger: Awaited<ReturnType<typeof getSafeServerLogger>> | null = null;
 void (async () => {
   try {
-    const { getServerLogger } = await import('@elevate/logging/server');
-    logger = getServerLogger({ name: 'csp-report' });
-  } catch (error) {
+    logger = await getSafeServerLogger('csp-report')
+  } catch {
     console.warn('Failed to initialize CSP report logger, falling back to console');
   }
 })();
@@ -83,6 +83,7 @@ const handleCSPReport = createCSPReportHandler({
  * @returns Response indicating receipt of the report
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  return withRateLimit(request, publicApiRateLimiter, async () => {
   // Hoist clientIP outside try block for error handler access
   const clientIP = request.headers.get('x-forwarded-for') || 
                   request.headers.get('x-real-ip') || 
@@ -96,11 +97,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return createErrorResponse(new Error('Invalid content type. Expected application/csp-report or application/json'), 400)
     }
 
-    // Rate limiting check (basic implementation)
-    
-    // Simple in-memory rate limiting (in production, use Redis or similar)
-    const rateLimitKey = `csp-report:${clientIP}`;
-    // Implementation would depend on your rate limiting strategy
+    // Rate limiting can be applied here if desired (e.g. Redis-based)
 
     // Process the violation report
     return await handleCSPReport(request);
@@ -119,6 +116,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Don't expose internal errors to clients
     return createErrorResponse(new Error('Internal server error'), 500)
   }
+  })
 }
 
 /**
@@ -126,7 +124,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  * CSP reports can come from any origin that loads our content, so we allow all origins
  * but only for this specific non-credentialed endpoint.
  */
-export async function OPTIONS(request: NextRequest): Promise<NextResponse> {
+export async function OPTIONS(_request: NextRequest): Promise<NextResponse> {
   const response = new NextResponse(null, { status: 200 });
   
   // CSP reports can come from any origin that loads our content

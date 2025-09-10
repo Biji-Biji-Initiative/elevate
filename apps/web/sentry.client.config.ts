@@ -6,83 +6,72 @@ import * as Sentry from '@sentry/nextjs'
 
 import { getClerkUserFromWindow } from '@elevate/auth/window-clerk'
 
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  
-  // Adjust this value in production, or use tracesSampler for greater control
-  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+{
+  const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN
+  const release = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA
+  const environment = process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV
 
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: process.env.NODE_ENV === 'development',
+  const options: Sentry.BrowserOptions = {
+    // Adjust this value in production, or use tracesSampler for greater control
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
 
-  enabled: Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN),
+    // Setting this option to true will print useful information to the console while you're setting up Sentry.
+    debug: process.env.NODE_ENV === 'development',
 
-  // Capture unhandled promise rejections
-  captureUnhandledRejections: true,
-  
-  // Performance monitoring
-  enableTracing: true,
-  
-  // Session tracking for release health
-  autoSessionTracking: true,
-  
-  // Capture interaction events
-  integrations: [
-    Sentry.browserTracingIntegration({
-      // Set sample rates for performance monitoring
-      tracePropagationTargets: [
-        'localhost',
-        /^https:\/\/leaps\.mereka\.org/,
-        /^https:\/\/.*\.vercel\.app/,
-      ],
-    }),
-    Sentry.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-      // Only capture replays for errors in production
-      sessionSampleRate: process.env.NODE_ENV === 'production' ? 0 : 0.1,
-      errorSampleRate: 1.0,
-    }),
-  ],
+    enabled: Boolean(dsn),
 
-  // Release tracking
-  release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
-  environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV,
+    // Capture interaction events
+    integrations: [
+      Sentry.browserTracingIntegration({}),
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
 
-  // Error filtering
-  beforeSend(event, hint) {
-    // Filter out development and localhost errors in production
-    if (process.env.NODE_ENV === 'production') {
-      if (event.request?.url?.includes('localhost')) {
+    environment,
+
+    // Error filtering
+    beforeSend(event) {
+      // Filter out development and localhost errors in production
+      if (process.env.NODE_ENV === 'production') {
+        if (event.request?.url?.includes('localhost')) {
+          return null
+        }
+      }
+
+      // Filter out known non-critical errors
+      if (event.exception?.values?.[0]?.type === 'ChunkLoadError') {
         return null
       }
-    }
 
-    // Filter out known non-critical errors
-    if (event.exception?.values?.[0]?.type === 'ChunkLoadError') {
-      return null
-    }
+      // Add user context from Clerk if available
+      const user = getClerkUserFromWindow()
+      if (user) {
+        Sentry.setUser({ id: user.id })
+      }
 
-    // Add user context from Clerk if available
-    const user = getClerkUserFromWindow()
-    if (user) {
-      Sentry.setUser({
-        id: user.id,
-        email: user.primaryEmailAddress?.emailAddress,
-        username: user.username,
-      })
-    }
-
-    return event
-  },
-
-  // Custom tags
-  initialScope: {
-    tags: {
-      component: 'web-app',
+      return event
     },
-  },
-})
+
+    // Custom tags
+    initialScope: {
+      tags: {
+        component: 'web-app',
+      },
+    },
+  }
+
+  if (dsn) options.dsn = dsn
+  if (release) options.release = release
+
+  // Replay sample rates
+  options.replaysSessionSampleRate =
+    process.env.NODE_ENV === 'production' ? 0 : 0.1
+  options.replaysOnErrorSampleRate = 1.0
+
+  Sentry.init(options)
+}
 
 // Global error handler for React errors
 if (typeof window !== 'undefined') {

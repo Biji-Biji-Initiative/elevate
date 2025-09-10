@@ -2,12 +2,7 @@
 // Safely calls gtag when Google Analytics is available
 import { useEffect } from 'react'
 
-declare global {
-  interface Window {
-    gtag?: (...args: unknown[]) => void
-    dataLayer?: unknown[]
-  }
-}
+type GTagWindow = { gtag?: (command: string, ...params: unknown[]) => void }
 
 export interface CTAClickEvent {
   area: 'hero' | 'stories' | 'dual_paths' | 'convening'
@@ -29,9 +24,10 @@ export interface UGCEvent {
 
 // Safe gtag wrapper
 function trackEvent(eventName: string, parameters: Record<string, unknown>) {
-  if (typeof window !== 'undefined' && window.gtag) {
+  if (typeof window !== 'undefined' && (window as unknown as GTagWindow).gtag) {
     try {
-      window.gtag('event', eventName, parameters)
+      const w = window as unknown as GTagWindow
+      w.gtag?.('event', eventName, parameters)
     } catch (error) {
       // Silently fail - don't break the app if analytics fails
       console.debug('Analytics tracking failed:', error)
@@ -71,7 +67,10 @@ export const analytics = {
 
   // Track user-generated content interactions
   ugcView: (event?: UGCEvent) => {
-    trackEvent('ugc_view', event || {})
+    const payload: Record<string, unknown> = event?.post_id
+      ? { post_id: event.post_id }
+      : {}
+    trackEvent('ugc_view', payload)
   },
 
   ugcClick: (event: UGCEvent) => {

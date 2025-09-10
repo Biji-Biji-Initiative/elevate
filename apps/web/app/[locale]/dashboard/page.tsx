@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 import { useAuth } from '@clerk/nextjs'
 
@@ -18,7 +19,9 @@ import { getApiClient } from '../../../lib/api-client'
 type DashboardData = SafeDashboardData
 
 const ACTIVITY_ROUTES = {
-  LEARN: '/dashboard/learn',
+  // LEARN points come from Kajabi tags (Option B).
+  // Route to metrics instead of a form.
+  LEARN: '/metrics/learn',
   EXPLORE: '/dashboard/explore',
   AMPLIFY: '/dashboard/amplify',
   PRESENT: '/dashboard/present',
@@ -49,18 +52,24 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
-  useEffect(() => {
-    if (isLoaded && userId) {
-      void fetchDashboardData()
-    }
-  }, [isLoaded, userId])
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true)
       const api = getApiClient()
       const result = await api.getDashboardDTO()
+      // Pre-check user type confirmation and redirect if needed
+      try {
+        const meRes = await fetch('/api/profile/me')
+        if (meRes.ok) {
+          const me = (await meRes.json()) as { data?: { userTypeConfirmed?: boolean } }
+          if (me?.data?.userTypeConfirmed === false) {
+            router.push(withLocale('/onboarding/user-type'))
+            return
+          }
+        }
+      } catch { /* noop */ }
       setData(result.data)
     } catch (error) {
       const errorMessage =
@@ -69,7 +78,13 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router, withLocale])
+
+  useEffect(() => {
+    if (isLoaded && userId) {
+      void fetchDashboardData()
+    }
+  }, [isLoaded, userId, fetchDashboardData])
 
   if (!isLoaded || loading) {
     return (
@@ -373,6 +388,31 @@ export default function DashboardPage() {
                       className="w-full text-left justify-start"
                     >
                       View Public Profile
+                    </Button>
+                  </Link>
+                  <Link href={withLocale('/dashboard/explore')} className="block">
+                    <Button variant="ghost" className="w-full text-left justify-start">
+                      Start Explore
+                    </Button>
+                  </Link>
+                  <Link href={withLocale('/dashboard/amplify')} className="block">
+                    <Button variant="ghost" className="w-full text-left justify-start">
+                      Submit Amplify Evidence
+                    </Button>
+                  </Link>
+                  <Link href={withLocale('/dashboard/amplify/invite')} className="block">
+                    <Button variant="ghost" className="w-full text-left justify-start">
+                      Invite Peers/Students
+                    </Button>
+                  </Link>
+                  <Link href={withLocale('/dashboard/present')} className="block">
+                    <Button variant="ghost" className="w-full text-left justify-start">
+                      Submit LinkedIn Post
+                    </Button>
+                  </Link>
+                  <Link href={withLocale('/dashboard/shine')} className="block">
+                    <Button variant="ghost" className="w-full text-left justify-start">
+                      Submit Innovation
                     </Button>
                   </Link>
                 </div>

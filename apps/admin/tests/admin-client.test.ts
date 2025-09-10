@@ -34,7 +34,20 @@ describe('adminClient', () => {
             created_at: new Date().toISOString(),
             status: 'PENDING',
             visibility: 'PRIVATE',
-            user: { id: 'u1', name: 'User', handle: 'user', email: 'u@example.com' },
+            payload: {
+              activityCode: 'LEARN',
+              data: {
+                provider: 'SPL',
+                course_name: 'Course',
+                completed_at: '2024-01-01',
+              },
+            },
+            user: {
+              id: 'u1',
+              name: 'User',
+              handle: 'user',
+              email: 'u@example.com',
+            },
             activity: { code: 'LEARN', name: 'Learn' },
           },
         ],
@@ -52,10 +65,15 @@ describe('adminClient', () => {
       data: {
         users: [
           {
-            id: 'u1', handle: 'user', name: 'U', email: 'u@example.com',
-            role: 'PARTICIPANT', created_at: new Date().toISOString(),
-            _count: { submissions: 1, ledger: 1, earned_badges: 0 }, totalPoints: 5,
-          }
+            id: 'u1',
+            handle: 'user',
+            name: 'U',
+            email: 'u@example.com',
+            role: 'PARTICIPANT',
+            created_at: new Date().toISOString(),
+            _count: { submissions: 1, ledger: 1, earned_badges: 0 },
+            totalPoints: 5,
+          },
         ],
         pagination: { page: 1, limit: 50, total: 1, pages: 1 },
       },
@@ -68,7 +86,16 @@ describe('adminClient', () => {
   it('getBadges parses badges list envelope', async () => {
     mockFetchOnce(200, {
       success: true,
-      data: { badges: [{ code: 'EARLY', name: 'Early Adopter', description: 'desc', criteria: { type: 'points', threshold: 10 } }] }
+      data: {
+        badges: [
+          {
+            code: 'EARLY',
+            name: 'Early Adopter',
+            description: 'desc',
+            criteria: { type: 'points', threshold: 10 },
+          },
+        ],
+      },
     })
     const res = await adminClient.getBadges(true)
     expect(res.badges[0].code).toBe('EARLY')
@@ -78,12 +105,37 @@ describe('adminClient', () => {
     mockFetchOnce(200, {
       success: true,
       data: {
-        overview: { submissions: { total: 1, pending: 0, approved: 1, rejected: 0, approvalRate: 100 }, users: { total: 1, active: 1, withSubmissions: 1, withBadges: 0, activationRate: 100 }, points: { totalAwarded: 10, totalEntries: 1, avgPerEntry: 10 }, badges: { totalBadges: 1, totalEarned: 1, uniqueEarners: 1 }, reviews: { pendingReviews: 0, avgReviewTimeHours: 0 } },
-        distributions: { submissionsByStatus: [], submissionsByActivity: [], usersByRole: [], usersByCohort: [], pointsByActivity: [], pointsDistribution: { totalUsers: 1, max: 10, min: 10, avg: 10, percentiles: [] } },
+        overview: {
+          submissions: {
+            total: 1,
+            pending: 0,
+            approved: 1,
+            rejected: 0,
+            approvalRate: 100,
+          },
+          users: {
+            total: 1,
+            active: 1,
+            withSubmissions: 1,
+            withBadges: 0,
+            activationRate: 100,
+          },
+          points: { totalAwarded: 10, totalEntries: 1, avgPerEntry: 10 },
+          badges: { totalBadges: 1, totalEarned: 1, uniqueEarners: 1 },
+          reviews: { pendingReviews: 0, avgReviewTimeHours: 0 },
+        },
+        distributions: {
+          submissionsByStatus: [],
+          submissionsByActivity: [],
+          usersByRole: [],
+          usersByCohort: [],
+          pointsByActivity: [],
+          pointsDistribution: [],
+        },
         trends: { submissionsByDate: [], userRegistrationsByDate: [] },
         recentActivity: { submissions: [], approvals: [], users: [] },
-        performance: { reviewers: [], topBadges: [] }
-      }
+        performance: { reviewers: [], topBadges: [] },
+      },
     })
     const res = await adminClient.getAnalytics({})
     expect(res.overview.submissions.total).toBe(1)

@@ -53,12 +53,15 @@ export default defineConfig({
       console.error('Failed to copy CSS files:', err)
     }
 
-    // Add 'use client' directive to bundled files
+    // Add 'use client' directive to bundled entry points
     const jsDistDir = path.resolve('dist/js')
     const addUseClientToFile = async (filePath) => {
       try {
         const content = await fs.promises.readFile(filePath, 'utf8')
-        if (!content.startsWith('"use client";') && !content.startsWith("'use client'")) {
+        if (
+          !content.startsWith('"use client";') &&
+          !content.startsWith("'use client'")
+        ) {
           const newContent = '"use client";\n' + content
           await fs.promises.writeFile(filePath, newContent, 'utf8')
           console.log(`✓ Added "use client" to ${path.basename(filePath)}`)
@@ -72,9 +75,9 @@ export default defineConfig({
     const filesToUpdate = [
       path.join(jsDistDir, 'index.js'),
       path.join(jsDistDir, 'blocks/index.js'),
-      path.join(jsDistDir, 'blocks/sections/index.js'), 
+      path.join(jsDistDir, 'blocks/sections/index.js'),
       path.join(jsDistDir, 'feedback/index.js'),
-      path.join(jsDistDir, 'next/index.js')
+      path.join(jsDistDir, 'next/index.js'),
     ]
 
     await Promise.all(filesToUpdate.map(addUseClientToFile))

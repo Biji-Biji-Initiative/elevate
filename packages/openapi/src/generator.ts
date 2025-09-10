@@ -9,7 +9,7 @@ import { writeFileSync, mkdirSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 
-import { openApiSpec } from './spec'
+import { getOpenApiSpec } from './spec'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -20,31 +20,28 @@ mkdirSync(distDir, { recursive: true })
 
 // Write OpenAPI spec to JSON file
 const specPath = resolve(distDir, 'openapi.json')
-writeFileSync(specPath, JSON.stringify(openApiSpec, null, 2), 'utf-8')
+writeFileSync(specPath, JSON.stringify(getOpenApiSpec(), null, 2), 'utf-8')
 
 console.log(`✅ OpenAPI specification generated: ${specPath}`)
 // Summary counts (avoids unsafe casts)
 try {
-  const endpoints =
-    typeof openApiSpec === 'object' &&
-    openApiSpec &&
-    'paths' in (openApiSpec as unknown as Record<string, unknown>)
-      ? Object.keys(
-          (openApiSpec as { paths?: Record<string, unknown> }).paths || {},
-        ).length
-      : 0
-  const components =
-    typeof openApiSpec === 'object' &&
-    openApiSpec &&
-    'components' in (openApiSpec as unknown as Record<string, unknown>)
-      ? Object.keys(
-          (
-            openApiSpec as {
-              components?: { schemas?: Record<string, unknown> }
-            }
-          ).components?.schemas || {},
-        ).length
-      : 0
+  const spec = getOpenApiSpec()
+  const isRecord = (v: unknown): v is Record<string, unknown> =>
+    !!v && typeof v === 'object'
+  const endpoints = (() => {
+    if (!isRecord(spec)) return 0
+    if (!('paths' in spec)) return 0
+    const paths = (spec as { paths?: Record<string, unknown> }).paths
+    return paths ? Object.keys(paths).length : 0
+  })()
+  const components = (() => {
+    if (!isRecord(spec)) return 0
+    if (!('components' in spec)) return 0
+    const c = (spec as { components?: { schemas?: Record<string, unknown> } })
+      .components
+    const schemas = c?.schemas
+    return schemas ? Object.keys(schemas).length : 0
+  })()
   console.log(`📊 Endpoints: ${endpoints}`)
   console.log(`🔧 Components: ${components} schemas`)
 } catch {
@@ -71,4 +68,6 @@ try {
 }
 
 console.log('\n🚀 OpenAPI documentation generated successfully!')
-console.log('   View at: http://localhost:3000/api/docs (once Swagger UI is set up)')
+console.log(
+  '   View at: http://localhost:3000/api/docs (once Swagger UI is set up)',
+)

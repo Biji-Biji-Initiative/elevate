@@ -58,7 +58,7 @@ export async function approveAmplifySubmission(
 
   const sessionStart = toUtc(
     opts.payload.session_date,
-    opts.payload.session_start_time ?? undefined,
+    opts.payload.session_start_time ?? null ?? undefined,
     opts.orgTimezone,
   )
   const startOfDay = toUtc(opts.payload.session_date, '00:00', opts.orgTimezone)
@@ -77,11 +77,33 @@ export async function approveAmplifySubmission(
   let studentsUsed = 0
   let duplicateFlag = false
 
+  const isRecord = (v: unknown): v is Record<string, unknown> =>
+    !!v && typeof v === 'object' && !Array.isArray(v)
+  const toAmplifyPayload = (raw: unknown): AmplifyPayload => {
+    const obj = isRecord(raw) ? raw : {}
+    const peers = typeof obj.peers_trained === 'number' ? obj.peers_trained : 0
+    const students =
+      typeof obj.students_trained === 'number' ? obj.students_trained : 0
+    const session_date =
+      typeof obj.session_date === 'string' ? obj.session_date : ''
+    const session_start_time =
+      typeof obj.session_start_time === 'string' ? obj.session_start_time : null
+    const loc = isRecord(obj.location) ? obj.location : undefined
+    const city = loc && typeof loc.city === 'string' ? { city: loc.city } : null
+    return {
+      peers_trained: peers,
+      students_trained: students,
+      session_date,
+      session_start_time,
+      location: city,
+    }
+  }
+
   for (const sub of existing) {
-    const data = sub.payload as unknown as AmplifyPayload
+    const data = toAmplifyPayload(sub.payload)
     const otherStart = toUtc(
       data.session_date,
-      data.session_start_time ?? undefined,
+      data.session_start_time ?? null ?? undefined,
       opts.orgTimezone,
     )
     if (otherStart >= windowStart && otherStart <= windowEnd) {

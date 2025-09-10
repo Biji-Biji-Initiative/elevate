@@ -127,7 +127,10 @@ export function getSecurityHeaders({ isProduction }: SecurityHeadersOptions): {
 export function parseAdminEnv(env?: NodeJS.ProcessEnv): z.infer<typeof AdminEnvSchema>;
 
 // @public (undocumented)
-export function parseEnv<TOutput>(env: NodeJS.ProcessEnv, schema?: z.ZodType<TOutput>): TOutput;
+export function parseEnv(env: NodeJS.ProcessEnv): z.infer<typeof EnvSchema>;
+
+// @public (undocumented)
+export function parseEnv<TOutput>(env: NodeJS.ProcessEnv, schema: z.ZodType<TOutput>): TOutput;
 
 // @public (undocumented)
 export function parseWebEnv(env?: NodeJS.ProcessEnv): WebEnv;

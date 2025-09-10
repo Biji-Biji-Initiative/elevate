@@ -1,18 +1,17 @@
 import { headers } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { clerkClient, type WebhookEvent } from '@clerk/nextjs/server'
 import { Webhook } from 'svix'
 
 import { parseClerkPublicMetadata } from '@elevate/auth'
+import type { Prisma as PrismaNS } from '@elevate/db'
 import { prisma } from '@elevate/db/client'
-import { getKajabiClient } from '@elevate/integrations'
-import { enrollUserInKajabi } from '@elevate/integrations'
+import { getKajabiClient, enrollUserInKajabi } from '@elevate/integrations'
 import { withRateLimit, webhookRateLimiter } from '@elevate/security'
-import { parseRole, parseClerkWebhook } from '@elevate/types'
-import { clerkClient } from '@clerk/nextjs/server'
+import { parseRole, parseClerkWebhook, type Role } from '@elevate/types'
 
-import type { WebhookEvent } from '@clerk/nextjs/server'
-import type { Role, Prisma } from '@prisma/client'
+import type { UserType as PrismaUserType } from '@prisma/client'
 
 export const runtime = 'nodejs'
 
@@ -63,7 +62,7 @@ export async function POST(req: NextRequest) {
 
     // Store raw event for audit trail (before verification)
     try {
-      const auditMeta: Prisma.InputJsonValue = {
+      const auditMeta: PrismaNS.InputJsonValue = {
         event_type: validatedEvent.type,
         svix_id: svixId,
         timestamp: svixTimestamp,
@@ -96,7 +95,7 @@ export async function POST(req: NextRequest) {
       }) as WebhookEvent // Safe cast since we validated the structure earlier
     } catch (err) {
       // Log failed verification attempt
-      const failureMeta: Prisma.InputJsonValue = {
+      const failureMeta: PrismaNS.InputJsonValue = {
         error: err instanceof Error ? err.message : String(err),
         svix_id: svixId,
         event_type: validatedEvent.type,
@@ -170,7 +169,11 @@ export async function POST(req: NextRequest) {
           const publicMetadata = parseClerkPublicMetadata(public_metadata)
           const userRole =
             parseRole(publicMetadata.role) || ('PARTICIPANT' as Role)
-          const userType = publicMetadata.user_type || 'EDUCATOR'
+          const userTypeRaw = (
+            publicMetadata.user_type || 'EDUCATOR'
+          ).toUpperCase()
+          const userType: PrismaUserType =
+            userTypeRaw === 'STUDENT' ? 'STUDENT' : 'EDUCATOR'
 
           // Upsert user in database
           const updateData: {
@@ -178,7 +181,7 @@ export async function POST(req: NextRequest) {
             email: string
             avatar_url: string | null
             role: Role
-            user_type: string
+            user_type: PrismaUserType
             handle?: string
           } = {
             name,
@@ -193,7 +196,7 @@ export async function POST(req: NextRequest) {
             updateData.handle = handle
           }
 
-          const upsertedUser = await prisma.user.upsert({
+          await prisma.user.upsert({
             where: { id },
             update: updateData,
             create: {
@@ -240,7 +243,7 @@ export async function POST(req: NextRequest) {
                 const result = await enrollUserInKajabi(email, name, {
                   offerId,
                 })
-                const grantMeta: Prisma.InputJsonValue = {
+                const grantMeta: PrismaNS.InputJsonValue = {
                   kajabi_contact_id: kajabiContact.id,
                   email,
                   offer_id: offerId,
@@ -260,7 +263,7 @@ export async function POST(req: NextRequest) {
               }
 
               // Create audit log for Kajabi enrollment
-              const enrollmentMeta: Prisma.InputJsonValue = {
+              const enrollmentMeta: PrismaNS.InputJsonValue = {
                 kajabi_contact_id: kajabiContact.id,
                 email: email,
                 name: name,
@@ -277,7 +280,7 @@ export async function POST(req: NextRequest) {
             } catch (kajabiError) {
               // Don't fail the webhook if Kajabi enrollment fails
               // Log the error for manual follow-up
-              const enrollmentFailureMeta: Prisma.InputJsonValue = {
+              const enrollmentFailureMeta: PrismaNS.InputJsonValue = {
                 error:
                   kajabiError instanceof Error
                     ? kajabiError.message
@@ -318,7 +321,7 @@ export async function POST(req: NextRequest) {
       return new NextResponse('Success', { status: 200 })
     } catch (error) {
       // Log error for debugging
-      const errorMeta: Prisma.InputJsonValue = {
+      const errorMeta: PrismaNS.InputJsonValue = {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
       }

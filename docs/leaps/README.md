@@ -17,6 +17,8 @@ This folder is the canonical reference for LEAPS points, badges, webhooks, caps,
 - kajabi-learn.md — webhook contract, idempotency, badge unlock, admin reconciliation
 - amplify.md — definitions, evidence, caps, server validation, reviewer guidance
 - badges.md — badge catalog, criteria, grant algorithm, backfill
+ - handoff.md — current implementation status, gaps, and next steps
+ - agent-tracker.md — conformance checklist to verify code matches specs
 
 ## Code References
 
@@ -37,5 +39,4 @@ This folder is the canonical reference for LEAPS points, badges, webhooks, caps,
 - All award writes use `external_event_id` for idempotency.
 - All server-side validations must mirror UI constraints and include explicit error messages.
 - Public pages read only aggregate data; no PII.
-
 

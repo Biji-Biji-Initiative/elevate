@@ -1,0 +1,41 @@
+name: Staging Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Staging BASE_URL (e.g., https://staging.example.org)"
+        required: true
+      with_admin:
+        description: "Include admin endpoints (requires ADMIN_TOKEN secret)"
+        required: false
+        default: "true"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install deps
+        run: pnpm -C elevate install --frozen-lockfile
+
+      - name: Run staged validation script
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          ADMIN_TOKEN: ${{ secrets.STAGING_ADMIN_JWT }}
+          INTERNAL_METRICS_TOKEN: ${{ secrets.STAGING_INTERNAL_METRICS_TOKEN }}
+          CRON_SECRET: ${{ secrets.STAGING_CRON_SECRET }}
+        run: pnpm -C elevate qa:validate:staging
+

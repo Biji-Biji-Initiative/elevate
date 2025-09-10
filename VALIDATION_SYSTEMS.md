@@ -1,12 +1,21 @@
-# Validation Systems - Phase 4 Implementation
+---
+title: Validation Systems - Phase 4 Implementation
+owner: platform-team
+status: active
+last_reviewed: 2025-09-10
+tags: [validation, quality, ci, build]
+---
+
+## Validation Systems - Phase 4 Implementation
 
 This document describes the comprehensive validation infrastructure implemented in Phase 4 to prevent code quality drift and maintain alignment with [BUILDING.md](./BUILDING.md) principles.
 
 ## Overview
 
 The validation system consists of multiple layers of checks that ensure:
+
 - TypeScript compilation without errors
-- Import path boundaries and restrictions  
+- Import path boundaries and restrictions
 - Export/entry point alignment
 - Code quality standards
 - API surface stability
@@ -17,50 +26,59 @@ The validation system consists of multiple layers of checks that ensure:
 ### Core Scripts
 
 #### 1. `validate-imports.mjs`
+
 **Purpose**: Block deep internal imports per BUILDING.md Section 12
 
 **What it checks**:
+
 - Prevents imports from `@elevate/*/src/*` paths
-- Blocks imports from `@elevate/*/dist/*` paths  
+- Blocks imports from `@elevate/*/dist/*` paths
 - Detects cross-package src/ imports
 - Flags relative package imports that should be workspace imports
 
 **Usage**:
+
 ```bash
 pnpm run verify:imports
 # or directly: node scripts/validate-imports.mjs
 ```
 
 **Example violations caught**:
+
 ```typescript
 // ❌ Forbidden
 import { utils } from '@elevate/ui/src/internal/utils'
 import Client from '@elevate/openapi/dist/sdk'
 
-// ✅ Correct  
+// ✅ Correct
 import { utils } from '@elevate/ui'
 import Client from '@elevate/openapi/sdk'
 ```
 
 #### 2. `validate-exports.mjs`
+
 **Purpose**: Ensure tsup entries match package.json exports per BUILDING.md Section 11
 
 **What it checks**:
+
 - Compares tsup config entry points with package.json exports
 - Detects missing exports for bundled entries
 - Finds exports without corresponding tsup entries
 - Handles both array and object entry formats
 
 **Usage**:
+
 ```bash
-pnpm run verify:exports  
+pnpm run verify:exports
 # or directly: node scripts/validate-exports.mjs
 ```
 
 #### 3. `lint-fix-verify.mjs`
+
 **Purpose**: Post-lint-fix validation per BUILDING.md Section 11
 
 **What it checks**:
+
 - TypeScript compilation after lint fixes
 - ESLint passes without errors
 - Import paths remain valid
@@ -69,6 +87,7 @@ pnpm run verify:exports
 - Common post-fix regressions
 
 **Usage**:
+
 ```bash
 pnpm run lint:fix:verify
 # or directly: node scripts/lint-fix-verify.mjs
@@ -77,9 +96,11 @@ pnpm run lint:fix:verify
 ### Comprehensive Scripts
 
 #### 4. `validate-all.mjs`
+
 **Purpose**: Run all validation checks with comprehensive reporting
 
 **Checks performed**:
+
 1. TypeScript Compilation (`typecheck:build`)
 2. Import Path Validation (`validate-imports.mjs`)
 3. Export/Entry Alignment (`validate-exports.mjs`)
@@ -89,24 +110,28 @@ pnpm run lint:fix:verify
 7. Build Types Check (`build:types`)
 
 **Usage**:
+
 ```bash
 pnpm run verify:all
 # or directly: node scripts/validate-all.mjs
 ```
 
 **Output Format**:
+
 - ✅ Critical checks (must pass for deployment)
 - ⚠️ Optional checks (warnings, should be addressed)
 - Detailed error reporting with actionable guidance
 - Performance metrics (duration per check)
 
 #### 5. `validate-code-quality.mjs` (Enhanced)
+
 **Purpose**: Comprehensive code quality validation
 
 **Checks performed**:
+
 - Duplicate test file detection
 - ESM import extensions compliance
-- Test file location validation  
+- Test file location validation
 - Deprecated import detection
 - Package boundary enforcement
 - TypeScript configuration consistency
@@ -121,7 +146,7 @@ The following scripts are available:
 ```json
 {
   "verify:imports": "node scripts/validate-imports.mjs",
-  "verify:exports": "node scripts/validate-exports.mjs", 
+  "verify:exports": "node scripts/validate-exports.mjs",
   "verify:all": "node scripts/validate-all.mjs",
   "lint:fix:verify": "node scripts/lint-fix-verify.mjs",
   "ci": "... && pnpm run verify:all && ..."
@@ -137,6 +162,7 @@ pnpm run ci
 ```
 
 This runs:
+
 1. Environment validation
 2. Build checks
 3. Security verification
@@ -154,7 +180,7 @@ The validation scripts integrate with existing GitHub workflows:
 - name: Run comprehensive validation
   run: pnpm run verify:all
 
-- name: Post-lint verification (if lint fixes are applied)  
+- name: Post-lint verification (if lint fixes are applied)
   run: pnpm run lint:fix:verify
 ```
 
@@ -163,6 +189,7 @@ The validation scripts integrate with existing GitHub workflows:
 The existing ESLint configuration already includes strong rules per BUILDING.md:
 
 ### Import Restrictions
+
 ```javascript
 // Prevents deep internal imports
 'no-restricted-imports': [
@@ -174,6 +201,7 @@ The existing ESLint configuration already includes strong rules per BUILDING.md:
 ```
 
 ### Extension Handling
+
 ```javascript
 // ESM import hygiene per BUILDING.md Section 6
 'import/extensions': [
@@ -181,7 +209,7 @@ The existing ESLint configuration already includes strong rules per BUILDING.md:
   'ignorePackages',
   {
     js: 'always',
-    jsx: 'never', 
+    jsx: 'never',
     ts: 'never',
     tsx: 'never',
   },
@@ -189,6 +217,7 @@ The existing ESLint configuration already includes strong rules per BUILDING.md:
 ```
 
 ### Type Safety
+
 ```javascript
 // Strict type safety rules - zero tolerance
 '@typescript-eslint/no-explicit-any': 'error',
@@ -204,17 +233,20 @@ The existing ESLint configuration already includes strong rules per BUILDING.md:
 API Extractor is configured and integrated per BUILDING.md Section 9:
 
 ### Configuration
-- Base configuration: `api-extractor.base.json`  
+
+- Base configuration: `api-extractor.base.json`
 - Per-package configurations: `packages/*/api-extractor.json`
 - API reports committed to git: `packages/*/api-reports/*.api.md`
 
 ### Scripts
+
 ```bash
 pnpm run api:extract  # Update API reports
 pnpm run api:check    # Validate API reports match code
 ```
 
 ### Workflow
+
 1. Build types: `pnpm run build:types`
 2. Extract API: `pnpm run api:extract`
 3. Review changes in `.api.md` files
@@ -225,6 +257,7 @@ pnpm run api:check    # Validate API reports match code
 ### Validation Script Output
 
 All validation scripts provide:
+
 - Colored output for easy scanning
 - Actionable error messages
 - Performance metrics
@@ -234,6 +267,7 @@ All validation scripts provide:
 ### Error Categories
 
 **Critical Errors** (CI fails):
+
 - TypeScript compilation failures
 - Import boundary violations
 - Export/entry mismatches
@@ -241,6 +275,7 @@ All validation scripts provide:
 - Build failures
 
 **Warnings** (CI passes with warnings):
+
 - Code quality issues
 - API report updates needed
 - Performance regressions
@@ -248,16 +283,19 @@ All validation scripts provide:
 ## Drift Prevention Strategies
 
 ### 1. Automated Validation
-- All PRs must pass `verify:all` 
+
+- All PRs must pass `verify:all`
 - Post-lint-fix verification prevents regressions
 - API reports catch unintended breaking changes
 
 ### 2. Configuration Alignment
+
 - Single source of truth for entries vs exports
 - TypeScript project references properly configured
 - ESLint rules enforce boundaries
 
 ### 3. Documentation
+
 - Clear guidance in error messages
 - Examples of correct vs incorrect patterns
 - Integration with existing workflows
@@ -265,12 +303,14 @@ All validation scripts provide:
 ## Performance Optimization
 
 ### Validation Script Performance
+
 - Scripts run in parallel where possible
 - Intelligent filtering of files to check
 - Caching of results where appropriate
 - Early exit on critical failures
 
 ### CI Pipeline Efficiency
+
 - Consolidated validation reduces redundant checks
 - Better error reporting reduces debugging time
 - Parallel execution of independent checks
@@ -278,6 +318,7 @@ All validation scripts provide:
 ## Troubleshooting Common Issues
 
 ### Import Violations
+
 ```bash
 # Check specific import issues
 pnpm run verify:imports
@@ -288,6 +329,7 @@ pnpm run verify:imports
 ```
 
 ### Export Misalignment
+
 ```bash
 # Check export/entry alignment
 pnpm run verify:exports
@@ -298,6 +340,7 @@ pnpm run verify:exports
 ```
 
 ### Post-Lint Issues
+
 ```bash
 # After running lint --fix, verify no regressions
 pnpm run lint:fix:verify
@@ -311,12 +354,14 @@ pnpm run lint:fix:verify
 ## Future Enhancements
 
 ### Planned Improvements
+
 1. **Bundle Size Validation**: Prevent size regressions
 2. **Performance Benchmarking**: Track build/test times
 3. **Dependency Analysis**: Detect circular dependencies
 4. **Security Scanning**: Automated vulnerability checks
 
 ### Extension Points
+
 - Plugin system for custom validation rules
 - Project-specific configuration overrides
 - Integration with additional linters/analyzers
@@ -326,29 +371,35 @@ pnpm run lint:fix:verify
 For existing projects adopting this validation system:
 
 ### Step 1: Install Dependencies
+
 ```bash
 # Dependencies already included in package.json
 pnpm install
 ```
 
 ### Step 2: Run Initial Validation
+
 ```bash
 pnpm run verify:all
 ```
 
 ### Step 3: Fix Issues
+
 Use the specific scripts to address individual issue categories:
+
 ```bash
 pnpm run verify:imports    # Fix import violations
-pnpm run verify:exports    # Fix export alignment  
+pnpm run verify:exports    # Fix export alignment
 pnpm run lint:packages     # Fix ESLint issues
 pnpm run typecheck:build   # Fix TypeScript errors
 ```
 
 ### Step 4: Update CI
+
 Update your CI configuration to use `pnpm run verify:all`
 
 ### Step 5: Establish Baselines
+
 ```bash
 pnpm run api:extract  # Generate initial API reports
 ```
@@ -356,18 +407,21 @@ pnpm run api:extract  # Generate initial API reports
 ## Best Practices
 
 ### For Developers
+
 1. Run `verify:all` before creating PRs
 2. Use `lint:fix:verify` after ESLint fixes
 3. Check `verify:imports` when refactoring imports
 4. Review API report changes in PRs
 
 ### For Teams
+
 1. Require `verify:all` to pass in CI
 2. Review validation failures in PR reviews
 3. Keep API reports up to date
 4. Address warnings promptly to prevent accumulation
 
 ### For Maintainers
+
 1. Monitor validation performance metrics
 2. Update validation rules as the codebase evolves
 3. Extend validation coverage to new quality areas
@@ -375,4 +429,4 @@ pnpm run api:extract  # Generate initial API reports
 
 ---
 
-*This validation system implements the requirements from [BUILDING.md](./BUILDING.md) Sections 11 and 12, providing comprehensive drift prevention and quality assurance for the monorepo.*
+_This validation system implements the requirements from [BUILDING.md](./BUILDING.md) Sections 11 and 12, providing comprehensive drift prevention and quality assurance for the monorepo._

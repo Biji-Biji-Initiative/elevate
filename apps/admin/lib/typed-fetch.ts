@@ -1,3 +1,5 @@
+import { getClientLogger } from '@elevate/logging/client'
+
 import type { z } from 'zod'
 
 export class HttpError extends Error {
@@ -19,7 +21,14 @@ export async function typedFetch<T>(
     json = await res.json()
   } catch (error) {
     // Failed to parse JSON response, likely empty or non-JSON content
-    console.warn('Failed to parse JSON response:', error instanceof Error ? error.message : 'Unknown error')
+    try {
+      const logger = getClientLogger().forComponent('typed-fetch')
+      logger.warn(
+        `Failed to parse JSON response: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      )
+    } catch {
+      // no-op
+    }
     json = {}
   }
 
@@ -37,4 +46,3 @@ export async function typedFetch<T>(
   }
   return parsed.data
 }
-

@@ -8,13 +8,23 @@
     "type-check": {
       "outputs": ["**/*.tsbuildinfo"],
       "cache": true,
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json", "tsconfig.*.json"]
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "tsconfig.json",
+        "tsconfig.*.json"
+      ]
     },
     "build:types": {
       "dependsOn": ["^type-check"],
       "outputs": ["packages/*/dist/types/**", "dist/types/**"],
       "cache": true,
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json", "tsconfig.*.json"]
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "tsconfig.json",
+        "tsconfig.*.json"
+      ]
     },
     "build:js": {
       "dependsOn": ["build:types"],
@@ -27,7 +37,14 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
       "cache": true,
       "persistent": true,
-      "inputs": ["src/**/*", "public/**/*", "next.config.*", "package.json", "tailwind.config.*", "postcss.config.*"]
+      "inputs": [
+        "src/**/*",
+        "public/**/*",
+        "next.config.*",
+        "package.json",
+        "tailwind.config.*",
+        "postcss.config.*"
+      ]
     },
     "dev": {
       "cache": false,
@@ -122,6 +139,7 @@
     // Misc
     "USER",
     // Kajabi integration
-    "KAJABI_OFFER_ID"
+    "KAJABI_OFFER_ID",
+    "AV_SCAN_ENABLED"
   ]
 }

@@ -34,13 +34,433 @@ export interface paths {
                             /** @enum {boolean} */
                             success: true;
                             data: {
-                                counters: {
-                                    educators_learning: number;
-                                    peers_students_reached: number;
-                                    stories_shared: number;
-                                    micro_credentials: number;
-                                    mce_certified: number;
+                                totalEducators: number;
+                                totalSubmissions: number;
+                                totalPoints: number;
+                                studentsImpacted: number;
+                                byStage: {
+                                    learn: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
+                                    explore: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
+                                    amplify: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
+                                    present: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
+                                    shine: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
                                 };
+                                topCohorts: {
+                                    name: string;
+                                    count: number;
+                                    avgPoints?: number;
+                                }[];
+                                monthlyGrowth: {
+                                    month: string;
+                                    educators: number;
+                                    submissions: number;
+                                }[];
+                                badges: {
+                                    totalAwarded: number;
+                                    uniqueBadges: number;
+                                    mostPopular: {
+                                        code: string;
+                                        name: string;
+                                        count: number;
+                                    }[];
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kajabi/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kajabi Health
+         * @description Check Kajabi connectivity and environment presence
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                healthy: boolean;
+                                hasKey: boolean;
+                                hasSecret: boolean;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kajabi/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kajabi Invite
+         * @description Force-enroll a user in Kajabi by userId or email and optionally grant an offer
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        userId?: string;
+                        /** Format: email */
+                        email?: string;
+                        name?: string;
+                        offerId?: string | number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Invitation sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                invited: boolean;
+                                contactId?: number;
+                                withOffer: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Upstream error */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/storage/retention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Storage Retention
+         * @description Enforce evidence retention policy for a user
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        userId: string;
+                        days?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Retention enforced */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                userId: string;
+                                days: number;
+                                deleted: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/slo/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * SLO Summary
+         * @description Get SLO summary or a specific SLO status (internal admin use)
+         */
+        get: {
+            parameters: {
+                query?: {
+                    slo?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
                             };
                         };
                     };
@@ -244,6 +664,112 @@ export interface paths {
                 };
                 /** @description Not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/referrals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Referrals
+         * @description List referral events with filters
+         */
+        get: {
+            parameters: {
+                query?: {
+                    referrerId?: string;
+                    refereeId?: string;
+                    email?: string;
+                    month?: string;
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                referrals: {
+                                    id: string;
+                                    eventType: string;
+                                    source?: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    externalEventId?: string | null;
+                                    referrer: {
+                                        id: string;
+                                        name: string;
+                                        email: string;
+                                    };
+                                    referee: {
+                                        id: string;
+                                        name: string;
+                                        email: string;
+                                        /** @enum {string} */
+                                        user_type: "EDUCATOR" | "STUDENT";
+                                    };
+                                }[];
+                                pagination: {
+                                    total: number;
+                                    limit: number;
+                                    offset: number;
+                                    pages: number;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -560,6 +1086,82 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/referrals/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Referral Link
+         * @description Get or allocate a referral code and share link for the current user
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                refCode: string;
+                                /** Format: uri */
+                                link: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

@@ -7,7 +7,8 @@ import { useRouter, usePathname } from 'next/navigation'
 
 import { useTranslations } from 'next-intl'
 
-import type { StatsResponseDTO, LeaderboardEntryDTO } from '@elevate/types'
+import { LeaderboardResponseSchema } from '@elevate/openapi/schemas'
+import type { StatsResponseDTO } from '@elevate/types'
 import {
   StoriesGrid,
   LeaderboardPreview,
@@ -59,8 +60,8 @@ interface StoriesResponse {
 async function fetchPlatformStats(): Promise<PlatformStats | null> {
   try {
     const api = getApiClient()
-    const res = await api.getStats()
-    const stats = res.data as StatsResponseDTO
+    const res = await api.getStatsDTO()
+    const stats: StatsResponseDTO = res.data
 
     const byStage: PlatformStats['byStage'] = Object.fromEntries(
       Object.entries(stats.byStage).map(([key, value]) => [
@@ -90,11 +91,10 @@ async function fetchLeaderboardPreview(): Promise<LeaderboardPreviewEntry[]> {
   try {
     const api = getApiClient()
     const res = await api.getLeaderboard({ limit: 3 })
-    // API enveloped response shape is { success, data: { period, data: LeaderboardEntryDTO[] } }
-    const payloadContainer = res.data as { data?: LeaderboardEntryDTO[]; [k: string]: unknown }
-    const payload = Array.isArray(payloadContainer.data) ? payloadContainer.data : []
+    const parsed = LeaderboardResponseSchema.safeParse(res.data)
+    const rows = parsed.success ? parsed.data.data : []
 
-    return payload.map((entry) => ({
+    return rows.map((entry) => ({
       rank: entry.rank,
       user: {
         name: entry.user.name,
@@ -104,10 +104,12 @@ async function fetchLeaderboardPreview(): Promise<LeaderboardPreviewEntry[]> {
       },
       points: entry.user.totalPoints,
       badges:
-        entry.user.earnedBadges?.map((b) => ({
-          code: b.badge.code,
-          name: b.badge.name,
-        })) ?? [],
+        entry.user.earnedBadges?.map(
+          (b: { badge: { code: string; name: string } }) => ({
+            code: b.badge.code,
+            name: b.badge.name,
+          }),
+        ) ?? [],
     }))
   } catch (_) {
     return []
@@ -115,7 +117,12 @@ async function fetchLeaderboardPreview(): Promise<LeaderboardPreviewEntry[]> {
 }
 
 function isStoriesResponse(raw: unknown): raw is StoriesResponse {
-  return !!raw && typeof raw === 'object' && 'stories' in (raw as Record<string, unknown>) && Array.isArray((raw as StoriesResponse).stories)
+  return (
+    !!raw &&
+    typeof raw === 'object' &&
+    'stories' in (raw as Record<string, unknown>) &&
+    Array.isArray((raw as StoriesResponse).stories)
+  )
 }
 
 async function fetchStories(): Promise<StoryEntry[]> {
@@ -268,7 +275,7 @@ export default function Page() {
 
   const handleEducatorPath = () => {
     analytics.ctaClick({ area: 'dual_paths', label: 'start_now' })
-    router.push('/dashboard/learn')
+    router.push('/metrics/learn')
   }
 
   const handleTrainerPath = () => {

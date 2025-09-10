@@ -1,290 +1,94 @@
-# 🚀 MS Elevate Indonesia LEAPS Tracker
+# MS Elevate Indonesia LEAPS Tracker
 
-[![CI](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/ci.yml)
-[![Deploy](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/deploy.yml/badge.svg)](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/deploy.yml)
-[![Database Drift Check](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/db-drift-check.yml/badge.svg)](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/db-drift-check.yml)
-[![Secret Scan](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/secret-scan.yml/badge.svg)](https://github.com/your-org/elevate-leaps-tracker/actions/workflows/secret-scan.yml)
-[![Codecov](https://codecov.io/gh/your-org/elevate-leaps-tracker/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/elevate-leaps-tracker)
+Platform for Indonesian educators to progress through the LEAPS framework (Learn, Explore, Amplify, Present, Shine) while adopting AI in classrooms.
 
-> Production-ready platform for tracking Indonesian educators' journey through the LEAPS framework (Learn, Explore, Amplify, Present, Shine) as they adopt AI in classrooms.
+## Quick Start
 
-## 📋 Table of Contents
+```bash
+# Clone and install
+git clone <repo-url>
+cd elevate
+pnpm install
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Quick Start](#quick-start)
-- [Project Structure](#project-structure)
-- [Deployment](#deployment)
-- [Documentation](#documentation)
-- [License](#license)
+# Setup environment (copy .env.example to .env.local and fill in values)
+cp .env.example .env.local
 
-## ✨ Features
+# Setup database and start development
+pnpm setup
+pnpm dev
+```
 
-### For Educators
-- **5-Stage LEAPS Journey**: Structured progression through Learn, Explore, Amplify, Present, and Shine
-- **Points & Gamification**: Earn points for completing activities, with anti-gaming measures
-- **Public Leaderboard**: Top 20 educators showcased with 30-day and all-time views
-- **Evidence Submission**: Upload certificates, classroom photos, and documentation
-- **Badge System**: Earn achievements for milestones and excellence
-- **Bilingual Support**: Full Indonesian (Bahasa) and English localization
+Visit:
 
-### For Administrators
-- **Review Queue**: Efficient submission approval/rejection workflow
-- **User Management**: Role-based access control (Participant, Reviewer, Admin)
-- **Analytics Dashboard**: Real-time metrics and insights
-- **Data Exports**: CSV exports for reporting and analysis
-- **Kajabi Integration**: Automatic Learn stage crediting via webhooks
-- **Email Notifications**: Automated communications via Resend
+- Web app: http://localhost:3000
+- Admin app: http://localhost:3001
 
-## 🛠 Tech Stack
+## Architecture
 
-- **Frontend**: Next.js 15, React 18, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes, Prisma ORM
-- **Database**: PostgreSQL (Supabase)
+- **2 Next.js Apps**: Web (public + dashboard) and Admin (review console)
+- **Database**: PostgreSQL via Supabase with Prisma ORM
+- **Auth**: Clerk with Google OAuth and role-based access
 - **Storage**: Supabase Storage for evidence files
-- **Authentication**: Clerk (Google SSO)
-- **Email**: Resend with React Email templates
-- **Localization**: next-intl (Indonesian/English)
-- **Deployment**: Vercel
+- **Deployment**: Vercel (separate projects for web/admin)
 
-## 🚀 Quick Start
+## Documentation
 
-### Prerequisites
+- **[Development Guide](docs/DEVELOPMENT.md)** - Setup, build, test, debug
+- **[API Reference](docs/API.md)** - All endpoints and usage
+- **[Database Schema](docs/DATABASE.md)** - Prisma models and queries
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - How to deploy
+- **[Admin Guide](docs/admin/ADMIN_GUIDE.md)** - Kajabi health/invite, retention, Ops
+- **[Ops Runbook](docs/OPS_RUNBOOK.md)** - Environment, endpoints, cron
+- **[Staging Validation](docs/qa/STAGING_VALIDATION.md)** - E2E validation checklist
+- **[Security Guide](docs/SECURITY.md)** - Auth, RBAC, privacy
+- **[Contributing Guide](docs/CONTRIBUTING.md)** - How to contribute
+- **[Onboarding Guide](docs/ONBOARDING.md)** - New engineer setup
 
-- Node.js 18.17 or later
-- pnpm 8.0 or later
-- PostgreSQL database (Supabase recommended)
-- Clerk account for authentication
-- Resend account for emails (optional)
+## Key Commands
 
-### Installation
+```bash
+# Development
+pnpm dev                # Start both apps
+pnpm build              # Build everything
+pnpm test               # Run tests
+pnpm verify:all         # Run all validation
+pnpm qa:validate:staging # Probe staging endpoints (see docs/qa/STAGING_VALIDATION.md)
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-org/elevate-leaps-tracker.git
-   cd elevate-leaps-tracker/elevate
-   ```
+# Database
+pnpm db:studio          # Open Prisma Studio
+pnpm db:seed            # Seed test data
+pnpm db:migrate         # Run migrations
 
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
+# Deployment
+pnpm deploy:web:prod    # Deploy web app
+pnpm deploy:admin:prod  # Deploy admin app
+```
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env.local
-   cp apps/web/.env.example apps/web/.env.local
-   cp apps/admin/.env.example apps/admin/.env.local
-   ```
-   
-   Edit the `.env.local` files with your credentials:
-   - Database URL from Supabase
-   - Clerk keys from dashboard
-   - Resend API key (optional)
-   - Kajabi webhook secret (if using)
-
-4. **Set up the database**
-   ```bash
-   pnpm db:setup
-   ```
-   
-   This will:
-   - Run Prisma migrations
-   - Create materialized views
-   - Seed initial data
-
-5. **Set up Turbo Remote Cache (optional but recommended)**
-   ```bash
-   pnpm setup:cache
-   ```
-   
-   This enables faster builds by caching across team members and CI. See [Turbo Remote Cache Guide](./docs/TURBO_REMOTE_CACHE.md) for details.
-
-6. **Start development servers**
-   ```bash
-   pnpm dev
-   ```
-   
-   - Web app: http://localhost:3000
-   - Admin app: http://localhost:3001
-
-## 📘 API Documentation
-
-- Interactive Swagger UI: visit `/docs` on the web app
-- Raw OpenAPI spec JSON: `GET /api/docs`
-- Generate spec + SDK locally: `pnpm openapi:generate` (artifacts in `packages/openapi/dist`)
-
-### Admin API Envelopes
-
-- Success: `{ success: true, data: { ... } }`
-- Errors: `{ success: false, error, details? }` (via `createErrorResponse`)
-
-### Attachments (Canonical Source)
-
-- Submissions persist attachments in the relational table `submission_attachments`.
-- The legacy JSON `attachments` field is deprecated and remains empty for compatibility.
-- All APIs derive `attachmentCount` exclusively from `attachments_rel`.
-
-### Deterministic SQL Migrations
-
-- All SQL migrations live under `packages/db/migrations` and are applied in lexical order by `scripts/db-setup.sh`.
-- Prisma schema in `packages/db/schema.prisma` remains the single source of truth; additional SQL augments constraints, views, and triggers.
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 elevate/
 ├── apps/
-│   ├── web/                 # Public site + participant dashboard
-│   │   ├── app/             # Next.js app router pages
-│   │   ├── components/      # React components
-│   │   ├── messages/        # i18n translations (id/en)
-│   │   └── public/          # Static assets
-│   └── admin/               # Admin console
-│       ├── app/             # Admin pages
-│       └── components/      # Admin UI components
+│   ├── web/           # Public site + participant dashboard
+│   └── admin/         # Admin console for reviewers
 ├── packages/
-│   ├── db/                  # Prisma schema & migrations
-│   ├── auth/                # RBAC & authentication helpers
-│   ├── types/               # Zod schemas & TypeScript types
-│   ├── ui/                  # Shared UI components
-│   ├── storage/             # Supabase storage utilities
-│   ├── emails/              # Email templates
-│   └── logic/               # Business logic & scoring
-├── supabase/
-│   ├── migrations/          # SQL migrations
-│   └── seed.sql            # Seed data
-├── scripts/                 # Deployment & maintenance scripts
-└── docs/                    # Documentation
+│   ├── auth/          # Clerk authentication helpers
+│   ├── db/            # Prisma schema + database utilities
+│   ├── ui/            # Shared UI components (shadcn/ui)
+│   ├── types/         # Shared TypeScript types
+│   └── ...
+├── docs/              # Documentation
+└── scripts/           # Build, deploy, and utility scripts
 ```
 
-## 🌐 Deployment
+## LEAPS Framework
 
-### Vercel Deployment
+1. **Learn** (20 points) - Complete AI course and upload certificate
+2. **Explore** (50 points) - Apply AI in classroom with evidence
+3. **Amplify** (variable points) - Train peers/students (2 pts/peer, 1 pt/student)
+4. **Present** (20 points) - Share story on LinkedIn
+5. **Shine** - Recognition and badges
 
-1. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial deployment"
-   git push origin main
-   ```
+## License
 
-2. **Import to Vercel**
-   - Go to [vercel.com](https://vercel.com)
-   - Import your GitHub repository
-   - Select the `elevate` directory as root
-   - Configure environment variables
-
-3. **Set environment variables in Vercel**
-   - All variables from `.env.local` files
-   - Set `NODE_ENV=production`
-
-4. **Deploy**
-   ```bash
-   pnpm deploy:prod
-   ```
-
-### Database Setup (Production)
-
-1. **Create Supabase project**
-   - Go to [supabase.com](https://supabase.com)
-   - Create new project
-   - Copy connection string
-
-2. **Run migrations**
-   ```bash
-   pnpm db:deploy production
-   ```
-
-3. **Configure storage**
-   - Create `evidence` bucket in Supabase Storage
-   - Set as private bucket
-   - Configure CORS for your domain
-
-## 📚 Documentation
-
-- [CLAUDE.md](./CLAUDE.md) - Comprehensive project documentation
-- [SETUP.md](./SETUP.md) - Detailed setup instructions
-- [DEPLOYMENT.md](./DEPLOYMENT.md) - Production deployment guide
-- [Turbo Remote Cache](./docs/TURBO_REMOTE_CACHE.md) - Build caching setup guide
-- [API Documentation](./docs/api-specs.yaml) - OpenAPI specification
-- [Kajabi Integration](./docs/kajabi-integration.md) - Webhook setup guide
-
-## 🔧 Development Commands
-
-```bash
-# Install dependencies
-pnpm install
-
-# Development servers
-pnpm dev              # Start all apps
-pnpm dev:web         # Web app only
-pnpm dev:admin       # Admin app only
-
-# Database
-pnpm db:generate     # Generate Prisma client
-pnpm db:push         # Push schema changes
-pnpm db:migrate      # Run migrations
-pnpm db:seed         # Seed database
-pnpm db:studio       # Open Prisma Studio
-
-# Build (with caching)
-pnpm build           # Build all apps
-pnpm build:web       # Build web app
-pnpm build:admin     # Build admin app
-
-# Cache management
-pnpm setup:cache     # Set up Turbo Remote Cache
-turbo run build --summarize  # Build with cache summary
-
-# Testing
-pnpm lint            # Run linter
-pnpm type-check      # TypeScript checks
-pnpm test            # Run tests
-
-# Deployment
-pnpm deploy:staging  # Deploy to staging
-pnpm deploy:prod     # Deploy to production
-```
-
-## 🌟 Key Features Implementation
-
-### LEAPS Framework
-- **Learn** (20 pts): Certificate upload or Kajabi auto-credit
-- **Explore** (50 pts): Classroom AI application evidence
-- **Amplify** (2 pts/peer, 1 pt/student): Training documentation
-- **Present** (20 pts): LinkedIn post with screenshot
-- **Shine** (Recognition): Innovation ideas submission
-
-### Anti-Gaming Measures
-- Maximum 50 peers, 200 students per Amplify submission
-- 7-day rolling submission limits
-- Duplicate certificate detection
-- Bounded point adjustments (±20%)
-- Append-only audit trail
-
-### Security Features
-- Row Level Security (RLS) policies
-- File type/size validation (PDF/JPG/PNG, max 10MB)
-- Signed URLs with 1-hour TTL
-- RBAC with 4-tier hierarchy
-- CSRF protection
-- Input sanitization
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
-
-## 📄 License
-
-MIT License - see [LICENSE](./LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Microsoft Indonesia for the Elevate program
-- Indonesian educators embracing AI in education
-- Open source community for the amazing tools
-
----
-
-**Built with ❤️ for Indonesian educators**
+MIT License - see LICENSE file for details.

@@ -14,8 +14,8 @@ env:
   NODE_VERSION: '20.11.1'
   PNPM_VERSION: '10'
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/elevate_test
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
-  CLERK_SECRET_KEY: sk_test_dummy
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: test_dummy
+  CLERK_SECRET_KEY: test_dummy
   # Use CI-safe, format-valid placeholders for env validation
   NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
   NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_key

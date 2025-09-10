@@ -11,26 +11,21 @@ export function hasTraceId(value: unknown): value is { traceId?: string } {
 
 export function normalizeError(err: unknown): NormalizedError {
   if (err instanceof Error) {
-    const base: NormalizedError = {
+    const base: Pick<NormalizedError, 'name' | 'message'> = {
       name: err.name,
       message: err.message,
-      stack: err.stack,
     }
-    if (hasTraceId(err)) base.traceId = err.traceId
-    return base
+    const withStack: Partial<Pick<NormalizedError, 'stack'>> =
+      typeof err.stack === 'string' ? { stack: err.stack } : {}
+    const withTrace: Partial<Pick<NormalizedError, 'traceId'>> =
+      hasTraceId(err) && typeof err.traceId === 'string'
+        ? { traceId: err.traceId }
+        : {}
+    return { ...base, ...withStack, ...withTrace }
   }
   return {
     name: 'Error',
     message: typeof err === 'string' ? err : JSON.stringify(err),
-  }
-}
-
-export function toMessage(err: unknown): string {
-  if (err instanceof Error) return err.message
-  try {
-    return typeof err === 'string' ? err : JSON.stringify(err)
-  } catch {
-    return 'Unknown error'
   }
 }
 

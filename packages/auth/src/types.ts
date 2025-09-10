@@ -2,14 +2,22 @@
 import { parseRole, type Role } from '@elevate/types'
 
 // Map Prisma Role enum to lowercase for UI
-const ROLE_MAPPING: Record<Role, 'participant' | 'reviewer' | 'admin' | 'superadmin'> = {
+const ROLE_MAPPING: Record<
+  Role,
+  'participant' | 'reviewer' | 'admin' | 'superadmin'
+> = {
   PARTICIPANT: 'participant',
   REVIEWER: 'reviewer',
   ADMIN: 'admin',
   SUPERADMIN: 'superadmin',
 } as const
 
-export const ROLE_ORDER = ['participant', 'reviewer', 'admin', 'superadmin'] as const
+export const ROLE_ORDER = [
+  'participant',
+  'reviewer',
+  'admin',
+  'superadmin',
+] as const
 export type RoleName = (typeof ROLE_ORDER)[number]
 
 // Utility to convert Prisma Role to lowercase RoleName
@@ -39,23 +47,43 @@ export interface AuthUser {
 export const ROLE_PERMISSIONS = {
   participant: ['view_profile', 'submit_evidence', 'view_leaderboard'],
   reviewer: [
-    'view_profile', 'submit_evidence', 'view_leaderboard',
-    'review_submissions', 'approve_submissions', 'reject_submissions'
+    'view_profile',
+    'submit_evidence',
+    'view_leaderboard',
+    'review_submissions',
+    'approve_submissions',
+    'reject_submissions',
   ],
   admin: [
-    'view_profile', 'submit_evidence', 'view_leaderboard',
-    'review_submissions', 'approve_submissions', 'reject_submissions',
-    'manage_users', 'view_analytics', 'export_data', 'manage_badges'
+    'view_profile',
+    'submit_evidence',
+    'view_leaderboard',
+    'review_submissions',
+    'approve_submissions',
+    'reject_submissions',
+    'manage_users',
+    'view_analytics',
+    'export_data',
+    'manage_badges',
   ],
   superadmin: [
-    'view_profile', 'submit_evidence', 'view_leaderboard',
-    'review_submissions', 'approve_submissions', 'reject_submissions',
-    'manage_users', 'view_analytics', 'export_data', 'manage_badges',
-    'manage_system', 'manage_roles'
-  ]
+    'view_profile',
+    'submit_evidence',
+    'view_leaderboard',
+    'review_submissions',
+    'approve_submissions',
+    'reject_submissions',
+    'manage_users',
+    'view_analytics',
+    'export_data',
+    'manage_badges',
+    'manage_system',
+    'manage_roles',
+  ],
 } as const
 
-export type Permission = (typeof ROLE_PERMISSIONS)[keyof typeof ROLE_PERMISSIONS][number]
+export type Permission =
+  (typeof ROLE_PERMISSIONS)[keyof typeof ROLE_PERMISSIONS][number]
 
 /**
  * Safely parse role from unknown input and return as RoleName
@@ -67,7 +95,7 @@ export function safeParseRole(role?: unknown): RoleName {
   if (parsedRole) {
     return roleToRoleName(parsedRole)
   }
-  
+
   // Fallback: try to match lowercase string directly
   if (typeof role === 'string') {
     const normalized = role.toLowerCase() as RoleName
@@ -75,7 +103,7 @@ export function safeParseRole(role?: unknown): RoleName {
       return normalized
     }
   }
-  
+
   return 'participant'
 }
 
@@ -97,45 +125,67 @@ export function hasRole(userRole: RoleName, requiredRole: RoleName): boolean {
 /**
  * Check if user has any of the required roles
  */
-export function hasAnyRole(userRole: RoleName, requiredRoles: RoleName[]): boolean {
-  return requiredRoles.some(role => hasRole(userRole, role))
+export function hasAnyRole(
+  userRole: RoleName,
+  requiredRoles: RoleName[],
+): boolean {
+  return requiredRoles.some((role) => hasRole(userRole, role))
 }
 
 /**
  * Check if user has specific permission
  */
-export function hasPermission(userRole: RoleName, permission: Permission): boolean {
+export function hasPermission(
+  userRole: RoleName,
+  permission: Permission,
+): boolean {
   return (ROLE_PERMISSIONS[userRole] as readonly string[]).includes(permission)
 }
 
 /**
  * Safely parse Clerk publicMetadata
  */
-export function parseClerkPublicMetadata(metadata: unknown): { role?: string } {
+export function parseClerkPublicMetadata(metadata: unknown): {
+  role?: string
+  user_type?: string
+} {
   if (!metadata || typeof metadata !== 'object' || metadata === null) {
     return {}
   }
-  
+
   // Type-safe property access
-  if ('role' in metadata && typeof metadata.role === 'string') {
-    return { role: metadata.role }
+  const out: { role?: string; user_type?: string } = {}
+  type MetadataLike = { role?: unknown; user_type?: unknown }
+  const m = metadata as MetadataLike
+  if ('role' in m && typeof m.role === 'string') {
+    out.role = m.role
   }
-  
-  return {}
+  if ('user_type' in m && typeof m.user_type === 'string') {
+    out.user_type = m.user_type
+  }
+  return out
 }
 
 /**
  * Safely parse Clerk email address from session claims
  */
-export function parseClerkEmailAddress(emailAddress: unknown): string | undefined {
-  if (!emailAddress || typeof emailAddress !== 'object' || emailAddress === null) {
+export function parseClerkEmailAddress(
+  emailAddress: unknown,
+): string | undefined {
+  if (
+    !emailAddress ||
+    typeof emailAddress !== 'object' ||
+    emailAddress === null
+  ) {
     return undefined
   }
-  
+
   // Type-safe property access
-  if ('emailAddress' in emailAddress && typeof emailAddress.emailAddress === 'string') {
-    return emailAddress.emailAddress
+  type EmailLike = { emailAddress?: unknown }
+  const m = emailAddress as EmailLike
+  if ('emailAddress' in m && typeof m.emailAddress === 'string') {
+    return m.emailAddress
   }
-  
+
   return undefined
 }

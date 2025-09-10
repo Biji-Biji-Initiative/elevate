@@ -2,7 +2,7 @@ import { type NextRequest } from 'next/server'
 
 import { prisma } from '@elevate/db/client'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
-import { getServerLogger } from '@elevate/logging/server'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { formatActivityBreakdown, formatCohortPerformanceStats, formatMonthlyGrowthStats } from '@elevate/logic'
 import { type ActivityCode } from '@elevate/types'
 
@@ -48,7 +48,10 @@ type PlatformStatsOverview = {
 }
 
 export async function GET(request: NextRequest) {
-  const logger = getServerLogger().forRequestWithHeaders(request)
+  const baseLogger = await getSafeServerLogger('stats-optimized')
+  const logger = baseLogger.forRequestWithHeaders
+    ? baseLogger.forRequestWithHeaders(request)
+    : baseLogger
   try {
     // Use optimized materialized views for maximum performance
     const [platformStats, cohortStats, monthlyStats, amplifyData] =

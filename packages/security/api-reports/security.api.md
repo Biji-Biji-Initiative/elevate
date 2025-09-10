@@ -368,44 +368,6 @@ export function stripHtml(input: string): string;
 export const submissionRateLimiter: RateLimiter;
 
 // @public
-export function useCSRFProtectedFetch(): {
-    csrfFetch: (url: string, options?: RequestInit) => Promise<Response>;
-    token: string | null;
-    loading: boolean;
-    error: string | null;
-    refreshToken: () => void;
-};
-
-// @public
-export function useCSRFProtectedForm<T extends Record<string, unknown>>(): {
-    submit: (url: string, data: T, options?: {
-        method?: "POST" | "PUT" | "PATCH" | "DELETE";
-        onSuccess?: (data: unknown) => void;
-        onError?: (error: Error) => void;
-    }) => Promise<{
-        success: boolean;
-        error: string;
-        data?: never;
-    } | {
-        success: boolean;
-        data: unknown;
-        error?: never;
-    }>;
-    isSubmitting: boolean;
-    submitError: string | null;
-    tokenLoading: boolean;
-    tokenError: string | null;
-};
-
-// @public
-export function useCSRFToken(): {
-    token: string | null;
-    loading: boolean;
-    error: string | null;
-    refreshToken: () => void;
-};
-
-// @public
 export function validateContentSecurity(content: string, field: string): void;
 
 // @public

@@ -1,19 +1,23 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import type { LogContext } from '@elevate/logging'
-import type { ServerLogger } from '@elevate/logging/server'
+import type { SafeLogger } from '@elevate/logging/safe-server'
 
 import { getCurrentUser, requireRole, RoleError } from './withRole'
 
 import type { RoleName, AuthUser } from './types'
 
 // Dynamic logger initialization for server-side only
-let logger: ServerLogger | null = null
+let logger: SafeLogger | null = null
 const initializeLogger = async () => {
-  if (typeof window === 'undefined' && typeof process !== 'undefined' && !logger) {
+  if (
+    typeof window === 'undefined' &&
+    typeof process !== 'undefined' &&
+    !logger
+  ) {
     try {
-      const { getServerLogger } = await import('@elevate/logging/server')
-      logger = getServerLogger({ name: 'elevate-auth' })
+      const { getSafeServerLogger } = await import('@elevate/logging/safe-server')
+      logger = await getSafeServerLogger('elevate-auth')
     } catch {
       // No logger available in this environment
     }
@@ -38,8 +42,12 @@ export { hasRole } from './types'
  */
 export function createProtectedApiHandler(
   minRole: RoleName,
-  handler: (user: AuthUser, req: NextRequest, context?: LogContext) => Promise<NextResponse>,
-  context?: LogContext
+  handler: (
+    user: AuthUser,
+    req: NextRequest,
+    context?: LogContext,
+  ) => Promise<NextResponse>,
+  context?: LogContext,
 ) {
   return async (req: NextRequest): Promise<NextResponse> => {
     const startTime = Date.now()
@@ -52,18 +60,21 @@ export function createProtectedApiHandler(
 
     try {
       const user = await requireRole(minRole)
-      
+
       // Log successful authentication
       if (logger) {
-        logger.auth({
-          action: 'role_check',
-          userId: user.userId,
-          role: user.role,
-          success: true,
-        }, {
-          ...requestContext,
-          requiredRole: minRole,
-        })
+        logger.auth(
+          {
+            action: 'role_check',
+            userId: user.userId,
+            role: user.role,
+            success: true,
+          },
+          {
+            ...requestContext,
+            requiredRole: minRole,
+          },
+        )
       }
 
       const response = await handler(user, req, requestContext)
@@ -71,16 +82,19 @@ export function createProtectedApiHandler(
 
       // Log successful API request
       if (logger) {
-        logger.api({
-          method: req.method,
-          url: req.url,
-          statusCode: response.status,
-          duration,
-        }, {
-          ...requestContext,
-          userId: user.userId,
-          role: user.role,
-        })
+        logger.api(
+          {
+            method: req.method,
+            url: req.url,
+            statusCode: response.status,
+            duration,
+          },
+          {
+            ...requestContext,
+            userId: user.userId,
+            role: user.role,
+          },
+        )
       }
 
       return response
@@ -90,27 +104,34 @@ export function createProtectedApiHandler(
       if (error instanceof RoleError) {
         // Log role-based access failure
         if (logger) {
-          logger.auth({
-            action: 'role_check',
-            success: false,
-            error: error.message,
-          }, {
-            ...requestContext,
-            requiredRole: minRole,
-            statusCode: error.statusCode,
-            duration,
-          })
+          logger.auth(
+            {
+              action: 'role_check',
+              success: false,
+              error: error.message,
+            },
+            {
+              ...requestContext,
+              requiredRole: minRole,
+              statusCode: error.statusCode,
+              duration,
+            },
+          )
         }
 
         return NextResponse.json(
           { success: false, error: error.message },
-          { status: error.statusCode }
+          { status: error.statusCode },
         )
       }
-      
+
       if (error instanceof Error) {
-        const statusCode = error.message === 'Unauthenticated' ? 401 : 
-                          error.message.startsWith('Forbidden') ? 403 : 500
+        const statusCode =
+          error.message === 'Unauthenticated'
+            ? 401
+            : error.message.startsWith('Forbidden')
+            ? 403
+            : 500
 
         // Log authentication/authorization error
         if (logger) {
@@ -121,16 +142,19 @@ export function createProtectedApiHandler(
           })
         }
 
-        const errorMessage = statusCode === 401 ? 'Authentication required' :
-                           statusCode === 403 ? 'Insufficient permissions' :
-                           'Internal server error'
-        
+        const errorMessage =
+          statusCode === 401
+            ? 'Authentication required'
+            : statusCode === 403
+            ? 'Insufficient permissions'
+            : 'Internal server error'
+
         return NextResponse.json(
           { success: false, error: errorMessage },
-          { status: statusCode }
+          { status: statusCode },
         )
       }
-      
+
       // Log unknown error
       if (logger) {
         logger.error('Unknown API error', new Error(String(error)), {
@@ -142,7 +166,7 @@ export function createProtectedApiHandler(
 
       return NextResponse.json(
         { success: false, error: 'Internal server error' },
-        { status: 500 }
+        { status: 500 },
       )
     }
   }
@@ -150,13 +174,13 @@ export function createProtectedApiHandler(
 
 /**
  * Server action with role protection
- * @param minRole Minimum required role
+ * @param minRole Minimum role required
  * @param action Server action function
  * @returns Protected server action
  */
 export function createProtectedAction<TInput, TOutput>(
   minRole: RoleName,
-  action: (user: AuthUser, input: TInput) => Promise<TOutput>
+  action: (user: AuthUser, input: TInput) => Promise<TOutput>,
 ) {
   return async (input: TInput): Promise<TOutput> => {
     try {
@@ -178,7 +202,7 @@ export function createProtectedAction<TInput, TOutput>(
  */
 export async function validateAuth(minRole?: RoleName) {
   const user = await getCurrentUser()
-  
+
   if (!user) {
     throw new RoleError('Authentication required', 401)
   }
@@ -186,7 +210,7 @@ export async function validateAuth(minRole?: RoleName) {
   if (minRole) {
     await requireRole(minRole)
   }
-  
+
   return user
 }
 
@@ -198,9 +222,9 @@ export async function validateAuth(minRole?: RoleName) {
  * @returns NextResponse with error
  */
 export function createErrorResponse(
-  error: unknown, 
-  fallbackStatus = 500, 
-  context?: LogContext
+  error: unknown,
+  fallbackStatus = 500,
+  context?: LogContext,
 ): NextResponse {
   if (error instanceof RoleError) {
     // Log role error
@@ -215,10 +239,10 @@ export function createErrorResponse(
 
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: error.statusCode }
+      { status: error.statusCode },
     )
   }
-  
+
   if (error instanceof Error) {
     // Log general error
     if (logger) {
@@ -231,10 +255,10 @@ export function createErrorResponse(
 
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: fallbackStatus }
+      { status: fallbackStatus },
     )
   }
-  
+
   // Log unknown error
   if (logger) {
     logger.error('Unknown API error response', new Error(String(error)), {
@@ -246,7 +270,7 @@ export function createErrorResponse(
 
   return NextResponse.json(
     { success: false, error: 'An unexpected error occurred' },
-    { status: fallbackStatus }
+    { status: fallbackStatus },
   )
 }
 
@@ -254,9 +278,19 @@ export function createErrorResponse(
  * Enhanced logging utilities for authentication operations
  */
 export const authLogger = {
-  login: (userId: string, success: boolean, provider?: string, context?: LogContext) => {
+  login: (
+    userId: string,
+    success: boolean,
+    provider?: string,
+    context?: LogContext,
+  ) => {
     if (logger) {
-      const payload: { action: 'login'; userId: string; success: boolean; provider?: string } = {
+      const payload: {
+        action: 'login'
+        userId: string
+        success: boolean
+        provider?: string
+      } = {
         action: 'login',
         userId,
         success,
@@ -268,40 +302,60 @@ export const authLogger = {
 
   logout: (userId: string, context?: LogContext) => {
     if (logger) {
-      logger.auth({
-        action: 'logout',
-        userId,
-        success: true,
-      }, context)
+      logger.auth(
+        {
+          action: 'logout',
+          userId,
+          success: true,
+        },
+        context,
+      )
     }
   },
 
-  roleCheck: (userId: string, role: string, requiredRole: string, success: boolean, context?: LogContext) => {
+  roleCheck: (
+    userId: string,
+    role: string,
+    requiredRole: string,
+    success: boolean,
+    context?: LogContext,
+  ) => {
     if (logger) {
-      logger.auth({
-        action: 'role_check',
-        userId,
-        role,
-        success,
-      }, {
-        ...context,
-        requiredRole,
-      })
+      logger.auth(
+        {
+          action: 'role_check',
+          userId,
+          role,
+          success,
+        },
+        {
+          ...context,
+          requiredRole,
+        },
+      )
     }
   },
 
   securityEvent: (
-    event: 'csrf_violation' | 'csp_violation' | 'rate_limit_hit' | 'auth_failure' | 'suspicious_activity',
+    event:
+      | 'csrf_violation'
+      | 'csp_violation'
+      | 'rate_limit_hit'
+      | 'auth_failure'
+      | 'suspicious_activity',
     severity: 'low' | 'medium' | 'high' | 'critical',
     details: Record<string, unknown>,
-    context?: LogContext
+    context?: LogContext,
   ) => {
     if (logger) {
-      logger.security({
-        event,
-        severity,
-        details,
-      }, context)
+      logger.security(
+        {
+          event,
+          severity,
+          details,
+        },
+        context,
+      )
     }
   },
 }

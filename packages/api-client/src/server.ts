@@ -15,13 +15,10 @@ export type ServerApiResponse<T> =
  * Uses internal API calls with proper authentication context
  */
 export function createServerClient(baseUrl?: string): ApiClient {
-  const ClientCtor = ElevateAPIClient as unknown as new (config: {
-    baseUrl?: string
-  }) => ApiClient
-  return new ClientCtor({
+  return new ElevateAPIClient({
     baseUrl:
       baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  })
+  }) as ApiClient
 }
 
 /**

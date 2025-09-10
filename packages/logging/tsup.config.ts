@@ -6,6 +6,8 @@ export default baseTsup({
     client: 'src/client.ts',
     server: 'src/server.ts',
     'safe-server': 'src/safe-server.ts',
+    metrics: 'src/metrics.ts',
+    'slo-monitor': 'src/slo-monitor.ts',
   },
   external: ['pino', 'pino-pretty', '@sentry/node'],
 })

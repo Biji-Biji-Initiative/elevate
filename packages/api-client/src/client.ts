@@ -12,8 +12,7 @@ export type ApiResponse<T> = { success: true; data: T } | { success: false; erro
  * Uses fetch with credentials and CSRF protection
  */
 export function createClient(baseUrl?: string): ApiClient {
-  const ClientCtor = ElevateAPIClient as unknown as new (config: { baseUrl?: string }) => ApiClient
-  return new ClientCtor({ baseUrl: baseUrl || '/api' })
+  return new ElevateAPIClient({ baseUrl: baseUrl || '/api' }) as ApiClient
 }
 
 /**
@@ -33,4 +32,3 @@ export async function handleApiResponse<T>(response: Promise<ApiResponse<T>>): P
   }
   return result.data
 }
-

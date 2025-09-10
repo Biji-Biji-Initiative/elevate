@@ -16,13 +16,16 @@
       "@elevate/db": ["../db/dist/types/index.d.ts"],
       "@elevate/db/*": ["../db/dist/types/*"],
       "@elevate/logging": ["../logging/dist/types/index.d.ts"],
-      "@elevate/logging/*": ["../logging/dist/types/*"]
+      "@elevate/logging/*": ["../logging/dist/types/*"],
+      "@elevate/storage": ["../storage/dist/types/index.d.ts"],
+      "@elevate/storage/*": ["../storage/dist/types/*"]
     }
   },
   "include": ["src/**/*"],
   "references": [
     { "path": "../types/tsconfig.build.json" },
     { "path": "../db/tsconfig.build.json" },
-    { "path": "../logging/tsconfig.build.json" }
+    { "path": "../logging/tsconfig.build.json" },
+    { "path": "../storage/tsconfig.build.json" }
   ]
 }

@@ -2,10 +2,11 @@ import type { NextRequest } from 'next/server'
 
 import { auth } from '@clerk/nextjs/server'
 
-import { withRole } from '@elevate/auth'
+import { requireRole } from '@elevate/auth'
 import { prisma } from '@elevate/db/client'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
-import { getServerLogger, trackApiRequest } from '@elevate/logging'
+import { trackApiRequest } from '@elevate/logging'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
 
 import { normalizeError } from '../../lib/error-utils'
 
@@ -38,33 +39,37 @@ export async function GET(request: NextRequest) {
     return new Response(null, { status: 404 })
   }
   const startTime = Date.now()
-  const logger = getServerLogger().forRequestWithHeaders(request)
-  
+  const baseLogger = await getSafeServerLogger('performance-benchmark')
+  const logger = baseLogger.forRequestWithHeaders
+    ? baseLogger.forRequestWithHeaders(request)
+    : baseLogger
+
   try {
     // Verify admin/reviewer role
     const { userId } = await auth()
     if (!userId) {
       const duration = Date.now() - startTime
       trackApiRequest('GET', '/api/performance-benchmark', 401, duration)
-      
+
       logger.warn('Unauthorized performance benchmark access attempt', {
         operation: 'performance_benchmark',
         ip: request.headers.get('x-forwarded-for') || 'unknown',
       })
-      
+
       return createErrorResponse(new Error('Unauthorized'), 401)
     }
 
-    const hasPermission = await withRole(['ADMIN', 'REVIEWER'])(userId)
-    if (!hasPermission) {
+    try {
+      await requireRole('reviewer')
+    } catch {
       const duration = Date.now() - startTime
       trackApiRequest('GET', '/api/performance-benchmark', 403, duration)
-      
+
       logger.warn('Insufficient permissions for performance benchmark', {
         operation: 'performance_benchmark',
         userId,
       })
-      
+
       return createErrorResponse(new Error('Insufficient permissions'), 403)
     }
 
@@ -78,43 +83,43 @@ export async function GET(request: NextRequest) {
       includeComparison,
       userId,
     })
-    
+
     const benchmarks: BenchmarkResult[] = []
     const comparisons: PerformanceComparison[] = []
 
     // 1. Leaderboard Benchmarks
     if (benchmarkType === 'all' || benchmarkType === 'leaderboard') {
-      benchmarks.push(...await benchmarkLeaderboardQueries())
+      benchmarks.push(...(await benchmarkLeaderboardQueries()))
     }
 
-    // 2. Metrics Benchmarks  
+    // 2. Metrics Benchmarks
     if (benchmarkType === 'all' || benchmarkType === 'metrics') {
-      benchmarks.push(...await benchmarkMetricsQueries())
+      benchmarks.push(...(await benchmarkMetricsQueries()))
     }
 
     // 3. Analytics Benchmarks
     if (benchmarkType === 'all' || benchmarkType === 'analytics') {
-      benchmarks.push(...await benchmarkAnalyticsQueries())
+      benchmarks.push(...(await benchmarkAnalyticsQueries()))
     }
 
     // 4. Dashboard Benchmarks
     if (benchmarkType === 'all' || benchmarkType === 'dashboard') {
-      benchmarks.push(...await benchmarkDashboardQueries())
+      benchmarks.push(...(await benchmarkDashboardQueries()))
     }
 
     // 5. Stats Benchmarks
     if (benchmarkType === 'all' || benchmarkType === 'stats') {
-      benchmarks.push(...await benchmarkStatsQueries())
+      benchmarks.push(...(await benchmarkStatsQueries()))
     }
 
     // 6. Direct vs Materialized View Comparison
     if (includeComparison) {
-      comparisons.push(...await runPerformanceComparisons())
+      comparisons.push(...(await runPerformanceComparisons()))
     }
 
     // Calculate summary statistics
     const summary = calculateBenchmarkSummary(benchmarks)
-    
+
     const response = {
       success: true,
       timestamp: new Date().toISOString(),
@@ -122,14 +127,17 @@ export async function GET(request: NextRequest) {
       summary,
       benchmarks: benchmarks.sort((a, b) => b.duration_ms - a.duration_ms),
       ...(includeComparison && { comparisons }),
-      recommendations: generatePerformanceRecommendations(benchmarks, comparisons),
+      recommendations: generatePerformanceRecommendations(
+        benchmarks,
+        comparisons,
+      ),
       // Metadata for monitoring
       _meta: {
         total_benchmarks: benchmarks.length,
         average_duration_ms: summary.avg_duration_ms,
         slowest_endpoint: benchmarks[0]?.endpoint || 'none',
-        fastest_endpoint: benchmarks[benchmarks.length - 1]?.endpoint || 'none'
-      }
+        fastest_endpoint: benchmarks[benchmarks.length - 1]?.endpoint || 'none',
+      },
     }
 
     const res = createSuccessResponse(response)
@@ -137,14 +145,19 @@ export async function GET(request: NextRequest) {
     res.headers.set('X-Performance-Benchmark', 'true')
     res.headers.set('X-Benchmark-Count', benchmarks.length.toString())
     return res
-
   } catch (err: unknown) {
-    const logger = getServerLogger().forRequestWithHeaders(request)
+    const baseLogger = await getSafeServerLogger('performance-benchmark')
+    const logger = baseLogger.forRequestWithHeaders
+      ? baseLogger.forRequestWithHeaders(request)
+      : baseLogger
     const e = normalizeError(err)
     logger.error('Performance benchmark failed', new Error(e.message), {
       operation: 'performance_benchmark',
     })
-    return createErrorResponse(new Error('Failed to run performance benchmarks'), 500)
+    return createErrorResponse(
+      new Error('Failed to run performance benchmarks'),
+      500,
+    )
   }
 }
 
@@ -168,7 +181,7 @@ async function benchmarkLeaderboardQueries(): Promise<BenchmarkResult[]> {
     query_type: 'materialized_view',
     cache_status: 'miss',
     optimization_applied: true,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   // 30-day leaderboard
@@ -188,7 +201,7 @@ async function benchmarkLeaderboardQueries(): Promise<BenchmarkResult[]> {
     query_type: 'materialized_view',
     cache_status: 'miss',
     optimization_applied: true,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   // Search query
@@ -202,14 +215,14 @@ async function benchmarkLeaderboardQueries(): Promise<BenchmarkResult[]> {
   `
   results.push({
     endpoint: '/api/leaderboard?search=edu',
-    method: 'GET', 
+    method: 'GET',
     description: 'Leaderboard search with ILIKE on materialized view',
     duration_ms: Date.now() - start3,
     rows_returned: Array.isArray(searchResults) ? searchResults.length : 0,
     query_type: 'materialized_view',
     cache_status: 'miss',
     optimization_applied: true,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   return results
@@ -220,7 +233,7 @@ async function benchmarkMetricsQueries(): Promise<BenchmarkResult[]> {
 
   // Activity metrics for each LEAPS stage
   const activities = ['LEARN', 'EXPLORE', 'AMPLIFY', 'PRESENT', 'SHINE']
-  
+
   for (const activity of activities) {
     const start = Date.now()
     const metrics = await prisma.$queryRaw`
@@ -235,7 +248,7 @@ async function benchmarkMetricsQueries(): Promise<BenchmarkResult[]> {
       query_type: 'materialized_view',
       cache_status: 'miss',
       optimization_applied: true,
-      timestamp: new Date()
+      timestamp: new Date(),
     })
   }
 
@@ -263,11 +276,11 @@ async function benchmarkAnalyticsQueries(): Promise<BenchmarkResult[]> {
     method: 'GET',
     description: 'Comprehensive analytics overview (single query)',
     duration_ms: Date.now() - start1,
-    rows_returned: 1,
+    rows_returned: Array.isArray(analyticsData) ? analyticsData.length : 0,
     query_type: 'hybrid',
     cache_status: 'miss',
     optimization_applied: true,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   // Activity distribution
@@ -287,7 +300,7 @@ async function benchmarkAnalyticsQueries(): Promise<BenchmarkResult[]> {
     query_type: 'direct_query',
     cache_status: 'miss',
     optimization_applied: true,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   return results
@@ -298,30 +311,30 @@ async function benchmarkDashboardQueries(): Promise<BenchmarkResult[]> {
 
   // Simulate user dashboard query for a test user
   const testUsers = await prisma.user.findMany({ take: 5 })
-  
+
   for (const user of testUsers) {
     const start = Date.now()
-    
+
     // Parallel query execution (optimized approach)
     await Promise.all([
       prisma.pointsLedger.aggregate({
         where: { user_id: user.id },
-        _sum: { delta_points: true }
+        _sum: { delta_points: true },
       }),
-      
+
       prisma.submission.findMany({
         where: { user_id: user.id },
         include: { activity: true },
-        orderBy: { created_at: 'desc' }
+        orderBy: { created_at: 'desc' },
       }),
-      
+
       prisma.earnedBadge.findMany({
         where: { user_id: user.id },
         include: { badge: true },
-        orderBy: { earned_at: 'desc' }
-      })
+        orderBy: { earned_at: 'desc' },
+      }),
     ])
-    
+
     results.push({
       endpoint: '/api/dashboard',
       method: 'GET',
@@ -331,7 +344,7 @@ async function benchmarkDashboardQueries(): Promise<BenchmarkResult[]> {
       query_type: 'hybrid',
       cache_status: 'miss',
       optimization_applied: true,
-      timestamp: new Date()
+      timestamp: new Date(),
     })
   }
 
@@ -351,11 +364,11 @@ async function benchmarkStatsQueries(): Promise<BenchmarkResult[]> {
     method: 'GET',
     description: 'Platform statistics from materialized view',
     duration_ms: Date.now() - start1,
-    rows_returned: 1,
+    rows_returned: Array.isArray(platformStats) ? platformStats.length : 0,
     query_type: 'materialized_view',
     cache_status: 'miss',
     optimization_applied: true,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   // Cohort performance stats
@@ -372,7 +385,7 @@ async function benchmarkStatsQueries(): Promise<BenchmarkResult[]> {
     query_type: 'materialized_view',
     cache_status: 'miss',
     optimization_applied: true,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   // Monthly growth trends
@@ -389,7 +402,7 @@ async function benchmarkStatsQueries(): Promise<BenchmarkResult[]> {
     query_type: 'materialized_view',
     cache_status: 'miss',
     optimization_applied: true,
-    timestamp: new Date()
+    timestamp: new Date(),
   })
 
   return results
@@ -399,8 +412,10 @@ async function runPerformanceComparisons(): Promise<PerformanceComparison[]> {
   const comparisons: PerformanceComparison[] = []
 
   // Compare materialized view vs direct aggregation for leaderboard
-  const logger = getServerLogger()
-  logger.info('Running performance comparisons...', { operation: 'performance_benchmark_comparisons' })
+  const logger = await getSafeServerLogger('performance-benchmark')
+  logger.info('Running performance comparisons...', {
+    operation: 'performance_benchmark_comparisons',
+  })
 
   // 1. Leaderboard comparison
   const mvStart = Date.now()
@@ -433,9 +448,11 @@ async function runPerformanceComparisons(): Promise<PerformanceComparison[]> {
     endpoint: '/api/leaderboard',
     original_ms: directDuration,
     optimized_ms: mvDuration,
-    improvement_percent: Math.round(((directDuration - mvDuration) / directDuration) * 100),
+    improvement_percent: Math.round(
+      ((directDuration - mvDuration) / directDuration) * 100,
+    ),
     queries_reduced: 1, // Single query vs aggregation
-    rows_processed: 100
+    rows_processed: 100,
   })
 
   // 2. Analytics comparison
@@ -444,7 +461,10 @@ async function runPerformanceComparisons(): Promise<PerformanceComparison[]> {
     prisma.user.count(),
     prisma.submission.count(),
     prisma.pointsLedger.aggregate({ _sum: { delta_points: true } }),
-    prisma.submission.groupBy({ by: ['activity_code', 'status'], _count: { id: true } })
+    prisma.submission.groupBy({
+      by: ['activity_code', 'status'],
+      _count: { id: true },
+    }),
   ])
   const analyticsDirectDuration = Date.now() - analyticsDirectStart
 
@@ -456,65 +476,95 @@ async function runPerformanceComparisons(): Promise<PerformanceComparison[]> {
     endpoint: '/admin/api/admin/analytics',
     original_ms: analyticsDirectDuration,
     optimized_ms: analyticsOptimizedDuration,
-    improvement_percent: Math.round(((analyticsDirectDuration - analyticsOptimizedDuration) / analyticsDirectDuration) * 100),
+    improvement_percent: Math.round(
+      ((analyticsDirectDuration - analyticsOptimizedDuration) /
+        analyticsDirectDuration) *
+        100,
+    ),
     queries_reduced: 3, // 4 queries reduced to 1
-    rows_processed: 1
+    rows_processed: 1,
   })
 
   return comparisons
 }
 
 function calculateBenchmarkSummary(benchmarks: BenchmarkResult[]) {
-  if (benchmarks.length === 0) return { total: 0, avg_duration_ms: 0, fastest_ms: 0, slowest_ms: 0 }
+  if (benchmarks.length === 0)
+    return { total: 0, avg_duration_ms: 0, fastest_ms: 0, slowest_ms: 0 }
 
-  const durations = benchmarks.map(b => b.duration_ms)
+  const durations = benchmarks.map((b) => b.duration_ms)
   return {
     total_benchmarks: benchmarks.length,
-    avg_duration_ms: Math.round(durations.reduce((sum, d) => sum + d, 0) / durations.length),
+    avg_duration_ms: Math.round(
+      durations.reduce((sum, d) => sum + d, 0) / durations.length,
+    ),
     fastest_ms: Math.min(...durations),
     slowest_ms: Math.max(...durations),
     total_rows: benchmarks.reduce((sum, b) => sum + b.rows_returned, 0),
-    optimized_queries: benchmarks.filter(b => b.optimization_applied).length,
-    materialized_view_queries: benchmarks.filter(b => b.query_type === 'materialized_view').length
+    optimized_queries: benchmarks.filter((b) => b.optimization_applied).length,
+    materialized_view_queries: benchmarks.filter(
+      (b) => b.query_type === 'materialized_view',
+    ).length,
   }
 }
 
 function generatePerformanceRecommendations(
   benchmarks: BenchmarkResult[],
-  comparisons: PerformanceComparison[]
+  comparisons: PerformanceComparison[],
 ): string[] {
   const recommendations: string[] = []
 
   // Analyze benchmark results
-  const slowQueries = benchmarks.filter(b => b.duration_ms > 1000) // > 1 second
-  const avgDuration = benchmarks.reduce((sum, b) => sum + b.duration_ms, 0) / benchmarks.length
+  const slowQueries = benchmarks.filter((b) => b.duration_ms > 1000) // > 1 second
+  const avgDuration =
+    benchmarks.reduce((sum, b) => sum + b.duration_ms, 0) / benchmarks.length
 
   if (slowQueries.length > 0) {
-    recommendations.push(`${slowQueries.length} queries are taking >1 second - consider optimization`)
+    recommendations.push(
+      `${slowQueries.length} queries are taking >1 second - consider optimization`,
+    )
   }
 
   if (avgDuration > 500) {
-    recommendations.push(`Average query time is ${Math.round(avgDuration)}ms - consider more aggressive caching`)
+    recommendations.push(
+      `Average query time is ${Math.round(
+        avgDuration,
+      )}ms - consider more aggressive caching`,
+    )
   }
 
-  const nonOptimized = benchmarks.filter(b => !b.optimization_applied)
+  const nonOptimized = benchmarks.filter((b) => !b.optimization_applied)
   if (nonOptimized.length > 0) {
-    recommendations.push(`${nonOptimized.length} endpoints are not yet optimized`)
+    recommendations.push(
+      `${nonOptimized.length} endpoints are not yet optimized`,
+    )
   }
 
   // Analyze comparisons if available
   if (comparisons.length > 0) {
-    const avgImprovement = comparisons.reduce((sum, c) => sum + c.improvement_percent, 0) / comparisons.length
+    const avgImprovement =
+      comparisons.reduce((sum, c) => sum + c.improvement_percent, 0) /
+      comparisons.length
     if (avgImprovement > 50) {
-      recommendations.push(`Materialized views are providing ${Math.round(avgImprovement)}% average performance improvement`)
+      recommendations.push(
+        `Materialized views are providing ${Math.round(
+          avgImprovement,
+        )}% average performance improvement`,
+      )
     }
   }
 
-  const mvQueries = benchmarks.filter(b => b.query_type === 'materialized_view')
+  const mvQueries = benchmarks.filter(
+    (b) => b.query_type === 'materialized_view',
+  )
   const mvPercentage = (mvQueries.length / benchmarks.length) * 100
-  
+
   if (mvPercentage < 50) {
-    recommendations.push(`Only ${Math.round(mvPercentage)}% of queries use materialized views - expand coverage`)
+    recommendations.push(
+      `Only ${Math.round(
+        mvPercentage,
+      )}% of queries use materialized views - expand coverage`,
+    )
   }
 
   if (recommendations.length === 0) {

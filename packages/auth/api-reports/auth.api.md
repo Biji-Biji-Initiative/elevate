@@ -4,78 +4,57 @@
 
 ```ts
 
-import { Role } from '@elevate/types';
+import { AuthUser } from './types';
+import { hasAnyRole } from './types';
+import { hasPermission } from './types';
+import { hasRole } from './types';
+import { normalizeRole } from './types';
+import { parseClerkEmailAddress } from './types';
+import { parseClerkPublicMetadata } from './types';
+import { Permission } from './types';
+import { requireRole } from './withRole';
+import { ROLE_ORDER } from './types';
+import { ROLE_PERMISSIONS } from './types';
+import { RoleError } from './withRole';
+import { RoleName } from './types';
+import { roleNameToRole } from './types';
+import { roleToRoleName } from './types';
+import { safeParseRole } from './types';
+import { withRoleProtection as withRole } from './withRole';
 
-// @public (undocumented)
-export interface AuthUser {
-    // (undocumented)
-    email?: string;
-    // (undocumented)
-    name?: string;
-    // (undocumented)
-    role: RoleName;
-    // (undocumented)
-    userId: string;
-}
+export { AuthUser }
 
-// @public
-export function hasAnyRole(userRole: RoleName, requiredRoles: RoleName[]): boolean;
+export { hasAnyRole }
 
-// @public
-export function hasPermission(userRole: RoleName, permission: Permission): boolean;
+export { hasPermission }
 
-// @public
-export function hasRole(userRole: RoleName, requiredRole: RoleName): boolean;
+export { hasRole }
 
-// @public @deprecated (undocumented)
-export function normalizeRole(role?: string): RoleName;
+export { normalizeRole }
 
-// @public
-export function parseClerkEmailAddress(emailAddress: unknown): string | undefined;
+export { parseClerkEmailAddress }
 
-// @public
-export function parseClerkPublicMetadata(metadata: unknown): {
-    role?: string;
-};
+export { parseClerkPublicMetadata }
 
-// @public (undocumented)
-export type Permission = (typeof ROLE_PERMISSIONS)[keyof typeof ROLE_PERMISSIONS][number];
+export { Permission }
 
-// @public
-export function requireRole(minRole: RoleName): Promise<AuthUser>;
+export { requireRole }
 
-// @public (undocumented)
-export const ROLE_ORDER: readonly ["participant", "reviewer", "admin", "superadmin"];
+export { ROLE_ORDER }
 
-// @public (undocumented)
-export const ROLE_PERMISSIONS: {
-    readonly participant: readonly ["view_profile", "submit_evidence", "view_leaderboard"];
-    readonly reviewer: readonly ["view_profile", "submit_evidence", "view_leaderboard", "review_submissions", "approve_submissions", "reject_submissions"];
-    readonly admin: readonly ["view_profile", "submit_evidence", "view_leaderboard", "review_submissions", "approve_submissions", "reject_submissions", "manage_users", "view_analytics", "export_data", "manage_badges"];
-    readonly superadmin: readonly ["view_profile", "submit_evidence", "view_leaderboard", "review_submissions", "approve_submissions", "reject_submissions", "manage_users", "view_analytics", "export_data", "manage_badges", "manage_system", "manage_roles"];
-};
+export { ROLE_PERMISSIONS }
 
-// @public
-export class RoleError extends Error {
-    constructor(message: string, statusCode?: number);
-    // (undocumented)
-    statusCode: number;
-}
+export { RoleError }
 
-// @public (undocumented)
-export type RoleName = (typeof ROLE_ORDER)[number];
+export { RoleName }
 
-// @public (undocumented)
-export function roleNameToRole(roleName: RoleName): Role;
+export { roleNameToRole }
 
-// @public (undocumented)
-export function roleToRoleName(role: Role): RoleName;
+export { roleToRoleName }
 
-// @public
-export function safeParseRole(role?: unknown): RoleName;
+export { safeParseRole }
 
-// @public
-export function withRole<T extends unknown[], R>(minRole: RoleName, handler: (user: AuthUser, ...args: T) => R | Promise<R>): (...args: T) => Promise<R>;
+export { withRole }
 
 // (No @packageDocumentation comment for this package)
 

@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "module": "ESNext",
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*", "../types/dist/types/**/*.d.ts"]
+}

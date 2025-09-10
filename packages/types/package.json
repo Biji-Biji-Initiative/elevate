@@ -67,6 +67,10 @@
       "types": "./dist/types/dto-mappers.d.ts",
       "import": "./dist/js/dto-mappers.js"
     },
+    "./activity-canon": {
+      "types": "./dist/types/activity-canon.d.ts",
+      "import": "./dist/js/activity-canon.js"
+    },
     "./admin-api-types": {
       "types": "./dist/types/admin-api-types.d.ts",
       "import": "./dist/js/admin-api-types.js"

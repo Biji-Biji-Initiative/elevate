@@ -46,7 +46,7 @@ function makeRequest(url: string): NextRequest & {
     nextUrl: u,
     headers,
     method: 'GET',
-  } as unknown as NextRequest & { nextUrl: URL; headers: Headers; method: string }
+  } as NextRequest & { nextUrl: URL; headers: Headers; method: string }
 }
 
 describe('GET /api/metrics (stage)', () => {
