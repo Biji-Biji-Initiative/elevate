@@ -1,4 +1,12 @@
 "use server"
 import 'server-only'
 
-export { listKajabiService as getKajabiList, kajabiHealthService as getKajabiHealth } from '@/lib/server/kajabi-service'
+export async function getKajabiList() {
+  const { listKajabiService } = await import('@/lib/server/kajabi-service')
+  return listKajabiService()
+}
+
+export async function getKajabiHealth() {
+  const { kajabiHealthService } = await import('@/lib/server/kajabi-service')
+  return kajabiHealthService()
+}

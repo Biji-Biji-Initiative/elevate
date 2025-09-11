@@ -1,5 +1,5 @@
-import { Prisma } from '@prisma/client'
-import { prisma } from '@elevate/db/client'
+import { Prisma } from '@elevate/db'
+import { prisma as defaultPrisma } from '@elevate/db/client'
 import type { StageMetricsDTO } from '@elevate/types/dto-mappers'
 
 type RawStageCounts = {
@@ -56,7 +56,24 @@ function isValidStage(stage: string): stage is ValidStage {
   return validStages.includes(stage as ValidStage)
 }
 
-export async function getStageMetricsService(stage: string): Promise<StageMetricsDTO | null> {
+interface PrismaLike {
+  submission: {
+    count: (args: unknown) => Promise<number>
+    groupBy: (args: unknown) => Promise<unknown>
+  }
+  user: { groupBy: (args: unknown) => Promise<unknown> }
+  $queryRaw: <T>(...args: unknown[]) => Promise<T>
+}
+
+export interface MetricsServiceDeps { prisma: PrismaLike }
+
+const defaultDeps: MetricsServiceDeps = { prisma: defaultPrisma as unknown as PrismaLike }
+
+export async function getStageMetricsService(
+  stage: string,
+  deps?: Partial<MetricsServiceDeps>,
+): Promise<StageMetricsDTO | null> {
+  const { prisma } = { ...defaultDeps, ...(deps || {}) }
   if (!isValidStage(stage)) return null
   const activityCode = stage.toUpperCase() as 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
 
@@ -67,8 +84,8 @@ export async function getStageMetricsService(stage: string): Promise<StageMetric
     rejectedSubmissions,
     uniqueEducatorGroups,
     points,
-    topSchoolsRaw,
-    cohortRaw,
+    topSchoolsRawUnknown,
+    cohortRawUnknown,
     monthlyRaw,
   ] = await Promise.all([
     prisma.submission.count({ where: { activity_code: activityCode } }),
@@ -100,6 +117,8 @@ export async function getStageMetricsService(stage: string): Promise<StageMetric
     ),
   ])
 
+  const topSchoolsRaw = topSchoolsRawUnknown as Array<{ school: string | null; _count: { id: number } }>
+  const cohortRaw = cohortRawUnknown as Array<{ cohort: string | null; _count: { id: number } }>
   const pointsNormalized = points.map((p) => ({ points_awarded: p.delta_points ?? 0 }))
   const raw: RawStageCounts = {
     stage: activityCode,
@@ -107,7 +126,7 @@ export async function getStageMetricsService(stage: string): Promise<StageMetric
     approvedSubmissions,
     pendingSubmissions,
     rejectedSubmissions,
-    uniqueEducators: uniqueEducatorGroups.length,
+    uniqueEducators: Array.isArray(uniqueEducatorGroups) ? uniqueEducatorGroups.length : 0,
     points: pointsNormalized,
     topSchools: topSchoolsRaw
       .filter((r) => r.school)
@@ -119,4 +138,3 @@ export async function getStageMetricsService(stage: string): Promise<StageMetric
   }
   return buildStageMetricsDTO(raw)
 }
-

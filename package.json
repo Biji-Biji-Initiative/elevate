@@ -150,6 +150,8 @@
     "prerelease:exit": "changeset pre exit"
   },
   "devDependencies": {
+    "yaml": "^2.8.0",
+    "@elevate/app-services": "workspace:*",
     "@asteasolutions/zod-to-openapi": "^7.3.4",
     "@changesets/cli": "^2.29.6",
     "@eslint/js": "^9.34.0",

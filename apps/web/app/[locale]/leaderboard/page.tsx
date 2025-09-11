@@ -1,10 +1,13 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 
 import { useState, useEffect, Suspense } from 'react'
 
 import Link from 'next/link'
 
 import { getProfilePath, type LeaderboardEntryDTO } from '@elevate/types'
+import { buildQueryString } from '@/lib/utils/query'
+import { safeJsonParse } from '@/lib/utils/safe-json'
 import { LeaderboardTable, PageLoading } from '@elevate/ui/blocks'
 
 // Use public API route for client-side fetch
@@ -27,28 +30,17 @@ async function fetchLeaderboard(
   offset = 0,
   search = '',
 ): Promise<LeaderboardEntryDTO[]> {
-  const params = new URLSearchParams({ period, limit: String(limit), offset: String(offset) })
-  if (search) params.set('search', search)
-  const res = await fetch(`/api/leaderboard?${params.toString()}`)
+  const qs = buildQueryString({ period, limit, offset, search: search || undefined })
+  const res = await fetch(`/api/leaderboard?${qs}`)
   if (!res.ok) return []
-  const body: unknown = await res.json()
+  const text = await res.text()
+  const body = safeJsonParse<{ data?: unknown }>(text)
   let rows: LeaderboardApiEntry[] = []
-  if (
-    body &&
-    typeof body === 'object' &&
-    'data' in body &&
-    Array.isArray((body as { data: unknown }).data)
-  ) {
-    rows = (body as { data: LeaderboardApiEntry[] }).data
-  } else if (
-    body &&
-    typeof body === 'object' &&
-    'data' in body &&
-    typeof (body as { data: unknown }).data === 'object' &&
-    body !== null &&
-    Array.isArray((body as { data: { data?: unknown } }).data?.data)
-  ) {
-    rows = ((body as { data: { data: LeaderboardApiEntry[] } }).data).data
+  const top = (body?.data ?? undefined) as unknown
+  if (Array.isArray(top)) {
+    rows = top as LeaderboardApiEntry[]
+  } else if (top && typeof top === 'object' && Array.isArray((top as { data?: unknown }).data)) {
+    rows = (top as { data: LeaderboardApiEntry[] }).data
   }
   // Normalize to LeaderboardEntryDTO to satisfy iconUrl type (omit when undefined)
   return rows.map((e) => ({

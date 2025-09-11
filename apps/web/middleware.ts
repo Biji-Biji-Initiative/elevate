@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { parseClerkPublicMetadata } from '@elevate/auth'
 import createIntlMiddleware from 'next-intl/middleware'
 
 import { locales, defaultLocale } from './i18n'
@@ -37,6 +38,18 @@ const isPublicRoute = createRouteMatcher([
   '/api/kajabi/webhook',
   '/api/profile/(.*)', // Public profile API
   '/api/test-db',
+])
+
+// Educator-only page routes (localized and non-localized fallbacks)
+const isEducatorOnlyRoute = createRouteMatcher([
+  '/(en|id)/dashboard(.*)',
+  '/dashboard(.*)',
+])
+
+// Metrics routes are public but we still redirect signed-in Students to educators-only
+const isMetricsRoute = createRouteMatcher([
+  '/(en|id)/metrics/(.*)',
+  '/metrics/(.*)',
 ])
 
 // Create the Clerk middleware with i18n integration
@@ -99,6 +112,40 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
   if (!isPublicRoute(request)) {
     const { userId, redirectToSignIn } = await auth()
     if (!userId) return redirectToSignIn()
+
+    // Server-side student gating for educator-only routes to avoid client flashes
+    if (isEducatorOnlyRoute(request)) {
+      const { sessionClaims } = await auth()
+      const meta = parseClerkPublicMetadata(
+        (sessionClaims as Record<string, unknown> | undefined)?.publicMetadata,
+      )
+      const userType = (meta.user_type || '').toUpperCase()
+      if (userType === 'STUDENT') {
+        const localeMatch = pathname.match(/^\/(en|id)(\/|$)/)
+        const locale = localeMatch ? localeMatch[1] : defaultLocale
+        return NextResponse.redirect(new URL(`/${locale}/educators-only`, request.url))
+      }
+    }
+  }
+
+  // For public metrics pages, if the user is signed-in as STUDENT, redirect to educators-only
+  try {
+    if (isMetricsRoute(request)) {
+      const { userId, sessionClaims } = await auth()
+      if (userId) {
+        const meta = parseClerkPublicMetadata(
+          (sessionClaims as Record<string, unknown> | undefined)?.publicMetadata,
+        )
+        const userType = (meta.user_type || '').toUpperCase()
+        if (userType === 'STUDENT') {
+          const localeMatch = pathname.match(/^\/(en|id)(\/|$)/)
+          const locale = localeMatch ? localeMatch[1] : defaultLocale
+          return NextResponse.redirect(new URL(`/${locale}/educators-only`, request.url))
+        }
+      }
+    }
+  } catch {
+    // ignore session parse errors
   }
 
   return intlResponse

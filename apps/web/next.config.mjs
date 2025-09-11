@@ -58,6 +58,7 @@ const nextConfig = {
     '@elevate/integrations',
     '@elevate/logic',
     '@elevate/config',
+    '@elevate/app-services',
   ],
 
   // ESLint configuration

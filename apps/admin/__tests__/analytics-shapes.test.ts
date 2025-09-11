@@ -83,5 +83,22 @@ describe('analytics DTO shapes', () => {
     const perfParsed = PerformanceSchema.safeParse(perf)
     expect(perfParsed.success).toBe(true)
   })
-})
 
+  it('accepts quantile-labeled pointsDistribution', () => {
+    const sample = {
+      submissionsByStatus: [],
+      submissionsByActivity: [],
+      usersByRole: [],
+      usersByCohort: [],
+      pointsByActivity: [],
+      pointsDistribution: [
+        { range: 'Q1 (≤ 10)', count: 5 },
+        { range: 'Q2 (≤ 20)', count: 5 },
+        { range: 'Q3 (+)', count: 2 },
+      ],
+    }
+    const parsed = DistributionsSchema.safeParse(sample)
+    expect(parsed.success).toBe(true)
+    expect(parsed.success && parsed.data.pointsDistribution?.[0]?.range.startsWith('Q')).toBe(true)
+  })
+})

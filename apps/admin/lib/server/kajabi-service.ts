@@ -15,7 +15,10 @@ import {
 import { enrollUserInKajabi, isKajabiHealthy } from '@elevate/integrations'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { sloMonitor } from '@elevate/logging/slo-monitor'
+import { handleApiError } from '@/lib/error-utils'
 import { grantBadgesForUser } from '@elevate/logic'
+import { recordSLO } from '@/lib/server/obs'
+import { AdminError } from '@/lib/server/admin-error'
 import {
   KajabiTestSchema,
   buildAuditMeta,
@@ -49,20 +52,29 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 export async function listKajabiService(): Promise<{ events: KajabiEvent[]; stats: KajabiStats }> {
   await requireRole('admin')
-  const [events, stats, pointsAwarded] = await Promise.all([
-    findKajabiEvents(50),
-    getKajabiEventStats(),
-    getKajabiPointsAwarded(),
-  ])
+  const start = Date.now()
+  try {
+    const [events, stats, pointsAwarded] = await Promise.all([
+      findKajabiEvents(50),
+      getKajabiEventStats(),
+      getKajabiPointsAwarded(),
+    ])
 
-  const mapped = events.map((e) => KajabiEventSchema.parse(toKajabiEvent(e)))
+    const mapped = events.map((e) => KajabiEventSchema.parse(toKajabiEvent(e)))
 
-  const logger = await getSafeServerLogger('admin-kajabi')
-  logger.info('Fetched Kajabi events', { count: mapped.length })
+    const logger = await getSafeServerLogger('admin-kajabi')
+    logger.info('Fetched Kajabi events', { count: mapped.length })
+    recordSLO('/admin/service/kajabi/list', start, 200)
 
-  return {
-    events: mapped,
-    stats: { ...stats, points_awarded: pointsAwarded } as KajabiStats,
+    return {
+      events: mapped,
+      stats: { ...stats, points_awarded: pointsAwarded } as KajabiStats,
+    }
+  } catch (err) {
+    const logger = await getSafeServerLogger('admin-kajabi')
+    logger.error('List Kajabi events failed', { error: err instanceof Error ? err.message : String(err) })
+    recordSLO('/admin/service/kajabi/list', start, 500)
+    throw new Error(handleApiError(err, 'List Kajabi events failed'))
   }
 }
 
@@ -86,13 +98,15 @@ export async function kajabiHealthService(): Promise<{ healthy: boolean; hasKey:
 
 export async function testKajabiService(body: unknown) {
   await requireRole('admin')
+  const start = Date.now()
+  try {
   const parsed = KajabiTestSchema.safeParse(body)
-  if (!parsed.success) throw new Error('Invalid request body')
+  if (!parsed.success) throw new AdminError('VALIDATION_ERROR', 'Invalid request body')
   const { user_email, course_name = 'Test Course - Admin Console' } = parsed.data
 
   const email = user_email.toLowerCase().trim()
   const user = await prisma.user.findUnique({ where: { email } })
-  if (!user) throw new Error('User not found for email: ' + email)
+  if (!user) throw new AdminError('NOT_FOUND', 'User not found for email: ' + email)
 
   const eventId = `test_${randomUUID()}`
 
@@ -207,6 +221,7 @@ export async function testKajabiService(body: unknown) {
 
   const logger = await getSafeServerLogger('admin-kajabi')
   logger.info('Created Kajabi test event', { event_id: result.event_id, user_id: result.user_id })
+  recordSLO('/admin/service/kajabi/test', start, 200)
 
   return {
     success: true,
@@ -215,37 +230,45 @@ export async function testKajabiService(body: unknown) {
     timestamp: new Date().toISOString(),
     ...result,
   }
+  } catch (err) {
+    const logger = await getSafeServerLogger('admin-kajabi')
+    logger.error('Kajabi test event failed', { error: err instanceof Error ? err.message : String(err) })
+    recordSLO('/admin/service/kajabi/test', start, 500)
+    throw new Error(handleApiError(err, 'Kajabi test event failed'))
+  }
 }
 
 export async function reprocessKajabiService(body: unknown) {
   await requireRole('admin')
+  const start = Date.now()
+  try {
   const parsed = (await import('zod')).z
     .object({ event_id: (await import('zod')).z.string() })
     .safeParse(body)
-  if (!parsed.success) throw new Error('Invalid request body')
+  if (!parsed.success) throw new AdminError('VALIDATION_ERROR', 'Invalid request body')
   const { event_id } = parsed.data
-  if (!event_id) throw new Error('event_id is required')
+  if (!event_id) throw new AdminError('VALIDATION_ERROR', 'event_id is required')
 
   const kajabiEvent = await prisma.kajabiEvent.findUnique({ where: { id: event_id } })
-  if (!kajabiEvent) throw new Error('Event not found')
+  if (!kajabiEvent) throw new AdminError('NOT_FOUND', 'Event not found')
 
   const status = getStringField(kajabiEvent, 'status')
-  if (status && status !== 'queued_unmatched') throw new Error('Event already processed')
+  if (status && status !== 'queued_unmatched') throw new AdminError('CONFLICT', 'Event already processed')
 
   const eventData = parseKajabiWebhook(
     getObjectField(kajabiEvent, 'raw') ?? getObjectField(kajabiEvent, 'payload') ?? {},
   )
-  if (!eventData) throw new Error('Invalid event payload format')
-  if (eventData.event_type !== 'contact.tagged') throw new Error('Only contact.tagged events can be reprocessed')
+  if (!eventData) throw new AdminError('VALIDATION_ERROR', 'Invalid event payload format')
+  if (eventData.event_type !== 'contact.tagged') throw new AdminError('VALIDATION_ERROR', 'Only contact.tagged events can be reprocessed')
 
   const { contact, tag } = eventData
   const email = (contact.email || '').toLowerCase().trim()
   const contactId = String(contact.id)
   const tagRaw = tag.name
   const tagNorm = tagRaw.toLowerCase().trim()
-  if (!email || !tagNorm) throw new Error('Required fields missing: email and tag name')
+  if (!email || !tagNorm) throw new AdminError('VALIDATION_ERROR', 'Required fields missing: email and tag name')
   const COURSE_TAGS = new Set(['elevate-ai-1-completed', 'elevate-ai-2-completed'])
-  if (!COURSE_TAGS.has(tagNorm)) throw new Error('Unsupported tag for reprocessing')
+  if (!COURSE_TAGS.has(tagNorm)) throw new AdminError('VALIDATION_ERROR', 'Unsupported tag for reprocessing')
 
   let user = await prisma.user.findUnique({ where: { kajabi_contact_id: contactId } })
   if (!user) {
@@ -262,7 +285,7 @@ export async function reprocessKajabiService(body: unknown) {
 
   if (user.user_type === 'STUDENT') {
     await prisma.kajabiEvent.update({ where: { id: event_id }, data: { status: 'student' } })
-    throw new Error('Student accounts are not eligible')
+    throw new AdminError('FORBIDDEN', 'Student accounts are not eligible')
   }
 
   const eventTime = kajabiEvent.created_at_utc
@@ -337,26 +360,35 @@ export async function reprocessKajabiService(body: unknown) {
 
   const logger = await getSafeServerLogger('admin-kajabi')
   logger.info('Reprocessed Kajabi event', { event_id: kajabiEvent.id, user_id: result.user_id, duplicate: result.duplicate })
+  recordSLO('/admin/service/kajabi/reprocess', start, 200)
 
   return { message: result.duplicate ? 'Event marked as duplicate' : 'Event reprocessed successfully', ...result }
+  } catch (err) {
+    const logger = await getSafeServerLogger('admin-kajabi')
+    logger.error('Kajabi reprocess failed', { error: err instanceof Error ? err.message : String(err) })
+    recordSLO('/admin/service/kajabi/reprocess', start, 500)
+    throw new Error(handleApiError(err, 'Kajabi reprocess failed'))
+  }
 }
 
 
 export async function inviteKajabiService(body: unknown): Promise<{ invited: boolean; contactId?: number; withOffer: boolean; offerIdResolved?: string | number }>
 {
   await requireRole('admin')
+  const start = Date.now()
+  try {
   const z = (await import('zod')).z
   const InviteRequestSchema = z
     .object({ userId: z.string().optional(), email: z.string().email().optional(), name: z.string().optional(), offerId: z.union([z.string(), z.number()]).optional() })
     .refine((v) => !!v.userId || !!v.email, { message: 'userId or email is required' })
   const parsed = InviteRequestSchema.safeParse(body)
-  if (!parsed.success) throw new Error(parsed.error.issues?.[0]?.message || 'Invalid body')
+  if (!parsed.success) throw new AdminError('VALIDATION_ERROR', parsed.error.issues?.[0]?.message || 'Invalid body')
   const { userId, email: emailInput, name: nameInput, offerId } = parsed.data
 
   let user: null | { id: string; email: string; name: string | null } = null
   if (userId) {
     const found = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, name: true } })
-    if (!found) throw new Error('User not found')
+    if (!found) throw new AdminError('NOT_FOUND', 'User not found')
     user = found
   } else if (emailInput) {
     const found = await prisma.user.findUnique({ where: { email: emailInput.toLowerCase() }, select: { id: true, email: true, name: true } })
@@ -365,7 +397,7 @@ export async function inviteKajabiService(body: unknown): Promise<{ invited: boo
 
   const email = (user?.email || emailInput || '').toLowerCase()
   const name: string = (nameInput || user?.name || email.split('@')[0]) ?? ''
-  if (!email) throw new Error('Email required')
+  if (!email) throw new AdminError('VALIDATION_ERROR', 'Email required')
 
   const effectiveOfferId = offerId ?? process.env.KAJABI_OFFER_ID
 
@@ -470,8 +502,18 @@ export async function inviteKajabiService(body: unknown): Promise<{ invited: boo
     },
   })
 
-  if (!result.success) throw new Error(result.error || 'Kajabi invite failed')
+  if (!result.success) throw new AdminError('INTEGRATION_FAILED', result.error || 'Kajabi invite failed')
 
   const contactIdFinal = result.contactId || (contactIdResolved ? Number(contactIdResolved) : undefined)
-  return { invited: true, ...(contactIdFinal !== undefined ? { contactId: contactIdFinal } : {}), withOffer: !!effectiveOfferId, ...(offerIdResolved !== undefined ? { offerIdResolved } : {}) }
+  const out = { invited: true, ...(contactIdFinal !== undefined ? { contactId: contactIdFinal } : {}), withOffer: !!effectiveOfferId, ...(offerIdResolved !== undefined ? { offerIdResolved } : {}) }
+  const logger2 = await getSafeServerLogger('admin-kajabi')
+  logger2.info('Invite Kajabi', { email, withOffer: !!effectiveOfferId, contactId: contactIdFinal })
+  recordSLO('/admin/service/kajabi/invite', start, 200)
+  return out
+  } catch (err) {
+    const logger = await getSafeServerLogger('admin-kajabi')
+    logger.error('Invite Kajabi failed', { error: err instanceof Error ? err.message : String(err) })
+    recordSLO('/admin/service/kajabi/invite', start, 500)
+    throw new Error(handleApiError(err, 'Invite Kajabi failed'))
+  }
 }

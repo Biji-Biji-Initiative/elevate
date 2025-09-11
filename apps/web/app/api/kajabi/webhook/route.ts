@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const eventId = String(payload.event_id ?? '')
+    const eventId = String((payload as { event_id?: unknown })?.event_id ?? '')
     const tagRaw = String(payload.tag?.name ?? '')
     const tagNorm = tagRaw.toLowerCase().trim()
     const contactId = String(payload.contact?.id ?? '')

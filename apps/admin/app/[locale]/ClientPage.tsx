@@ -72,6 +72,7 @@ export default function ClientPage({ initialAnalytics, initialCohorts }: Props) 
     cohort: 'ALL',
   })
   const [referralsSummary, setReferralsSummary] = useState<null | { month: string; total: number; byType: { educators: number; students: number }; uniqueReferrers: number; pointsAwarded: number; topReferrers: Array<{ userId: string; points: number; user: { id: string; name: string; email: string; handle: string } }> }>(null)
+  const [referralsTrend, setReferralsTrend] = useState<Array<{ month: string; total: number; points: number }>>([])
   const [recentLogs, setRecentLogs] = useState<Array<{ id: string; action: string; actor_id: string; target_id: string | null; created_at: string }>>([])
 
   const fetchAnalytics = useCallback(async () => {
@@ -108,6 +109,24 @@ export default function ClientPage({ initialAnalytics, initialCohorts }: Props) 
         setReferralsSummary(sum)
       } catch {
         void 0 // allow dashboard to render without referrals summary
+      }
+      // Load 6-month referrals trend (best-effort)
+      try {
+        const base = new Date()
+        const months: string[] = []
+        for (let i = 5; i >= 0; i--) {
+          const dt = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() - i, 1))
+          months.push(`${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}`)
+        }
+        const results = await Promise.allSettled(months.map((m) => fetchReferralsSummaryAction(m)))
+        const data = results.map((r, idx) => (
+          r.status === 'fulfilled' && r.value
+            ? { month: months[idx], total: r.value.total || 0, points: r.value.pointsAwarded || 0 }
+            : { month: months[idx], total: 0, points: 0 }
+        ))
+        setReferralsTrend(data)
+      } catch {
+        // ignore trend failures
       }
       try {
         const res = await fetch('/api/admin/audit?limit=5')
@@ -308,7 +327,7 @@ export default function ClientPage({ initialAnalytics, initialCohorts }: Props) 
               <div className="bg-gray-50 rounded p-3"><div className="text-gray-500">Points</div><div className="font-semibold">{referralsSummary.pointsAwarded}</div></div>
             </div>
             <div className="mt-4">
-              <Link href={`/admin/referrals?month=${encodeURIComponent(referralsSummary.month)}`}>
+              <Link href={`/admin/referrals?${buildQueryString({ month: referralsSummary.month })}`}>
                 <Button variant="ghost" style={{ padding: '4px 8px', fontSize: 12 }}>View Referrals</Button>
               </Link>
             </div>
@@ -366,6 +385,35 @@ export default function ClientPage({ initialAnalytics, initialCohorts }: Props) 
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+          {referralsTrend.length > 0 && (
+            <div className="bg-white p-6 rounded-lg border md:col-span-3">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Referrals Trend (6 months)</h2>
+                <Link href={`/admin/referrals?${buildQueryString({ month: referralsSummary.month })}`}>
+                  <Button variant="ghost" style={{ padding: '4px 8px', fontSize: 12 }}>Details</Button>
+                </Link>
+              </div>
+              <div className="grid grid-cols-6 gap-3 items-end" style={{ minHeight: 120 }}>
+                {referralsTrend.map((m) => (
+                  <div key={m.month} className="flex flex-col items-center justify-end gap-2">
+                    <div className="w-full bg-indigo-100 rounded" style={{ height: Math.max(6, Math.min(100, m.total)) }} />
+                    <div className="text-xs text-gray-500">{m.month.slice(2)}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-xs text-gray-500 mt-2">Bar height proportional to total referrals each month</div>
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Referral Points (6 months)</h3>
+                <div className="grid grid-cols-6 gap-3 items-end" style={{ minHeight: 60 }}>
+                  {referralsTrend.map((m) => (
+                    <div key={m.month + ':p'} className="flex flex-col items-center justify-end gap-1">
+                      <div className="w-full bg-purple-100 rounded" style={{ height: Math.max(4, Math.min(60, m.points)) }} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

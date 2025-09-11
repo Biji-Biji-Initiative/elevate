@@ -1,8 +1,7 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
+import React, { useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -26,14 +25,14 @@ import {
   FileList,
 } from '@elevate/ui/blocks'
 
-import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 import { toMessage } from '../../../lib/error-utils'
-import { useCurrentLocale } from '@elevate/ui/next'
+import { useEducatorGuard } from '@/hooks/useEducatorGuard'
+
+const CSRF_TOKEN_HEADER = 'X-CSRF-Token'
 
 export default function ShineFormPage() {
   const { userId } = useAuth()
-  const router = useRouter()
-  const { withLocale } = useCurrentLocale()
+  useEducatorGuard()
   const [makePublic, setMakePublic] = useState(true) // Default to public for Shine
 
   const {
@@ -44,6 +43,7 @@ export default function ShineFormPage() {
     successMessage:
       'Innovation idea submitted successfully! Your idea is now under review for recognition.',
   })
+  const submit = (handleFormSubmit as unknown as (fn: () => Promise<void>) => Promise<void>)
 
   const {
     uploadedFiles,
@@ -61,11 +61,9 @@ export default function ShineFormPage() {
           const resp = await fetch('/api/files/upload', { method: 'POST', body: form })
           if (!resp.ok) throw new Error('Upload failed')
           const result = (await resp.json()) as { data?: { path: string; hash: string } }
-          return {
-            file,
-            path: result.data.path,
-            hash: result.data.hash,
-          }
+          const data = result?.data
+          if (!data) throw new Error('Malformed upload response')
+          return { file, path: data.path, hash: data.hash }
         } catch (error) {
           return {
             file,
@@ -90,6 +88,8 @@ export default function ShineFormPage() {
   const watchedTitle = watch('idea_title')
   const watchedSummary = watch('idea_summary')
 
+  
+
   const handleFileSelect = async (files: File[]) => {
     const results = await handleFileUpload(files)
     const paths = results.map((r) => r.path).filter(Boolean) as string[]
@@ -105,7 +105,7 @@ export default function ShineFormPage() {
   }
 
   const onSubmit = async (data: ShineInput) => {
-    await handleFormSubmit(async () => {
+    await submit(async () => {
       if (!userId) {
         throw new Error('You must be logged in to submit')
       }
@@ -322,22 +322,3 @@ export default function ShineFormPage() {
     </main>
   )
 }
-  // Gate: students -> educators-only; unconfirmed educators -> onboarding
-  useEffect(() => {
-    const guard = async () => {
-      try {
-        const res = await fetch('/api/profile/me')
-        if (!res.ok) return
-        const me = (await res.json()) as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
-        if (me?.data?.userType === 'STUDENT') {
-          router.push(withLocale('/educators-only'))
-          return
-        }
-        if (me?.data?.userTypeConfirmed === false) {
-          router.push(withLocale('/onboarding/user-type'))
-          return
-        }
-      } catch { /* noop */ }
-    }
-    void guard()
-  }, [router, withLocale])

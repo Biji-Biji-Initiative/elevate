@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { Inter } from 'next/font/google'
+// Use system fonts to avoid network fetch during offline builds
 import { headers } from 'next/headers'
 import Script from 'next/script'
 
@@ -8,7 +8,6 @@ import Script from 'next/script'
 import type { Metadata } from 'next'
 import '@elevate/ui/styles/globals.css'
 
-const inter = Inter({ subsets: ['latin'], display: 'swap' })
 
 // Root layout - minimal metadata, detailed metadata moved to locale layout
 
@@ -45,12 +44,9 @@ export default function RootLayout({
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
-        
-        {/* Preconnect to external domains */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* No external font preconnects in offline-friendly build */}
       </head>
-      <body className={`${inter.className} min-h-screen flex flex-col`}>
+      <body className={`min-h-screen flex flex-col font-sans`}>
         {children}
         
         {/* Analytics and performance monitoring would go here */}

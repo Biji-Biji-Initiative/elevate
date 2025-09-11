@@ -7,7 +7,15 @@ import { fileURLToPath } from 'url'
 import path from 'path'
 import fs from 'fs/promises'
 
-import { getOpenApiSpec } from '@elevate/openapi'
+// Try to load programmatic generator; fallback to YAML if unavailable
+let getOpenApiSpec
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const mod = await import('@elevate/openapi')
+  getOpenApiSpec = mod.getOpenApiSpec
+} catch (_) {
+  getOpenApiSpec = null
+}
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -17,7 +25,16 @@ async function main() {
   const outDir = path.join(root, 'apps', 'web', 'public')
   const outFile = path.join(outDir, 'openapi.json')
 
-  const spec = getOpenApiSpec()
+  let spec
+  if (typeof getOpenApiSpec === 'function') {
+    spec = getOpenApiSpec()
+  } else {
+    // Fallback: read YAML spec and parse to JSON
+    const yamlPath = path.join(root, 'docs', 'openapi.yaml')
+    const yamlText = await fs.readFile(yamlPath, 'utf8')
+    const { parse } = await import('yaml')
+    spec = parse(yamlText)
+  }
   await fs.mkdir(outDir, { recursive: true })
   await fs.writeFile(outFile, JSON.stringify(spec, null, 2), 'utf8')
   // eslint-disable-next-line no-console
@@ -29,4 +46,3 @@ main().catch((err) => {
   console.error('Failed to emit OpenAPI JSON', err)
   process.exitCode = 1
 })
-

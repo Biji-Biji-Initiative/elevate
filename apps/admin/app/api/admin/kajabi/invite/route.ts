@@ -4,7 +4,9 @@ import { z } from 'zod'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
-import { createErrorResponse, createSuccessResponse } from '@elevate/http'
+// Standardized envelopes: prefer local helpers
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { enrollUserInKajabi } from '@elevate/integrations'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
@@ -32,9 +34,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const json = (await request.json()) as unknown
       const parsed = InviteRequestSchema.safeParse(json)
       if (!parsed.success) {
-        return createErrorResponse(
-          new Error(parsed.error.issues?.[0]?.message || 'Invalid body'),
-          400,
+        return toErrorResponse(
+          new AdminError(
+            'VALIDATION_ERROR',
+            parsed.error.issues?.[0]?.message || 'Invalid body',
+          ),
         )
       }
       const {
@@ -55,7 +59,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           where: { id: userId },
           select: { id: true, email: true, name: true },
         })
-        if (!user) return createErrorResponse(new Error('User not found'), 404)
+        if (!user) return toErrorResponse(new AdminError('NOT_FOUND', 'User not found'))
       } else if (emailInput) {
         const found = await prisma.user.findUnique({
           where: { email: emailInput.toLowerCase() },
@@ -67,7 +71,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const email = (user?.email || emailInput || '').toLowerCase()
       const name: string =
         (nameInput || user?.name || email.split('@')[0]) ?? ''
-      if (!email) return createErrorResponse(new Error('Email required'), 400)
+      if (!email) return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Email required'))
 
       const effectiveOfferId = offerId ?? process.env.KAJABI_OFFER_ID
 
@@ -251,10 +255,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         logger.warn('Kajabi invite failed', { email, error: result.error })
         recordApiAvailability('/api/admin/kajabi/invite', 'POST', 502)
         recordApiResponseTime('/api/admin/kajabi/invite', 'POST', Date.now() - start, 502)
-        return createErrorResponse(
-          new Error(result.error || 'Kajabi invite failed'),
-          502,
-        )
+        return toErrorResponse(new AdminError('INTEGRATION_FAILED', result.error || 'Kajabi invite failed'))
       }
 
       logger.info('Kajabi invite sent', {
@@ -263,7 +264,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         withOffer: !!effectiveOfferId,
         offerIdResolved,
       })
-      const res = createSuccessResponse({
+      const res = toSuccessResponse({
         invited: true,
         contactId: result.contactId || contactIdResolved,
         withOffer: !!effectiveOfferId,
@@ -275,7 +276,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     } catch (error) {
       recordApiAvailability('/api/admin/kajabi/invite', 'POST', 500)
       recordApiResponseTime('/api/admin/kajabi/invite', 'POST', 0, 500)
-      return createErrorResponse(new Error('Internal Server Error'), 500)
+      return toErrorResponse(error)
     }
   })
 }

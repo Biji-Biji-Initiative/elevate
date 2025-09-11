@@ -55,9 +55,8 @@ export async function GET(_req: NextRequest) {
 
     // Construct link using ref_code (preferred)
     const origin = process.env.NEXT_PUBLIC_SITE_URL || ''
-    const link = origin
-      ? `${origin}/?ref=${encodeURIComponent(user.ref_code)}`
-      : `/?ref=${encodeURIComponent(user.ref_code)}`
+    const qs = (await import('@/lib/utils/query')).buildQueryString({ ref: user.ref_code })
+    const link = origin ? `${origin}/?${qs}` : `/?${qs}`
     return createSuccessResponse({ refCode: user.ref_code, link })
   } catch (e) {
     return createErrorResponse(new Error('Internal Server Error'), 500)

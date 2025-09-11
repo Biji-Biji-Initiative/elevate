@@ -195,6 +195,9 @@ jobs:
       - name: 🔍 Validate environment configuration
         run: pnpm run env:validate:ci
 
+      - name: 🚫 Enforce API docs disabled in production template
+        run: node scripts/assert-api-docs-prod-disabled.mjs
+
       - name: 🗄️ Setup database
         run: |
           pnpm db:push

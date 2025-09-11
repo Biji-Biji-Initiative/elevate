@@ -1,11 +1,15 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 
 import React, { useState } from 'react'
 
 import { useAuth } from '@clerk/nextjs'
 
 import { Button, Card, Alert, Input, Label } from '@elevate/ui'
+import { LearnPortalLink } from '@/components/LearnPortalLink'
 import { LoadingSpinner } from '@elevate/ui/blocks'
+import { buildQueryString } from '@/lib/utils/query'
+import { safeJsonParse } from '@/lib/utils/safe-json'
 
 export default function UserTypeOnboardingPage() {
   const { isLoaded, userId } = useAuth()
@@ -64,10 +68,14 @@ export default function UserTypeOnboardingPage() {
         try {
           setLoadingSuggestions(true)
           setLastQuery(q)
-          const res = await fetch(`/api/schools?q=${encodeURIComponent(q)}&limit=10`)
+          const res = await fetch(`/api/schools?${buildQueryString({ q, limit: 10 })}`)
           if (res.ok) {
-            const json = (await res.json()) as { data?: Array<{ name: string; city?: string | null; province?: string | null }> }
-            setSuggestions(json.data || [])
+            const text = await res.text()
+            const parsed = safeJsonParse<{ data?: Array<{ name: string; city?: string | null; province?: string | null }> }>(text)
+            const data = (parsed && typeof parsed === 'object' && 'data' in parsed)
+              ? (parsed as { data?: Array<{ name: string; city?: string | null; province?: string | null }> }).data
+              : []
+            setSuggestions(data || [])
             setShowSuggestions(true)
           }
         } finally {
@@ -167,12 +175,4 @@ export default function UserTypeOnboardingPage() {
   )
 }
 
-function LearnPortalLink() {
-  const portal = (typeof window === 'undefined' ? '' : (process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL || ''))
-  if (!portal) return null
-  return (
-    <a href={portal} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50">
-      Open Learn Portal
-    </a>
-  )
-}
+// Shared LearnPortalLink component is imported above

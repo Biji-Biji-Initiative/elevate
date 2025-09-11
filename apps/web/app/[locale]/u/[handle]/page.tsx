@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 
 import { notFound } from 'next/navigation'
 
@@ -16,7 +17,9 @@ import {
   PageLoading,
 } from '@elevate/ui/blocks'
 
-import { getPublicProfileByHandleService } from '@elevate/app-services'
+import { buildQueryString } from '@/lib/utils/query'
+import { safeJsonParse } from '@/lib/utils/safe-json'
+import type { UserProfileDTO as UserProfile } from '@elevate/types/dto-mappers'
 
 import type { Metadata } from 'next'
 
@@ -26,66 +29,26 @@ export const revalidate = 300
 // Next 15 app router sometimes expects PageProps.params to be a Promise in build workers
 type ProfilePageProps = { params: Promise<{ handle: string }> }
 
-interface UserProfile {
-  id: string
-  handle: string
-  name: string
-  email: string
-  avatarUrl?: string
-  school?: string
-  cohort?: string
-  createdAt: string
-  totalPoints: number
-  submissions: Array<{
-    id: string
-    activityCode: string
-    activity: {
-      name: string
-      code: string
-    }
-    status: 'APPROVED' | 'PENDING' | 'REJECTED'
-    visibility: 'PUBLIC' | 'PRIVATE'
-    payload: SubmissionPayload
-    createdAt: string
-    updatedAt: string
-  }>
-  earnedBadges: Array<{
-    badge: {
-      code: string
-      name: string
-      description: string
-      iconUrl?: string
-    }
-    earnedAt: string
-  }>
-}
+// Use shared DTO type for profile
 
 async function fetchUserProfile(handle: string): Promise<UserProfile | null> {
-  const dto = await getPublicProfileByHandleService(handle)
-  if (!dto) return null
-  // Adapt DTO to local shape (aligns closely already)
-  return {
-    id: dto.id,
-    handle: dto.handle,
-    name: dto.name,
-    email: dto.email,
-    avatarUrl: dto.avatarUrl ?? undefined,
-    school: dto.school ?? undefined,
-    cohort: dto.cohort ?? undefined,
-    createdAt: dto.createdAt,
-    totalPoints: dto.totalPoints,
-    submissions: dto.submissions.map((s) => ({
-      id: s.id,
-      activityCode: s.activityCode,
-      activity: s.activity,
-      status: s.status,
-      visibility: s.visibility,
-      payload: s.payload as SubmissionPayload,
-      createdAt: s.createdAt,
-      updatedAt: s.updatedAt,
+  const qs = buildQueryString({})
+  const res = await fetch(`/api/profile/${encodeURIComponent(handle)}${qs ? `?${qs}` : ''}`, { cache: 'no-store' })
+  if (!res.ok) return null
+  const text = await res.text()
+  const parsed = safeJsonParse<{ data?: UserProfile }>(text)
+  const data = (parsed && typeof parsed === 'object' && 'data' in parsed)
+    ? (parsed as { data?: UserProfile }).data
+    : undefined
+  if (!data) return null
+  const normalized: UserProfile = {
+    ...data,
+    submissions: data.submissions.map((s: UserProfile['submissions'][number]) => ({
+      ...s,
+      payload: s.payload as unknown as SubmissionPayload,
     })),
-    earnedBadges: dto.earnedBadges,
   }
+  return normalized
 }
 
 function formatDate(dateString: string) {

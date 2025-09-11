@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
+import { buildQueryString } from '@/lib/utils/query'
 
 export default function Page() {
-  redirect('/admin/submissions?status=PENDING')
+  const qs = buildQueryString({ status: 'PENDING' })
+  redirect(`/admin/submissions?${qs}`)
 }
-

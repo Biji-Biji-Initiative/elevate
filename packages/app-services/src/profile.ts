@@ -1,7 +1,47 @@
-import { prisma, getPublicProfileByHandle } from '@elevate/db'
+import { prisma as defaultPrisma, getPublicProfileByHandle as defaultGetProfile } from '@elevate/db'
 import { mapRawUserProfileToDTO, type UserProfileDTO } from '@elevate/types/dto-mappers'
 
-export async function getPublicProfileByHandleService(handle: string): Promise<UserProfileDTO | null> {
+type MinimalBadge = {
+  badge_code: string
+  badge: { code: string; name: string; description: string; icon_url: string | null }
+  earned_at: Date
+}
+type MinimalSubmission = {
+  id: string
+  activity_code: string
+  activity?: { code: string; name: string } | null
+  status: string
+  visibility: string
+  payload?: unknown
+  created_at: Date
+  updated_at?: Date | null
+}
+type MinimalProfile = {
+  id: string
+  handle: string
+  name: string
+  school: string | null
+  cohort: string | null
+  created_at: Date
+  earned_badges: MinimalBadge[]
+  submissions: MinimalSubmission[]
+}
+
+export interface ProfileServiceDeps {
+  getPublicProfileByHandle: (handle: string) => Promise<MinimalProfile | null>
+  prisma: { pointsLedger: { aggregate: (args: unknown) => Promise<{ _sum: { delta_points: number | null } }> } }
+}
+
+const defaultDeps: ProfileServiceDeps = {
+  getPublicProfileByHandle: defaultGetProfile as unknown as ProfileServiceDeps['getPublicProfileByHandle'],
+  prisma: defaultPrisma as unknown as ProfileServiceDeps['prisma'],
+}
+
+export async function getPublicProfileByHandleService(
+  handle: string,
+  deps?: Partial<ProfileServiceDeps>,
+): Promise<UserProfileDTO | null> {
+  const { getPublicProfileByHandle, prisma } = { ...defaultDeps, ...(deps || {}) }
   const user = await getPublicProfileByHandle(handle)
   if (!user) return null
   const pointsAgg = await prisma.pointsLedger.aggregate({
@@ -40,4 +80,3 @@ export async function getPublicProfileByHandleService(handle: string): Promise<U
   }
   return mapRawUserProfileToDTO(raw)
 }
-

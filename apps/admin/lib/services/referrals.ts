@@ -1,7 +1,12 @@
 "use server"
 import 'server-only'
 
-export { listReferralsService as listReferrals } from '@/lib/server/referrals-service'
+import type { ReferralsQuery } from '@/lib/server/referrals-service'
+
+export async function listReferrals(params: ReferralsQuery) {
+  const { listReferralsService } = await import('@/lib/server/referrals-service')
+  return listReferralsService(params)
+}
 
 export type ReferralRow = {
   id: string

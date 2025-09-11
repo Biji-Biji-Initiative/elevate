@@ -60,6 +60,9 @@ export const EnvSchema = z.object({
     .url("Invalid site URL")
     .default("http://localhost:3000"),
 
+  // Optional Learn portal URL for Students and Educators
+  NEXT_PUBLIC_KAJABI_PORTAL_URL: z.string().url().optional(),
+
   NODE_ENV: z.enum(["development", "production", "test"])
     .default("development"),
 

@@ -47,7 +47,7 @@ import {
   VISIBILITY_OPTIONS,
   SUBMISSION_STATUSES,
 } from '@elevate/types'
-import { activityCanon } from '@elevate/types/activity-canon'
+import { activityCanon, computeAmplifyPoints } from '@elevate/types/activity-canon'
 import {
   transformPayloadAPIToDB,
   transformPayloadDBToAPI,

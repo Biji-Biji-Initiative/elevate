@@ -8,6 +8,10 @@ import { toReferralRow, type ReferralEventRow } from '@/lib/server/mappers'
 import { requireRole } from '@elevate/auth/server-helpers'
 import type { Prisma } from '@elevate/db'
 import { prisma } from '@elevate/db'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { handleApiError } from '@/lib/error-utils'
+import { recordSLO } from '@/lib/server/obs'
+import { AdminError } from '@/lib/server/admin-error'
 
 export const ReferralsQuerySchema = z.object({
   referrerId: z.string().optional(),
@@ -22,6 +26,8 @@ export type ReferralsQuery = z.infer<typeof ReferralsQuerySchema>
 
 export async function listReferralsService(params: ReferralsQuery) {
   await requireRole('admin')
+  const start = Date.now()
+  try {
   const parsed = ReferralsQuerySchema.parse(params)
   const { referrerId, refereeId, email, month, limit, offset } = parsed
 
@@ -67,9 +73,19 @@ export async function listReferralsService(params: ReferralsQuery) {
 
   const referrals = (rows as ReferralEventRow[]).map((r) => toReferralRow(r))
 
+  const logger = await getSafeServerLogger('admin-referrals')
+  logger.info('Listed referrals', { limit, offset, filters: { referrerId, refereeId, email, month } })
+  recordSLO('/admin/service/referrals/list', start, 200)
+
   return {
     referrals,
     pagination: { total, limit, offset, pages: Math.ceil(total / limit) },
+  }
+  } catch (err) {
+    const logger = await getSafeServerLogger('admin-referrals')
+    logger.error('List referrals failed', { error: err instanceof Error ? err.message : String(err) })
+    recordSLO('/admin/service/referrals/list', start, 500)
+    throw new Error(handleApiError(err, 'List referrals failed'))
   }
 }
 
@@ -82,8 +98,10 @@ export async function referralsMonthlySummaryService(month: string): Promise<{
   topReferrers: Array<{ userId: string; points: number; user: { id: string; name: string; email: string; handle: string; user_type: 'EDUCATOR' | 'STUDENT' } }>
 }> {
   await requireRole('admin')
+  const start = Date.now()
+  try {
   const parts = month.split('-')
-  if (parts.length !== 2) throw new Error('Invalid month format')
+  if (parts.length !== 2) throw new AdminError('VALIDATION_ERROR', 'Invalid month format')
   const y = Number.parseInt(String(parts[0] ?? ''), 10)
   const m = Number.parseInt(String(parts[1] ?? ''), 10)
   const monthStart = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0))
@@ -120,5 +138,14 @@ export async function referralsMonthlySummaryService(month: string): Promise<{
     user: byId.get(t.user_id) || { id: t.user_id, name: '', email: '', handle: '', user_type: 'EDUCATOR' },
   }))
 
+  const logger = await getSafeServerLogger('admin-referrals')
+  logger.info('Monthly summary', { month, total, educators, students, uniqueReferrers, pointsAwarded })
+  recordSLO('/admin/service/referrals/monthly-summary', start, 200)
   return { month, total, byType: { educators, students }, uniqueReferrers, pointsAwarded, topReferrers }
+  } catch (err) {
+    const logger = await getSafeServerLogger('admin-referrals')
+    logger.error('Monthly summary failed', { month, error: err instanceof Error ? err.message : String(err) })
+    recordSLO('/admin/service/referrals/monthly-summary', start, 500)
+    throw new Error(handleApiError(err, 'Monthly summary failed'))
+  }
 }

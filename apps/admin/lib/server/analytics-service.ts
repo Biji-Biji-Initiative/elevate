@@ -115,22 +115,61 @@ async function getPointsDistribution(filter: { user?: { cohort: string } }): Pro
     where: { ...(filter.user ? { user: filter.user } : {}) },
     _sum: { delta_points: true },
   })
-  const buckets: Record<string, number> = {
-    '0-49': 0,
-    '50-99': 0,
-    '100-199': 0,
-    '200-499': 0,
-    '500+': 0,
+
+  const values = totals.map((t) => t._sum?.delta_points ?? 0)
+  if (values.length === 0) return []
+
+  // Optional quantile-based distribution via env ANALYTICS_POINTS_QUANTILES
+  const quantilesEnv = process.env.ANALYTICS_POINTS_QUANTILES
+  const quantiles = quantilesEnv ? Number.parseInt(quantilesEnv, 10) : NaN
+  if (Number.isFinite(quantiles) && quantiles >= 2 && quantiles <= 10) {
+    const sorted = [...values].sort((a, b) => a - b)
+    const bins: Array<{ label: string; upper: number | null; count: number }> = []
+    for (let i = 1; i <= quantiles; i += 1) {
+      const idx = i === quantiles ? sorted.length - 1 : Math.max(0, Math.ceil((sorted.length * i) / quantiles) - 1)
+      const upper = i === quantiles ? null : sorted[idx]
+      bins.push({ label: `Q${i}${upper === null ? ' (+)' : ` (≤ ${upper})`}`, upper, count: 0 })
+    }
+    for (const v of sorted) {
+      const binIndex = bins.findIndex((b) => b.upper !== null && v <= (b.upper as number))
+      const idx = binIndex === -1 ? bins.length - 1 : binIndex
+      const target = bins[idx]
+      if (target) target.count += 1
+    }
+    return bins.map((b) => ({ range: b.label, count: b.count }))
   }
-  for (const t of totals) {
-    const pts = t._sum.delta_points ?? 0
-    if (pts < 50) buckets['0-49'] += 1
-    else if (pts < 100) buckets['50-99'] += 1
-    else if (pts < 200) buckets['100-199'] += 1
-    else if (pts < 500) buckets['200-499'] += 1
-    else buckets['500+'] += 1
+
+  // Bucket-based distribution via env ANALYTICS_POINTS_BUCKETS, e.g. "0,50,100,200,500"
+  const bucketEnv = process.env.ANALYTICS_POINTS_BUCKETS
+  const parsed = (bucketEnv || '')
+    .split(',')
+    .map((s) => Number.parseInt(s.trim(), 10))
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b)
+
+  const thresholds = parsed.length >= 2 ? parsed : [0, 50, 100, 200, 500]
+
+  type Bucket = { min: number; max: number | null; label: string; count: number }
+  const buckets: Bucket[] = []
+  for (let i = 0; i < thresholds.length; i += 1) {
+    const min = thresholds[i] as number
+    const next = thresholds[i + 1]
+    if (next !== undefined) {
+      const max = next - 1
+      buckets.push({ min, max, label: `${min}-${max}`, count: 0 })
+    } else {
+      buckets.push({ min, max: null, label: `${min}+`, count: 0 })
+    }
   }
-  return Object.entries(buckets).map(([range, count]) => ({ range, count }))
+
+  for (const pts of values) {
+    const idx = buckets.findIndex((b) => (b.max === null ? pts >= b.min : pts >= b.min && pts <= (b.max as number)))
+    const index = idx === -1 ? buckets.length - 1 : idx
+    const target = buckets[index]
+    if (target) target.count += 1
+  }
+
+  return buckets.map((b) => ({ range: b.label, count: b.count }))
 }
 
 async function getRecentSubmissions(limit: number) {
@@ -147,9 +186,25 @@ async function getRecentApprovals(limit: number) {
     where: { status: 'APPROVED' },
     orderBy: { updated_at: 'desc' },
     take: limit,
-    select: { id: true, activity_code: true, updated_at: true, reviewer: { select: { name: true } }, user: { select: { name: true } } },
+    select: {
+      id: true,
+      activity_code: true,
+      updated_at: true,
+      reviewer: { select: { name: true } },
+      user: { select: { name: true } },
+      activity: { select: { default_points: true } },
+    },
   })
-  return rows.map((r) => toRecentApproval({ id: r.id, activity_code: r.activity_code, updated_at: r.updated_at ?? null, points_awarded: 0, reviewer: r.reviewer ?? null, user: r.user ?? null }))
+  return rows.map((r) =>
+    toRecentApproval({
+      id: r.id,
+      activity_code: r.activity_code,
+      updated_at: r.updated_at ?? null,
+      points_awarded: r.activity?.default_points ?? 0,
+      reviewer: r.reviewer ?? null,
+      user: r.user ?? null,
+    }),
+  )
 }
 
 async function getRecentUsers(limit: number) {

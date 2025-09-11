@@ -19,6 +19,14 @@ import type {
 
 export const runtime = 'nodejs'
 
+// CSV cell sanitizer: mitigates formula injection and ensures proper quoting
+function cell(v: unknown) {
+  let s = String(v ?? '')
+  const first = s.charAt(0)
+  if (first && ['=', '+', '-', '@'].includes(first)) s = `'${s}`
+  return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
+}
+
 export async function GET(request: NextRequest) {
   const logger = await getSafeServerLogger('admin-exports')
   return withRateLimit(request, adminRateLimiter, async () => {
@@ -212,11 +220,9 @@ async function generateSubmissionsCSV(filters: {
     JSON.stringify(sub.payload),
   ])
 
-  const csv = [headers, ...rows]
-    .map((row) =>
-      row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(','),
-    )
-    .join('\n')
+  const rowsSanitized = rows.map((row) => row.map((field) => cell(field)))
+
+  const csv = [headers.join(','), ...rowsSanitized.map((row) => row.join(','))].join('\n')
 
   const timestamp = new Date().toISOString().split('T')[0]
   const filename = `submissions-export-${timestamp}.csv`
@@ -291,11 +297,9 @@ async function generateUsersCSV(filters: { cohort?: string | null }) {
     user.created_at.toISOString(),
   ])
 
-  const csv = [headers, ...rows]
-    .map((row) =>
-      row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(','),
-    )
-    .join('\n')
+  const rowsSanitized = rows.map((row) => row.map((field) => cell(field)))
+
+  const csv = [headers.join(','), ...rowsSanitized.map((row) => row.join(','))].join('\n')
 
   const timestamp = new Date().toISOString().split('T')[0]
   const filename = `users-export-${timestamp}.csv`
@@ -378,11 +382,9 @@ async function generateLeaderboardCSV(filters: { cohort?: string | null }) {
     })
     .filter((row) => row.length > 0) // Remove any empty rows
 
-  const csv = [headers, ...rows]
-    .map((row) =>
-      row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(','),
-    )
-    .join('\n')
+  const rowsSanitized = rows.map((row) => row.map((field) => cell(field)))
+
+  const csv = [headers.join(','), ...rowsSanitized.map((row) => row.join(','))].join('\n')
 
   const timestamp = new Date().toISOString().split('T')[0]
   const filename = `leaderboard-export-${timestamp}.csv`
@@ -459,11 +461,9 @@ async function generatePointsLedgerCSV(filters: {
     entry.created_at.toISOString(),
   ])
 
-  const csv = [headers, ...rows]
-    .map((row) =>
-      row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(','),
-    )
-    .join('\n')
+  const rowsSanitized = rows.map((row) => row.map((field) => cell(field)))
+
+  const csv = [headers.join(','), ...rowsSanitized.map((row) => row.join(','))].join('\n')
 
   const timestamp = new Date().toISOString().split('T')[0]
   const filename = `points-ledger-export-${timestamp}.csv`

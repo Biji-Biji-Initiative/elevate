@@ -151,9 +151,21 @@ export default async function LocaleLayout({ children, params }: Props) {
         })()}
         signInButton={
           <SignedOut>
-            <SignInButton mode="modal">
-              <Button variant="ghost">Sign In</Button>
-            </SignInButton>
+            <div className="flex items-center gap-2">
+              {process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL ? (
+                <a
+                  href={process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50"
+                >
+                  Learn Portal
+                </a>
+              ) : null}
+              <SignInButton mode="modal">
+                <Button variant="ghost">Sign In</Button>
+              </SignInButton>
+            </div>
           </SignedOut>
         }
         userButton={
@@ -163,9 +175,21 @@ export default async function LocaleLayout({ children, params }: Props) {
         }
         dashboardCta={
           <SignedIn>
-            <Link href={`/${locale}/dashboard`}>
-              <Button variant="default">Dashboard</Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href={`/${locale}/dashboard`}>
+                <Button variant="default">Dashboard</Button>
+              </Link>
+              {process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL ? (
+                <a
+                  href={process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50"
+                >
+                  Learn Portal
+                </a>
+              ) : null}
+            </div>
           </SignedIn>
         }
         languageSwitcher={<LanguageSwitcher />}

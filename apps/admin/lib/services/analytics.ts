@@ -1,4 +1,9 @@
 "use server"
 import 'server-only'
 
-export { getAnalyticsService as getAnalytics } from '@/lib/server/analytics-service'
+import type { AnalyticsQuery } from '@/lib/server/analytics-service'
+
+export async function getAnalytics(query: AnalyticsQuery) {
+  const { getAnalyticsService } = await import('@/lib/server/analytics-service')
+  return getAnalyticsService(query)
+}

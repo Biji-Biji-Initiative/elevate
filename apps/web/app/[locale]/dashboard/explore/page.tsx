@@ -1,8 +1,7 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
+import React, { useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
@@ -26,9 +25,9 @@ import {
   SelectValue,
 } from '@elevate/ui'
 import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
-import { useCurrentLocale } from '@elevate/ui/next'
+import { useEducatorGuard } from '@/hooks/useEducatorGuard'
 
-import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
+const CSRF_TOKEN_HEADER = 'X-CSRF-Token'
 
 const aiToolOptions = [
   { value: 'ChatGPT', label: 'ChatGPT' },
@@ -39,8 +38,7 @@ const aiToolOptions = [
 ]
 
 export default function ExploreFormPage() {
-  const router = useRouter()
-  const { withLocale } = useCurrentLocale()
+  useEducatorGuard()
   const t = useTranslations('homepage')
   const { userId } = useAuth()
   const [selectedAiTool, setSelectedAiTool] = useState<string>('')
@@ -61,11 +59,9 @@ export default function ExploreFormPage() {
           const resp = await fetch('/api/files/upload', { method: 'POST', body: form })
           if (!resp.ok) throw new Error('Upload failed')
           const result = (await resp.json()) as { data?: { path: string; hash: string } }
-          return {
-            file,
-            path: result.data.path,
-            hash: result.data.hash,
-          }
+          const data = result?.data
+          if (!data) throw new Error('Malformed upload response')
+          return { file, path: data.path, hash: data.hash }
         } catch (error) {
           return {
             file,
@@ -93,6 +89,8 @@ export default function ExploreFormPage() {
     setCharacterCount(watchedReflection?.length || 0)
   }, [watchedReflection])
 
+  
+
   const handleFileSelect = async (files: File[]) => {
     const results = await handleFileUpload(files)
     setValue('evidence_files', results.map((r) => r.path))
@@ -103,8 +101,9 @@ export default function ExploreFormPage() {
     setValue('evidence_files', successfulUploads.map((f) => f.path))
   }
 
+  const submit = (handleFormSubmit as unknown as (fn: () => Promise<void>) => Promise<void>)
   const onSubmit = async (data: ExploreInput) => {
-    await handleFormSubmit(async () => {
+    await submit(async () => {
       if (!userId) {
         throw new Error(t('validation.missing_file'))
       }
@@ -290,22 +289,3 @@ export default function ExploreFormPage() {
     </main>
   )
 }
-  // Gate: students -> educators-only; unconfirmed educators -> onboarding
-  useEffect(() => {
-    const guard = async () => {
-      try {
-        const res = await fetch('/api/profile/me')
-        if (!res.ok) return
-        const me = (await res.json()) as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
-        if (me?.data?.userType === 'STUDENT') {
-          router.push(withLocale('/educators-only'))
-          return
-        }
-        if (me?.data?.userTypeConfirmed === false) {
-          router.push(withLocale('/onboarding/user-type'))
-          return
-        }
-      } catch { /* noop */ }
-    }
-    void guard()
-  }, [router, withLocale])

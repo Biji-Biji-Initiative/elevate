@@ -1,10 +1,14 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 
 import React from 'react'
 
 import { UserProfile } from '@clerk/nextjs'
 
 import { useCurrentLocale } from '@elevate/ui/next'
+import { LearnPortalLink } from '@/components/LearnPortalLink'
+import { buildQueryString } from '@/lib/utils/query'
+import { safeJsonParse } from '@/lib/utils/safe-json'
 
 export default function AccountPage() {
   const { withLocale } = useCurrentLocale()
@@ -34,12 +38,13 @@ export default function AccountPage() {
             },
           }}
         >
-          <UserProfile.Link label="LEAPS Dashboard" url={withLocale('/dashboard')} />
+          <UserProfile.Link label="LEAPS Dashboard" url={withLocale('/dashboard')} labelIcon={<span />} />
           <UserProfile.Link
             label="Invite Peers/Students"
             url={withLocale('/dashboard/amplify/invite')}
+            labelIcon={<span />}
           />
-          <UserProfile.Page label="LEAPS Profile" urlSegment="leaps-profile">
+          <UserProfile.Page label="LEAPS Profile" url="leaps-profile" labelIcon={<span />}>
             <LeapsProfileForm />
           </UserProfile.Page>
         </UserProfile>
@@ -99,11 +104,12 @@ function LeapsProfileForm() {
         try {
           setLoadingSuggestions(true)
           setLastQuery(q)
-          const res = await fetch(`/api/schools?q=${encodeURIComponent(q)}&limit=10`)
+          const res = await fetch(`/api/schools?${buildQueryString({ q, limit: 10 })}`)
           if (res.ok) {
-            const json: unknown = await res.json()
-            const data = (json && typeof json === 'object' && 'data' in json)
-              ? (json as { data?: Array<{ name: string; city?: string | null; province?: string | null }> }).data
+            const text = await res.text()
+            const parsed = safeJsonParse<{ data?: Array<{ name: string; city?: string | null; province?: string | null }> }>(text)
+            const data = (parsed && typeof parsed === 'object' && 'data' in parsed)
+              ? (parsed as { data?: Array<{ name: string; city?: string | null; province?: string | null }> }).data
               : []
             setSuggestions(Array.isArray(data) ? data : [])
             setShowSuggestions(true)
@@ -219,12 +225,4 @@ function LeapsProfileForm() {
   )
 }
 
-function LearnPortalLink() {
-  const portal = (typeof window === 'undefined' ? '' : (process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL || ''))
-  if (!portal) return null
-  return (
-    <a href={portal} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50">
-      Open Learn Portal
-    </a>
-  )
-}
+// Shared LearnPortalLink component is used above

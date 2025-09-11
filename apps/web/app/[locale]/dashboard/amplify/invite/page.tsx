@@ -1,18 +1,17 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 
 import React, { useMemo, useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 
 import { useAuth } from '@clerk/nextjs'
 
 import { Button, Card, Alert } from '@elevate/ui'
 import { LoadingSpinner } from '@elevate/ui/blocks'
-import { useCurrentLocale } from '@elevate/ui/next'
+import { useEducatorGuard } from '@/hooks/useEducatorGuard'
 
 export default function AmplifyInvitePage() {
   const { isLoaded, userId } = useAuth()
-  const router = useRouter()
-  const { withLocale } = useCurrentLocale()
+  useEducatorGuard()
 
   const [state, setState] = useState<{
     handle: string | null
@@ -28,21 +27,7 @@ export default function AmplifyInvitePage() {
         setState((s) => ({ ...s, loading: false, error: 'Please sign in' }))
         return
       }
-      // Gate: students -> educators-only; unconfirmed educators -> onboarding
-      try {
-        const meRes = await fetch('/api/profile/me')
-        if (meRes.ok) {
-          const me = (await meRes.json()) as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
-          if (me?.data?.userType === 'STUDENT') {
-            router.push(withLocale('/educators-only'))
-            return
-          }
-          if (me?.data?.userTypeConfirmed === false) {
-            router.push(withLocale('/onboarding/user-type'))
-            return
-          }
-        }
-      } catch { /* noop */ }
+      
       try {
         const locale = typeof window !== 'undefined' ? (window.location.pathname.split('/')[1] || 'en') : 'en'
         const linkRes = await fetch('/api/referrals/link')
@@ -55,7 +40,7 @@ export default function AmplifyInvitePage() {
       }
     }
     void run()
-  }, [isLoaded, userId, router, withLocale])
+  }, [isLoaded, userId])
 
   const shareUrl = useMemo(() => {
     const origin = typeof window !== 'undefined' ? window.location.origin : ''

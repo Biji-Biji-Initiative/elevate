@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import { BadgeSchema, toPrismaJson, buildAuditMeta } from '@elevate/types'
@@ -51,13 +53,13 @@ export async function GET(request: NextRequest) {
             },
           })
 
-      return createSuccessResponse({ badges })
+      return toSuccessResponse({ badges })
     } catch (error) {
       logger.error(
         'Admin badges GET failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      return createErrorResponse(error, 500)
+      return toErrorResponse(error)
     }
   })
 }
@@ -71,7 +73,7 @@ export async function POST(request: NextRequest) {
 
       const validation = BadgeSchema.safeParse(body)
       if (!validation.success) {
-        return createErrorResponse(new Error('Validation failed'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Validation failed'))
       }
 
       const data = validation.data
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
       })
 
       if (existing) {
-        return createErrorResponse(new Error('Badge code already exists'), 400)
+        return toErrorResponse(new AdminError('DUPLICATE', 'Badge code already exists'))
       }
 
       const badge = await prisma.badge.create({
@@ -111,13 +113,13 @@ export async function POST(request: NextRequest) {
         },
       })
 
-      return createSuccessResponse({ message: 'Badge created successfully' })
+      return toSuccessResponse({ message: 'Badge created successfully' })
     } catch (error) {
       logger.error(
         'Admin badges POST failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      return createErrorResponse(error, 500)
+      return toErrorResponse(error)
     }
   })
 }
@@ -131,17 +133,14 @@ export async function PATCH(request: NextRequest) {
 
       // Type-safe extraction of code and updates
       if (!body || typeof body !== 'object') {
-        return createErrorResponse(new Error('Invalid request body'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid request body'))
       }
 
       const bodyObj = body as Record<string, unknown>
       const { code, ...updates } = bodyObj
 
       if (!code || typeof code !== 'string') {
-        return createErrorResponse(
-          new Error('Badge code is required and must be a string'),
-          400,
-        )
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Badge code is required and must be a string'))
       }
 
       const existing = await prisma.badge.findUnique({
@@ -149,7 +148,7 @@ export async function PATCH(request: NextRequest) {
       })
 
       if (!existing) {
-        return createErrorResponse(new Error('Badge not found'), 404)
+        return toErrorResponse(new AdminError('NOT_FOUND', 'Badge not found'))
       }
 
       // Validate updates
@@ -157,7 +156,7 @@ export async function PATCH(request: NextRequest) {
       const validation = updateSchema.safeParse(updates)
 
       if (!validation.success) {
-        return createErrorResponse(new Error('Validation failed'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Validation failed'))
       }
 
       // Build update data object conditionally to avoid passing undefined
@@ -195,13 +194,13 @@ export async function PATCH(request: NextRequest) {
         },
       })
 
-      return createSuccessResponse({ message: 'Badge updated successfully' })
+      return toSuccessResponse({ message: 'Badge updated successfully' })
     } catch (error) {
       logger.error(
         'Admin badges PATCH failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      return createErrorResponse(error, 500)
+      return toErrorResponse(error)
     }
   })
 }
@@ -216,7 +215,7 @@ export async function DELETE(request: NextRequest) {
       const querySchema = z.object({ code: z.string().min(1) })
       const queryParsed = querySchema.safeParse(queryObj)
       if (!queryParsed.success) {
-        return createErrorResponse(new Error('Badge code is required'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Badge code is required'))
       }
       const { code } = queryParsed.data
 
@@ -232,14 +231,11 @@ export async function DELETE(request: NextRequest) {
       })
 
       if (!existing) {
-        return createErrorResponse(new Error('Badge not found'), 404)
+        return toErrorResponse(new AdminError('NOT_FOUND', 'Badge not found'))
       }
 
       if (existing._count.earned_badges > 0) {
-        return createErrorResponse(
-          new Error('Cannot delete badge that has been earned by users'),
-          400,
-        )
+        return toErrorResponse(new AdminError('CONFLICT', 'Cannot delete badge that has been earned by users'))
       }
 
       await prisma.badge.delete({
@@ -262,13 +258,13 @@ export async function DELETE(request: NextRequest) {
         },
       })
 
-      return createSuccessResponse({ message: 'Badge deleted successfully' })
+      return toSuccessResponse({ message: 'Badge deleted successfully' })
     } catch (error) {
       logger.error(
         'Admin badges DELETE failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      return createErrorResponse(error, 500)
+      return toErrorResponse(error)
     }
   })
 }

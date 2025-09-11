@@ -4,7 +4,8 @@ import 'server-only'
 import { toAdminSubmission, type SubmissionRow } from '@/lib/server/mappers'
 import { requireRole } from '@elevate/auth/server-helpers'
 import { findSubmissionById, findSubmissionsWithFilters, countSubmissionsWithFilters, prisma } from '@elevate/db'
-import { sloMonitor } from '@elevate/logging/slo-monitor'
+// SLO metrics are recorded via recordSLO helper
+import { recordSLO } from '@/lib/server/obs'
 import {
   parseSubmissionStatus,
   parseActivityCode,
@@ -15,6 +16,7 @@ import {
 } from '@elevate/types'
 import type { AdminSubmission, Pagination } from '@elevate/types/admin-api-types'
 import type { SubmissionWhereClause } from '@elevate/types/common'
+import { AdminError } from '@/lib/server/admin-error'
 
  
 
@@ -62,8 +64,7 @@ export async function listSubmissionsService(params: ListParams): Promise<{ subm
 
   const mapped: AdminSubmission[] = (submissions as SubmissionRow[]).map((s) => toAdminSubmission(s))
 
-  sloMonitor.recordApiAvailability('/admin/service/submissions/list', 'SERVICE', 200)
-  sloMonitor.recordApiResponseTime('/admin/service/submissions/list', 'SERVICE', Date.now() - start, 200)
+  recordSLO('/admin/service/submissions/list', start, 200)
   return {
     submissions: mapped,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
@@ -74,12 +75,11 @@ export async function getSubmissionByIdService(id: string): Promise<{ submission
   await requireRole('reviewer')
   const start = Date.now()
   const s = await findSubmissionById(id)
-  if (!s) throw new Error('Submission not found')
+  if (!s) throw new AdminError('NOT_FOUND', 'Submission not found')
 
   const sRow = s as SubmissionRow
   const submission = toAdminSubmission(sRow)
-  sloMonitor.recordApiAvailability('/admin/service/submissions/get', 'SERVICE', 200)
-  sloMonitor.recordApiResponseTime('/admin/service/submissions/get', 'SERVICE', Date.now() - start, 200)
+  recordSLO('/admin/service/submissions/get', start, 200)
   return { submission }
 }
 
@@ -90,8 +90,8 @@ export async function reviewSubmissionService(body: unknown) {
   const { submissionId, action, reviewNote, pointAdjustment } = parsed
 
   const submission = await findSubmissionById(submissionId)
-  if (!submission) throw new Error('Submission not found')
-  if (submission.status !== SUBMISSION_STATUSES[0]) throw new Error('Submission already reviewed')
+  if (!submission) throw new AdminError('NOT_FOUND', 'Submission not found')
+  if (submission.status !== SUBMISSION_STATUSES[0]) throw new AdminError('CONFLICT', 'Submission already reviewed')
   const newStatus = action === 'approve' ? SUBMISSION_STATUSES[1] : SUBMISSION_STATUSES[2]
 
   await prisma.$transaction(async (tx) => {
@@ -123,8 +123,7 @@ export async function reviewSubmissionService(body: unknown) {
   })
   const logger = await (await import('@elevate/logging/safe-server')).getSafeServerLogger('admin-submissions')
   logger.info('Reviewed submission', { submissionId, action })
-  sloMonitor.recordApiAvailability('/admin/service/submissions/review', 'SERVICE', 200)
-  sloMonitor.recordApiResponseTime('/admin/service/submissions/review', 'SERVICE', Date.now() - start, 200)
+  recordSLO('/admin/service/submissions/review', start, 200)
   return { message: 'Review processed' }
 }
 
@@ -146,7 +145,6 @@ export async function bulkReviewService(body: unknown) {
   }
   const logger = await (await import('@elevate/logging/safe-server')).getSafeServerLogger('admin-submissions')
   logger.info('Bulk review', { action, processed, failed: submissionIds.length - processed })
-  sloMonitor.recordApiAvailability('/admin/service/submissions/bulk-review', 'SERVICE', 200)
-  sloMonitor.recordApiResponseTime('/admin/service/submissions/bulk-review', 'SERVICE', Date.now() - start, 200)
+  recordSLO('/admin/service/submissions/bulk-review', start, 200)
   return { processed, failed: submissionIds.length - processed, errors }
 }

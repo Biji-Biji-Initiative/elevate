@@ -88,6 +88,7 @@
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
     "NEXT_PUBLIC_SITE_URL",
+    "NEXT_PUBLIC_KAJABI_PORTAL_URL",
     // Turbo cloud cache auth (optional)
     "TURBO_TOKEN",
     "TURBO_TEAM",
@@ -145,6 +146,9 @@
     "KAJABI_OFFER_ID",
     "KAJABI_OFFER_NAME",
     "ALLOW_UNSIGNED_KAJABI_WEBHOOK",
-    "AV_SCAN_ENABLED"
+    "AV_SCAN_ENABLED",
+    // Admin analytics configuration
+    "ANALYTICS_POINTS_BUCKETS",
+    "ANALYTICS_POINTS_QUANTILES"
   ]
 }

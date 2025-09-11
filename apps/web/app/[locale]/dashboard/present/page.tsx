@@ -1,8 +1,7 @@
 'use client'
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
+import React, { useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
@@ -21,13 +20,12 @@ import {
   AlertDescription,
 } from '@elevate/ui'
 import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
-import { useCurrentLocale } from '@elevate/ui/next'
+import { useEducatorGuard } from '@/hooks/useEducatorGuard'
 
-import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
+const CSRF_TOKEN_HEADER = 'X-CSRF-Token'
 
 export default function PresentFormPage() {
-  const router = useRouter()
-  const { withLocale } = useCurrentLocale()
+  useEducatorGuard()
   const t = useTranslations('homepage')
   const { userId } = useAuth()
   const [makePublic, setMakePublic] = useState(false)
@@ -40,6 +38,7 @@ export default function PresentFormPage() {
     successMessage:
       'LinkedIn post submitted successfully! You could earn 20 points once approved.',
   })
+  const submit = (handleFormSubmit as unknown as (fn: () => Promise<void>) => Promise<void>)
 
   const {
     uploadedFiles,
@@ -61,14 +60,9 @@ export default function PresentFormPage() {
       const resp = await fetch('/api/files/upload', { method: 'POST', body: form })
       if (!resp.ok) throw new Error('Upload failed')
       const result = (await resp.json()) as { data?: { path: string; hash: string } }
-
-      return [
-        {
-          file,
-          path: result.data.path,
-          hash: result.data.hash,
-        },
-      ]
+      const data = result?.data
+      if (!data) throw new Error('Malformed upload response')
+      return [{ file, path: data.path, hash: data.hash }]
     },
   })
 
@@ -81,6 +75,8 @@ export default function PresentFormPage() {
   } = useForm<PresentInput>({
     resolver: zodResolver(PresentSchema),
   })
+
+  
 
   const watchedUrl = watch('linkedin_url')
   const watchedCaption = watch('caption')
@@ -107,7 +103,7 @@ export default function PresentFormPage() {
   }
 
   const onSubmit = async (data: PresentInput) => {
-    await handleFormSubmit(async () => {
+    await submit(async () => {
       if (!userId) {
         throw new Error(t('validation.missing_file'))
       }
@@ -313,22 +309,3 @@ export default function PresentFormPage() {
     </main>
   )
 }
-  // Gate: students -> educators-only; unconfirmed educators -> onboarding
-  useEffect(() => {
-    const guard = async () => {
-      try {
-        const res = await fetch('/api/profile/me')
-        if (!res.ok) return
-        const me = (await res.json()) as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
-        if (me?.data?.userType === 'STUDENT') {
-          router.push(withLocale('/educators-only'))
-          return
-        }
-        if (me?.data?.userTypeConfirmed === false) {
-          router.push(withLocale('/onboarding/user-type'))
-          return
-        }
-      } catch { /* noop */ }
-    }
-    void guard()
-  }, [router, withLocale])

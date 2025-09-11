@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import { Inter } from 'next/font/google'
+// Use system fonts to avoid network fetch during offline builds
 import { headers } from 'next/headers'
 
 import { NextIntlClientProvider } from 'next-intl'
@@ -13,7 +13,6 @@ import { Providers } from './providers'
 
 import type { Metadata } from 'next'
 
-const inter = Inter({ subsets: ['latin'] })
 
 // Force dynamic rendering for the entire admin app
 export const dynamic = 'force-dynamic'
@@ -26,7 +25,7 @@ export default async function RootLayout({
   const messages = await getMessages()
   return (
     <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
-      <body className={inter.className}>
+      <body className="font-sans">
         <NextIntlClientProvider messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>

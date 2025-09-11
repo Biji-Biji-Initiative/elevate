@@ -1,7 +1,17 @@
 "use server"
 import 'server-only'
 
-export { listSubmissionsService as listSubmissions, getSubmissionByIdService as getSubmissionById } from '@/lib/server/submissions-service'
+import type { ListSubmissionsParams } from '@/lib/server/submissions-service'
+
+export async function listSubmissions(params: ListSubmissionsParams) {
+  const { listSubmissionsService } = await import('@/lib/server/submissions-service')
+  return listSubmissionsService(params)
+}
+
+export async function getSubmissionById(id: string) {
+  const { getSubmissionByIdService } = await import('@/lib/server/submissions-service')
+  return getSubmissionByIdService(id)
+}
 
 export async function getCohorts(): Promise<string[]> {
   const { prisma } = await import('@elevate/db')

@@ -279,6 +279,7 @@ export default [
           ignore: [
             '^@elevate/ui/styles/',
             '^@elevate/openapi($|/.*)',
+            '^@elevate/app-services($|/.*)',
             '^@clerk/localizations$',
             '^server-only$',
           ],

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { SignOutButton } from '@clerk/nextjs'
 
 import { Button, Card } from '@elevate/ui'
+import { LearnPortalLink } from '@/components/LearnPortalLink'
 import { useCurrentLocale } from '@elevate/ui/next'
 
 export default function EducatorsOnlyPage() {
@@ -32,12 +33,4 @@ export default function EducatorsOnlyPage() {
   )
 }
 
-function LearnPortalLink() {
-  const portal = (typeof window === 'undefined' ? '' : (process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL || ''))
-  if (!portal) return null
-  return (
-    <a href={portal} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50">
-      Open Learn Portal
-    </a>
-  )
-}
+// Use shared LearnPortalLink component from components directory

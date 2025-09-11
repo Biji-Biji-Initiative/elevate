@@ -205,6 +205,23 @@ cd apps/admin && npm run validate:env
 3. **Database**: Verify connection and migrations
 4. **Webhooks**: Test webhook endpoints with curl
 
+### Admin Analytics Configuration
+
+You can customize points distribution in the Admin analytics dashboard using these optional env vars (set in root or `apps/admin/.env.local`):
+
+```bash
+# Comma-separated integer thresholds; defaults to 0,50,100,200,500
+ANALYTICS_POINTS_BUCKETS=0,25,50,100,250,500
+
+# Quantile mode (2–10). If set, overrides buckets and renders labels like
+# Q1 (≤ X) ... Qn (+). Example for quartiles:
+ANALYTICS_POINTS_QUANTILES=4
+```
+
+Notes:
+- Only set one of the vars; quantiles take precedence if both are present.
+- These envs are read at runtime by the admin service; see `apps/admin/lib/server/analytics-service.ts`.
+
 ## Troubleshooting
 
 ### Common Issues

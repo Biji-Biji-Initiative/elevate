@@ -8,7 +8,9 @@ import { requireRole, hasRole } from '@elevate/auth/server-helpers'
 import { prisma, findUserById, findUserByHandle, type Prisma } from '@elevate/db'
 import { parseRole } from '@elevate/types'
 import type { AdminUser, Pagination } from '@elevate/types/admin-api-types'
-import { sloMonitor } from '@elevate/logging/slo-monitor'
+// SLO metrics are recorded via recordSLO helper
+import { recordSLO } from '@/lib/server/obs'
+import { AdminError } from '@/lib/server/admin-error'
 
 export type ListUsersParams = {
   search?: string
@@ -90,8 +92,7 @@ export async function listUsersService(params: ListUsersParams): Promise<{ users
 
   const mapped: AdminUser[] = (users as AdminUserRow[]).map((u) => toAdminUser(u, pointsMap[u.id] || 0))
   logger.info('Listed users', { page, limit, sortBy, sortOrder, filter: { search, role, userType, cohort }, returned: mapped.length })
-  sloMonitor.recordApiAvailability('/admin/service/users/list', 'SERVICE', 200)
-  sloMonitor.recordApiResponseTime('/admin/service/users/list', 'SERVICE', Date.now() - (globalThis.__USERS_LIST_START__ ?? Date.now()), 200)
+  // Metrics recorded via API routes; skip at service layer to reduce coupling
 
   return {
     users: mapped,
@@ -113,18 +114,19 @@ export async function updateUserService(body: {
   handle?: string
 }) {
   const currentUser = await requireRole('admin')
+  const start = Date.now()
   const { userId, role, school, cohort, name, handle } = body
 
-  if (!userId) throw new Error('userId is required')
+  if (!userId) throw new AdminError('VALIDATION_ERROR', 'userId is required')
 
   const targetUser = await findUserById(userId)
-  if (!targetUser) throw new Error('User not found')
+  if (!targetUser) throw new AdminError('NOT_FOUND', 'User not found')
 
   if (role && role !== targetUser.role) {
     if (currentUser.role !== 'superadmin') {
       const restricted = ['ADMIN', 'SUPERADMIN']
       if (restricted.includes(role) || restricted.includes(targetUser.role)) {
-        throw new Error('Insufficient permissions to modify admin roles')
+        throw new AdminError('FORBIDDEN', 'Insufficient permissions to modify admin roles')
       }
     }
     const parsedNewRole = parseRole(role)
@@ -133,7 +135,7 @@ export async function updateUserService(body: {
       parsedNewRole &&
       !hasRole(currentUser.role, roleToRoleName(parsedNewRole))
     ) {
-      throw new Error('Cannot demote your own role')
+      throw new AdminError('FORBIDDEN', 'Cannot demote your own role')
     }
   }
 
@@ -154,7 +156,7 @@ export async function updateUserService(body: {
   if (handle !== undefined && handle !== targetUser.handle) {
     const existingHandle = await findUserByHandle(handle)
     if (existingHandle && existingHandle.id !== userId) {
-      throw new Error('Handle is already taken')
+      throw new AdminError('DUPLICATE', 'Handle is already taken')
     }
     updateData.handle = handle
   }
@@ -184,8 +186,7 @@ export async function updateUserService(body: {
   const userDto = toAdminUser(updated as AdminUserRow, totalPoints)
   const audit = await getSafeServerLogger('admin-users')
   audit.info('Updated user', { userId, changed: Object.keys(updateData) })
-  sloMonitor.recordApiAvailability('/admin/service/users/update', 'SERVICE', 200)
-  sloMonitor.recordApiResponseTime('/admin/service/users/update', 'SERVICE', 1, 200)
+  recordSLO('/admin/service/users/update', start, 200)
   return { message: 'User updated successfully', user: userDto }
 }
 
@@ -197,14 +198,14 @@ export async function bulkUpdateUsersService(body: {
   const { userIds, role } = body
 
   if (!Array.isArray(userIds) || userIds.length === 0) {
-    throw new Error('userIds array is required')
+    throw new AdminError('VALIDATION_ERROR', 'userIds array is required')
   }
-  if (!role) throw new Error('role is required')
-  if (userIds.length > 100) throw new Error('Maximum 100 users per bulk operation')
+  if (!role) throw new AdminError('VALIDATION_ERROR', 'role is required')
+  if (userIds.length > 100) throw new AdminError('VALIDATION_ERROR', 'Maximum 100 users per bulk operation')
 
   if (currentUser.role !== 'superadmin') {
     const restricted = ['ADMIN', 'SUPERADMIN']
-    if (restricted.includes(role)) throw new Error('Insufficient permissions to assign admin roles')
+    if (restricted.includes(role)) throw new AdminError('FORBIDDEN', 'Insufficient permissions to assign admin roles')
   }
 
   const parsedBulkRole = parseRole(role)
@@ -213,14 +214,14 @@ export async function bulkUpdateUsersService(body: {
     parsedBulkRole &&
     !hasRole(currentUser.role, roleToRoleName(parsedBulkRole))
   ) {
-    throw new Error('Cannot demote your own role in bulk operation')
+    throw new AdminError('FORBIDDEN', 'Cannot demote your own role in bulk operation')
   }
 
   const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, role: true } })
-  if (users.length === 0) throw new Error('No users found')
+  if (users.length === 0) throw new AdminError('NOT_FOUND', 'No users found')
   if (currentUser.role !== 'superadmin') {
     const hasRestricted = users.some((u) => ['ADMIN', 'SUPERADMIN'].includes(u.role))
-    if (hasRestricted) throw new Error('Cannot modify admin users without superadmin role')
+    if (hasRestricted) throw new AdminError('FORBIDDEN', 'Cannot modify admin users without superadmin role')
   }
 
   const start = Date.now()
@@ -236,9 +237,8 @@ export async function bulkUpdateUsersService(body: {
   })
   const logger2 = await getSafeServerLogger('admin-users')
   logger2.info('Bulk role update', { role, processed: results.length })
-  const { sloMonitor } = await import('@elevate/logging/slo-monitor')
-  sloMonitor.recordApiAvailability('/admin/service/users/bulk-update', 'SERVICE', 200)
-  sloMonitor.recordApiResponseTime('/admin/service/users/bulk-update', 'SERVICE', Date.now() - start, 200)
+  const { recordSLO } = await import('@/lib/server/obs')
+  recordSLO('/admin/service/users/bulk-update', start, 200)
   return { processed: results.length, failed: 0, errors: [] as Array<{ userId: string; error: string }> }
 }
 
@@ -251,7 +251,7 @@ export async function bulkUpdateLeapsUsersService(body: {
 }) {
   await requireRole('admin')
   const { userIds, userType, userTypeConfirmed, school, region } = body
-  if (!Array.isArray(userIds) || userIds.length === 0) throw new Error('userIds array is required')
+  if (!Array.isArray(userIds) || userIds.length === 0) throw new AdminError('VALIDATION_ERROR', 'userIds array is required')
   const results = { processed: 0, failed: 0, errors: [] as Array<{ userId: string; error: string }> }
   const client = (await import('@clerk/nextjs/server')).clerkClient
   const start = Date.now()
@@ -284,9 +284,8 @@ export async function bulkUpdateLeapsUsersService(body: {
   }
   const log = await getSafeServerLogger('admin-users')
   log.info('Bulk LEAPS update', { processed: results.processed, failed: results.failed })
-  const { sloMonitor } = await import('@elevate/logging/slo-monitor')
-  sloMonitor.recordApiAvailability('/admin/service/users/bulk-leaps', 'SERVICE', 200)
-  sloMonitor.recordApiResponseTime('/admin/service/users/bulk-leaps', 'SERVICE', Date.now() - start, 200)
+  const { recordSLO } = await import('@/lib/server/obs')
+  recordSLO('/admin/service/users/bulk-leaps', start, 200)
   return results
 }
 
@@ -314,7 +313,7 @@ export async function getUserLeapsProfileService(id: string): Promise<{
       region: true,
     },
   })
-  if (!u) throw new Error('User not found')
+  if (!u) throw new AdminError('NOT_FOUND', 'User not found')
   return {
     id: u.id,
     email: u.email,

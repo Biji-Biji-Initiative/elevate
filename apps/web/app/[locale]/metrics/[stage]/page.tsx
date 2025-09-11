@@ -1,13 +1,17 @@
 import { Suspense } from 'react'
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment */
 
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { auth } from '@clerk/nextjs/server'
 
 import { SignedIn } from '@clerk/nextjs'
 
 import { MetricsChart, StatsGrid, PageLoading } from '@elevate/ui/blocks'
+import { buildQueryString } from '@/lib/utils/query'
+import { safeJsonParse } from '@/lib/utils/safe-json'
+import type { StageMetricsDTO as StageMetrics } from '@elevate/types/dto-mappers'
 
-import { getStageMetricsService } from '@elevate/app-services'
 
 import type { Metadata } from 'next'
 
@@ -21,29 +25,7 @@ interface MetricsPageProps {
   }>
 }
 
-interface StageMetrics {
-  stage: string
-  totalSubmissions: number
-  approvedSubmissions: number
-  pendingSubmissions: number
-  rejectedSubmissions: number
-  avgPointsEarned: number
-  uniqueEducators: number
-  topSchools: Array<{
-    name: string
-    count: number
-  }>
-  cohortBreakdown: Array<{
-    cohort: string
-    count: number
-  }>
-  monthlyTrend: Array<{
-    month: string
-    submissions: number
-    approvals: number
-  }>
-  completionRate: number
-}
+// Using shared DTO type "StageMetrics"
 
 const validStages = ['learn', 'explore', 'amplify', 'present', 'shine'] as const
 
@@ -88,8 +70,14 @@ const stageInfo = {
 
 async function fetchStageMetrics(stage: string): Promise<StageMetrics | null> {
   if (!isValidStage(stage)) return null
-  const dto = await getStageMetricsService(stage)
-  return dto as unknown as StageMetrics
+  const qs = buildQueryString({ stage })
+  const res = await fetch(`/api/metrics?${qs}`, { cache: 'no-store' })
+  if (!res.ok) return null
+  const text = await res.text()
+  const json = safeJsonParse<{ data?: unknown }>(text)
+  const data = (json && typeof json === 'object' && 'data' in json) ? (json as { data?: unknown }).data : undefined
+  if (!data || typeof data !== 'object') return null
+  return data as StageMetrics
 }
 
 function safeRate(numerator: number, denominator: number): number {
@@ -422,6 +410,23 @@ export async function generateMetadata({
 export default async function MetricsStagePage({ params }: MetricsPageProps) {
   const { stage, locale } = await params
   const stageKey = stage.toLowerCase()
+
+  // Gate signed-in Students away from in-app views; guide unconfirmed Educators
+  try {
+    const { userId } = await auth()
+    if (userId) {
+      const { prisma } = await import('@elevate/db')
+      const u = await prisma.user.findUnique({ where: { id: userId }, select: { user_type: true, user_type_confirmed: true } })
+      if (u?.user_type === 'STUDENT') {
+        redirect(`/${locale}/educators-only`)
+      }
+      if (u?.user_type === 'EDUCATOR' && u.user_type_confirmed === false) {
+        redirect(`/${locale}/onboarding/user-type`)
+      }
+    }
+  } catch {
+    // metrics remains public for anonymous users
+  }
 
   return (
     <Suspense fallback={<PageLoading />}>

@@ -46,7 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 - `[locale]/ClientPage.tsx` contains the interactive UI and calls server actions like `lib/actions/analytics.getAnalyticsAction` to fetch on-demand.
 - Avoid importing `@elevate/admin-core` in client components; use services and actions instead.
 
-Refer to `docs/DEV_TROUBLESHOOTING.md` for additional patterns and common resolutions.
+Refer to `docs/DEV_TROUBLESHOOTING.md` for additional patterns and common resolutions. See also `docs/ADMIN_PATTERNS.md` for quick templates (service + mapper + action).
 
 ## Server-First Patterns (Admin)
 
