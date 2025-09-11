@@ -25,6 +25,8 @@ const nextConfig = {
 
   // React 19 and Next.js 15 configuration with Turbopack
   experimental: {
+    // Allow all hosts for Replit proxy compatibility
+    allowedHosts: true,
     reactCompiler: false, // Disable React Compiler for now
     // Development optimizations
     optimizePackageImports: [
