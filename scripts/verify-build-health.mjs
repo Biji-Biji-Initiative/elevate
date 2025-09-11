@@ -17,7 +17,6 @@ async function verifyBuildHealth() {
   console.log('🔍 Verifying build health...\n');
   
   let hasErrors = false;
-  let warnings = [];
   
   try {
     // Find all workspace packages
@@ -99,59 +98,13 @@ function validatePackageBuild(packageDir, packageJson) {
     }
   }
   
-  // Check package.json exports
-  if (packageJson.exports) {
-    const exportErrors = validateExports(packageDir, packageJson.exports);
-    errors.push(...exportErrors);
-  }
+  // Note: Export validation is handled separately by 'pnpm run verify:exports'
   
   return errors;
 }
 
-function validateExports(packageDir, exports) {
-  const errors = [];
-  
-  function checkExportPath(exportPath, context) {
-    if (typeof exportPath === 'string') {
-      // Skip special exports like "./package.json"
-      if (exportPath === './package.json' || exportPath.startsWith('./') === false) {
-        return;
-      }
-      
-      const fullPath = resolve(packageDir, exportPath);
-      if (!existsSync(fullPath)) {
-        errors.push(`Export "${context}" points to non-existent file: ${exportPath}`);
-      }
-    } else if (typeof exportPath === 'object') {
-      // Handle conditional exports like { "import": "./dist/js/index.js", "types": "./dist/types/index.d.ts" }
-      Object.entries(exportPath).forEach(([condition, path]) => {
-        checkExportPath(path, `${context} (${condition})`);
-      });
-    }
-  }
-  
-  // Handle different export formats
-  if (typeof exports === 'string') {
-    checkExportPath(exports, 'main');
-  } else if (Array.isArray(exports)) {
-    exports.forEach((exp, index) => checkExportPath(exp, `export[${index}]`));
-  } else if (typeof exports === 'object') {
-    Object.entries(exports).forEach(([key, value]) => {
-      checkExportPath(value, key);
-    });
-  }
-  
-  return errors;
-}
-
-function checkFileSize(filePath) {
-  try {
-    const stats = statSync(filePath);
-    return stats.size;
-  } catch {
-    return 0;
-  }
-}
+// Note: This script focuses on build artifacts, not export validation
+// Export validation is handled by scripts/validate-exports.mjs
 
 // Run verification
 verifyBuildHealth();

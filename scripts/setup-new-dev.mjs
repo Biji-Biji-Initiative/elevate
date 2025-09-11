@@ -105,7 +105,7 @@ async function runSetup() {
 }
 
 // Preflight checks
-function preflightChecks() {
+async function preflightChecks() {
   console.log('🔍 Running preflight checks...');
   
   // Check Node.js version
@@ -121,7 +121,7 @@ function preflightChecks() {
   
   // Check if pnpm is available
   try {
-    execAsync('pnpm --version');
+    await execAsync('pnpm --version');
     console.log('✅ pnpm is available');
   } catch (error) {
     console.error('❌ pnpm is not installed. Please install it: npm install -g pnpm');
@@ -138,5 +138,12 @@ function preflightChecks() {
 }
 
 // Run setup
-preflightChecks();
-runSetup();
+async function main() {
+  await preflightChecks();
+  await runSetup();
+}
+
+main().catch(error => {
+  console.error('Setup failed:', error.message);
+  process.exit(1);
+});

@@ -30,6 +30,7 @@ async function validateTsConfig() {
       hasErrors = true;
     } else {
       hasErrors = validateProjectReferences(rootTsConfig.references) || hasErrors;
+      hasErrors = validateCircularDependencies(rootTsConfig.references) || hasErrors;
     }
     
     // Find all workspace packages
@@ -107,8 +108,13 @@ function validateWorkspacePackages(packageDirs, references) {
       const expectedReference = resolve(packageDir, 'tsconfig.build.json');
       
       if (!referencePaths.includes(expectedReference)) {
-        console.log(`⚠️  Package ${packageName} has tsconfig.build.json but is not referenced in root tsconfig.json`);
-        // This might be intentional for apps, so it's a warning not an error
+        const packageJson = JSON.parse(readFileSync(packagePath, 'utf8'));
+        if (packageJson.name?.startsWith('@elevate/')) {
+          console.log(`❌ Library ${packageName} has tsconfig.build.json but is not referenced in root tsconfig.json`);
+          hasErrors = true;
+        } else {
+          console.log(`⚠️  Package ${packageName} has tsconfig.build.json but is not referenced in root tsconfig.json`);
+        }
       }
       
     } catch (error) {
@@ -128,6 +134,116 @@ function validateWorkspacePackages(packageDirs, references) {
   }
   
   return hasErrors;
+}
+
+function validateCircularDependencies(references) {
+  console.log('\n🔄 Checking for circular dependencies...');
+  let hasErrors = false;
+  
+  try {
+    // Build dependency graph
+    const graph = buildDependencyGraph(references);
+    const cycles = findCircularDependencies(graph);
+    
+    if (cycles.length > 0) {
+      console.log('❌ Circular dependencies found:');
+      cycles.forEach((cycle, index) => {
+        console.log(`   Cycle ${index + 1}: ${cycle.join(' → ')}`);
+      });
+      hasErrors = true;
+    } else {
+      console.log('✅ No circular dependencies found');
+    }
+  } catch (error) {
+    console.log(`❌ Failed to check circular dependencies: ${error.message}`);
+    hasErrors = true;
+  }
+  
+  return hasErrors;
+}
+
+function buildDependencyGraph(references) {
+  const graph = new Map();
+  
+  // Initialize nodes
+  references.forEach(ref => {
+    const configPath = resolve(rootDir, ref.path);
+    graph.set(configPath, new Set());
+  });
+  
+  // Build edges by reading each tsconfig and its references
+  references.forEach(ref => {
+    const configPath = resolve(rootDir, ref.path);
+    
+    try {
+      const config = JSON.parse(readFileSync(configPath, 'utf8'));
+      const configDir = dirname(configPath);
+      
+      if (config.references) {
+        config.references.forEach(childRef => {
+          const childPath = resolve(configDir, childRef.path);
+          if (graph.has(childPath)) {
+            graph.get(configPath).add(childPath);
+          }
+        });
+      }
+    } catch (error) {
+      // Skip files that can't be read
+    }
+  });
+  
+  return graph;
+}
+
+function findCircularDependencies(graph) {
+  const cycles = [];
+  const visited = new Set();
+  const recursionStack = new Set();
+  const currentPath = [];
+  
+  function dfs(node) {
+    if (recursionStack.has(node)) {
+      // Found a cycle - extract the cycle from currentPath
+      const cycleStart = currentPath.indexOf(node);
+      if (cycleStart !== -1) {
+        const cycle = currentPath.slice(cycleStart).map(path => {
+          const relativePath = path.replace(rootDir + '/', '');
+          return relativePath;
+        });
+        cycle.push(cycle[0]); // Complete the cycle
+        cycles.push(cycle);
+      }
+      return true;
+    }
+    
+    if (visited.has(node)) {
+      return false;
+    }
+    
+    visited.add(node);
+    recursionStack.add(node);
+    currentPath.push(node);
+    
+    const neighbors = graph.get(node) || new Set();
+    for (const neighbor of neighbors) {
+      if (dfs(neighbor)) {
+        return true;
+      }
+    }
+    
+    recursionStack.delete(node);
+    currentPath.pop();
+    return false;
+  }
+  
+  // Check all nodes
+  for (const node of graph.keys()) {
+    if (!visited.has(node)) {
+      dfs(node);
+    }
+  }
+  
+  return cycles;
 }
 
 // Run validation

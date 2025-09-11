@@ -14,6 +14,16 @@ pnpm run validate:tsconfig  # Check for duplicates
 # Fix any duplicates found in root tsconfig.json
 ```
 
+### Circular dependency errors
+
+**Symptoms**: TypeScript build hangs or fails with circular dependency errors
+**Root Cause**: Packages reference each other in a cycle (A → B → C → A)
+**Solution**: 
+```bash
+pnpm run validate:tsconfig  # Check for circular dependencies
+# Restructure packages to break the cycle
+```
+
 ### "Module not found: Can't resolve '@elevate/...' "
 
 **Symptoms**: Next.js can't import workspace packages
