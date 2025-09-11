@@ -177,6 +177,20 @@ export function withRoleGuard<P extends object>(
       return <div>Please sign in to access this page.</div>
     }
 
+    // Development-only override: if the signed-in email is listed in
+    // NEXT_PUBLIC_ADMIN_EMAILS, allow access regardless of role checks.
+    if (process.env.NODE_ENV === 'development') {
+      const list = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
+        .toLowerCase()
+        .split(',')
+        .map((e) => e.trim())
+        .filter(Boolean)
+      const emailLc = (auth.email || '').toLowerCase()
+      if (emailLc && list.includes(emailLc)) {
+        return <Component {...props} />
+      }
+    }
+
     if (!requiredRoles.some((role) => auth.hasRole(role))) {
       return <div>You don't have permission to access this page.</div>
     }

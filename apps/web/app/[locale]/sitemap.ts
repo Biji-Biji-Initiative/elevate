@@ -20,6 +20,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'daily',
         priority: 1.0,
       },
+      ...(process.env.NEXT_PUBLIC_ENABLE_API_DOCS === 'true'
+        ? ([
+            {
+              url: `${baseUrl}/docs`,
+              lastModified: new Date(),
+              changeFrequency: 'weekly',
+              priority: 0.3,
+            },
+          ] as MetadataRoute.Sitemap)
+        : ([] as MetadataRoute.Sitemap)),
       {
         url: `${baseUrl}/leaderboard`,
         lastModified: new Date(),

@@ -43,7 +43,8 @@
     }
   },
   "scripts": {
-    "build": "pnpm run build:types && tsup --config tsup.config.ts",
+    "build:js": "tsup --config tsup.config.ts",
+    "build": "pnpm run build:types && pnpm run build:js",
     "build:types": "tsc -b tsconfig.build.json",
     "clean": "rm -rf dist",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --max-warnings 0",

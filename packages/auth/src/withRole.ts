@@ -2,7 +2,6 @@ import { auth } from '@clerk/nextjs/server'
 
 import {
   parseClerkPublicMetadata,
-  parseClerkEmailAddress,
   safeParseRole,
   hasRole,
   type RoleName,
@@ -17,12 +16,23 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   const { userId, sessionClaims } = await auth()
   if (!userId) return null
 
-  const publicMetadata = parseClerkPublicMetadata(sessionClaims?.publicMetadata)
+  const publicMetadata = parseClerkPublicMetadata(
+    (sessionClaims as unknown as { publicMetadata?: unknown })?.publicMetadata,
+  )
   let role = safeParseRole(publicMetadata.role)
-  const email = parseClerkEmailAddress(sessionClaims?.primaryEmailAddress)
-  const name = `${sessionClaims?.firstName ?? ''} ${
-    sessionClaims?.lastName ?? ''
-  }`.trim()
+  // In Clerk v6, email might be in different places in sessionClaims
+  const emailRaw =
+    (sessionClaims as Record<string, unknown> | undefined)?.email ??
+    (sessionClaims as Record<string, unknown> | undefined)?.primaryEmailAddress ??
+    (sessionClaims as Record<string, unknown> | undefined)?.emailAddress
+  const email = typeof emailRaw === 'string' ? emailRaw : undefined
+  const first = typeof (sessionClaims as Record<string, unknown> | undefined)?.firstName === 'string'
+    ? ((sessionClaims as Record<string, unknown>).firstName as string)
+    : ''
+  const last = typeof (sessionClaims as Record<string, unknown> | undefined)?.lastName === 'string'
+    ? ((sessionClaims as Record<string, unknown>).lastName as string)
+    : ''
+  const name = `${first} ${last}`.trim()
 
   // Development-only override: if the signed-in email is listed in
   // NEXT_PUBLIC_ADMIN_EMAILS, elevate to superadmin locally to unblock
@@ -39,6 +49,14 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       if (allow.has(email.toLowerCase())) {
         role = 'superadmin'
       }
+    }
+  }
+
+  // Development-only override: hardcoded userId bypass for development
+  if (process.env.NODE_ENV === 'development') {
+    const devAdminUserIds = ['user_328teXv7Od0N4I9ck6W7Q65SuaL']
+    if (devAdminUserIds.includes(userId)) {
+      role = 'superadmin'
     }
   }
 

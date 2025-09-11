@@ -4,17 +4,6 @@
   "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
-  "functions": {
-    "apps/web/app/api/**/*.ts": {
-      "maxDuration": 30
-    },
-    "apps/web/app/api/cron/**/*.ts": {
-      "maxDuration": 60
-    },
-    "apps/web/app/api/admin/**/*.ts": {
-      "maxDuration": 60
-    }
-  },
   "crons": [
     {
       "path": "/api/cron/refresh-leaderboards",
@@ -41,9 +30,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "TURBO_TOKEN": "@turbo_token",
-    "TURBO_TEAM": "@turbo_team"
-  }
+  ]
 }

@@ -11,7 +11,7 @@ import type {
   SubmissionsQuery,
   UsersQuery,
   AnalyticsQuery,
-} from '@/lib/admin-client'
+} from '@elevate/types/admin-api-types'
 
 import {
   AdminSubmissionSchema,

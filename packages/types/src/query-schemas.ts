@@ -44,6 +44,8 @@ export type AdminSubmissionsQuery = z.infer<typeof AdminSubmissionsQuerySchema>
 export const AdminUsersQuerySchema = z.object({
   search: z.string().max(200).trim().optional().default(''),
   role: RoleFilterSchema.default('ALL'),
+  userType: z.enum(['ALL', 'EDUCATOR', 'STUDENT']).default('ALL'),
+  kajabi: z.enum(['ALL', 'LINKED', 'UNLINKED']).default('ALL'),
   cohort: z.string().max(100).trim().optional().default('ALL'),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),

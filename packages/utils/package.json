@@ -36,7 +36,8 @@
     }
   },
   "scripts": {
-    "build": "pnpm run build:types && tsup",
+    "build:js": "tsup --config tsup.config.ts",
+    "build": "pnpm run build:types && pnpm run build:js",
     "build:types": "tsc -b tsconfig.build.json",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit"

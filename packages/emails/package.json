@@ -14,7 +14,8 @@
   "types": "./dist/types/index.d.ts",
   "scripts": {
     "dev": "echo 'Email templates ready'",
-    "build": "pnpm run build:types && tsup --config tsup.config.ts",
+    "build:js": "tsup --config tsup.config.ts",
+    "build": "pnpm run build:types && pnpm run build:js",
     "clean": "rm -rf dist",
     "export": "echo 'Email templates exported'",
     "build:types": "tsc -b tsconfig.build.json",

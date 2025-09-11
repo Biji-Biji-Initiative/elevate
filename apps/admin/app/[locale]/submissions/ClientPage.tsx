@@ -4,22 +4,23 @@ import React, { useCallback, useMemo, useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
+import { reviewSubmissionAction, bulkReviewAction, getSubmissionByIdAction, listSubmissionsAction } from '@/lib/actions/submissions'
 import { toMsg } from '@/lib/errors'
+import { useAdminFilters } from '@/lib/hooks/useAdminFilters'
+import { useModal } from '@/lib/hooks/useModal'
 import { toSubmissionRowUI, type SubmissionRowUI } from '@/lib/ui-types'
 import {
   ACTIVITY_CODES,
   SUBMISSION_STATUSES,
   ACTIVITY_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
-  AMPLIFY,
 } from '@elevate/types'
 import type { SubmissionsQuery, AdminSubmission, Pagination } from '@elevate/types/admin-api-types'
-import { reviewSubmissionAction, bulkReviewAction, getSubmissionByIdAction, listSubmissionsAction } from '@/lib/actions/submissions'
 import { Button, Input, Textarea, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 import { DataTable, StatusBadge, Modal, ConfirmModal, type Column } from '@elevate/ui/blocks'
 
 // Filters model for client UI state
-interface Filters {
+interface Filters extends Record<string, unknown> {
   status: (typeof STATUS_FILTER_OPTIONS)[number]
   activity: (typeof ACTIVITY_FILTER_OPTIONS)[number]
   search: string
@@ -52,7 +53,7 @@ export function ClientPage({
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [cohorts] = useState<string[]>(initialCohorts)
 
-  const [filters, setFilters] = useState<Filters>({
+  const { filters, setFilters } = useAdminFilters<Filters>({
     status: STATUS_FILTER_OPTIONS[1], // PENDING
     activity: ACTIVITY_FILTER_OPTIONS[0], // ALL
     search: '',
@@ -61,7 +62,96 @@ export function ClientPage({
     sortOrder: 'desc',
   })
 
-  const setErrorString = (msg: string) => setError(msg)
+  const setErrorString = useCallback((msg: string) => setError(msg), [])
+
+  // columns defined later after callbacks are ready
+
+  const fetchSubmissions = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params: SubmissionsQuery = {
+        page: pagination.page,
+        limit: pagination.limit,
+        status: filters.status !== 'ALL' ? filters.status : undefined,
+        activity: filters.activity !== 'ALL' ? filters.activity : undefined,
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder,
+        search: filters.search || undefined,
+        cohort: filters.cohort !== 'ALL' ? filters.cohort : undefined,
+      }
+
+      const result = await listSubmissionsAction(params as Record<string, string | number>)
+      setSubmissions(result.submissions.map(toSubmissionRowUI))
+      setPagination((prev) => {
+        const page = result.pagination.page ?? prev.page
+        const limit = result.pagination.limit ?? prev.limit
+        const total = result.pagination.total ?? prev.total ?? 0
+        const pages = Math.ceil(total / limit)
+        return { ...prev, page, limit, total, pages }
+      })
+    } catch (error: unknown) {
+      const msg: string = toMsg('Fetch submissions', error)
+      setErrorString(msg)
+    } finally {
+      setLoading(false)
+    }
+  }, [pagination.page, pagination.limit, filters, setErrorString])
+
+  const handlePageChange = (page: number) => {
+    setPagination((prev) => ({ ...prev, page }))
+  }
+
+  const isValidSortKey = (value: string): value is Filters['sortBy'] =>
+    value === 'created_at' || value === 'updated_at' || value === 'status'
+
+  const handleSort = (sortBy: string, sortOrder: 'asc' | 'desc') => {
+    setFilters((prev) => ({
+      ...prev,
+      sortBy: isValidSortKey(sortBy) ? sortBy : prev.sortBy,
+      sortOrder,
+    }))
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const reviewModal = useModal<{ submission?: AdminSubmission; action: 'approve' | 'reject' }>()
+  const [reviewLoading, setReviewLoading] = useState(false)
+  const bulkModal = useModal<'approve' | 'reject'>()
+  const [reviewNote, setReviewNote] = useState('')
+  const [pointAdjustment, setPointAdjustment] = useState<number | ''>('')
+  const [processing, setProcessing] = useState(false)
+
+  const getBasePoints = (submission: AdminSubmission): number => {
+    const code = submission.activity.code
+    const payload = submission.payload
+    const isLearn = code === ACTIVITY_CODES[0] // LEARN
+    if (isLearn) return submission.activity.default_points ?? 0
+    const defaultPoints = submission.activity.default_points ?? 0
+    if (typeof payload === 'object' && payload && 'points' in payload) {
+      const p = (payload as Record<string, unknown>).points
+      if (typeof p === 'number') return p
+    }
+    return defaultPoints
+  }
+
+  const openReviewModalById = useCallback(
+    async (submissionId: string, action: 'approve' | 'reject') => {
+      setReviewLoading(true)
+      reviewModal.open({ action })
+      setReviewNote('')
+      setPointAdjustment('')
+      try {
+        const detail = await getSubmissionByIdAction(submissionId)
+        reviewModal.open({ action, submission: detail.submission })
+      } catch (error: unknown) {
+        const msg: string = toMsg('Fetch submission for review', error)
+        setErrorString(msg)
+        reviewModal.close()
+      } finally {
+        setReviewLoading(false)
+      }
+    },
+    [reviewModal, setReviewLoading, setReviewNote, setPointAdjustment, setErrorString],
+  )
 
   const columns: ReadonlyArray<Column<SubmissionRow>> = useMemo(
     () => [
@@ -178,110 +268,17 @@ export function ClientPage({
         sortable: false,
       },
     ],
-    [],
+    [openReviewModalById, router],
   )
-
-  const fetchSubmissions = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params: SubmissionsQuery = {
-        page: pagination.page,
-        limit: pagination.limit,
-        status: filters.status !== 'ALL' ? filters.status : undefined,
-        activity: filters.activity !== 'ALL' ? filters.activity : undefined,
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder,
-        search: filters.search || undefined,
-        cohort: filters.cohort !== 'ALL' ? filters.cohort : undefined,
-      }
-
-      const result = await listSubmissionsAction(params as Record<string, string | number>)
-      setSubmissions(result.submissions.map(toSubmissionRowUI))
-      setPagination((prev) => {
-        const page = result.pagination.page ?? prev.page
-        const limit = result.pagination.limit ?? prev.limit
-        const total = result.pagination.total ?? prev.total ?? 0
-        const pages = Math.ceil(total / limit)
-        return { ...prev, page, limit, total, pages }
-      })
-    } catch (error: unknown) {
-      const msg: string = toMsg('Fetch submissions', error)
-      setErrorString(msg)
-    } finally {
-      setLoading(false)
-    }
-  }, [pagination.page, pagination.limit, filters])
-
-  const handlePageChange = (page: number) => {
-    setPagination((prev) => ({ ...prev, page }))
-  }
-
-  const isValidSortKey = (value: string): value is Filters['sortBy'] =>
-    value === 'created_at' || value === 'updated_at' || value === 'status'
-
-  const handleSort = (sortBy: string, sortOrder: 'asc' | 'desc') => {
-    setFilters((prev) => ({
-      ...prev,
-      sortBy: isValidSortKey(sortBy) ? sortBy : prev.sortBy,
-      sortOrder,
-    }))
-    setPagination((prev) => ({ ...prev, page: 1 }))
-  }
-
-  const [reviewModal, setReviewModal] = useState<{
-    isOpen: boolean
-    submission?: AdminSubmission
-    action: 'approve' | 'reject'
-  }>({ isOpen: false, action: 'approve' })
-  const [reviewLoading, setReviewLoading] = useState(false)
-  const [bulkModal, setBulkModal] = useState<{ isOpen: boolean; action: 'approve' | 'reject' }>(
-    { isOpen: false, action: 'approve' },
-  )
-  const [reviewNote, setReviewNote] = useState('')
-  const [pointAdjustment, setPointAdjustment] = useState<number | ''>('')
-  const [processing, setProcessing] = useState(false)
-
-  const getBasePoints = (submission: AdminSubmission): number => {
-    const code = submission.activity.code
-    const payload = submission.payload
-    const isLearn = code === ACTIVITY_CODES[0] // LEARN
-    if (isLearn) return AMPLIFY.DEFAULT_POINTS
-    const defaultPoints = submission.activity.default_points ?? 0
-    if (typeof payload === 'object' && payload && 'points' in payload) {
-      const p = (payload as Record<string, unknown>).points
-      if (typeof p === 'number') return p
-    }
-    return defaultPoints
-  }
-
-  const openReviewModalById = async (
-    submissionId: string,
-    action: 'approve' | 'reject',
-  ) => {
-    setReviewLoading(true)
-    setReviewModal({ isOpen: true, action })
-    setReviewNote('')
-    setPointAdjustment('')
-    try {
-      const detail = await getSubmissionByIdAction(submissionId)
-      setReviewModal((prev) => ({ ...prev, submission: detail.submission }))
-    } catch (error: unknown) {
-      const msg: string = toMsg('Fetch submission for review', error)
-      setErrorString(msg)
-      setReviewModal({ isOpen: false, action: 'approve' })
-    } finally {
-      setReviewLoading(false)
-    }
-  }
 
   const closeReviewModal = () => {
-    setReviewModal({ isOpen: false, action: 'approve' })
+    reviewModal.close()
     setReviewNote('')
     setPointAdjustment('')
   }
 
   const handleSingleReview = async () => {
-    if (!reviewModal.submission) return
+    if (!reviewModal.data?.submission) return
     setProcessing(true)
     try {
       const reviewData: {
@@ -290,8 +287,8 @@ export function ClientPage({
         reviewNote?: string
         pointAdjustment?: number
       } = {
-        submissionId: reviewModal.submission.id,
-        action: reviewModal.action,
+        submissionId: reviewModal.data.submission.id,
+        action: reviewModal.data.action,
         ...(reviewNote ? { reviewNote } : {}),
         ...(pointAdjustment === '' ? {} : { pointAdjustment: Number(pointAdjustment) }),
       }
@@ -316,13 +313,13 @@ export function ClientPage({
         reviewNote?: string
       } = {
         submissionIds: Array.from(selectedRows),
-        action: bulkModal.action,
+        action: bulkModal.data ?? 'approve',
         ...(reviewNote ? { reviewNote } : {}),
       }
       await bulkReviewAction(bulkReviewData)
       setSelectedRows(new Set())
       await fetchSubmissions()
-      setBulkModal({ isOpen: false, action: 'approve' })
+      bulkModal.close()
     } catch (error: unknown) {
       const msg: string = toMsg('Bulk review', error)
       setErrorString(msg)
@@ -343,28 +340,31 @@ export function ClientPage({
 
       {/* Error */}
       {error && (
-        <Alert
-          variant="destructive"
-          title="Something went wrong"
-          description={error}
-          onClose={() => setError(null)}
-        />
+        <Alert variant="destructive">
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-semibold">Something went wrong</h3>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+            <button onClick={() => setError(null)} className="ml-4 text-lg">×</button>
+          </div>
+        </Alert>
       )}
 
       {/* Filters */}
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <span id="submissions-filter-status-label" className="block text-sm font-medium text-gray-700 mb-1">
               Status
-            </label>
+            </span>
             <Select
               value={filters.status}
               onValueChange={(v) =>
-                setFilters((prev) => ({ ...prev, status: v }))
+                setFilters((prev) => ({ ...prev, status: v as typeof prev.status }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="submissions-filter-status-label">
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
@@ -378,16 +378,16 @@ export function ClientPage({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <span id="submissions-filter-activity-label" className="block text-sm font-medium text-gray-700 mb-1">
               Activity
-            </label>
+            </span>
             <Select
               value={filters.activity}
               onValueChange={(v) =>
-                setFilters((prev) => ({ ...prev, activity: v }))
+                setFilters((prev) => ({ ...prev, activity: v as typeof prev.activity }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="submissions-filter-activity-label">
                 <SelectValue placeholder="Select activity" />
               </SelectTrigger>
               <SelectContent>
@@ -401,16 +401,16 @@ export function ClientPage({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <span id="submissions-filter-cohort-label" className="block text-sm font-medium text-gray-700 mb-1">
               Cohort
-            </label>
+            </span>
             <Select
               value={filters.cohort}
               onValueChange={(v) =>
                 setFilters((prev) => ({ ...prev, cohort: v }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="submissions-filter-cohort-label">
                 <SelectValue placeholder="All cohorts" />
               </SelectTrigger>
               <SelectContent>
@@ -425,9 +425,9 @@ export function ClientPage({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <span id="submissions-filter-sortby-label" className="block text-sm font-medium text-gray-700 mb-1">
               Sort By
-            </label>
+            </span>
             <Select
               value={filters.sortBy}
               onValueChange={(v) =>
@@ -437,7 +437,7 @@ export function ClientPage({
                 }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="submissions-filter-sortby-label">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -449,16 +449,16 @@ export function ClientPage({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <span id="submissions-filter-order-label" className="block text-sm font-medium text-gray-700 mb-1">
               Order
-            </label>
+            </span>
             <Select
               value={filters.sortOrder}
               onValueChange={(v: 'asc' | 'desc') =>
                 setFilters((prev) => ({ ...prev, sortOrder: v }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-labelledby="submissions-filter-order-label">
                 <SelectValue placeholder="Sort order" />
               </SelectTrigger>
               <SelectContent>
@@ -469,7 +469,7 @@ export function ClientPage({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="submissions-filter-search" className="block text-sm font-medium text-gray-700 mb-1">
               Search
             </label>
             <Input
@@ -501,7 +501,7 @@ export function ClientPage({
                   variant="default"
                   className="bg-emerald-600"
                   onClick={() => {
-                    setBulkModal({ isOpen: true, action: 'approve' })
+                    bulkModal.open('approve')
                     setReviewNote('')
                   }}
                 >
@@ -511,7 +511,7 @@ export function ClientPage({
                   variant="default"
                   className="bg-red-600"
                   onClick={() => {
-                    setBulkModal({ isOpen: true, action: 'reject' })
+                    bulkModal.open('reject')
                     setReviewNote('')
                   }}
                 >
@@ -553,7 +553,7 @@ export function ClientPage({
       <Modal
         isOpen={reviewModal.isOpen}
         onClose={closeReviewModal}
-        title={`${reviewModal.action === 'approve' ? 'Approve' : 'Reject'} Submission`}
+        title={`${(reviewModal.data?.action ?? 'approve') === 'approve' ? 'Approve' : 'Reject'} Submission`}
         size="md"
         actions={
           <div className="space-x-3">
@@ -564,11 +564,11 @@ export function ClientPage({
               variant="default"
               onClick={handleSingleReview}
               disabled={processing}
-              className={reviewModal.action === 'approve' ? 'bg-emerald-600' : 'bg-red-600'}
+              className={(reviewModal.data?.action ?? 'approve') === 'approve' ? 'bg-emerald-600' : 'bg-red-600'}
             >
               {processing
                 ? 'Processing...'
-                : reviewModal.action === 'approve'
+                : (reviewModal.data?.action ?? 'approve') === 'approve'
                 ? 'Approve'
                 : 'Reject'}
             </Button>
@@ -578,30 +578,30 @@ export function ClientPage({
         {reviewLoading && (
           <div className="py-6 text-sm text-gray-600">Loading submission…</div>
         )}
-        {reviewModal.submission && !reviewLoading && (
+        {reviewModal.data?.submission && !reviewLoading && (
           <div className="space-y-4">
             <div>
               <h4 className="font-medium text-gray-900 mb-2">Submission Details</h4>
               <div className="bg-gray-50 p-3 rounded-md text-sm">
                 <p>
-                  <strong>Participant:</strong> {reviewModal.submission.user.name}
+                  <strong>Participant:</strong> {reviewModal.data.submission.user.name}
                 </p>
                 <p>
-                  <strong>Activity:</strong> {reviewModal.submission.activity.name}
+                  <strong>Activity:</strong> {reviewModal.data.submission.activity.name}
                 </p>
                 <p>
                   <strong>Submitted:</strong>{' '}
-                  {new Date(reviewModal.submission.created_at).toLocaleDateString()}
+                  {new Date(reviewModal.data.submission.created_at).toLocaleDateString()}
                 </p>
-                {reviewModal.action === 'approve' && (
+                {(reviewModal.data.action === 'approve') && (
                   <p>
-                    <strong>Base Points:</strong> {getBasePoints(reviewModal.submission)}
+                    <strong>Base Points:</strong> {getBasePoints(reviewModal.data.submission)}
                   </p>
                 )}
               </div>
             </div>
 
-            {reviewModal.action === 'approve' && (
+            {(reviewModal.data.action === 'approve') && (
               <div>
                 <label htmlFor="point-adjustment-input" className="block text-sm font-medium text-gray-700 mb-1">
                   Point Adjustment (Optional)
@@ -609,7 +609,7 @@ export function ClientPage({
                 <Input
                   id="point-adjustment-input"
                   type="number"
-                  placeholder={`Base points: ${getBasePoints(reviewModal.submission)}`}
+                  placeholder={`Base points: ${getBasePoints(reviewModal.data.submission)}`}
                   value={pointAdjustment}
                   onChange={(e) => setPointAdjustment(e.target.value === '' ? '' : Number(e.target.value))}
                 />
@@ -638,11 +638,11 @@ export function ClientPage({
       {/* Bulk Action Modal */}
       <ConfirmModal
         isOpen={bulkModal.isOpen}
-        onClose={() => setBulkModal({ isOpen: false, action: 'approve' })}
+        onClose={() => bulkModal.close()}
         onConfirm={handleBulkAction}
-        title={`Bulk ${bulkModal.action === 'approve' ? 'Approve' : 'Reject'}`}
-        message={`Are you sure you want to ${bulkModal.action} ${selectedRows.size} submissions?`}
-        confirmText={bulkModal.action === 'approve' ? 'Approve All' : 'Reject All'}
+        title={`Bulk ${(bulkModal.data ?? 'approve') === 'approve' ? 'Approve' : 'Reject'}`}
+        message={`Are you sure you want to ${bulkModal.data ?? 'approve'} ${selectedRows.size} submissions?`}
+        confirmText={(bulkModal.data ?? 'approve') === 'approve' ? 'Approve All' : 'Reject All'}
         isLoading={processing}
       />
     </div>

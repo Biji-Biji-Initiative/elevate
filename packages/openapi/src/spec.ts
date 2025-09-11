@@ -90,6 +90,135 @@ registry.registerPath({
   },
 })
 
+// Admin: User detail (GET/PATCH)
+registry.registerPath({
+  method: 'get',
+  path: '/api/admin/users/{id}',
+  description: 'Get admin view of a single user by id',
+  summary: 'Admin User Detail',
+  tags: ['Admin'],
+  security: [{ ClerkAuth: [] }],
+  request: { params: z.object({ id: z.string() }) },
+  responses: {
+    200: {
+      description: 'OK',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema.extend({
+            data: z.object({
+              user: z.object({
+                id: z.string(),
+                email: z.string(),
+                name: z.string().nullable().optional(),
+                handle: z.string().nullable().optional(),
+                user_type: z.enum(['EDUCATOR', 'STUDENT']),
+                user_type_confirmed: z.boolean(),
+                school: z.string().nullable().optional(),
+                region: z.string().nullable().optional(),
+                kajabi_contact_id: z.string().nullable().optional(),
+                created_at: z.string().datetime(),
+              }),
+            }),
+          }),
+        },
+      },
+    },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    404: { description: 'Not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+})
+
+registry.registerPath({
+  method: 'patch',
+  path: '/api/admin/users/{id}',
+  description: 'Update user_type, user_type_confirmed, school, or region',
+  summary: 'Admin Update User Profile Fields',
+  tags: ['Admin'],
+  security: [{ ClerkAuth: [] }],
+  request: {
+    params: z.object({ id: z.string() }),
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            userType: z.enum(['EDUCATOR', 'STUDENT']).optional(),
+            userTypeConfirmed: z.boolean().optional(),
+            school: z.string().optional(),
+            region: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Updated',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema.extend({
+            data: z.object({
+              user: z.object({
+                id: z.string(),
+                email: z.string(),
+                name: z.string().nullable().optional(),
+                handle: z.string().nullable().optional(),
+                user_type: z.enum(['EDUCATOR', 'STUDENT']),
+                user_type_confirmed: z.boolean(),
+                school: z.string().nullable().optional(),
+                region: z.string().nullable().optional(),
+                kajabi_contact_id: z.string().nullable().optional(),
+                created_at: z.string().datetime(),
+              }),
+            }),
+          }),
+        },
+      },
+    },
+    400: { description: 'Invalid', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    404: { description: 'Not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+})
+
+// Admin: Bulk LEAPS updates
+registry.registerPath({
+  method: 'post',
+  path: '/api/admin/users/leaps',
+  description: 'Bulk update LEAPS fields (userType, userTypeConfirmed, school, region)',
+  summary: 'Admin Bulk LEAPS Update',
+  tags: ['Admin'],
+  security: [{ ClerkAuth: [] }],
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: z.object({
+            userIds: z.array(z.string()).min(1),
+            userType: z.enum(['EDUCATOR', 'STUDENT']).optional(),
+            userTypeConfirmed: z.boolean().optional(),
+            school: z.string().optional(),
+            region: z.string().optional(),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'Bulk update results',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema.extend({
+            data: z.object({ processed: z.number().int(), failed: z.number().int(), errors: z.array(z.object({ userId: z.string(), error: z.string() })) }),
+          }),
+        },
+      },
+    },
+    400: { description: 'Invalid', content: { 'application/json': { schema: ErrorResponseSchema } } },
+    401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+})
+
 // Admin: Kajabi health
 registry.registerPath({
   method: 'get',
@@ -297,6 +426,38 @@ registry.registerPath({
   },
 })
 
+// Admin: Referrals summary
+registry.registerPath({
+  method: 'get',
+  path: '/api/admin/referrals/summary',
+  description: 'Monthly summary for referrals',
+  summary: 'Admin Referrals Summary',
+  tags: ['Admin'],
+  security: [{ ClerkAuth: [] }],
+  request: {
+    query: z.object({ month: z.string().regex(/^\d{4}-\d{2}$/).openapi({ example: '2025-09' }) }),
+  },
+  responses: {
+    200: {
+      description: 'OK',
+      content: {
+        'application/json': {
+          schema: SuccessResponseSchema.extend({
+            data: z.object({
+              month: z.string(),
+              total: z.number().int(),
+              byType: z.object({ educators: z.number().int(), students: z.number().int() }),
+              uniqueReferrers: z.number().int(),
+              pointsAwarded: z.number().int(),
+              topReferrers: z.array(z.object({ userId: z.string(), points: z.number().int(), user: z.object({ id: z.string(), name: z.string(), email: z.string(), handle: z.string(), user_type: z.enum(['EDUCATOR','STUDENT']) }) })),
+            }),
+          }),
+        },
+      },
+    },
+  },
+})
+
 // Submissions endpoints
 registry.registerPath({
   method: 'post',
@@ -417,6 +578,28 @@ registry.registerPath({
     200: { description: 'OK', content: { 'application/json': { schema: SuccessResponseSchema } } },
     400: { description: 'Bad Request', content: { 'application/json': { schema: ErrorResponseSchema } } },
     401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+  },
+})
+
+// Schools search
+registry.registerPath({
+  method: 'get',
+  path: '/api/schools',
+  description: 'Autocomplete search for schools by name',
+  summary: 'Schools Search',
+  tags: ['Profile'],
+  request: {
+    query: z.object({
+      q: z.string().min(1).openapi({ description: 'Search query', example: 'Universitas' }),
+      limit: z.number().int().min(1).max(50).optional().openapi({ example: 20 }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'OK',
+      content: { 'application/json': { schema: SuccessResponseSchema.extend({ data: z.array(z.object({ name: z.string(), city: z.string().nullable().optional(), province: z.string().nullable().optional() })) }) } },
+    },
+    400: { description: 'Bad Request', content: { 'application/json': { schema: ErrorResponseSchema } } },
   },
 })
 
@@ -985,6 +1168,8 @@ registry.registerPath({
       role: z
         .enum(['ALL', 'PARTICIPANT', 'REVIEWER', 'ADMIN', 'SUPERADMIN'])
         .optional(),
+      userType: z.enum(['ALL', 'EDUCATOR', 'STUDENT']).optional(),
+      kajabi: z.enum(['ALL', 'LINKED', 'UNLINKED']).optional(),
       cohort: z.string().optional(),
       page: z.coerce.number().int().min(1).optional(),
       limit: z.coerce.number().int().min(1).max(100).optional(),

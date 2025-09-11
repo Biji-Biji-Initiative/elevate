@@ -41,4 +41,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 - Do not import deep internals or `dist/` outputs.
 - Keep server-only modules out of client components.
 
+### Dashboard split (server + client)
+- `[locale]/page.tsx` is now a server component that loads initial analytics and cohorts via `apps/admin/lib/services/*` and renders a client shell.
+- `[locale]/ClientPage.tsx` contains the interactive UI and calls server actions like `lib/actions/analytics.getAnalyticsAction` to fetch on-demand.
+- Avoid importing `@elevate/admin-core` in client components; use services and actions instead.
+
 Refer to `docs/DEV_TROUBLESHOOTING.md` for additional patterns and common resolutions.

@@ -64,205 +64,211 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const logger = await getSafeServerLogger('admin-badges')
-  try {
-    const user = await requireRole('admin')
-    const body: unknown = await request.json()
+  return withRateLimit(request, adminRateLimiter, async () => {
+    try {
+      const user = await requireRole('admin')
+      const body: unknown = await request.json()
 
-    const validation = BadgeSchema.safeParse(body)
-    if (!validation.success) {
-      return createErrorResponse(new Error('Validation failed'), 400)
+      const validation = BadgeSchema.safeParse(body)
+      if (!validation.success) {
+        return createErrorResponse(new Error('Validation failed'), 400)
+      }
+
+      const data = validation.data
+
+      // Check if badge code already exists
+      const existing = await prisma.badge.findUnique({
+        where: { code: data.code },
+      })
+
+      if (existing) {
+        return createErrorResponse(new Error('Badge code already exists'), 400)
+      }
+
+      const badge = await prisma.badge.create({
+        data: {
+          code: data.code,
+          name: data.name,
+          description: data.description,
+          criteria: toPrismaJson(data.criteria) as Prisma.InputJsonValue,
+          icon_url: data.icon_url ?? null,
+        },
+      })
+
+      // Create audit log
+      await prisma.auditLog.create({
+        data: {
+          actor_id: user.userId,
+          action: 'CREATE_BADGE',
+          target_id: badge.code,
+          meta: buildAuditMeta(
+            { entityType: 'badge', entityId: badge.code },
+            {
+              badgeName: badge.name,
+              criteria: badge.criteria,
+            },
+          ) as Prisma.InputJsonValue,
+        },
+      })
+
+      return createSuccessResponse({ message: 'Badge created successfully' })
+    } catch (error) {
+      logger.error(
+        'Admin badges POST failed',
+        error instanceof Error ? error : new Error(String(error)),
+      )
+      return createErrorResponse(error, 500)
     }
-
-    const data = validation.data
-
-    // Check if badge code already exists
-    const existing = await prisma.badge.findUnique({
-      where: { code: data.code },
-    })
-
-    if (existing) {
-      return createErrorResponse(new Error('Badge code already exists'), 400)
-    }
-
-    const badge = await prisma.badge.create({
-      data: {
-        code: data.code,
-        name: data.name,
-        description: data.description,
-        criteria: toPrismaJson(data.criteria) as Prisma.InputJsonValue,
-        icon_url: data.icon_url ?? null,
-      },
-    })
-
-    // Create audit log
-    await prisma.auditLog.create({
-      data: {
-        actor_id: user.userId,
-        action: 'CREATE_BADGE',
-        target_id: badge.code,
-        meta: buildAuditMeta(
-          { entityType: 'badge', entityId: badge.code },
-          {
-            badgeName: badge.name,
-            criteria: badge.criteria,
-          },
-        ) as Prisma.InputJsonValue,
-      },
-    })
-
-    return createSuccessResponse({ message: 'Badge created successfully' })
-  } catch (error) {
-    logger.error(
-      'Admin badges POST failed',
-      error instanceof Error ? error : new Error(String(error)),
-    )
-    return createErrorResponse(error, 500)
-  }
+  })
 }
 
 export async function PATCH(request: NextRequest) {
   const logger = await getSafeServerLogger('admin-badges')
-  try {
-    const user = await requireRole('admin')
-    const body: unknown = await request.json()
+  return withRateLimit(request, adminRateLimiter, async () => {
+    try {
+      const user = await requireRole('admin')
+      const body: unknown = await request.json()
 
-    // Type-safe extraction of code and updates
-    if (!body || typeof body !== 'object') {
-      return createErrorResponse(new Error('Invalid request body'), 400)
-    }
+      // Type-safe extraction of code and updates
+      if (!body || typeof body !== 'object') {
+        return createErrorResponse(new Error('Invalid request body'), 400)
+      }
 
-    const bodyObj = body as Record<string, unknown>
-    const { code, ...updates } = bodyObj
+      const bodyObj = body as Record<string, unknown>
+      const { code, ...updates } = bodyObj
 
-    if (!code || typeof code !== 'string') {
-      return createErrorResponse(
-        new Error('Badge code is required and must be a string'),
-        400,
+      if (!code || typeof code !== 'string') {
+        return createErrorResponse(
+          new Error('Badge code is required and must be a string'),
+          400,
+        )
+      }
+
+      const existing = await prisma.badge.findUnique({
+        where: { code },
+      })
+
+      if (!existing) {
+        return createErrorResponse(new Error('Badge not found'), 404)
+      }
+
+      // Validate updates
+      const updateSchema = BadgeSchema.partial().omit({ code: true })
+      const validation = updateSchema.safeParse(updates)
+
+      if (!validation.success) {
+        return createErrorResponse(new Error('Validation failed'), 400)
+      }
+
+      // Build update data object conditionally to avoid passing undefined
+      const updateData: Prisma.BadgeUpdateInput = {}
+      if (validation.data.name !== undefined)
+        updateData.name = validation.data.name
+      if (validation.data.description !== undefined)
+        updateData.description = validation.data.description
+      if (validation.data.icon_url !== undefined)
+        updateData.icon_url = validation.data.icon_url ?? null
+      if (validation.data.criteria !== undefined) {
+        updateData.criteria = toPrismaJson(
+          validation.data.criteria,
+        ) as Prisma.InputJsonValue
+      }
+
+      await prisma.badge.update({
+        where: { code },
+        data: updateData,
+      })
+
+      // Create audit log
+      await prisma.auditLog.create({
+        data: {
+          actor_id: user.userId,
+          action: 'UPDATE_BADGE',
+          target_id: code,
+          meta: buildAuditMeta(
+            { entityType: 'badge', entityId: code },
+            {
+              updates: validation.data,
+              original: existing,
+            },
+          ) as Prisma.InputJsonValue,
+        },
+      })
+
+      return createSuccessResponse({ message: 'Badge updated successfully' })
+    } catch (error) {
+      logger.error(
+        'Admin badges PATCH failed',
+        error instanceof Error ? error : new Error(String(error)),
       )
+      return createErrorResponse(error, 500)
     }
-
-    const existing = await prisma.badge.findUnique({
-      where: { code },
-    })
-
-    if (!existing) {
-      return createErrorResponse(new Error('Badge not found'), 404)
-    }
-
-    // Validate updates
-    const updateSchema = BadgeSchema.partial().omit({ code: true })
-    const validation = updateSchema.safeParse(updates)
-
-    if (!validation.success) {
-      return createErrorResponse(new Error('Validation failed'), 400)
-    }
-
-    // Build update data object conditionally to avoid passing undefined
-    const updateData: Prisma.BadgeUpdateInput = {}
-    if (validation.data.name !== undefined)
-      updateData.name = validation.data.name
-    if (validation.data.description !== undefined)
-      updateData.description = validation.data.description
-    if (validation.data.icon_url !== undefined)
-      updateData.icon_url = validation.data.icon_url ?? null
-    if (validation.data.criteria !== undefined) {
-      updateData.criteria = toPrismaJson(
-        validation.data.criteria,
-      ) as Prisma.InputJsonValue
-    }
-
-    await prisma.badge.update({
-      where: { code },
-      data: updateData,
-    })
-
-    // Create audit log
-    await prisma.auditLog.create({
-      data: {
-        actor_id: user.userId,
-        action: 'UPDATE_BADGE',
-        target_id: code,
-        meta: buildAuditMeta(
-          { entityType: 'badge', entityId: code },
-          {
-            updates: validation.data,
-            original: existing,
-          },
-        ) as Prisma.InputJsonValue,
-      },
-    })
-
-    return createSuccessResponse({ message: 'Badge updated successfully' })
-  } catch (error) {
-    logger.error(
-      'Admin badges PATCH failed',
-      error instanceof Error ? error : new Error(String(error)),
-    )
-    return createErrorResponse(error, 500)
-  }
+  })
 }
 
 export async function DELETE(request: NextRequest) {
   const logger = await getSafeServerLogger('admin-badges')
-  try {
-    const user = await requireRole('admin')
-    const { searchParams } = new URL(request.url)
-    const queryObj = Object.fromEntries(searchParams)
-    const querySchema = z.object({ code: z.string().min(1) })
-    const queryParsed = querySchema.safeParse(queryObj)
-    if (!queryParsed.success) {
-      return createErrorResponse(new Error('Badge code is required'), 400)
-    }
-    const { code } = queryParsed.data
+  return withRateLimit(request, adminRateLimiter, async () => {
+    try {
+      const user = await requireRole('admin')
+      const { searchParams } = new URL(request.url)
+      const queryObj = Object.fromEntries(searchParams)
+      const querySchema = z.object({ code: z.string().min(1) })
+      const queryParsed = querySchema.safeParse(queryObj)
+      if (!queryParsed.success) {
+        return createErrorResponse(new Error('Badge code is required'), 400)
+      }
+      const { code } = queryParsed.data
 
-    const existing = await prisma.badge.findUnique({
-      where: { code },
-      include: {
-        _count: {
-          select: {
-            earned_badges: true,
+      const existing = await prisma.badge.findUnique({
+        where: { code },
+        include: {
+          _count: {
+            select: {
+              earned_badges: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    if (!existing) {
-      return createErrorResponse(new Error('Badge not found'), 404)
-    }
+      if (!existing) {
+        return createErrorResponse(new Error('Badge not found'), 404)
+      }
 
-    if (existing._count.earned_badges > 0) {
-      return createErrorResponse(
-        new Error('Cannot delete badge that has been earned by users'),
-        400,
+      if (existing._count.earned_badges > 0) {
+        return createErrorResponse(
+          new Error('Cannot delete badge that has been earned by users'),
+          400,
+        )
+      }
+
+      await prisma.badge.delete({
+        where: { code },
+      })
+
+      // Create audit log
+      await prisma.auditLog.create({
+        data: {
+          actor_id: user.userId,
+          action: 'DELETE_BADGE',
+          target_id: code,
+          meta: buildAuditMeta(
+            { entityType: 'badge', entityId: code },
+            {
+              badgeName: existing.name,
+              criteria: existing.criteria,
+            },
+          ) as Prisma.InputJsonValue,
+        },
+      })
+
+      return createSuccessResponse({ message: 'Badge deleted successfully' })
+    } catch (error) {
+      logger.error(
+        'Admin badges DELETE failed',
+        error instanceof Error ? error : new Error(String(error)),
       )
+      return createErrorResponse(error, 500)
     }
-
-    await prisma.badge.delete({
-      where: { code },
-    })
-
-    // Create audit log
-    await prisma.auditLog.create({
-      data: {
-        actor_id: user.userId,
-        action: 'DELETE_BADGE',
-        target_id: code,
-        meta: buildAuditMeta(
-          { entityType: 'badge', entityId: code },
-          {
-            badgeName: existing.name,
-            criteria: existing.criteria,
-          },
-        ) as Prisma.InputJsonValue,
-      },
-    })
-
-    return createSuccessResponse({ message: 'Badge deleted successfully' })
-  } catch (error) {
-    logger.error(
-      'Admin badges DELETE failed',
-      error instanceof Error ? error : new Error(String(error)),
-    )
-    return createErrorResponse(error, 500)
-  }
+  })
 }

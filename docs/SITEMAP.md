@@ -272,13 +272,18 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Last Reviewed**: 2025-09-10
 - **Tags**: archived
 
-### ⚠️ [Archived Document (Archived)](docs/leaps/activity-canon.md)
-- **Status**: deprecated
+### ✅ [LEAPS Activity Canon (Authoritative)](docs/leaps/activity-canon.md)
+- **Status**: active
 - **Owner**: platform-team
-- **Last Reviewed**: 2025-09-10
-- **Tags**: archived
+- **Last Reviewed**: 2025-09-11
+- **Tags**: leaps, scoring, canon
 
 ### ❓ [Scope](docs/leaps/README.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ❓ [Source of Truth](docs/leaps/ONBOARDING.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -341,22 +346,22 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ❓ [Overview](packages/openapi/README.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
-### ❓ [Features](packages/logging/README.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
 ### ❓ [Features](packages/security/README.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
+### ❓ [Overview](packages/openapi/README.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
 ### ❓ [Overview](packages/integrations/README.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ❓ [Features](packages/logging/README.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -384,12 +389,17 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 
 ## Generated
 
+### ❓ [API Report File for "@elevate/types"](packages/types/api-reports/types.api.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
 ### ❓ [API Report File for "@elevate/ui"](packages/ui/api-reports/ui.api.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ❓ [API Report File for "@elevate/types"](packages/types/api-reports/types.api.md)
+### ❓ [API Report File for "@elevate/security"](packages/security/api-reports/security.api.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -399,7 +409,7 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ❓ [API Report File for "@elevate/security"](packages/security/api-reports/security.api.md)
+### ❓ [API Report File for "@elevate/openapi"](packages/openapi/api-reports/openapi.api.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -469,6 +479,11 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Last Reviewed**: unknown
 
 ### ❓ [Overview](ENV_MANAGEMENT.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ❓ [Overview](ENVIRONMENT_SETUP.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -632,6 +647,12 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
+### ✅ [Ops Guide — Rate Limits & Internal Endpoints](docs/OPS_GUIDE.md)
+- **Status**: active
+- **Owner**: platform-team
+- **Last Reviewed**: 2025-09-10
+- **Tags**: ops, limits, endpoints
+
 ### ❓ [Overview](docs/MATERIALIZED_VIEWS_OPTIMIZATION.md)
 - **Status**: unknown
 - **Owner**: unknown
@@ -693,6 +714,16 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
+### ⚠️ [Archived Document](packages/types/types.api.md)
+- **Status**: deprecated
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ⚠️ [Archived Document](packages/types/ORM-LEAKAGE-MIGRATION.md)
+- **Status**: deprecated
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
 ### ⚠️ [Archived Document](packages/ui/ui.api.md)
 - **Status**: deprecated
 - **Owner**: unknown
@@ -723,17 +754,22 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/types/types.api.md)
+### ⚠️ [Archived Document](packages/security/security.api.md)
 - **Status**: deprecated
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/types/ORM-LEAKAGE-MIGRATION.md)
+### ⚠️ [Archived Document](packages/security/MIGRATION.md)
 - **Status**: deprecated
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
 ### ⚠️ [Archived Document](packages/storage/storage.api.md)
+- **Status**: deprecated
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ⚠️ [Archived Document](packages/logic/logic.api.md)
 - **Status**: deprecated
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -744,21 +780,6 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Last Reviewed**: unknown
 
 ### ⚠️ [Archived Document](packages/openapi/CHANGELOG.md)
-- **Status**: deprecated
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
-### ⚠️ [Archived Document](packages/logic/logic.api.md)
-- **Status**: deprecated
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
-### ⚠️ [Archived Document](packages/security/security.api.md)
-- **Status**: deprecated
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
-### ⚠️ [Archived Document](packages/security/MIGRATION.md)
 - **Status**: deprecated
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -839,22 +860,27 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Last Reviewed**: 2025-09-10
 - **Tags**: security, privacy, rbac, pii, rls
 
+### ❓ [Conventions](docs/submissions/payloads.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
 ### ✅ [Deployment Runbook](docs/runbooks/deploy.md)
 - **Status**: active
 - **Owner**: platform-team
 - **Last Reviewed**: 2025-09-10
 - **Tags**: deployment, operations, runbook
 
+### ❓ [Web Application Routes](docs/generated/routes.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
 ### ⚠️ [Archived Document (Archived)](docs/copy/home.md)
 - **Status**: deprecated
 - **Owner**: platform-team
 - **Last Reviewed**: 2025-09-10
 - **Tags**: archived
-
-### ❓ [Web Application Routes](docs/generated/routes.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
 
 ### ✅ [Architecture Overview](docs/architecture/overview.md)
 - **Status**: active
@@ -869,6 +895,21 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Tags**: api, client, openapi, envelopes
 
 ### ❓ [Prerequisites](docs/admin/ADMIN_GUIDE.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ❓ [Overview](docs/dev/SCHOOLS_AUTOCOMPLETE.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ❓ [📋 Executive Summary](archive/migrations/logging-migration-plan.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ❓ [Directory Structure](archive/migrations/README.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -889,16 +930,6 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Last Reviewed**: unknown
 
 ### ❓ [Executive Summary](archive/legacy/MIGRATION_STATUS_REPORT.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
-### ❓ [📋 Executive Summary](archive/migrations/logging-migration-plan.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
-### ❓ [Directory Structure](archive/migrations/README.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -1002,23 +1033,23 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/ui/temp/ui.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/types"](packages/types/temp/types.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/types/temp/types.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/ui"](packages/ui/temp/ui.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/storage/temp/storage.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/security"](packages/security/temp/security.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/openapi/temp/openapi.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/storage"](packages/storage/temp/storage.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
@@ -1027,51 +1058,69 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/security/temp/security.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/openapi"](packages/openapi/temp/openapi.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/integrations/temp/integrations.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/integrations"](packages/integrations/temp/integrations.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/http/temp/http.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/http"](packages/http/temp/http.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/emails/temp/emails.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/emails"](packages/emails/temp/emails.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/config/temp/config.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/config"](packages/config/temp/config.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/api-client/temp/api-client.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/api-client"](packages/api-client/temp/api-client.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/auth/temp/auth.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/auth"](packages/auth/temp/auth.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ⚠️ [Archived Document](packages/db/temp/db.api.md)
-- **Status**: deprecated
+### ❓ [API Report File for "@elevate/db"](packages/db/temp/db.api.md)
+- **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
+
+### ❓ [ADR-0003: Authentication Strategy (Clerk + RBAC)](docs/architecture/adr/ADR-0003-authentication-strategy.md)
+- **Status**: proposed
+- **Owner**: platform-team
+- **Last Reviewed**: 2025-09-10
+- **Tags**: adr, auth, rbac
+
+### ❓ [ADR-0002: Database Choice (PostgreSQL + Prisma)](docs/architecture/adr/ADR-0002-database-choice.md)
+- **Status**: proposed
+- **Owner**: platform-team
+- **Last Reviewed**: 2025-09-10
+- **Tags**: adr, database, prisma
 
 ### ⚠️ [ADR-0001: Architecture Decision Record Template (Archived)](docs/architecture/adr/ADR-0001-template.md)
 - **Status**: deprecated
 - **Owner**: platform-team
 - **Last Reviewed**: 2025-09-10
 - **Tags**: archived
+
+### ❓ [ADR-0001: Monorepo Structure](docs/architecture/adr/ADR-0001-monorepo-structure.md)
+- **Status**: proposed
+- **Owner**: platform-team
+- **Last Reviewed**: 2025-09-10
+- **Tags**: adr, monorepo, architecture
 
 ### ❓ [⬇️ Downloads (copy into your repo or unzip and go)](archive/planning/plan/plan2.md)
 - **Status**: unknown
@@ -1133,11 +1182,6 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ❓ [API Report File for "@elevate/storage"](archive/packages-legacy/storage/storage.api.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
 ### ❓ [API Report File for "@elevate/security"](archive/packages-legacy/security/security.api.md)
 - **Status**: unknown
 - **Owner**: unknown
@@ -1148,17 +1192,27 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
+### ❓ [API Report File for "@elevate/storage"](archive/packages-legacy/storage/storage.api.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ❓ [API Report File for "@elevate/logic"](archive/packages-legacy/logic/logic.api.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ❓ [API Report File for "@elevate/integrations"](archive/packages-legacy/integrations/integrations.api.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
 ### ❓ [API Report File for "@elevate/openapi"](archive/packages-legacy/openapi/openapi.api.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
 ### ❓ [Unreleased](archive/packages-legacy/openapi/CHANGELOG.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
-### ❓ [API Report File for "@elevate/integrations"](archive/packages-legacy/integrations/integrations.api.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -1217,17 +1271,6 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
-
-### ❓ [API Report File for "@elevate/logic"](archive/packages-legacy/logic/logic.api.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
-### ⚠️ [Archived Document (Archived)](archive/docs-legacy/qa/VALIDATION_REPORT_TEMPLATE.md)
-- **Status**: deprecated
-- **Owner**: platform-team
-- **Last Reviewed**: 2025-09-10
-- **Tags**: archived
 
 ### ⚠️ [Archived Document (Archived)](archive/docs-legacy/leaps/threat-model.md)
 - **Status**: deprecated
@@ -1337,6 +1380,12 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Last Reviewed**: 2025-09-10
 - **Tags**: archived
 
+### ⚠️ [Archived Document (Archived)](archive/docs-legacy/qa/VALIDATION_REPORT_TEMPLATE.md)
+- **Status**: deprecated
+- **Owner**: platform-team
+- **Last Reviewed**: 2025-09-10
+- **Tags**: archived
+
 ### ⚠️ [Archived Document (Archived)](archive/docs-legacy/copy/home.md)
 - **Status**: deprecated
 - **Owner**: platform-team
@@ -1353,22 +1402,27 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ❓ [API Report File for "@elevate/storage"](archive/packages-legacy/storage/temp/storage.api.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
 ### ❓ [API Report File for "@elevate/security"](archive/packages-legacy/security/temp/security.api.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ❓ [API Report File for "@elevate/openapi"](archive/packages-legacy/openapi/temp/openapi.api.md)
+### ❓ [API Report File for "@elevate/storage"](archive/packages-legacy/storage/temp/storage.api.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ❓ [API Report File for "@elevate/logic"](archive/packages-legacy/logic/temp/logic.api.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
 ### ❓ [API Report File for "@elevate/integrations"](archive/packages-legacy/integrations/temp/integrations.api.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
+### ❓ [API Report File for "@elevate/openapi"](archive/packages-legacy/openapi/temp/openapi.api.md)
 - **Status**: unknown
 - **Owner**: unknown
 - **Last Reviewed**: unknown
@@ -1383,6 +1437,11 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
+### ❓ [API Report File for "@elevate/api-client"](archive/packages-legacy/api-client/temp/api-client.api.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
+
 ### ❓ [API Report File for "@elevate/db"](archive/packages-legacy/db/temp/db.api.md)
 - **Status**: unknown
 - **Owner**: unknown
@@ -1393,25 +1452,15 @@ This sitemap provides a comprehensive index of all documentation in the reposito
 - **Owner**: unknown
 - **Last Reviewed**: unknown
 
-### ❓ [API Report File for "@elevate/auth"](archive/packages-legacy/auth/temp/auth.api.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
-### ❓ [API Report File for "@elevate/api-client"](archive/packages-legacy/api-client/temp/api-client.api.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
-### ❓ [API Report File for "@elevate/logic"](archive/packages-legacy/logic/temp/logic.api.md)
-- **Status**: unknown
-- **Owner**: unknown
-- **Last Reviewed**: unknown
-
 ### ⚠️ [ADR-0001: Architecture Decision Record Template (Archived)](archive/docs-legacy/architecture/adr/ADR-0001-template.md)
 - **Status**: deprecated
 - **Owner**: platform-team
 - **Last Reviewed**: 2025-09-10
 - **Tags**: archived
+
+### ❓ [API Report File for "@elevate/auth"](archive/packages-legacy/auth/temp/auth.api.md)
+- **Status**: unknown
+- **Owner**: unknown
+- **Last Reviewed**: unknown
 
 

@@ -1,10 +1,6 @@
 {
   "broken": [
     {
-      "file": "packages/logic/temp/logic.api.md",
-      "link": "../../docs/README.md"
-    },
-    {
       "file": "packages/db/docs/LOGGING_BEST_PRACTICES.md",
       "link": "../../docs/README.md"
     },

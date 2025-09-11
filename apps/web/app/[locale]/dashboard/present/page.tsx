@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-
+import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
@@ -26,7 +26,7 @@ import {
   FileList,
 } from '@elevate/ui/blocks'
 
-import { getApiClient } from '../../../../lib/api-client'
+import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 
 export default function PresentFormPage() {
   const t = useTranslations('homepage')
@@ -56,8 +56,12 @@ export default function PresentFormPage() {
         throw new Error('Please upload an image file for the screenshot')
       }
 
-      const api = getApiClient()
-      const result = await api.uploadFile(file, PRESENT)
+      const form = new FormData()
+      form.append('file', file)
+      form.append('activityCode', PRESENT)
+      const resp = await fetch('/api/files/upload', { method: 'POST', body: form })
+      if (!resp.ok) throw new Error('Upload failed')
+      const result = (await resp.json()) as { data?: { path: string; hash: string } }
 
       return [
         {
@@ -125,13 +129,23 @@ export default function PresentFormPage() {
         screenshotHash: firstFile.hash,
       }
 
-      const api = getApiClient()
-      await api.createSubmission({
-        activityCode: PRESENT,
-        payload,
-        attachments: [firstFile.path],
-        visibility: makePublic ? 'PUBLIC' : 'PRIVATE',
+      const tokenRes = await fetch('/api/csrf-token')
+      const tokenJson = (await tokenRes.json().catch(() => ({}))) as { data?: { token?: string } }
+      const token = tokenJson?.data?.token
+      const resp = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', [CSRF_TOKEN_HEADER]: String(token || '') },
+        body: JSON.stringify({
+          activityCode: PRESENT,
+          payload,
+          attachments: [firstFile.path],
+          visibility: makePublic ? 'PUBLIC' : 'PRIVATE',
+        }),
       })
+      if (!resp.ok) {
+        const err = await resp.text().catch(() => 'Submission failed')
+        throw new Error(err || 'Submission failed')
+      }
 
       // Reset form
       setMakePublic(false)

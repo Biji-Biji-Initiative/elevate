@@ -13,7 +13,7 @@ import { Button, Card, Alert, AlertTitle, AlertDescription } from '@elevate/ui'
 import { LoadingSpinner } from '@elevate/ui/blocks'
 import { useCurrentLocale } from '@elevate/ui/next'
 
-import { getApiClient } from '../../../lib/api-client'
+// Use public API for client-side fetch
 
 // Using SafeDashboardData from @elevate/types for better type safety
 type DashboardData = SafeDashboardData
@@ -58,15 +58,21 @@ export default function DashboardPage() {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true)
-      const api = getApiClient()
-      const result = await api.getDashboardDTO()
+      const res = await fetch('/api/dashboard')
+      if (!res.ok) throw new Error('Failed to load dashboard')
+      const body = (await res.json()) as { data?: DashboardData }
+      const result = { data: body.data as DashboardData }
       // Post sign-in role check: redirect to onboarding if not confirmed
       try {
         const meRes = await fetch('/api/profile/me')
         if (meRes.ok) {
-          const me = (await meRes.json()) as { data?: { userTypeConfirmed?: boolean } }
+          const me = (await meRes.json()) as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
           if (me?.data?.userTypeConfirmed === false) {
             router.push(withLocale('/onboarding/user-type'))
+            return
+          }
+          if (me?.data?.userType === 'STUDENT') {
+            router.push(withLocale('/educators-only'))
             return
           }
         }
@@ -390,6 +396,14 @@ export default function DashboardPage() {
                       className="w-full text-left justify-start"
                     >
                       View Public Profile
+                    </Button>
+                  </Link>
+                  <Link href={withLocale('/account')} className="block">
+                    <Button
+                      variant="ghost"
+                      className="w-full text-left justify-start"
+                    >
+                      Manage Account
                     </Button>
                   </Link>
                   <Link

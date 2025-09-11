@@ -105,8 +105,14 @@ vercel --prod
 1. **Health Checks**:
 
    ```bash
+   # Web app health (should return JSON with status: "healthy")
    curl -f https://leaps.mereka.org/api/health
-   curl -f https://admin.leaps.mereka.org/api/health
+
+   # Admin app health (no dedicated health endpoint; use CSP report as proxy)
+   curl -f https://admin.leaps.mereka.org/api/csp-report -X POST -H "Content-Type: application/json" -d '{}'
+
+   # Expected response format:
+   # {"success": true, "data": {"status": "healthy", "timestamp": "...", "database": "connected"}}
    ```
 
 2. **Authentication Test**:
@@ -128,9 +134,20 @@ vercel --prod
    - Check signed URL generation
 
 5. **Integrations**:
-   - Test Kajabi webhook endpoint
-   - Verify email notifications work
-   - Check leaderboard updates
+
+   ```bash
+   # Test Kajabi webhook (POST to /api/kajabi/webhook)
+   curl -X POST https://leaps.mereka.org/api/kajabi/webhook \
+     -H "Content-Type: application/json" \
+     -d '{"test": true}'
+
+   # Check cron endpoints (admin access required)
+   curl https://leaps.mereka.org/api/cron/refresh-leaderboards
+   curl https://leaps.mereka.org/api/cron/enforce-retention
+   ```
+
+   - Verify email notifications work (check `/api/emails/*` routes)
+   - Check leaderboard updates via `/api/leaderboard`
 
 ## Database Migrations
 

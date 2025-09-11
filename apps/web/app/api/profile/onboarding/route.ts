@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 import { prisma } from '@elevate/db/client'
 import { createErrorResponse, createSuccessResponse } from '@elevate/http'
+import { enrollUserInKajabi } from '@elevate/integrations'
 
 export const runtime = 'nodejs'
 
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Mirror to DB and confirm
-    await prisma.user.update({
+    const updated = await prisma.user.update({
       where: { id: userId },
       data: {
         user_type: userType,
@@ -47,7 +48,28 @@ export async function POST(req: NextRequest) {
           ? { school: school || null, region: region || null }
           : {}),
       },
+      select: { id: true, email: true, name: true, kajabi_contact_id: true },
     })
+
+    // Educators only: enroll in Kajabi after confirmation (best-effort)
+    if (userType === 'EDUCATOR') {
+      try {
+        const email = updated.email || ''
+        const name = updated.name || email.split('@')[0] || 'Educator'
+        const offerId = process.env.KAJABI_OFFER_ID
+        const result = await enrollUserInKajabi(email, name, {
+          ...(offerId ? { offerId } : {}),
+        })
+        if (result.success && result.contactId && !updated.kajabi_contact_id) {
+          await prisma.user.update({
+            where: { id: updated.id },
+            data: { kajabi_contact_id: String(result.contactId) },
+          })
+        }
+      } catch {
+        // Ignore enrollment errors here
+      }
+    }
 
     return createSuccessResponse({ ok: true })
   } catch (e) {

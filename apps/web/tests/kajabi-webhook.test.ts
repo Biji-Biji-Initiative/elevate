@@ -74,11 +74,10 @@ describe('POST /api/kajabi/webhook', () => {
 
     const payload = {
       event_id: 'evt_1',
+      event_type: 'contact.tagged' as const,
       created_at: new Date().toISOString(),
-      data: {
-        contact: { id: 'contact_1', email: 'test@example.com' },
-        tag: { name: 'elevate-ai-1-completed' },
-      },
+      contact: { id: 1, email: 'test@example.com' },
+      tag: { name: 'elevate-ai-1-completed' },
     }
     const body = JSON.stringify(payload)
     const sig = crypto.createHmac('sha256', secret).update(body).digest('hex')

@@ -15,6 +15,36 @@ This document outlines the canonical routing strategy implemented for the MS Ele
 - **Purpose**: Internal data fetching only, not meant for direct access
 - **Redirect**: Automatically redirects to canonical profile if accessed directly
 
+### 3. LEAPS Metrics (Public)
+- **Canonical paths**:
+  - `/metrics/learn`
+  - `/metrics/explore`
+  - `/metrics/amplify`
+  - `/metrics/present`
+  - `/metrics/shine`
+- **Notes**:
+  - Learn uses Option B counters (no form); stage cards and nav link here.
+  - Locale prefix applies (e.g., `/{locale}/metrics/learn`).
+
+### 4. Onboarding (Post Sign-up)
+- **Canonical path**: `/{locale}/onboarding/user-type`
+- **Notes**:
+  - New users default to STUDENT until they select a role here.
+  - Educators must provide School (autocomplete) and Region.
+
+### 5. Webhooks & Admin APIs
+- **Webhooks**:
+  - `POST /api/kajabi/webhook` (Kajabi Learn tags; signature required in prod)
+  - `POST /api/webhooks/clerk` (Clerk user created/updated; Svix verified)
+- **Admin**:
+  - `POST /api/admin/kajabi/invite` (Enroll contact; offer grant; v1 fallback)
+
+### 6. Account (Clerk User Profile)
+- **Canonical path**: `/{locale}/account`
+- **Notes**:
+  - Renders Clerk’s `UserProfile` for account management (sign-in methods, password, connected accounts, profile image).
+  - LEAPS role and school/region remain managed via onboarding/profile pages; Clerk user profile does not modify `user_type`.
+
 ## Redirects Implemented
 
 ### Permanent Redirects (308 Status)

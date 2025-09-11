@@ -169,8 +169,9 @@ export async function POST(req: NextRequest) {
           const publicMetadata = parseClerkPublicMetadata(public_metadata)
           const userRole =
             parseRole(publicMetadata.role) || ('PARTICIPANT' as Role)
+          // Do not default to EDUCATOR; default to STUDENT until onboarding confirms role
           const userTypeRaw = (
-            publicMetadata.user_type || 'EDUCATOR'
+            publicMetadata.user_type || 'STUDENT'
           ).toUpperCase()
           const userType: PrismaUserType =
             userTypeRaw === 'STUDENT' ? 'STUDENT' : 'EDUCATOR'
@@ -224,7 +225,7 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          // Enroll user in Kajabi on registration
+          // Enroll user in Kajabi on registration — all users can join to learn
           if (eventType === 'user.created') {
             try {
               const kajabiClient = getKajabiClient()

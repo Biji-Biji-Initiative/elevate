@@ -1,10 +1,11 @@
 "use client"
 
 import React, { useState } from 'react'
+import { buildQueryString } from '@/lib/utils/query'
 
 import { toMsg } from '@/lib/errors'
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Alert } from '@elevate/ui'
 import type { ACTIVITY_CODES, SUBMISSION_STATUSES } from '@elevate/types'
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Alert } from '@elevate/ui'
 
 interface ExportFilters {
   startDate: string
@@ -36,39 +37,23 @@ export function ClientPage({ initialCohorts }: { initialCohorts: string[] }) {
     setError(null)
 
     try {
-      const params = new URLSearchParams({
+      const query = buildQueryString({
         type,
         format: 'csv',
-        ...Object.fromEntries(
-          Object.entries(filters).filter(([, value]) => value && value !== 'ALL'),
-        ),
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+        activity: filters.activity !== 'ALL' ? filters.activity : undefined,
+        status: filters.status !== 'ALL' ? filters.status : undefined,
+        cohort: filters.cohort !== 'ALL' ? filters.cohort : undefined,
       })
-
-      const response = await fetch(`/api/admin/exports?${params}`)
-
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-
-        const contentDisposition = response.headers.get('content-disposition')
-        const match = contentDisposition?.match(/filename="(.+)"/)
-        const filename = match?.[1] || `${type}-export.csv`
-        a.download = filename
-
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(a)
-      } else {
-        try {
-          const data = (await response.json()) as { error?: string; message?: string }
-          setError(`Export failed: ${data.error || data.message || 'Unknown error'}`)
-        } catch {
-          setError(`Export failed: HTTP ${response.status} ${response.statusText}`)
-        }
-      }
+      const url = `/api/admin/exports?${query}`
+      const a = document.createElement('a')
+      a.href = url
+      a.rel = 'noopener noreferrer'
+      a.target = '_blank'
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
     } catch (error: unknown) {
       const msg = toErrorMessage('Export data', error)
       setError(msg)

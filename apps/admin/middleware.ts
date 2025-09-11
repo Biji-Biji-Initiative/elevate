@@ -8,7 +8,6 @@ import {
   safeParseRole,
   type RoleName,
 } from '@elevate/auth'
-import { parseClerkEmailAddress } from '@elevate/auth/types'
 // Security headers are applied via next.config.mjs headers()
 
 import { locales, defaultLocale } from './i18n'
@@ -68,20 +67,21 @@ const adminMiddleware = clerkMiddleware(async (auth, req) => {
   // Check if user has minimum required role for admin access
   const publicMetadata = parseClerkPublicMetadata(sessionClaims?.publicMetadata)
   let userRole = safeParseRole(publicMetadata.role)
-  const email = parseClerkEmailAddress(sessionClaims?.primaryEmailAddress)
-  if (process.env.NODE_ENV === 'development' && email) {
-    const csv = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').toLowerCase()
-    if (csv.length > 0) {
-      const allow = new Set(
-        csv
-          .split(',')
-          .map((e) => e.trim())
-          .filter(Boolean),
-      )
-      if (allow.has(email.toLowerCase())) userRole = 'superadmin'
+  
+  // Development bypass for specific user IDs
+  // Since email is not available in sessionClaims by default, use userId for dev bypass
+  if (process.env.NODE_ENV === 'development') {
+    // This is your userId from the logs
+    const devAdminUserIds = ['user_328teXv7Od0N4I9ck6W7Q65SuaL']
+    if (devAdminUserIds.includes(userId)) {
+      userRole = 'superadmin'
+      // Dev bypass: elevating user to superadmin
     }
   }
+  
   const allowedRoles: RoleName[] = ['reviewer', 'admin', 'superadmin']
+  
+  // Auth check passed for route
 
   if (!allowedRoles.includes(userRole)) {
     if (isApi) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

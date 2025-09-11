@@ -4,11 +4,22 @@ import { useState, useEffect, Suspense } from 'react'
 
 import Link from 'next/link'
 
-import { LeaderboardResponseSchema } from '@elevate/openapi/schemas'
 import { getProfilePath, type LeaderboardEntryDTO } from '@elevate/types'
 import { LeaderboardTable, PageLoading } from '@elevate/ui/blocks'
 
-import { getApiClient } from '../../../lib/api-client'
+// Use public API route for client-side fetch
+
+type LeaderboardApiUser = {
+  id: string
+  handle: string
+  name: string
+  school?: string | null
+  avatarUrl?: string | null
+  totalPoints: number
+  earnedBadges?: Array<{ badge: { code: string; name: string; iconUrl?: string | null } }>
+}
+
+type LeaderboardApiEntry = { rank: number; user: LeaderboardApiUser }
 
 async function fetchLeaderboard(
   period: 'all' | '30d',
@@ -16,15 +27,29 @@ async function fetchLeaderboard(
   offset = 0,
   search = '',
 ): Promise<LeaderboardEntryDTO[]> {
-  const api = getApiClient()
-  const res = await api.getLeaderboard({
-    period,
-    limit,
-    offset,
-    ...(search ? { search } : {}),
-  })
-  const parsed = LeaderboardResponseSchema.safeParse(res.data)
-  const rows = parsed.success ? parsed.data.data : []
+  const params = new URLSearchParams({ period, limit: String(limit), offset: String(offset) })
+  if (search) params.set('search', search)
+  const res = await fetch(`/api/leaderboard?${params.toString()}`)
+  if (!res.ok) return []
+  const body: unknown = await res.json()
+  let rows: LeaderboardApiEntry[] = []
+  if (
+    body &&
+    typeof body === 'object' &&
+    'data' in body &&
+    Array.isArray((body as { data: unknown }).data)
+  ) {
+    rows = (body as { data: LeaderboardApiEntry[] }).data
+  } else if (
+    body &&
+    typeof body === 'object' &&
+    'data' in body &&
+    typeof (body as { data: unknown }).data === 'object' &&
+    body !== null &&
+    Array.isArray((body as { data: { data?: unknown } }).data?.data)
+  ) {
+    rows = ((body as { data: { data: LeaderboardApiEntry[] } }).data).data
+  }
   // Normalize to LeaderboardEntryDTO to satisfy iconUrl type (omit when undefined)
   return rows.map((e) => ({
     rank: e.rank,

@@ -1,7 +1,7 @@
-import { listUsers } from '@/lib/services/users'
 import { getCohorts } from '@/lib/services/submissions'
-
+import { listUsers } from '@/lib/services/users'
 import { toUserUI } from '@/lib/ui-types'
+
 import UsersClient from './ClientPage'
 
 export default async function UsersPage() {

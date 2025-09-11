@@ -131,6 +131,7 @@
     "verify:imports": "node scripts/validate-imports.mjs",
     "verify:all": "node scripts/validate-all.mjs",
     "verify:docs": "node scripts/validate-docs.mjs",
+    "verify:links": "node scripts/link-check.mjs",
     "qa:validate:staging": "tsx scripts/qa/validate-staging.ts",
     "qa:kajabi:v1": "tsx scripts/qa/kajabi-v1-offer-grant.ts",
     "qa:kajabi:webhook": "tsx scripts/qa/send-kajabi-webhook.ts",

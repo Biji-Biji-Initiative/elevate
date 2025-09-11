@@ -1,21 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "outDir": "dist",
-    "composite": true,
-    "declaration": true
+    "noEmit": true
   },
-  "include": [
-    "src/**/*",
-    "seed.ts",
-    "types.ts",
-    "tests/**/*.ts",
-    "__tests__/**/*.ts"
-  ],
-  "exclude": ["node_modules", "dist", ".turbo"],
-  "references": [
-    { "path": "../types" },
-    { "path": "../logging" }
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", ".turbo", "src/__tests__/**", "**/*.test.ts", "**/*.spec.ts"]
 }

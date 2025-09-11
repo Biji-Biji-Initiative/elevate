@@ -8,73 +8,101 @@ vi.mock('@elevate/security/rate-limiter', async () => ({
   withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
 }))
 
-// Mock next/headers to provide signature
-let currentSignature = ''
-vi.mock('next/headers', async () => ({
-  headers: async () => new Map([['x-kajabi-signature', currentSignature]]),
+// No-op badges awarding to avoid extra DB plumbing
+vi.mock('@elevate/logic', async () => ({
+  grantBadgesForUser: vi.fn(async () => {}),
 }))
 
-// Prisma mocks
-const userFindUniqueMock = vi.fn()
-const kajabiEventFindUniqueMock = vi.fn()
-const pointsLedgerFindFirstMock = vi.fn()
-const kajabiEventCreateMock = vi.fn()
-const pointsLedgerCreateMock = vi.fn()
-const submissionCreateMock = vi.fn()
-
+// Prisma $transaction mock with stateful behavior across calls
+let createCallCount = 0
 vi.mock('@elevate/db/client', async () => ({
   prisma: {
-    user: { findUnique: userFindUniqueMock, update: vi.fn() },
-    kajabiEvent: { findUnique: kajabiEventFindUniqueMock, create: kajabiEventCreateMock, upsert: vi.fn() },
-    pointsLedger: { findFirst: pointsLedgerFindFirstMock, create: pointsLedgerCreateMock },
-    activity: { findUnique: vi.fn(async () => ({ code: 'LEARN', default_points: 20 })) },
-    submission: { create: submissionCreateMock },
-    auditLog: { create: vi.fn() },
+    $transaction: async (fn: (t: {
+      kajabiEvent: { create: (args?: unknown) => Promise<unknown>; update: (args?: unknown) => Promise<unknown> }
+      user: { findUnique: (args: { where?: { kajabi_contact_id?: string; email?: string } }) => Promise<unknown>; update: (args?: unknown) => Promise<unknown> }
+      learnTagGrant: { create: (args?: unknown) => Promise<unknown> }
+      pointsLedger: { create: (args?: unknown) => Promise<unknown> }
+    }) => Promise<unknown>) => {
+      const tx = {
+        kajabiEvent: {
+          create: vi.fn(async () => {
+            createCallCount += 1
+            if (createCallCount === 1) return { id: 'k1' }
+            throw Object.assign(new Error('Unique constraint'), { code: 'P2002' as const })
+          }),
+          update: vi.fn(async () => {}),
+        },
+        user: {
+          findUnique: vi.fn(async (args: { where?: { kajabi_contact_id?: string; email?: string } }) => {
+            if (args?.where?.kajabi_contact_id) return null
+            if (args?.where?.email) {
+              return {
+                id: 'user_1',
+                email: 'user@example.com',
+                user_type: 'EDUCATOR',
+                kajabi_contact_id: null,
+              }
+            }
+            return null
+          }),
+          update: vi.fn(async () => {}),
+        },
+        learnTagGrant: { create: vi.fn(async () => ({})) },
+        pointsLedger: { create: vi.fn(async () => ({})) },
+      }
+      return fn(tx)
+    },
   },
 }))
 
 describe('Kajabi webhook - idempotency behavior', () => {
   beforeEach(() => {
-    userFindUniqueMock.mockReset()
-    kajabiEventFindUniqueMock.mockReset()
-    pointsLedgerFindFirstMock.mockReset()
-    kajabiEventCreateMock.mockReset()
-    pointsLedgerCreateMock.mockReset()
-    submissionCreateMock.mockReset()
+    createCallCount = 0
     process.env.KAJABI_WEBHOOK_SECRET = 'secret'
   })
 
   function sign(body: string) {
-    return crypto.createHmac('sha256', process.env.KAJABI_WEBHOOK_SECRET!).update(body).digest('hex')
+    return crypto
+      .createHmac('sha256', process.env.KAJABI_WEBHOOK_SECRET!)
+      .update(body)
+      .digest('hex')
   }
 
-  it('returns already_processed on duplicate event', async () => {
+  it('awards on first call and returns duplicate on retry', async () => {
     const { POST } = await import('../app/api/kajabi/webhook/route')
 
     const event = {
-      event_type: 'contact.tagged',
+      event_type: 'contact.tagged' as const,
       event_id: 'evt_1',
+      created_at: new Date().toISOString(),
       contact: { id: 123, email: 'user@example.com' },
-      tag: { name: 'LEARN_COMPLETED' }
+      tag: { name: 'elevate-ai-1-completed' },
     }
     const body = JSON.stringify(event)
-    currentSignature = sign(body)
+    const reqHeaders = { 'x-kajabi-signature': sign(body) }
 
-    userFindUniqueMock.mockResolvedValue({ id: 'user_1', email: 'user@example.com' })
-    kajabiEventFindUniqueMock.mockResolvedValueOnce(null)
-    pointsLedgerFindFirstMock.mockResolvedValueOnce(null)
-
-    // First call: process normally
-    const req1 = new Request('http://localhost/api/kajabi/webhook', { method: 'POST', body })
+    // First call: award
+    const req1 = new Request('http://localhost/api/kajabi/webhook', {
+      method: 'POST',
+      headers: reqHeaders,
+      body,
+    })
     const res1 = await POST(req1)
     expect(res1.status).toBe(200)
+    const json1 = await res1.json()
+    expect(json1.success).toBe(true)
+    expect(json1.data.awarded).toBe(true)
 
-    // Second call: simulate existing event
-    kajabiEventFindUniqueMock.mockResolvedValueOnce({ id: 'evt_1' })
-    const req2 = new Request('http://localhost/api/kajabi/webhook', { method: 'POST', body })
+    // Second call: duplicate
+    const req2 = new Request('http://localhost/api/kajabi/webhook', {
+      method: 'POST',
+      headers: reqHeaders,
+      body,
+    })
     const res2 = await POST(req2)
+    expect(res2.status).toBe(200)
     const json2 = await res2.json()
     expect(json2.success).toBe(true)
-    expect(json2.data.result.reason).toBe('already_processed')
+    expect(json2.data.duplicate).toBe(true)
   })
 })

@@ -1,3 +1,8 @@
+'use server'
+import { listUsersService, updateUserService, bulkUpdateUsersService, type ListUsersParams } from '@/lib/server/users-service'
+import { mergeOptional, isOneOf, nonEmptyString } from '@/lib/utils/param-builder'
+import type { AdminUser, Pagination } from '@elevate/types/admin-api-types'
+
 export async function updateUserAction(body: {
   userId: string
   role?: 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
@@ -5,26 +10,9 @@ export async function updateUserAction(body: {
   cohort?: string | null
   name?: string
   handle?: string
-}): Promise<{ message: string; user: any }>
+}): Promise<{ message: string; user: AdminUser }>
 {
-  'use server'
-  const { headers } = await import('next/headers')
-  const h = headers()
-  const cookie = h.get('cookie')
-  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3001'
-  const proto = h.get('x-forwarded-proto') || 'http'
-  const url = `${proto}://${host}/api/admin/users`
-  const res = await fetch(url, {
-    method: 'PATCH',
-    headers: { 'content-type': 'application/json', ...(cookie ? { cookie } : {}) },
-    body: JSON.stringify(body),
-    cache: 'no-store',
-  })
-  const json = (await res.json()) as any
-  if (!res.ok || !json?.success) {
-    throw new Error(json?.error ?? `Failed to update user (${res.status})`)
-  }
-  return json.data as { message: string; user: any }
+  return updateUserService(body)
 }
 
 export async function bulkUpdateUsersAction(body: {
@@ -32,23 +20,67 @@ export async function bulkUpdateUsersAction(body: {
   role: 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
 }): Promise<{ processed: number; failed: number; errors: Array<{ userId: string; error: string }> }>
 {
-  'use server'
-  const { headers } = await import('next/headers')
-  const h = headers()
-  const cookie = h.get('cookie')
-  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3001'
-  const proto = h.get('x-forwarded-proto') || 'http'
-  const url = `${proto}://${host}/api/admin/users`
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', ...(cookie ? { cookie } : {}) },
-    body: JSON.stringify(body),
-    cache: 'no-store',
-  })
-  const json = (await res.json()) as any
-  if (!res.ok || !json?.success) {
-    throw new Error(json?.error ?? `Failed to bulk update users (${res.status})`)
-  }
-  return json.data as { processed: number; failed: number; errors: Array<{ userId: string; error: string }> }
+  return bulkUpdateUsersService(body)
 }
 
+type ListUsersQuery = {
+  page?: number | string
+  limit?: number | string
+  sortBy?: 'created_at' | 'name' | 'email' | string
+  sortOrder?: 'asc' | 'desc' | string
+  search?: string
+  role?: ListUsersParams['role'] | string
+  userType?: ListUsersParams['userType'] | string
+  cohort?: string
+}
+
+export async function listUsersAction(query: ListUsersQuery)
+  : Promise<{ users: AdminUser[]; pagination: Pagination }>
+{
+  const page = Number(query.page ?? 1)
+  const limit = Number(query.limit ?? 20)
+  const paramsBase: ListUsersParams = {
+    page,
+    limit,
+    sortBy: (query.sortBy as 'created_at' | 'name' | 'email') || 'created_at',
+    sortOrder: (query.sortOrder as 'asc' | 'desc') || 'desc',
+  }
+  let params = paramsBase
+  if (nonEmptyString(query.search)) params = mergeOptional(params, 'search', query.search)
+  if (isOneOf(query.role, ['ALL','PARTICIPANT','REVIEWER','ADMIN','SUPERADMIN'] as const)) params = mergeOptional(params, 'role', query.role)
+  if (isOneOf(query.userType, ['ALL','EDUCATOR','STUDENT'] as const)) params = mergeOptional(params, 'userType', query.userType)
+  if (nonEmptyString(query.cohort)) params = mergeOptional(params, 'cohort', query.cohort)
+  return listUsersService(params)
+}
+
+export async function bulkUpdateLeapsUsersAction(body: {
+  userIds: string[]
+  userType?: 'EDUCATOR' | 'STUDENT'
+  userTypeConfirmed?: boolean
+  school?: string
+  region?: string
+}): Promise<{ processed: number; failed: number; errors: Array<{ userId: string; error: string }> }>
+{
+  const { bulkUpdateLeapsUsersService } = await import('@/lib/server/users-service')
+  return bulkUpdateLeapsUsersService(body)
+}
+
+export async function updateLeapsUserAction(body: {
+  userId: string
+  userType?: 'EDUCATOR' | 'STUDENT'
+  userTypeConfirmed?: boolean
+  school?: string
+  region?: string
+}): Promise<{ message: string }>
+{
+  'use server'
+  const { bulkUpdateLeapsUsersService } = await import('@/lib/server/users-service')
+  const { userId, userType, userTypeConfirmed, school, region } = body
+  const payload: { userIds: string[]; userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean; school?: string; region?: string } = { userIds: [userId] }
+  if (userType) payload.userType = userType
+  if (typeof userTypeConfirmed === 'boolean') payload.userTypeConfirmed = userTypeConfirmed
+  if (school !== undefined) payload.school = school
+  if (region !== undefined) payload.region = region
+  await bulkUpdateLeapsUsersService(payload)
+  return { message: 'Saved' }
+}

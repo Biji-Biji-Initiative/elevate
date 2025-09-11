@@ -4,3793 +4,4388 @@
  */
 
 export interface paths {
-  '/api/stats': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Platform Stats
-     * @description Get platform-wide statistics
-     */
-    get: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @enum {boolean} */
-              success: true
-              data: {
-                totalEducators: number
-                totalSubmissions: number
-                totalPoints: number
-                studentsImpacted: number
-                byStage: {
-                  learn: {
-                    total: number
-                    approved: number
-                    pending: number
-                    rejected: number
-                  }
-                  explore: {
-                    total: number
-                    approved: number
-                    pending: number
-                    rejected: number
-                  }
-                  amplify: {
-                    total: number
-                    approved: number
-                    pending: number
-                    rejected: number
-                  }
-                  present: {
-                    total: number
-                    approved: number
-                    pending: number
-                    rejected: number
-                  }
-                  shine: {
-                    total: number
-                    approved: number
-                    pending: number
-                    rejected: number
-                  }
-                }
-                topCohorts: {
-                  name: string
-                  count: number
-                  avgPoints?: number
-                }[]
-                monthlyGrowth: {
-                  month: string
-                  educators: number
-                  submissions: number
-                }[]
-                badges: {
-                  totalAwarded: number
-                  uniqueBadges: number
-                  mostPopular: {
-                    code: string
-                    name: string
-                    count: number
-                  }[]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/kajabi/health': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Kajabi Health
-     * @description Check Kajabi connectivity and environment presence
-     */
-    get: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              data: {
-                healthy: boolean
-                hasKey: boolean
-                hasSecret: boolean
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/kajabi/invite': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Kajabi Invite
-     * @description Force-enroll a user in Kajabi by userId or email and optionally grant an offer
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            userId?: string
-            /** Format: email */
-            email?: string
-            name?: string
-            offerId?: string | number
-          }
-        }
-      }
-      responses: {
-        /** @description Invitation sent */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              data: {
-                invited: boolean
-                contactId?: number
-                withOffer: boolean
-              }
-            }
-          }
-        }
-        /** @description Invalid */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-        /** @description Upstream error */
-        502: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/storage/retention': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Storage Retention
-     * @description Enforce evidence retention policy for a user
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            userId: string
-            days?: number
-          }
-        }
-      }
-      responses: {
-        /** @description Retention enforced */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              data: {
-                userId: string
-                days: number
-                deleted: number
-              }
-            }
-          }
-        }
-        /** @description Invalid */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/slo/summary': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * SLO Summary
-     * @description Get SLO summary or a specific SLO status (internal admin use)
-     */
-    get: {
-      parameters: {
-        query?: {
-          slo?: string
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/metrics': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Stage Metrics
-     * @description Get metrics for a LEAPS stage
-     */
-    get: {
-      parameters: {
-        query: {
-          stage: 'learn' | 'explore' | 'amplify' | 'present' | 'shine'
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @enum {boolean} */
-              success: true
-              data: {
-                stage: string
-                totalSubmissions: number
-                approvedSubmissions: number
-                pendingSubmissions: number
-                rejectedSubmissions: number
-                avgPointsEarned: number
-                uniqueEducators: number
-                topSchools: {
-                  name: string
-                  count: number
-                }[]
-                cohortBreakdown: {
-                  cohort: string
-                  count: number
-                }[]
-                monthlyTrend: {
-                  month: string
-                  submissions: number
-                  approvals: number
-                }[]
-                completionRate: number
-              }
-            }
-          }
-        }
-        /** @description Invalid query */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/profile/{handle}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Public Profile
-     * @description Get public profile data by handle
-     */
-    get: {
-      parameters: {
-        query?: never
-        header?: never
-        path: {
-          handle: string
-        }
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @enum {boolean} */
-              success: true
-              data: {
-                id: string
-                handle: string
-                name: string
-                email: string
-                avatarUrl?: string | null
-                school?: string | null
-                cohort?: string | null
-                /** Format: date-time */
-                createdAt: string
-                totalPoints: number
-                earnedBadges: {
-                  badge: {
-                    code: string
-                    name: string
-                    description?: string | null
-                    iconUrl?: string | null
-                  }
-                  /** Format: date-time */
-                  earnedAt: string
-                }[]
-                submissions: {
-                  id: string
-                  /**
-                   * @description LEAPS activity codes
-                   * @example LEARN
-                   * @enum {string}
-                   */
-                  activityCode:
-                    | 'LEARN'
-                    | 'EXPLORE'
-                    | 'AMPLIFY'
-                    | 'PRESENT'
-                    | 'SHINE'
-                  activity: {
-                    name: string
-                    /**
-                     * @description LEAPS activity codes
-                     * @example LEARN
-                     * @enum {string}
-                     */
-                    code: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-                  }
-                  /**
-                   * @description Submission review status
-                   * @example PENDING
-                   * @enum {string}
-                   */
-                  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-                  /**
-                   * @description Submission visibility setting
-                   * @example PRIVATE
-                   * @enum {string}
-                   */
-                  visibility: 'PUBLIC' | 'PRIVATE'
-                  /** @description Submission payload data specific to each activity type */
-                  payload: {
-                    [key: string]: unknown
-                  }
-                  /** Format: date-time */
-                  createdAt: string
-                  /** Format: date-time */
-                  updatedAt: string
-                }[]
-              }
-            }
-          }
-        }
-        /** @description Not found */
-        404: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/referrals': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Admin Referrals
-     * @description List referral events with filters
-     */
-    get: {
-      parameters: {
-        query?: {
-          referrerId?: string
-          refereeId?: string
-          email?: string
-          month?: string
-          limit?: number
-          offset?: number
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              data: {
-                referrals: {
-                  id: string
-                  eventType: string
-                  source?: string | null
-                  /** Format: date-time */
-                  createdAt: string
-                  externalEventId?: string | null
-                  referrer: {
-                    id: string
-                    name: string
-                    email: string
-                  }
-                  referee: {
-                    id: string
-                    name: string
-                    email: string
-                    /** @enum {string} */
-                    user_type: 'EDUCATOR' | 'STUDENT'
-                  }
-                }[]
-                pagination: {
-                  total: number
-                  limit: number
-                  offset: number
-                  pages: number
-                }
-              }
-            }
-          }
-        }
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/submissions': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * List User Submissions
-     * @description Get user submissions with optional filtering
-     */
-    get: {
-      parameters: {
-        query?: {
-          activity?: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-          status?: 'PENDING' | 'APPROVED' | 'REJECTED'
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description User submissions retrieved successfully */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @example true */
-              success: boolean
-              data: {
-                /**
-                 * @description Unique submission identifier
-                 * @example sub_abc123
-                 */
-                id: string
-                /**
-                 * @description LEAPS activity codes
-                 * @example LEARN
-                 * @enum {string}
-                 */
-                activityCode:
-                  | 'LEARN'
-                  | 'EXPLORE'
-                  | 'AMPLIFY'
-                  | 'PRESENT'
-                  | 'SHINE'
-                /**
-                 * @description Human-readable activity name
-                 * @example Learn
-                 */
-                activityName: string
-                /**
-                 * @description Submission review status
-                 * @example PENDING
-                 * @enum {string}
-                 */
-                status: 'PENDING' | 'APPROVED' | 'REJECTED'
-                /**
-                 * @description Submission visibility setting
-                 * @example PRIVATE
-                 * @enum {string}
-                 */
-                visibility: 'PUBLIC' | 'PRIVATE'
-                /**
-                 * Format: date-time
-                 * @description ISO 8601 timestamp
-                 * @example 2024-01-15T10:00:00Z
-                 */
-                createdAt: string
-                /**
-                 * Format: date-time
-                 * @description ISO 8601 timestamp
-                 * @example 2024-01-16T10:00:00Z
-                 */
-                updatedAt?: string
-                /**
-                 * @description Reviewer feedback message
-                 * @example Certificate looks good, approved!
-                 */
-                reviewNote?: string | null
-                /**
-                 * @description Number of attached files
-                 * @example 1
-                 */
-                attachmentCount: number
-                /**
-                 * @description Points that could be earned if approved
-                 * @example 20
-                 */
-                potentialPoints?: number
-              }[]
-            }
-          }
-        }
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    /**
-     * Submit LEAPS Activity Evidence
-     * @description Create a new LEAPS activity submission
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      /** @description Submission data */
-      requestBody?: {
-        content: {
-          'application/json': {
+    "/api/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Platform Stats
+         * @description Get platform-wide statistics
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                totalEducators: number;
+                                totalSubmissions: number;
+                                totalPoints: number;
+                                studentsImpacted: number;
+                                byStage: {
+                                    learn: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
+                                    explore: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
+                                    amplify: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
+                                    present: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
+                                    shine: {
+                                        total: number;
+                                        approved: number;
+                                        pending: number;
+                                        rejected: number;
+                                    };
+                                };
+                                topCohorts: {
+                                    name: string;
+                                    count: number;
+                                    avgPoints?: number;
+                                }[];
+                                monthlyGrowth: {
+                                    month: string;
+                                    educators: number;
+                                    submissions: number;
+                                }[];
+                                badges: {
+                                    totalAwarded: number;
+                                    uniqueBadges: number;
+                                    mostPopular: {
+                                        code: string;
+                                        name: string;
+                                        count: number;
+                                    }[];
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin User Detail
+         * @description Get admin view of a single user by id
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                user: {
+                                    id: string;
+                                    email: string;
+                                    name?: string | null;
+                                    handle?: string | null;
+                                    /** @enum {string} */
+                                    user_type: "EDUCATOR" | "STUDENT";
+                                    user_type_confirmed: boolean;
+                                    school?: string | null;
+                                    region?: string | null;
+                                    kajabi_contact_id?: string | null;
+                                    /** Format: date-time */
+                                    created_at: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Admin Update User Profile Fields
+         * @description Update user_type, user_type_confirmed, school, or region
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        userType?: "EDUCATOR" | "STUDENT";
+                        userTypeConfirmed?: boolean;
+                        school?: string;
+                        region?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                user: {
+                                    id: string;
+                                    email: string;
+                                    name?: string | null;
+                                    handle?: string | null;
+                                    /** @enum {string} */
+                                    user_type: "EDUCATOR" | "STUDENT";
+                                    user_type_confirmed: boolean;
+                                    school?: string | null;
+                                    region?: string | null;
+                                    kajabi_contact_id?: string | null;
+                                    /** Format: date-time */
+                                    created_at: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/admin/users/leaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin Bulk LEAPS Update
+         * @description Bulk update LEAPS fields (userType, userTypeConfirmed, school, region)
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        userIds: string[];
+                        /** @enum {string} */
+                        userType?: "EDUCATOR" | "STUDENT";
+                        userTypeConfirmed?: boolean;
+                        school?: string;
+                        region?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Bulk update results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                processed: number;
+                                failed: number;
+                                errors: {
+                                    userId: string;
+                                    error: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kajabi/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kajabi Health
+         * @description Check Kajabi connectivity and environment presence
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                healthy: boolean;
+                                hasKey: boolean;
+                                hasSecret: boolean;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kajabi/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kajabi Invite
+         * @description Force-enroll a user in Kajabi by userId or email and optionally grant an offer
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        userId?: string;
+                        /** Format: email */
+                        email?: string;
+                        name?: string;
+                        offerId?: string | number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Invitation sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                invited: boolean;
+                                contactId?: number;
+                                withOffer: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Upstream error */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/storage/retention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Storage Retention
+         * @description Enforce evidence retention policy for a user
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        userId: string;
+                        days?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Retention enforced */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                userId: string;
+                                days: number;
+                                deleted: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/slo/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * SLO Summary
+         * @description Get SLO summary or a specific SLO status (internal admin use)
+         */
+        get: {
+            parameters: {
+                query?: {
+                    slo?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stage Metrics
+         * @description Get metrics for a LEAPS stage
+         */
+        get: {
+            parameters: {
+                query: {
+                    stage: "learn" | "explore" | "amplify" | "present" | "shine";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                stage: string;
+                                totalSubmissions: number;
+                                approvedSubmissions: number;
+                                pendingSubmissions: number;
+                                rejectedSubmissions: number;
+                                avgPointsEarned: number;
+                                uniqueEducators: number;
+                                topSchools: {
+                                    name: string;
+                                    count: number;
+                                }[];
+                                cohortBreakdown: {
+                                    cohort: string;
+                                    count: number;
+                                }[];
+                                monthlyTrend: {
+                                    month: string;
+                                    submissions: number;
+                                    approvals: number;
+                                }[];
+                                completionRate: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid query */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/{handle}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Public Profile
+         * @description Get public profile data by handle
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    handle: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                id: string;
+                                handle: string;
+                                name: string;
+                                email: string;
+                                avatarUrl?: string | null;
+                                school?: string | null;
+                                cohort?: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                totalPoints: number;
+                                earnedBadges: {
+                                    badge: {
+                                        code: string;
+                                        name: string;
+                                        description?: string | null;
+                                        iconUrl?: string | null;
+                                    };
+                                    /** Format: date-time */
+                                    earnedAt: string;
+                                }[];
+                                submissions: {
+                                    id: string;
+                                    /**
+                                     * @description LEAPS activity codes
+                                     * @example LEARN
+                                     * @enum {string}
+                                     */
+                                    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                                    activity: {
+                                        name: string;
+                                        /**
+                                         * @description LEAPS activity codes
+                                         * @example LEARN
+                                         * @enum {string}
+                                         */
+                                        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                                    };
+                                    /**
+                                     * @description Submission review status
+                                     * @example PENDING
+                                     * @enum {string}
+                                     */
+                                    status: "PENDING" | "APPROVED" | "REJECTED";
+                                    /**
+                                     * @description Submission visibility setting
+                                     * @example PRIVATE
+                                     * @enum {string}
+                                     */
+                                    visibility: "PUBLIC" | "PRIVATE";
+                                    /** @description Submission payload data specific to each activity type */
+                                    payload: {
+                                        [key: string]: unknown;
+                                    };
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/referrals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Referrals
+         * @description List referral events with filters
+         */
+        get: {
+            parameters: {
+                query?: {
+                    referrerId?: string;
+                    refereeId?: string;
+                    email?: string;
+                    month?: string;
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                referrals: {
+                                    id: string;
+                                    eventType: string;
+                                    source?: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    externalEventId?: string | null;
+                                    referrer: {
+                                        id: string;
+                                        name: string;
+                                        email: string;
+                                    };
+                                    referee: {
+                                        id: string;
+                                        name: string;
+                                        email: string;
+                                        /** @enum {string} */
+                                        user_type: "EDUCATOR" | "STUDENT";
+                                    };
+                                }[];
+                                pagination: {
+                                    total: number;
+                                    limit: number;
+                                    offset: number;
+                                    pages: number;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/referrals/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Referrals Summary
+         * @description Monthly summary for referrals
+         */
+        get: {
+            parameters: {
+                query: {
+                    month: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                month: string;
+                                total: number;
+                                byType: {
+                                    educators: number;
+                                    students: number;
+                                };
+                                uniqueReferrers: number;
+                                pointsAwarded: number;
+                                topReferrers: {
+                                    userId: string;
+                                    points: number;
+                                    user: {
+                                        id: string;
+                                        name: string;
+                                        email: string;
+                                        handle: string;
+                                        /** @enum {string} */
+                                        user_type: "EDUCATOR" | "STUDENT";
+                                    };
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List User Submissions
+         * @description Get user submissions with optional filtering
+         */
+        get: {
+            parameters: {
+                query?: {
+                    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                    status?: "PENDING" | "APPROVED" | "REJECTED";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description User submissions retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * @description Unique submission identifier
+                                 * @example sub_abc123
+                                 */
+                                id: string;
+                                /**
+                                 * @description LEAPS activity codes
+                                 * @example LEARN
+                                 * @enum {string}
+                                 */
+                                activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                                /**
+                                 * @description Human-readable activity name
+                                 * @example Learn
+                                 */
+                                activityName: string;
+                                /**
+                                 * @description Submission review status
+                                 * @example PENDING
+                                 * @enum {string}
+                                 */
+                                status: "PENDING" | "APPROVED" | "REJECTED";
+                                /**
+                                 * @description Submission visibility setting
+                                 * @example PRIVATE
+                                 * @enum {string}
+                                 */
+                                visibility: "PUBLIC" | "PRIVATE";
+                                /**
+                                 * Format: date-time
+                                 * @description ISO 8601 timestamp
+                                 * @example 2024-01-15T10:00:00Z
+                                 */
+                                createdAt: string;
+                                /**
+                                 * Format: date-time
+                                 * @description ISO 8601 timestamp
+                                 * @example 2024-01-16T10:00:00Z
+                                 */
+                                updatedAt?: string;
+                                /**
+                                 * @description Reviewer feedback message
+                                 * @example Certificate looks good, approved!
+                                 */
+                                reviewNote?: string | null;
+                                /**
+                                 * @description Number of attached files
+                                 * @example 1
+                                 */
+                                attachmentCount: number;
+                                /**
+                                 * @description Points that could be earned if approved
+                                 * @example 20
+                                 */
+                                potentialPoints?: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Submit LEAPS Activity Evidence
+         * @description Create a new LEAPS activity submission
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Submission data */
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description LEAPS activity codes
+                         * @example LEARN
+                         * @enum {string}
+                         */
+                        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                        /** @description Activity-specific data matching the corresponding schema */
+                        payload: Record<string, never>;
+                        /**
+                         * @description Array of file storage paths
+                         * @example [
+                         *       "evidence/learn/user123/certificate.pdf"
+                         *     ]
+                         */
+                        attachments?: string[];
+                        /**
+                         * @description Submission visibility setting
+                         * @example PRIVATE
+                         * @enum {string}
+                         */
+                        visibility?: "PUBLIC" | "PRIVATE";
+                    };
+                };
+            };
+            responses: {
+                /** @description Submission created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /** @example sub_abc123 */
+                                id: string;
+                                /**
+                                 * @description LEAPS activity codes
+                                 * @example LEARN
+                                 * @enum {string}
+                                 */
+                                activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                                /**
+                                 * @description Submission review status
+                                 * @example PENDING
+                                 * @enum {string}
+                                 */
+                                status: "PENDING" | "APPROVED" | "REJECTED";
+                                /**
+                                 * @description Submission visibility setting
+                                 * @example PRIVATE
+                                 * @enum {string}
+                                 */
+                                visibility: "PUBLIC" | "PRIVATE";
+                                /**
+                                 * Format: date-time
+                                 * @example 2024-01-15T10:00:00Z
+                                 */
+                                createdAt: string;
+                                /** @example 20 */
+                                potentialPoints: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid submission data or business rule violation */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized - missing or invalid authentication */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Rate limit exceeded (e.g., Amplify 7-day limits) */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/referrals/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Referral Link
+         * @description Get or allocate a referral code and share link for the current user
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                refCode: string;
+                                /** Format: uri */
+                                link: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Profile Onboarding
+         * @description Complete required onboarding fields (role; educator school+region) and mirror to Clerk
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        userType: "EDUCATOR" | "STUDENT";
+                        school?: string;
+                        region?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/schools": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Schools Search
+         * @description Autocomplete search for schools by name
+         */
+        get: {
+            parameters: {
+                query: {
+                    q: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                name: string;
+                                city?: string | null;
+                                province?: string | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/files/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Evidence File
+         * @description Upload evidence files for LEAPS activities
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description File upload with activity context */
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description Evidence file (PDF, JPG, PNG, max 10MB)
+                         */
+                        file: string;
+                        /**
+                         * @description LEAPS activity code for file context
+                         * @example LEARN
+                         * @enum {string}
+                         */
+                        activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                    };
+                };
+            };
+            responses: {
+                /** @description File uploaded successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Upload success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * @description Storage path of uploaded file
+                                 * @example evidence/learn/user123/certificate.pdf
+                                 */
+                                path: string;
+                                /**
+                                 * @description File content hash for deduplication
+                                 * @example sha256:abc123...
+                                 */
+                                hash: string;
+                                /**
+                                 * @description Original filename
+                                 * @example certificate.pdf
+                                 */
+                                filename: string;
+                                /**
+                                 * @description File size in bytes
+                                 * @example 1024000
+                                 */
+                                size: number;
+                                /**
+                                 * @description MIME type
+                                 * @example application/pdf
+                                 */
+                                type: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid file or missing parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description File too large (max 10MB) */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Leaderboard
+         * @description Get public leaderboard data with pagination and search
+         */
+        get: {
+            parameters: {
+                query?: {
+                    period?: "all" | "30d";
+                    limit?: number;
+                    offset?: number | null;
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Leaderboard data retrieved successfully */
+                200: {
+                    headers: {
+                        /** @description Caching policy */
+                        "Cache-Control"?: string;
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Leaderboard time period
+                             * @example all
+                             * @enum {string}
+                             */
+                            period: "all" | "30d";
+                            data: {
+                                /**
+                                 * @description Current leaderboard position
+                                 * @example 1
+                                 */
+                                rank: number;
+                                user: {
+                                    /**
+                                     * @description User identifier
+                                     * @example user_123
+                                     */
+                                    id: string;
+                                    /**
+                                     * @description Unique user handle
+                                     * @example educator_ahmad
+                                     */
+                                    handle: string;
+                                    /**
+                                     * @description User display name
+                                     * @example Ahmad Sutanto
+                                     */
+                                    name: string;
+                                    /**
+                                     * @description School/institution name
+                                     * @example SDN 123 Jakarta
+                                     */
+                                    school?: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @description Profile picture URL
+                                     * @example https://images.clerk.dev/abc123
+                                     */
+                                    avatarUrl?: string | null;
+                                    /**
+                                     * @description Total points earned
+                                     * @example 95
+                                     */
+                                    totalPoints: number;
+                                    /** @description Badges earned by the user */
+                                    earnedBadges?: {
+                                        badge: {
+                                            /**
+                                             * @description Badge identifier
+                                             * @example EARLY_ADOPTER
+                                             */
+                                            code: string;
+                                            /**
+                                             * @description Badge display name
+                                             * @example Early Adopter
+                                             */
+                                            name: string;
+                                            /**
+                                             * Format: uri
+                                             * @description Badge icon URL
+                                             * @example https://storage.supabase.co/badges/early_adopter.svg
+                                             */
+                                            iconUrl?: string | null;
+                                        };
+                                    }[];
+                                };
+                            }[];
+                            /**
+                             * @description Total number of ranked users
+                             * @example 150
+                             */
+                            total: number;
+                            /**
+                             * @description Number of entries returned
+                             * @example 20
+                             */
+                            limit: number;
+                            /**
+                             * @description Starting position for pagination
+                             * @example 0
+                             */
+                            offset: number;
+                            /**
+                             * @description Whether more results are available
+                             * @example true
+                             */
+                            hasMore: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid query parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User Badges
+         * @description Get current user's earned badges
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description User badges retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                badges: {
+                                    /** @example EARLY_ADOPTER */
+                                    code: string;
+                                    /** @example Early Adopter */
+                                    name: string;
+                                    /** @example One of the first educators to join the program */
+                                    description: string;
+                                    /**
+                                     * Format: uri
+                                     * @example https://example.com/badge.png
+                                     */
+                                    iconUrl: string | null;
+                                    /** @example {
+                                     *       "type": "submissions",
+                                     *       "threshold": 1
+                                     *     } */
+                                    criteria: {
+                                        /** @enum {string} */
+                                        type: "points" | "submissions" | "activities" | "streak";
+                                        threshold: number;
+                                        activity_codes?: string[];
+                                        conditions?: {
+                                            [key: string]: string | number | boolean | string[] | number[];
+                                        };
+                                    };
+                                    /**
+                                     * Format: date-time
+                                     * @example 2024-01-15T10:00:00Z
+                                     */
+                                    earnedAt: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get User Dashboard
+         * @description Get user dashboard data including progress and recent submissions
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Dashboard data retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                user: {
+                                    /** @example user_123 */
+                                    id: string;
+                                    /** @example Ahmad Sutanto */
+                                    name: string;
+                                    /** @example educator_ahmad */
+                                    handle: string;
+                                    /**
+                                     * Format: email
+                                     * @example ahmad@school.edu
+                                     */
+                                    email: string;
+                                    /** @example SDN 123 Jakarta */
+                                    school: string | null;
+                                    /** @example Cohort-2024-A */
+                                    cohort: string | null;
+                                    /**
+                                     * Format: uri
+                                     * @example https://images.clerk.dev/abc123
+                                     */
+                                    avatar_url: string | null;
+                                    /**
+                                     * @description Whether profile is publicly visible
+                                     * @example false
+                                     */
+                                    profile_visibility: boolean;
+                                };
+                                progress: {
+                                    /** @example 95 */
+                                    totalPoints: number;
+                                    /** @example 4 */
+                                    completedActivities: number;
+                                    /** @example 5 */
+                                    totalActivities: number;
+                                    /** @example 15 */
+                                    leaderboardRank: number | null;
+                                };
+                                recentSubmissions: {
+                                    /**
+                                     * @description Unique submission identifier
+                                     * @example sub_abc123
+                                     */
+                                    id: string;
+                                    /**
+                                     * @description LEAPS activity codes
+                                     * @example LEARN
+                                     * @enum {string}
+                                     */
+                                    activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                                    /**
+                                     * @description Human-readable activity name
+                                     * @example Learn
+                                     */
+                                    activityName: string;
+                                    /**
+                                     * @description Submission review status
+                                     * @example PENDING
+                                     * @enum {string}
+                                     */
+                                    status: "PENDING" | "APPROVED" | "REJECTED";
+                                    /**
+                                     * @description Submission visibility setting
+                                     * @example PRIVATE
+                                     * @enum {string}
+                                     */
+                                    visibility: "PUBLIC" | "PRIVATE";
+                                    /**
+                                     * Format: date-time
+                                     * @description ISO 8601 timestamp
+                                     * @example 2024-01-15T10:00:00Z
+                                     */
+                                    createdAt: string;
+                                    /**
+                                     * Format: date-time
+                                     * @description ISO 8601 timestamp
+                                     * @example 2024-01-16T10:00:00Z
+                                     */
+                                    updatedAt?: string;
+                                    /**
+                                     * @description Reviewer feedback message
+                                     * @example Certificate looks good, approved!
+                                     */
+                                    reviewNote?: string | null;
+                                    /**
+                                     * @description Number of attached files
+                                     * @example 1
+                                     */
+                                    attachmentCount: number;
+                                    /**
+                                     * @description Points that could be earned if approved
+                                     * @example 20
+                                     */
+                                    potentialPoints?: number;
+                                }[];
+                                availableActivities: {
+                                    /**
+                                     * @description LEAPS activity codes
+                                     * @example LEARN
+                                     * @enum {string}
+                                     */
+                                    code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                                    /** @example Learn */
+                                    name: string;
+                                    /** @example Complete AI training and upload certificate */
+                                    description: string;
+                                    /** @example 20 */
+                                    default_points: number;
+                                    /** @example true */
+                                    hasSubmission: boolean;
+                                    /**
+                                     * @description Submission review status
+                                     * @example APPROVED
+                                     * @enum {string|null}
+                                     */
+                                    submissionStatus: "PENDING" | "APPROVED" | "REJECTED" | null;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Health Check
+         * @description Health check endpoint for monitoring
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Service is healthy */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example healthy */
+                            status: string;
+                            /**
+                             * Format: date-time
+                             * @example 2024-01-15T10:00:00Z
+                             */
+                            timestamp: string;
+                            /** @example 0.1.0 */
+                            version: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kajabi/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kajabi Course Completion Webhook
+         * @description Kajabi webhook for automatic Learn activity credit
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Kajabi webhook payload */
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @example course_completion */
+                        event_type: string;
+                        /**
+                         * Format: email
+                         * @example ahmad@school.edu
+                         */
+                        user_email: string;
+                        /** @example AI for Educators */
+                        course_name: string;
+                        /**
+                         * Format: date-time
+                         * @example 2024-01-15T10:00:00Z
+                         */
+                        completed_at: string;
+                        /**
+                         * Format: uri
+                         * @example https://kajabi.com/certificates/abc123
+                         */
+                        certificate_url?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Webhook processed successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            /** @example true */
+                            processed: boolean;
+                            /** @example true */
+                            user_matched: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid webhook payload */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid webhook signature */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Admin Submissions Queue
+         * @description Get submissions queue for review (admin only)
+         */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "PENDING" | "APPROVED" | "REJECTED";
+                    activity?: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                    limit?: number;
+                    offset?: number | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Admin submissions retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                submissions: {
+                                    /** @example sub_abc123 */
+                                    id: string;
+                                    /**
+                                     * Format: date-time
+                                     * @example 2024-01-15T10:00:00Z
+                                     */
+                                    created_at: string;
+                                    /** Format: date-time */
+                                    updated_at?: string | null;
+                                    /**
+                                     * @description Submission review status
+                                     * @example PENDING
+                                     * @enum {string}
+                                     */
+                                    status: "PENDING" | "APPROVED" | "REJECTED";
+                                    /**
+                                     * @description Submission visibility setting
+                                     * @example PRIVATE
+                                     * @enum {string}
+                                     */
+                                    visibility: "PUBLIC" | "PRIVATE";
+                                    review_note?: string | null;
+                                    attachments?: unknown[];
+                                    /** @example 2 */
+                                    attachmentCount?: number;
+                                    user: {
+                                        /** @example user_123 */
+                                        id: string;
+                                        /** @example Ahmad Sutanto */
+                                        name: string;
+                                        /** @example educator_ahmad */
+                                        handle: string;
+                                        /** Format: email */
+                                        email?: string;
+                                        school?: string | null;
+                                        cohort?: string | null;
+                                    };
+                                    activity: {
+                                        /**
+                                         * @description LEAPS activity codes
+                                         * @example LEARN
+                                         * @enum {string}
+                                         */
+                                        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                                        /** @example Learn */
+                                        name: string;
+                                        /** @example 20 */
+                                        default_points?: number;
+                                    };
+                                }[];
+                                pagination: {
+                                    /** @example 1 */
+                                    page: number;
+                                    /** @example 50 */
+                                    limit: number;
+                                    /** @example 250 */
+                                    total: number;
+                                    /** @example 5 */
+                                    pages: number;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Forbidden - insufficient permissions */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Bulk Review Submissions
+         * @description Bulk approve or reject submissions
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        submissionIds: string[];
+                        /** @enum {string} */
+                        action: "approve" | "reject";
+                        reviewNote?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Processed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+                /** @description Invalid body */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Review Submission
+         * @description Approve or reject a submission
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        submissionId: string;
+                        /** @enum {string} */
+                        action: "approve" | "reject";
+                        reviewNote?: string;
+                        pointAdjustment?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Reviewed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+                /** @description Invalid body */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/admin/submissions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Submission Detail
+         * @description Get a single submission by ID (admin/reviewer)
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Submission retrieved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                submission: {
+                                    /** @example sub_abc123 */
+                                    id: string;
+                                    /**
+                                     * Format: date-time
+                                     * @example 2024-01-15T10:00:00Z
+                                     */
+                                    created_at: string;
+                                    /** Format: date-time */
+                                    updated_at?: string | null;
+                                    /**
+                                     * @description Submission review status
+                                     * @example PENDING
+                                     * @enum {string}
+                                     */
+                                    status: "PENDING" | "APPROVED" | "REJECTED";
+                                    /**
+                                     * @description Submission visibility setting
+                                     * @example PRIVATE
+                                     * @enum {string}
+                                     */
+                                    visibility: "PUBLIC" | "PRIVATE";
+                                    review_note?: string | null;
+                                    attachments?: unknown[];
+                                    /** @example 2 */
+                                    attachmentCount?: number;
+                                    user: {
+                                        /** @example user_123 */
+                                        id: string;
+                                        /** @example Ahmad Sutanto */
+                                        name: string;
+                                        /** @example educator_ahmad */
+                                        handle: string;
+                                        /** Format: email */
+                                        email?: string;
+                                        school?: string | null;
+                                        cohort?: string | null;
+                                    };
+                                    activity: {
+                                        /**
+                                         * @description LEAPS activity codes
+                                         * @example LEARN
+                                         * @enum {string}
+                                         */
+                                        code: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+                                        /** @example Learn */
+                                        name: string;
+                                        /** @example 20 */
+                                        default_points?: number;
+                                    };
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Users
+         * @description List users with search and filters
+         */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    role?: "ALL" | "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+                    userType?: "ALL" | "EDUCATOR" | "STUDENT";
+                    kajabi?: "ALL" | "LINKED" | "UNLINKED";
+                    cohort?: string;
+                    page?: number;
+                    limit?: number;
+                    sortBy?: "created_at" | "name" | "email";
+                    sortOrder?: "asc" | "desc";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Users retrieved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                users: {
+                                    id: string;
+                                    handle: string;
+                                    name: string;
+                                    email: string;
+                                    avatar_url?: string | null;
+                                    /** @enum {string} */
+                                    role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+                                    school?: string | null;
+                                    cohort?: string | null;
+                                    /** Format: date-time */
+                                    created_at: string;
+                                    _count: {
+                                        submissions: number;
+                                        earned_badges: number;
+                                        ledger: number;
+                                    };
+                                    totalPoints: number;
+                                }[];
+                                pagination: {
+                                    /** @example 1 */
+                                    page: number;
+                                    /** @example 50 */
+                                    limit: number;
+                                    /** @example 250 */
+                                    total: number;
+                                    /** @example 5 */
+                                    pages: number;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid query */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Bulk Update Users
+         * @description Bulk update user roles
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        userIds: string[];
+                        role: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+                /** @description Invalid body */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update User
+         * @description Update a single user
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        userId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+                /** @description Invalid body */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/admin/badges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Badges
+         * @description List badges
+         */
+        get: {
+            parameters: {
+                query?: {
+                    includeStats?: "true" | "false";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                badges: {
+                                    code: string;
+                                    name: string;
+                                    description: string;
+                                    /** @description Badge criteria configuration */
+                                    criteria: {
+                                        /** @enum {string} */
+                                        type: "points" | "submissions" | "activities" | "streak";
+                                        threshold: number;
+                                        activity_codes?: string[];
+                                        conditions?: {
+                                            [key: string]: string | number | boolean | string[] | number[];
+                                        };
+                                    };
+                                    /** Format: uri */
+                                    icon_url?: string | null;
+                                    _count?: {
+                                        earned_badges?: number;
+                                    };
+                                    earned_badges?: {
+                                        id: string;
+                                        user: {
+                                            id: string;
+                                            name: string;
+                                            handle: string;
+                                        };
+                                        /** Format: date-time */
+                                        earned_at: string;
+                                    }[];
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create Badge
+         * @description Create a badge
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        code: string;
+                        name: string;
+                        description: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        /**
+         * Delete Badge
+         * @description Delete a badge by code
+         */
+        delete: {
+            parameters: {
+                query: {
+                    code: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Update Badge
+         * @description Update a badge
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/admin/badges/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Assign Badge
+         * @description Assign a badge to users
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        badgeCode: string;
+                        userIds: string[];
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Assigned */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        /**
+         * Remove Badge
+         * @description Remove a badge from users
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        badgeCode: string;
+                        userIds: string[];
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Removed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Analytics
+         * @description Get analytics data
+         */
+        get: {
+            parameters: {
+                query?: {
+                    startDate?: string;
+                    endDate?: string;
+                    cohort?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                overview: {
+                                    submissions: {
+                                        total: number;
+                                        pending: number;
+                                        approved: number;
+                                        rejected: number;
+                                        approvalRate: number;
+                                    };
+                                    users: {
+                                        total: number;
+                                        active: number;
+                                        withSubmissions: number;
+                                        withBadges: number;
+                                        activationRate: number;
+                                    };
+                                    points: {
+                                        totalAwarded: number;
+                                        totalEntries: number;
+                                        avgPerEntry: number;
+                                    };
+                                    badges: {
+                                        totalBadges: number;
+                                        totalEarned: number;
+                                        uniqueEarners: number;
+                                    };
+                                    reviews: {
+                                        pendingReviews: number;
+                                        avgReviewTimeHours: number;
+                                    };
+                                };
+                                distributions: {
+                                    submissionsByStatus: {
+                                        status: string;
+                                        count: number;
+                                    }[];
+                                    submissionsByActivity: {
+                                        activity: string;
+                                        activityName?: string;
+                                        count: number;
+                                    }[];
+                                    usersByRole: {
+                                        role: string;
+                                        count: number;
+                                    }[];
+                                    usersByCohort?: {
+                                        cohort: string | null;
+                                        count: number;
+                                    }[];
+                                    pointsByActivity: {
+                                        activity: string;
+                                        activityName?: string;
+                                        totalPoints: number;
+                                        entries: number;
+                                    }[];
+                                    pointsDistribution?: {
+                                        totalUsers: number;
+                                        max: number;
+                                        min: number;
+                                        avg: number;
+                                        percentiles: {
+                                            percentile: number;
+                                            value: number;
+                                        }[];
+                                    };
+                                };
+                                trends: {
+                                    submissionsByDate: {
+                                        date: string;
+                                        total: number;
+                                        approved: number;
+                                        rejected: number;
+                                        pending: number;
+                                    }[];
+                                    userRegistrationsByDate: {
+                                        date: string;
+                                        count: number;
+                                    }[];
+                                };
+                                recentActivity: {
+                                    submissions: {
+                                        id: string;
+                                        user: {
+                                            name: string;
+                                            handle: string;
+                                        };
+                                        activity: {
+                                            name: string;
+                                        };
+                                        status: string;
+                                        /** Format: date-time */
+                                        created_at: string;
+                                    }[];
+                                    approvals: {
+                                        id: string;
+                                        user: {
+                                            name: string;
+                                            handle: string;
+                                        };
+                                        activity: {
+                                            name: string;
+                                        };
+                                        /** Format: date-time */
+                                        updated_at: string;
+                                    }[];
+                                    users: {
+                                        id: string;
+                                        name: string;
+                                        handle: string;
+                                        email: string;
+                                        role: string;
+                                        /** Format: date-time */
+                                        created_at: string;
+                                    }[];
+                                };
+                                performance: {
+                                    reviewers: {
+                                        id: string;
+                                        name: string;
+                                        handle: string;
+                                        role: string;
+                                        approved: number;
+                                        rejected: number;
+                                        total: number;
+                                    }[];
+                                    topBadges: {
+                                        badge: {
+                                            code?: string;
+                                            name?: string;
+                                            /** Format: uri */
+                                            icon_url?: string | null;
+                                        };
+                                        earnedCount: number;
+                                    }[];
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/exports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exports
+         * @description Export data as CSV
+         */
+        get: {
+            parameters: {
+                query: {
+                    type: "submissions" | "users" | "leaderboard" | "points";
+                    format: "csv";
+                    startDate?: string;
+                    endDate?: string;
+                    activity?: string;
+                    status?: string;
+                    cohort?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV content */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/csv": string;
+                    };
+                };
+                /** @description Invalid query */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kajabi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Kajabi Events
+         * @description List recent Kajabi webhook events and stats
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                events: {
+                                    id: string;
+                                    /** Format: date-time */
+                                    received_at: string;
+                                    /** Format: date-time */
+                                    processed_at: string | null;
+                                    user_match: string | null;
+                                    payload: {
+                                        event_id?: string;
+                                        /** @enum {string} */
+                                        event_type: "contact.tagged" | "tag.added" | "tag.removed";
+                                        contact: {
+                                            id: number;
+                                            /** Format: email */
+                                            email: string;
+                                            first_name?: string;
+                                            last_name?: string;
+                                            tags?: string[];
+                                        };
+                                        tag: {
+                                            name: string;
+                                        };
+                                    };
+                                }[];
+                                stats: {
+                                    total_events: number;
+                                    processed_events: number;
+                                    matched_users: number;
+                                    unmatched_events: number;
+                                    points_awarded: number;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kajabi/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kajabi Test Event
+         * @description Create a test Kajabi completion event for a user
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: email */
+                        user_email: string;
+                        course_name?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/kajabi/reprocess": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Kajabi Reprocess
+         * @description Reprocess a stored Kajabi event by ID
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        event_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Reprocessed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/meta/cohorts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cohorts
+         * @description List available cohorts
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                            data: {
+                                cohorts: string[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+}
+export type webhooks = Record<string, never>;
+export interface components {
+    schemas: {
+        /**
+         * @description LEAPS activity codes
+         * @example LEARN
+         * @enum {string}
+         */
+        ActivityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+        /**
+         * @description Submission review status
+         * @example PENDING
+         * @enum {string}
+         */
+        SubmissionStatus: "PENDING" | "APPROVED" | "REJECTED";
+        /**
+         * @description Submission visibility setting
+         * @example PRIVATE
+         * @enum {string}
+         */
+        Visibility: "PUBLIC" | "PRIVATE";
+        /**
+         * Learn Submission
+         * @description Schema for Learn activity submissions (certificate upload)
+         * @example {
+         *       "provider": "SPL",
+         *       "course": "AI for Educators",
+         *       "completedAt": "2024-01-15T10:00:00Z",
+         *       "certificateFile": "evidence/learn/user123/certificate.pdf"
+         *     }
+         */
+        LearnSubmission: {
+            /** @enum {string} */
+            provider: "SPL" | "ILS";
+            course: string;
+            completedAt: string;
+            /** @description Storage path after upload */
+            certificateFile?: string;
+        };
+        /**
+         * Explore Submission
+         * @description Schema for Explore activity submissions (classroom AI application)
+         * @example {
+         *       "reflection": "I successfully integrated AI tools into my mathematics class by using ChatGPT to create personalized word problems for each student based on their skill level. The students were more engaged and showed improved problem-solving skills.",
+         *       "classDate": "2024-01-20",
+         *       "school": "SDN 123 Jakarta",
+         *       "evidenceFiles": [
+         *         "evidence/explore/user123/classroom_photo.jpg",
+         *         "evidence/explore/user123/student_work.pdf"
+         *       ]
+         *     }
+         */
+        ExploreSubmission: {
+            reflection: string;
+            classDate: string;
+            school?: string;
+            /** @description Array of storage paths after upload */
+            evidenceFiles?: string[];
+        };
+        /**
+         * Amplify Submission
+         * @description Schema for Amplify activity submissions (training others)
+         * @example {
+         *       "peersTrained": 5,
+         *       "studentsTrained": 25,
+         *       "attendanceProofFiles": [
+         *         "evidence/amplify/user123/attendance_sheet.pdf",
+         *         "evidence/amplify/user123/training_photos.jpg"
+         *       ]
+         *     }
+         */
+        AmplifySubmission: {
+            peersTrained: number | null;
+            studentsTrained: number | null;
+            /** @description Array of storage paths after upload */
+            attendanceProofFiles?: string[];
+        };
+        /**
+         * Present Submission
+         * @description Schema for Present activity submissions (LinkedIn sharing)
+         * @example {
+         *       "linkedinUrl": "https://linkedin.com/posts/educator123_ai-education-innovation",
+         *       "screenshotFile": "evidence/present/user123/linkedin_screenshot.png",
+         *       "caption": "Excited to share how AI is transforming my classroom!"
+         *     }
+         */
+        PresentSubmission: {
+            /** Format: uri */
+            linkedinUrl: string;
+            /** @description Storage path after upload */
+            screenshotFile?: string;
+            caption: string;
+        };
+        /**
+         * Shine Submission
+         * @description Schema for Shine activity submissions (innovative ideas)
+         * @example {
+         *       "ideaTitle": "AI-Powered Student Assessment",
+         *       "ideaSummary": "A comprehensive system that uses AI to provide real-time feedback and adaptive assessment for students, helping teachers identify learning gaps instantly.",
+         *       "attachment": [
+         *         "evidence/shine/user123/idea_presentation.pdf"
+         *       ]
+         *     }
+         */
+        ShineSubmission: {
+            ideaTitle: string;
+            ideaSummary: string;
+            /** @description Array of storage paths after upload */
+            attachment?: string[];
+        };
+        /**
+         * Submission Request
+         * @description Request body for creating a new submission
+         */
+        SubmissionRequest: {
             /**
              * @description LEAPS activity codes
              * @example LEARN
              * @enum {string}
              */
-            activityCode: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
+            activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
             /** @description Activity-specific data matching the corresponding schema */
-            payload: Record<string, never>
+            payload: Record<string, never>;
             /**
              * @description Array of file storage paths
              * @example [
              *       "evidence/learn/user123/certificate.pdf"
              *     ]
              */
-            attachments?: string[]
+            attachments?: string[];
             /**
              * @description Submission visibility setting
              * @example PRIVATE
              * @enum {string}
              */
-            visibility?: 'PUBLIC' | 'PRIVATE'
-          }
-        }
-      }
-      responses: {
-        /** @description Submission created successfully */
-        201: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @example true */
-              success: boolean
-              data: {
-                /** @example sub_abc123 */
-                id: string
-                /**
-                 * @description LEAPS activity codes
-                 * @example LEARN
-                 * @enum {string}
-                 */
-                activityCode:
-                  | 'LEARN'
-                  | 'EXPLORE'
-                  | 'AMPLIFY'
-                  | 'PRESENT'
-                  | 'SHINE'
-                /**
-                 * @description Submission review status
-                 * @example PENDING
-                 * @enum {string}
-                 */
-                status: 'PENDING' | 'APPROVED' | 'REJECTED'
-                /**
-                 * @description Submission visibility setting
-                 * @example PRIVATE
-                 * @enum {string}
-                 */
-                visibility: 'PUBLIC' | 'PRIVATE'
-                /**
-                 * Format: date-time
-                 * @example 2024-01-15T10:00:00Z
-                 */
-                createdAt: string
-                /** @example 20 */
-                potentialPoints: number
-              }
-            }
-          }
-        }
-        /** @description Invalid submission data or business rule violation */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-        /** @description Unauthorized - missing or invalid authentication */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-        /** @description Rate limit exceeded (e.g., Amplify 7-day limits) */
-        429: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/referrals/link': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * My Referral Link
-     * @description Get or allocate a referral code and share link for the current user
-     */
-    get: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              data: {
-                refCode: string
-                /** Format: uri */
-                link: string
-              }
-            }
-          }
-        }
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/files/upload': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Upload Evidence File
-     * @description Upload evidence files for LEAPS activities
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      /** @description File upload with activity context */
-      requestBody?: {
-        content: {
-          'multipart/form-data': {
+            visibility?: "PUBLIC" | "PRIVATE";
+        };
+        /**
+         * Submission Response
+         * @description Response format for submission data
+         */
+        SubmissionResponse: {
             /**
-             * Format: binary
-             * @description Evidence file (PDF, JPG, PNG, max 10MB)
+             * @description Unique submission identifier
+             * @example sub_abc123
              */
-            file: string
+            id: string;
             /**
-             * @description LEAPS activity code for file context
+             * @description LEAPS activity codes
              * @example LEARN
              * @enum {string}
              */
-            activityCode: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-          }
-        }
-      }
-      responses: {
-        /** @description File uploaded successfully */
-        201: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Upload success status
-               * @example true
-               */
-              success: boolean
-              data: {
-                /**
-                 * @description Storage path of uploaded file
-                 * @example evidence/learn/user123/certificate.pdf
-                 */
-                path: string
-                /**
-                 * @description File content hash for deduplication
-                 * @example sha256:abc123...
-                 */
-                hash: string
-                /**
-                 * @description Original filename
-                 * @example certificate.pdf
-                 */
-                filename: string
-                /**
-                 * @description File size in bytes
-                 * @example 1024000
-                 */
-                size: number
-                /**
-                 * @description MIME type
-                 * @example application/pdf
-                 */
-                type: string
-              }
-            }
-          }
-        }
-        /** @description Invalid file or missing parameters */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-        /** @description File too large (max 10MB) */
-        413: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/leaderboard': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get Leaderboard
-     * @description Get public leaderboard data with pagination and search
-     */
-    get: {
-      parameters: {
-        query?: {
-          period?: 'all' | '30d'
-          limit?: number
-          offset?: number | null
-          search?: string
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description Leaderboard data retrieved successfully */
-        200: {
-          headers: {
-            /** @description Caching policy */
-            'Cache-Control'?: string
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Leaderboard time period
-               * @example all
-               * @enum {string}
-               */
-              period: 'all' | '30d'
-              data: {
+            activityCode: "LEARN" | "EXPLORE" | "AMPLIFY" | "PRESENT" | "SHINE";
+            /**
+             * @description Human-readable activity name
+             * @example Learn
+             */
+            activityName: string;
+            /**
+             * @description Submission review status
+             * @example PENDING
+             * @enum {string}
+             */
+            status: "PENDING" | "APPROVED" | "REJECTED";
+            /**
+             * @description Submission visibility setting
+             * @example PRIVATE
+             * @enum {string}
+             */
+            visibility: "PUBLIC" | "PRIVATE";
+            /**
+             * Format: date-time
+             * @description ISO 8601 timestamp
+             * @example 2024-01-15T10:00:00Z
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 timestamp
+             * @example 2024-01-16T10:00:00Z
+             */
+            updatedAt?: string;
+            /**
+             * @description Reviewer feedback message
+             * @example Certificate looks good, approved!
+             */
+            reviewNote?: string | null;
+            /**
+             * @description Number of attached files
+             * @example 1
+             */
+            attachmentCount: number;
+            /**
+             * @description Points that could be earned if approved
+             * @example 20
+             */
+            potentialPoints?: number;
+        };
+        /**
+         * Leaderboard Response
+         * @description Paginated leaderboard data with user rankings
+         */
+        LeaderboardResponse: {
+            /**
+             * @description Leaderboard time period
+             * @example all
+             * @enum {string}
+             */
+            period: "all" | "30d";
+            data: {
                 /**
                  * @description Current leaderboard position
                  * @example 1
                  */
-                rank: number
+                rank: number;
                 user: {
-                  /**
-                   * @description User identifier
-                   * @example user_123
-                   */
-                  id: string
-                  /**
-                   * @description Unique user handle
-                   * @example educator_ahmad
-                   */
-                  handle: string
-                  /**
-                   * @description User display name
-                   * @example Ahmad Sutanto
-                   */
-                  name: string
-                  /**
-                   * @description School/institution name
-                   * @example SDN 123 Jakarta
-                   */
-                  school?: string | null
-                  /**
-                   * Format: uri
-                   * @description Profile picture URL
-                   * @example https://images.clerk.dev/abc123
-                   */
-                  avatarUrl?: string | null
-                  /**
-                   * @description Total points earned
-                   * @example 95
-                   */
-                  totalPoints: number
-                  /** @description Badges earned by the user */
-                  earnedBadges?: {
-                    badge: {
-                      /**
-                       * @description Badge identifier
-                       * @example EARLY_ADOPTER
-                       */
-                      code: string
-                      /**
-                       * @description Badge display name
-                       * @example Early Adopter
-                       */
-                      name: string
-                      /**
-                       * Format: uri
-                       * @description Badge icon URL
-                       * @example https://storage.supabase.co/badges/early_adopter.svg
-                       */
-                      iconUrl?: string | null
-                    }
-                  }[]
-                }
-              }[]
-              /**
-               * @description Total number of ranked users
-               * @example 150
-               */
-              total: number
-              /**
-               * @description Number of entries returned
-               * @example 20
-               */
-              limit: number
-              /**
-               * @description Starting position for pagination
-               * @example 0
-               */
-              offset: number
-              /**
-               * @description Whether more results are available
-               * @example true
-               */
-              hasMore: boolean
-            }
-          }
-        }
-        /** @description Invalid query parameters */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/badges': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get User Badges
-     * @description Get current user's earned badges
-     */
-    get: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description User badges retrieved successfully */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @example true */
-              success: boolean
-              data: {
-                badges: {
-                  /** @example EARLY_ADOPTER */
-                  code: string
-                  /** @example Early Adopter */
-                  name: string
-                  /** @example One of the first educators to join the program */
-                  description: string
-                  /**
-                   * Format: uri
-                   * @example https://example.com/badge.png
-                   */
-                  iconUrl: string | null
-                  /** @example {
-                   *       "type": "submissions",
-                   *       "threshold": 1
-                   *     } */
-                  criteria: {
-                    /** @enum {string} */
-                    type: 'points' | 'submissions' | 'activities' | 'streak'
-                    threshold: number
-                    activity_codes?: string[]
-                    conditions?: {
-                      [key: string]:
-                        | string
-                        | number
-                        | boolean
-                        | string[]
-                        | number[]
-                    }
-                  }
-                  /**
-                   * Format: date-time
-                   * @example 2024-01-15T10:00:00Z
-                   */
-                  earnedAt: string
-                }[]
-              }
-            }
-          }
-        }
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/dashboard': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get User Dashboard
-     * @description Get user dashboard data including progress and recent submissions
-     */
-    get: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description Dashboard data retrieved successfully */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @example true */
-              success: boolean
-              data: {
-                user: {
-                  /** @example user_123 */
-                  id: string
-                  /** @example Ahmad Sutanto */
-                  name: string
-                  /** @example educator_ahmad */
-                  handle: string
-                  /**
-                   * Format: email
-                   * @example ahmad@school.edu
-                   */
-                  email: string
-                  /** @example SDN 123 Jakarta */
-                  school: string | null
-                  /** @example Cohort-2024-A */
-                  cohort: string | null
-                  /**
-                   * Format: uri
-                   * @example https://images.clerk.dev/abc123
-                   */
-                  avatar_url: string | null
-                  /**
-                   * @description Whether profile is publicly visible
-                   * @example false
-                   */
-                  profile_visibility: boolean
-                }
-                progress: {
-                  /** @example 95 */
-                  totalPoints: number
-                  /** @example 4 */
-                  completedActivities: number
-                  /** @example 5 */
-                  totalActivities: number
-                  /** @example 15 */
-                  leaderboardRank: number | null
-                }
-                recentSubmissions: {
-                  /**
-                   * @description Unique submission identifier
-                   * @example sub_abc123
-                   */
-                  id: string
-                  /**
-                   * @description LEAPS activity codes
-                   * @example LEARN
-                   * @enum {string}
-                   */
-                  activityCode:
-                    | 'LEARN'
-                    | 'EXPLORE'
-                    | 'AMPLIFY'
-                    | 'PRESENT'
-                    | 'SHINE'
-                  /**
-                   * @description Human-readable activity name
-                   * @example Learn
-                   */
-                  activityName: string
-                  /**
-                   * @description Submission review status
-                   * @example PENDING
-                   * @enum {string}
-                   */
-                  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-                  /**
-                   * @description Submission visibility setting
-                   * @example PRIVATE
-                   * @enum {string}
-                   */
-                  visibility: 'PUBLIC' | 'PRIVATE'
-                  /**
-                   * Format: date-time
-                   * @description ISO 8601 timestamp
-                   * @example 2024-01-15T10:00:00Z
-                   */
-                  createdAt: string
-                  /**
-                   * Format: date-time
-                   * @description ISO 8601 timestamp
-                   * @example 2024-01-16T10:00:00Z
-                   */
-                  updatedAt?: string
-                  /**
-                   * @description Reviewer feedback message
-                   * @example Certificate looks good, approved!
-                   */
-                  reviewNote?: string | null
-                  /**
-                   * @description Number of attached files
-                   * @example 1
-                   */
-                  attachmentCount: number
-                  /**
-                   * @description Points that could be earned if approved
-                   * @example 20
-                   */
-                  potentialPoints?: number
-                }[]
-                availableActivities: {
-                  /**
-                   * @description LEAPS activity codes
-                   * @example LEARN
-                   * @enum {string}
-                   */
-                  code: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-                  /** @example Learn */
-                  name: string
-                  /** @example Complete AI training and upload certificate */
-                  description: string
-                  /** @example 20 */
-                  default_points: number
-                  /** @example true */
-                  hasSubmission: boolean
-                  /**
-                   * @description Submission review status
-                   * @example APPROVED
-                   * @enum {string|null}
-                   */
-                  submissionStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null
-                }[]
-              }
-            }
-          }
-        }
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/health': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Health Check
-     * @description Health check endpoint for monitoring
-     */
-    get: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description Service is healthy */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @example healthy */
-              status: string
-              /**
-               * Format: date-time
-               * @example 2024-01-15T10:00:00Z
-               */
-              timestamp: string
-              /** @example 0.1.0 */
-              version: string
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/kajabi/webhook': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Kajabi Course Completion Webhook
-     * @description Kajabi webhook for automatic Learn activity credit
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      /** @description Kajabi webhook payload */
-      requestBody?: {
-        content: {
-          'application/json': {
-            /** @example course_completion */
-            event_type: string
-            /**
-             * Format: email
-             * @example ahmad@school.edu
-             */
-            user_email: string
-            /** @example AI for Educators */
-            course_name: string
-            /**
-             * Format: date-time
-             * @example 2024-01-15T10:00:00Z
-             */
-            completed_at: string
-            /**
-             * Format: uri
-             * @example https://kajabi.com/certificates/abc123
-             */
-            certificate_url?: string
-          }
-        }
-      }
-      responses: {
-        /** @description Webhook processed successfully */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @example true */
-              success: boolean
-              /** @example true */
-              processed: boolean
-              /** @example true */
-              user_matched: boolean
-            }
-          }
-        }
-        /** @description Invalid webhook payload */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-        /** @description Invalid webhook signature */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/submissions': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get Admin Submissions Queue
-     * @description Get submissions queue for review (admin only)
-     */
-    get: {
-      parameters: {
-        query?: {
-          status?: 'PENDING' | 'APPROVED' | 'REJECTED'
-          activity?: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-          limit?: number
-          offset?: number | null
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description Admin submissions retrieved successfully */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @enum {boolean} */
-              success: true
-              data: {
-                submissions: {
-                  /** @example sub_abc123 */
-                  id: string
-                  /**
-                   * Format: date-time
-                   * @example 2024-01-15T10:00:00Z
-                   */
-                  created_at: string
-                  /** Format: date-time */
-                  updated_at?: string | null
-                  /**
-                   * @description Submission review status
-                   * @example PENDING
-                   * @enum {string}
-                   */
-                  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-                  /**
-                   * @description Submission visibility setting
-                   * @example PRIVATE
-                   * @enum {string}
-                   */
-                  visibility: 'PUBLIC' | 'PRIVATE'
-                  review_note?: string | null
-                  attachments?: unknown[]
-                  /** @example 2 */
-                  attachmentCount?: number
-                  user: {
-                    /** @example user_123 */
-                    id: string
-                    /** @example Ahmad Sutanto */
-                    name: string
-                    /** @example educator_ahmad */
-                    handle: string
-                    /** Format: email */
-                    email?: string
-                    school?: string | null
-                    cohort?: string | null
-                  }
-                  activity: {
                     /**
-                     * @description LEAPS activity codes
-                     * @example LEARN
-                     * @enum {string}
+                     * @description User identifier
+                     * @example user_123
                      */
-                    code: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-                    /** @example Learn */
-                    name: string
-                    /** @example 20 */
-                    default_points?: number
-                  }
-                }[]
-                pagination: {
-                  /** @example 1 */
-                  page: number
-                  /** @example 50 */
-                  limit: number
-                  /** @example 250 */
-                  total: number
-                  /** @example 5 */
-                  pages: number
-                }
-              }
-            }
-          }
-        }
-        /** @description Unauthorized */
-        401: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-        /** @description Forbidden - insufficient permissions */
-        403: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    /**
-     * Bulk Review Submissions
-     * @description Bulk approve or reject submissions
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            submissionIds: string[]
-            /** @enum {string} */
-            action: 'approve' | 'reject'
-            reviewNote?: string
-          }
-        }
-      }
-      responses: {
-        /** @description Processed */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-        /** @description Invalid body */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    delete?: never
-    options?: never
-    head?: never
-    /**
-     * Review Submission
-     * @description Approve or reject a submission
-     */
-    patch: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            submissionId: string
-            /** @enum {string} */
-            action: 'approve' | 'reject'
-            reviewNote?: string
-            pointAdjustment?: number
-          }
-        }
-      }
-      responses: {
-        /** @description Reviewed */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-        /** @description Invalid body */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    trace?: never
-  }
-  '/api/admin/submissions/{id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Get Submission Detail
-     * @description Get a single submission by ID (admin/reviewer)
-     */
-    get: {
-      parameters: {
-        query?: never
-        header?: never
-        path: {
-          id: string
-        }
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description Submission retrieved */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @enum {boolean} */
-              success: true
-              data: {
-                submission: {
-                  /** @example sub_abc123 */
-                  id: string
-                  /**
-                   * Format: date-time
-                   * @example 2024-01-15T10:00:00Z
-                   */
-                  created_at: string
-                  /** Format: date-time */
-                  updated_at?: string | null
-                  /**
-                   * @description Submission review status
-                   * @example PENDING
-                   * @enum {string}
-                   */
-                  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-                  /**
-                   * @description Submission visibility setting
-                   * @example PRIVATE
-                   * @enum {string}
-                   */
-                  visibility: 'PUBLIC' | 'PRIVATE'
-                  review_note?: string | null
-                  attachments?: unknown[]
-                  /** @example 2 */
-                  attachmentCount?: number
-                  user: {
-                    /** @example user_123 */
-                    id: string
-                    /** @example Ahmad Sutanto */
-                    name: string
-                    /** @example educator_ahmad */
-                    handle: string
-                    /** Format: email */
-                    email?: string
-                    school?: string | null
-                    cohort?: string | null
-                  }
-                  activity: {
+                    id: string;
                     /**
-                     * @description LEAPS activity codes
-                     * @example LEARN
-                     * @enum {string}
+                     * @description Unique user handle
+                     * @example educator_ahmad
                      */
-                    code: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-                    /** @example Learn */
-                    name: string
-                    /** @example 20 */
-                    default_points?: number
-                  }
-                }
-              }
-            }
-          }
-        }
-        /** @description Not found */
-        404: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
+                    handle: string;
+                    /**
+                     * @description User display name
+                     * @example Ahmad Sutanto
+                     */
+                    name: string;
+                    /**
+                     * @description School/institution name
+                     * @example SDN 123 Jakarta
+                     */
+                    school?: string | null;
+                    /**
+                     * Format: uri
+                     * @description Profile picture URL
+                     * @example https://images.clerk.dev/abc123
+                     */
+                    avatarUrl?: string | null;
+                    /**
+                     * @description Total points earned
+                     * @example 95
+                     */
+                    totalPoints: number;
+                    /** @description Badges earned by the user */
+                    earnedBadges?: {
+                        badge: {
+                            /**
+                             * @description Badge identifier
+                             * @example EARLY_ADOPTER
+                             */
+                            code: string;
+                            /**
+                             * @description Badge display name
+                             * @example Early Adopter
+                             */
+                            name: string;
+                            /**
+                             * Format: uri
+                             * @description Badge icon URL
+                             * @example https://storage.supabase.co/badges/early_adopter.svg
+                             */
+                            iconUrl?: string | null;
+                        };
+                    }[];
+                };
+            }[];
+            /**
+             * @description Total number of ranked users
+             * @example 150
+             */
+            total: number;
+            /**
+             * @description Number of entries returned
+             * @example 20
+             */
+            limit: number;
+            /**
+             * @description Starting position for pagination
+             * @example 0
+             */
+            offset: number;
+            /**
+             * @description Whether more results are available
+             * @example true
+             */
+            hasMore: boolean;
+        };
+        /**
+         * File Upload Response
+         * @description Response from successful file upload
+         */
+        FileUploadResponse: {
+            /**
+             * @description Upload success status
+             * @example true
+             */
+            success: boolean;
+            data: {
+                /**
+                 * @description Storage path of uploaded file
+                 * @example evidence/learn/user123/certificate.pdf
+                 */
+                path: string;
+                /**
+                 * @description File content hash for deduplication
+                 * @example sha256:abc123...
+                 */
+                hash: string;
+                /**
+                 * @description Original filename
+                 * @example certificate.pdf
+                 */
+                filename: string;
+                /**
+                 * @description File size in bytes
+                 * @example 1024000
+                 */
+                size: number;
+                /**
+                 * @description MIME type
+                 * @example application/pdf
+                 */
+                type: string;
+            };
+        };
+        /**
+         * Error Envelope
+         * @description Standard error envelope for LEAPS APIs
+         */
+        ErrorEnvelope: {
+            /**
+             * @example validation
+             * @enum {string}
+             */
+            type: "validation" | "cap" | "state" | "auth" | "idempotency";
+            /** @example INVALID_JSON */
+            code: string;
+            /** @example Body must be valid JSON */
+            message: string;
+            details?: unknown;
+        };
+        /**
+         * Error Response
+         * @description API error response with standardized envelope
+         */
+        ErrorResponse: {
+            /**
+             * Error Envelope
+             * @description Standard error envelope for LEAPS APIs
+             */
+            error: {
                 /**
                  * @example validation
                  * @enum {string}
                  */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
+                type: "validation" | "cap" | "state" | "auth" | "idempotency";
                 /** @example INVALID_JSON */
-                code: string
+                code: string;
                 /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/users': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Admin Users
-     * @description List users with search and filters
-     */
-    get: {
-      parameters: {
-        query?: {
-          search?: string
-          role?: 'ALL' | 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
-          cohort?: string
-          page?: number
-          limit?: number
-          sortBy?: 'created_at' | 'name' | 'email'
-          sortOrder?: 'asc' | 'desc'
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description Users retrieved */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @enum {boolean} */
-              success: true
-              data: {
-                users: {
-                  id: string
-                  handle: string
-                  name: string
-                  email: string
-                  avatar_url?: string | null
-                  /** @enum {string} */
-                  role: 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
-                  school?: string | null
-                  cohort?: string | null
-                  /** Format: date-time */
-                  created_at: string
-                  _count: {
-                    submissions: number
-                    earned_badges: number
-                    ledger: number
-                  }
-                  totalPoints: number
-                }[]
-                pagination: {
-                  /** @example 1 */
-                  page: number
-                  /** @example 50 */
-                  limit: number
-                  /** @example 250 */
-                  total: number
-                  /** @example 5 */
-                  pages: number
-                }
-              }
-            }
-          }
-        }
-        /** @description Invalid query */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    /**
-     * Bulk Update Users
-     * @description Bulk update user roles
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            userIds: string[]
-            role: string
-          }
-        }
-      }
-      responses: {
-        /** @description Updated */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-        /** @description Invalid body */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    delete?: never
-    options?: never
-    head?: never
-    /**
-     * Update User
-     * @description Update a single user
-     */
-    patch: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            userId: string
-          }
-        }
-      }
-      responses: {
-        /** @description Updated */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-        /** @description Invalid body */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    trace?: never
-  }
-  '/api/admin/badges': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * List Badges
-     * @description List badges
-     */
-    get: {
-      parameters: {
-        query?: {
-          includeStats?: 'true' | 'false'
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @enum {boolean} */
-              success: true
-              data: {
-                badges: {
-                  code: string
-                  name: string
-                  description: string
-                  /** @description Badge criteria configuration */
-                  criteria: {
-                    /** @enum {string} */
-                    type: 'points' | 'submissions' | 'activities' | 'streak'
-                    threshold: number
-                    activity_codes?: string[]
-                    conditions?: {
-                      [key: string]:
-                        | string
-                        | number
-                        | boolean
-                        | string[]
-                        | number[]
-                    }
-                  }
-                  /** Format: uri */
-                  icon_url?: string | null
-                  _count?: {
-                    earned_badges?: number
-                  }
-                  earned_badges?: {
-                    id: string
-                    user: {
-                      id: string
-                      name: string
-                      handle: string
-                    }
-                    /** Format: date-time */
-                    earned_at: string
-                  }[]
-                }[]
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    /**
-     * Create Badge
-     * @description Create a badge
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            code: string
-            name: string
-            description: string
-          }
-        }
-      }
-      responses: {
-        /** @description Created */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-      }
-    }
-    /**
-     * Delete Badge
-     * @description Delete a badge by code
-     */
-    delete: {
-      parameters: {
-        query: {
-          code: string
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description Deleted */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-      }
-    }
-    options?: never
-    head?: never
-    /**
-     * Update Badge
-     * @description Update a badge
-     */
-    patch: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            code: string
-          }
-        }
-      }
-      responses: {
-        /** @description Updated */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-      }
-    }
-    trace?: never
-  }
-  '/api/admin/badges/assign': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Assign Badge
-     * @description Assign a badge to users
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            badgeCode: string
-            userIds: string[]
-            reason?: string
-          }
-        }
-      }
-      responses: {
-        /** @description Assigned */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-      }
-    }
-    /**
-     * Remove Badge
-     * @description Remove a badge from users
-     */
-    delete: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            badgeCode: string
-            userIds: string[]
-            reason?: string
-          }
-        }
-      }
-      responses: {
-        /** @description Removed */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-      }
-    }
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/analytics': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Analytics
-     * @description Get analytics data
-     */
-    get: {
-      parameters: {
-        query?: {
-          startDate?: string
-          endDate?: string
-          cohort?: string
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @enum {boolean} */
-              success: true
-              data: {
-                overview: {
-                  submissions: {
-                    total: number
-                    pending: number
-                    approved: number
-                    rejected: number
-                    approvalRate: number
-                  }
-                  users: {
-                    total: number
-                    active: number
-                    withSubmissions: number
-                    withBadges: number
-                    activationRate: number
-                  }
-                  points: {
-                    totalAwarded: number
-                    totalEntries: number
-                    avgPerEntry: number
-                  }
-                  badges: {
-                    totalBadges: number
-                    totalEarned: number
-                    uniqueEarners: number
-                  }
-                  reviews: {
-                    pendingReviews: number
-                    avgReviewTimeHours: number
-                  }
-                }
-                distributions: {
-                  submissionsByStatus: {
-                    status: string
-                    count: number
-                  }[]
-                  submissionsByActivity: {
-                    activity: string
-                    activityName?: string
-                    count: number
-                  }[]
-                  usersByRole: {
-                    role: string
-                    count: number
-                  }[]
-                  usersByCohort?: {
-                    cohort: string | null
-                    count: number
-                  }[]
-                  pointsByActivity: {
-                    activity: string
-                    activityName?: string
-                    totalPoints: number
-                    entries: number
-                  }[]
-                  pointsDistribution?: {
-                    totalUsers: number
-                    max: number
-                    min: number
-                    avg: number
-                    percentiles: {
-                      percentile: number
-                      value: number
-                    }[]
-                  }
-                }
-                trends: {
-                  submissionsByDate: {
-                    date: string
-                    total: number
-                    approved: number
-                    rejected: number
-                    pending: number
-                  }[]
-                  userRegistrationsByDate: {
-                    date: string
-                    count: number
-                  }[]
-                }
-                recentActivity: {
-                  submissions: {
-                    id: string
-                    user: {
-                      name: string
-                      handle: string
-                    }
-                    activity: {
-                      name: string
-                    }
-                    status: string
-                    /** Format: date-time */
-                    created_at: string
-                  }[]
-                  approvals: {
-                    id: string
-                    user: {
-                      name: string
-                      handle: string
-                    }
-                    activity: {
-                      name: string
-                    }
-                    /** Format: date-time */
-                    updated_at: string
-                  }[]
-                  users: {
-                    id: string
-                    name: string
-                    handle: string
-                    email: string
-                    role: string
-                    /** Format: date-time */
-                    created_at: string
-                  }[]
-                }
-                performance: {
-                  reviewers: {
-                    id: string
-                    name: string
-                    handle: string
-                    role: string
-                    approved: number
-                    rejected: number
-                    total: number
-                  }[]
-                  topBadges: {
-                    badge: {
-                      code?: string
-                      name?: string
-                      /** Format: uri */
-                      icon_url?: string | null
-                    }
-                    earnedCount: number
-                  }[]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/exports': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Exports
-     * @description Export data as CSV
-     */
-    get: {
-      parameters: {
-        query: {
-          type: 'submissions' | 'users' | 'leaderboard' | 'points'
-          format: 'csv'
-          startDate?: string
-          endDate?: string
-          activity?: string
-          status?: string
-          cohort?: string
-        }
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description CSV content */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'text/csv': string
-          }
-        }
-        /** @description Invalid query */
-        400: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * Error Envelope
-               * @description Standard error envelope for LEAPS APIs
-               */
-              error: {
-                /**
-                 * @example validation
-                 * @enum {string}
-                 */
-                type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-                /** @example INVALID_JSON */
-                code: string
-                /** @example Body must be valid JSON */
-                message: string
-                details?: unknown
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/kajabi': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Kajabi Events
-     * @description List recent Kajabi webhook events and stats
-     */
-    get: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @enum {boolean} */
-              success: true
-              data: {
-                events: {
-                  id: string
-                  /** Format: date-time */
-                  received_at: string
-                  /** Format: date-time */
-                  processed_at: string | null
-                  user_match: string | null
-                  payload: {
-                    event_id?: string
-                    /** @enum {string} */
-                    event_type: 'contact.tagged' | 'tag.added' | 'tag.removed'
-                    contact: {
-                      id: number
-                      /** Format: email */
-                      email: string
-                      first_name?: string
-                      last_name?: string
-                      tags?: string[]
-                    }
-                    tag: {
-                      name: string
-                    }
-                  }
-                }[]
-                stats: {
-                  total_events: number
-                  processed_events: number
-                  matched_users: number
-                  unmatched_events: number
-                  points_awarded: number
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/kajabi/test': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Kajabi Test Event
-     * @description Create a test Kajabi completion event for a user
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            /** Format: email */
-            user_email: string
-            course_name?: string
-          }
-        }
-      }
-      responses: {
-        /** @description Created */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-      }
-    }
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/kajabi/reprocess': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    /**
-     * Kajabi Reprocess
-     * @description Reprocess a stored Kajabi event by ID
-     */
-    post: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: {
-        content: {
-          'application/json': {
-            event_id: string
-          }
-        }
-      }
-      responses: {
-        /** @description Reprocessed */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /**
-               * @description Operation success status
-               * @example true
-               */
-              success: boolean
-              /** @description Response data (varies by endpoint) */
-              data?: unknown
-            }
-          }
-        }
-      }
-    }
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/admin/meta/cohorts': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    /**
-     * Cohorts
-     * @description List available cohorts
-     */
-    get: {
-      parameters: {
-        query?: never
-        header?: never
-        path?: never
-        cookie?: never
-      }
-      requestBody?: never
-      responses: {
-        /** @description OK */
-        200: {
-          headers: {
-            [name: string]: unknown
-          }
-          content: {
-            'application/json': {
-              /** @enum {boolean} */
-              success: true
-              data: {
-                cohorts: string[]
-              }
-            }
-          }
-        }
-      }
-    }
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
+                message: string;
+                details?: unknown;
+            };
+        };
+        /**
+         * Success Response
+         * @description Standard success response format
+         */
+        SuccessResponse: {
+            /**
+             * @description Operation success status
+             * @example true
+             */
+            success: boolean;
+            /** @description Response data (varies by endpoint) */
+            data?: unknown;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
-export type webhooks = Record<string, never>
-export interface components {
-  schemas: {
-    /**
-     * @description LEAPS activity codes
-     * @example LEARN
-     * @enum {string}
-     */
-    ActivityCode: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-    /**
-     * @description Submission review status
-     * @example PENDING
-     * @enum {string}
-     */
-    SubmissionStatus: 'PENDING' | 'APPROVED' | 'REJECTED'
-    /**
-     * @description Submission visibility setting
-     * @example PRIVATE
-     * @enum {string}
-     */
-    Visibility: 'PUBLIC' | 'PRIVATE'
-    /**
-     * Learn Submission
-     * @description Schema for Learn activity submissions (certificate upload)
-     * @example {
-     *       "provider": "SPL",
-     *       "course": "AI for Educators",
-     *       "completedAt": "2024-01-15T10:00:00Z",
-     *       "certificateFile": "evidence/learn/user123/certificate.pdf"
-     *     }
-     */
-    LearnSubmission: {
-      /** @enum {string} */
-      provider: 'SPL' | 'ILS'
-      course: string
-      completedAt: string
-      /** @description Storage path after upload */
-      certificateFile?: string
-    }
-    /**
-     * Explore Submission
-     * @description Schema for Explore activity submissions (classroom AI application)
-     * @example {
-     *       "reflection": "I successfully integrated AI tools into my mathematics class by using ChatGPT to create personalized word problems for each student based on their skill level. The students were more engaged and showed improved problem-solving skills.",
-     *       "classDate": "2024-01-20",
-     *       "school": "SDN 123 Jakarta",
-     *       "evidenceFiles": [
-     *         "evidence/explore/user123/classroom_photo.jpg",
-     *         "evidence/explore/user123/student_work.pdf"
-     *       ]
-     *     }
-     */
-    ExploreSubmission: {
-      reflection: string
-      classDate: string
-      school?: string
-      /** @description Array of storage paths after upload */
-      evidenceFiles?: string[]
-    }
-    /**
-     * Amplify Submission
-     * @description Schema for Amplify activity submissions (training others)
-     * @example {
-     *       "peersTrained": 5,
-     *       "studentsTrained": 25,
-     *       "attendanceProofFiles": [
-     *         "evidence/amplify/user123/attendance_sheet.pdf",
-     *         "evidence/amplify/user123/training_photos.jpg"
-     *       ]
-     *     }
-     */
-    AmplifySubmission: {
-      peersTrained: number | null
-      studentsTrained: number | null
-      /** @description Array of storage paths after upload */
-      attendanceProofFiles?: string[]
-    }
-    /**
-     * Present Submission
-     * @description Schema for Present activity submissions (LinkedIn sharing)
-     * @example {
-     *       "linkedinUrl": "https://linkedin.com/posts/educator123_ai-education-innovation",
-     *       "screenshotFile": "evidence/present/user123/linkedin_screenshot.png",
-     *       "caption": "Excited to share how AI is transforming my classroom!"
-     *     }
-     */
-    PresentSubmission: {
-      /** Format: uri */
-      linkedinUrl: string
-      /** @description Storage path after upload */
-      screenshotFile?: string
-      caption: string
-    }
-    /**
-     * Shine Submission
-     * @description Schema for Shine activity submissions (innovative ideas)
-     * @example {
-     *       "ideaTitle": "AI-Powered Student Assessment",
-     *       "ideaSummary": "A comprehensive system that uses AI to provide real-time feedback and adaptive assessment for students, helping teachers identify learning gaps instantly.",
-     *       "attachment": [
-     *         "evidence/shine/user123/idea_presentation.pdf"
-     *       ]
-     *     }
-     */
-    ShineSubmission: {
-      ideaTitle: string
-      ideaSummary: string
-      /** @description Array of storage paths after upload */
-      attachment?: string[]
-    }
-    /**
-     * Submission Request
-     * @description Request body for creating a new submission
-     */
-    SubmissionRequest: {
-      /**
-       * @description LEAPS activity codes
-       * @example LEARN
-       * @enum {string}
-       */
-      activityCode: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-      /** @description Activity-specific data matching the corresponding schema */
-      payload: Record<string, never>
-      /**
-       * @description Array of file storage paths
-       * @example [
-       *       "evidence/learn/user123/certificate.pdf"
-       *     ]
-       */
-      attachments?: string[]
-      /**
-       * @description Submission visibility setting
-       * @example PRIVATE
-       * @enum {string}
-       */
-      visibility?: 'PUBLIC' | 'PRIVATE'
-    }
-    /**
-     * Submission Response
-     * @description Response format for submission data
-     */
-    SubmissionResponse: {
-      /**
-       * @description Unique submission identifier
-       * @example sub_abc123
-       */
-      id: string
-      /**
-       * @description LEAPS activity codes
-       * @example LEARN
-       * @enum {string}
-       */
-      activityCode: 'LEARN' | 'EXPLORE' | 'AMPLIFY' | 'PRESENT' | 'SHINE'
-      /**
-       * @description Human-readable activity name
-       * @example Learn
-       */
-      activityName: string
-      /**
-       * @description Submission review status
-       * @example PENDING
-       * @enum {string}
-       */
-      status: 'PENDING' | 'APPROVED' | 'REJECTED'
-      /**
-       * @description Submission visibility setting
-       * @example PRIVATE
-       * @enum {string}
-       */
-      visibility: 'PUBLIC' | 'PRIVATE'
-      /**
-       * Format: date-time
-       * @description ISO 8601 timestamp
-       * @example 2024-01-15T10:00:00Z
-       */
-      createdAt: string
-      /**
-       * Format: date-time
-       * @description ISO 8601 timestamp
-       * @example 2024-01-16T10:00:00Z
-       */
-      updatedAt?: string
-      /**
-       * @description Reviewer feedback message
-       * @example Certificate looks good, approved!
-       */
-      reviewNote?: string | null
-      /**
-       * @description Number of attached files
-       * @example 1
-       */
-      attachmentCount: number
-      /**
-       * @description Points that could be earned if approved
-       * @example 20
-       */
-      potentialPoints?: number
-    }
-    /**
-     * Leaderboard Response
-     * @description Paginated leaderboard data with user rankings
-     */
-    LeaderboardResponse: {
-      /**
-       * @description Leaderboard time period
-       * @example all
-       * @enum {string}
-       */
-      period: 'all' | '30d'
-      data: {
-        /**
-         * @description Current leaderboard position
-         * @example 1
-         */
-        rank: number
-        user: {
-          /**
-           * @description User identifier
-           * @example user_123
-           */
-          id: string
-          /**
-           * @description Unique user handle
-           * @example educator_ahmad
-           */
-          handle: string
-          /**
-           * @description User display name
-           * @example Ahmad Sutanto
-           */
-          name: string
-          /**
-           * @description School/institution name
-           * @example SDN 123 Jakarta
-           */
-          school?: string | null
-          /**
-           * Format: uri
-           * @description Profile picture URL
-           * @example https://images.clerk.dev/abc123
-           */
-          avatarUrl?: string | null
-          /**
-           * @description Total points earned
-           * @example 95
-           */
-          totalPoints: number
-          /** @description Badges earned by the user */
-          earnedBadges?: {
-            badge: {
-              /**
-               * @description Badge identifier
-               * @example EARLY_ADOPTER
-               */
-              code: string
-              /**
-               * @description Badge display name
-               * @example Early Adopter
-               */
-              name: string
-              /**
-               * Format: uri
-               * @description Badge icon URL
-               * @example https://storage.supabase.co/badges/early_adopter.svg
-               */
-              iconUrl?: string | null
-            }
-          }[]
-        }
-      }[]
-      /**
-       * @description Total number of ranked users
-       * @example 150
-       */
-      total: number
-      /**
-       * @description Number of entries returned
-       * @example 20
-       */
-      limit: number
-      /**
-       * @description Starting position for pagination
-       * @example 0
-       */
-      offset: number
-      /**
-       * @description Whether more results are available
-       * @example true
-       */
-      hasMore: boolean
-    }
-    /**
-     * File Upload Response
-     * @description Response from successful file upload
-     */
-    FileUploadResponse: {
-      /**
-       * @description Upload success status
-       * @example true
-       */
-      success: boolean
-      data: {
-        /**
-         * @description Storage path of uploaded file
-         * @example evidence/learn/user123/certificate.pdf
-         */
-        path: string
-        /**
-         * @description File content hash for deduplication
-         * @example sha256:abc123...
-         */
-        hash: string
-        /**
-         * @description Original filename
-         * @example certificate.pdf
-         */
-        filename: string
-        /**
-         * @description File size in bytes
-         * @example 1024000
-         */
-        size: number
-        /**
-         * @description MIME type
-         * @example application/pdf
-         */
-        type: string
-      }
-    }
-    /**
-     * Error Envelope
-     * @description Standard error envelope for LEAPS APIs
-     */
-    ErrorEnvelope: {
-      /**
-       * @example validation
-       * @enum {string}
-       */
-      type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-      /** @example INVALID_JSON */
-      code: string
-      /** @example Body must be valid JSON */
-      message: string
-      details?: unknown
-    }
-    /**
-     * Error Response
-     * @description API error response with standardized envelope
-     */
-    ErrorResponse: {
-      /**
-       * Error Envelope
-       * @description Standard error envelope for LEAPS APIs
-       */
-      error: {
-        /**
-         * @example validation
-         * @enum {string}
-         */
-        type: 'validation' | 'cap' | 'state' | 'auth' | 'idempotency'
-        /** @example INVALID_JSON */
-        code: string
-        /** @example Body must be valid JSON */
-        message: string
-        details?: unknown
-      }
-    }
-    /**
-     * Success Response
-     * @description Standard success response format
-     */
-    SuccessResponse: {
-      /**
-       * @description Operation success status
-       * @example true
-       */
-      success: boolean
-      /** @description Response data (varies by endpoint) */
-      data?: unknown
-    }
-  }
-  responses: never
-  parameters: never
-  requestBodies: never
-  headers: never
-  pathItems: never
-}
-export type $defs = Record<string, never>
-export type operations = Record<string, never>
+export type $defs = Record<string, never>;
+export type operations = Record<string, never>;
 
-import { mergeHeaders, addAuthHeader, type ApiSuccess } from '@elevate/types'
-import { APIError } from '@elevate/types/errors'
+
+import { mergeHeaders, addAuthHeader, type ApiSuccess } from '@elevate/types';
+import { APIError } from '@elevate/types/errors';
 // Import DTO types for request/response convenience
 import type {
   LearnApiInput,
@@ -3798,126 +4393,99 @@ import type {
   AmplifyApiInput,
   PresentApiInput,
   ShineApiInput,
-} from '@elevate/types/submission-payloads.api'
-import {
-  StatsResponseDTOSchema,
-  StageMetricsDTOSchema,
-  AdminAnalyticsDTOSchema,
-  type StatsResponseDTO,
-  type StageMetricsDTO,
-  type AdminAnalyticsDTO,
-} from '@elevate/types/dto-mappers'
-import {
-  SafeDashboardDataSchema,
-  type SafeDashboardData,
-} from '@elevate/types/ui-types'
+} from '@elevate/types/submission-payloads.api';
+import { StatsResponseDTOSchema, StageMetricsDTOSchema, AdminAnalyticsDTOSchema, type StatsResponseDTO, type StageMetricsDTO, type AdminAnalyticsDTO } from '@elevate/types/dto-mappers';
+import { SafeDashboardDataSchema, type SafeDashboardData } from '@elevate/types/ui-types';
 
 // API Client SDK
 export class ElevateAPIClient {
-  private baseUrl: string
-  private token?: string
+  private baseUrl: string;
+  private token?: string;
 
   constructor(config: { baseUrl?: string; token?: string } = {}) {
-    this.baseUrl = config.baseUrl ?? 'https://leaps.mereka.org'
+    this.baseUrl = config.baseUrl ?? 'https://leaps.mereka.org';
     if (config.token) {
-      this.token = config.token
+      this.token = config.token;
     }
   }
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {},
+    options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`
-
+    const url = `${this.baseUrl}${endpoint}`;
+    
     // Type-safe header merging
     const isFormData =
-      typeof FormData !== 'undefined' &&
-      (options as any)?.body instanceof FormData
-    const defaultHeaders = isFormData
-      ? {}
-      : { 'Content-Type': 'application/json' }
-    let headers = mergeHeaders(defaultHeaders, options.headers)
+      typeof FormData !== 'undefined' && (options as any)?.body instanceof FormData;
+    const defaultHeaders = isFormData ? {} : { 'Content-Type': 'application/json' };
+    let headers = mergeHeaders(
+      defaultHeaders,
+      options.headers
+    );
 
     if (this.token) {
-      headers = addAuthHeader(headers, this.token)
+      headers = addAuthHeader(headers, this.token);
     }
 
     const response = await fetch(url, {
       credentials: 'include',
       ...options,
       headers,
-    })
+    });
 
     if (!response.ok) {
-      const fallback = { error: 'Request failed' } as const
-      const parsed = (await response.json().catch(() => fallback)) as {
-        error?: string
-        details?: unknown
-      }
-      throw new APIError(
-        parsed.error ?? 'Request failed',
-        response.status,
-        parsed.details !== undefined
-          ? Array.isArray(parsed.details)
-            ? parsed.details
-            : [parsed.details]
-          : undefined,
-      )
+      const fallback = { error: 'Request failed' } as const;
+      const parsed = await response
+        .json()
+        .catch(() => fallback) as { error?: string; details?: unknown };
+      throw new APIError(parsed.error ?? 'Request failed', response.status, parsed.details !== undefined ? (Array.isArray(parsed.details) ? parsed.details : [parsed.details]) : undefined);
     }
 
-    return response.json() as Promise<T>
+    return response.json() as Promise<T>;
   }
 
   // Submissions API
   // DTO-friendly body type for submission creation
   // Matches API shape: { activityCode, payload, attachments?, visibility? }
-  async createSubmission(data: {
-    activityCode: ActivityCode
-    payload:
-      | LearnApiInput
-      | ExploreApiInput
-      | AmplifyApiInput
-      | PresentApiInput
-      | ShineApiInput
-    attachments?: string[]
-    visibility?: 'PUBLIC' | 'PRIVATE'
-  }) {
-    return this.request<
-      paths['/api/submissions']['post']['responses']['201']['content']['application/json']
-    >('/api/submissions', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    })
+  async createSubmission(
+    data: {
+      activityCode: ActivityCode;
+      payload: LearnApiInput | ExploreApiInput | AmplifyApiInput | PresentApiInput | ShineApiInput;
+      attachments?: string[];
+      visibility?: 'PUBLIC' | 'PRIVATE';
+    }
+  ) {
+    return this.request<paths['/api/submissions']['post']['responses']['201']['content']['application/json']>(
+      '/api/submissions',
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
   }
 
-  async getSubmissions(
-    params?: paths['/api/submissions']['get']['parameters']['query'],
-  ) {
-    const searchParams = new URLSearchParams()
+  async getSubmissions(params?: paths['/api/submissions']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined) {
-          searchParams.append(key, String(value))
+          searchParams.append(key, String(value));
         }
-      })
+      });
     }
-
-    const queryString = searchParams.toString()
-    const endpoint = '/api/submissions' + (queryString ? '?' + queryString : '')
-    return this.request<
-      paths['/api/submissions']['get']['responses']['200']['content']['application/json']
-    >(endpoint)
+    
+    const queryString = searchParams.toString();
+    const endpoint = '/api/submissions' + (queryString ? '?' + queryString : '');
+    return this.request<paths['/api/submissions']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
   // Submissions summary convenience method (since current /api/submissions doesn't match full DTO shape)
   async getSubmissionsSummary(
-    params?: paths['/api/submissions']['get']['parameters']['query'],
-  ): Promise<
-    paths['/api/submissions']['get']['responses']['200']['content']['application/json']
-  > {
+    params?: paths['/api/submissions']['get']['parameters']['query']
+  ): Promise<paths['/api/submissions']['get']['responses']['200']['content']['application/json']> {
     // Call the regular method to get submissions summary
-    return this.getSubmissions(params)
+    return this.getSubmissions(params);
   }
 
   // Convenience typed return for submissions list (DTO mapping)
@@ -3926,394 +4494,286 @@ export class ElevateAPIClient {
 
   // File Upload API
   async uploadFile(file: File, activityCode: string) {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('activityCode', activityCode)
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('activityCode', activityCode);
 
-    return this.request<
-      paths['/api/files/upload']['post']['responses']['201']['content']['application/json']
-    >('/api/files/upload', {
-      method: 'POST',
-      body: formData,
-      headers: {}, // Remove Content-Type header to let browser set it for FormData
-    })
+    return this.request<paths['/api/files/upload']['post']['responses']['201']['content']['application/json']>(
+      '/api/files/upload',
+      {
+        method: 'POST',
+        body: formData,
+        headers: {}, // Remove Content-Type header to let browser set it for FormData
+      }
+    );
   }
 
   // Leaderboard API
-  async getLeaderboard(
-    params?: paths['/api/leaderboard']['get']['parameters']['query'],
-  ) {
-    const searchParams = new URLSearchParams()
+  async getLeaderboard(params?: paths['/api/leaderboard']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined) {
-          searchParams.append(key, String(value))
+          searchParams.append(key, String(value));
         }
-      })
+      });
     }
-
-    const endpoint = `/api/leaderboard${
-      searchParams.toString() ? '?' + searchParams.toString() : ''
-    }`
-    return this.request<
-      paths['/api/leaderboard']['get']['responses']['200']['content']['application/json']
-    >(endpoint)
+    
+    const endpoint = `/api/leaderboard${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    return this.request<paths['/api/leaderboard']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
   // Dashboard API
   async getDashboard() {
-    return this.request<
-      paths['/api/dashboard']['get']['responses']['200']['content']['application/json']
-    >('/api/dashboard')
+    return this.request<paths['/api/dashboard']['get']['responses']['200']['content']['application/json']>('/api/dashboard');
   }
   // Typed DTO convenience for dashboard
   async getDashboardDTO(): Promise<ApiSuccess<SafeDashboardData>> {
-    const res = await this.request<ApiSuccess<unknown>>('/api/dashboard')
-    const parsed = SafeDashboardDataSchema.safeParse(res.data)
+    const res = await this.request<ApiSuccess<unknown>>('/api/dashboard');
+    const parsed = SafeDashboardDataSchema.safeParse(res.data);
     if (!parsed.success) {
-      throw new APIError(
-        'Invalid dashboard response shape',
-        500,
-        parsed.error.issues,
-      )
+      throw new APIError('Invalid dashboard response shape', 500, parsed.error.issues);
     }
     return {
       success: res.success,
-      data: parsed.data as SafeDashboardData,
-    }
+      data: parsed.data as SafeDashboardData
+    };
   }
 
   // Public Stats API
   async getStats() {
-    return this.request<
-      paths['/api/stats']['get']['responses']['200']['content']['application/json']
-    >('/api/stats')
+    return this.request<paths['/api/stats']['get']['responses']['200']['content']['application/json']>('/api/stats');
   }
 
   // Typed DTO convenience for public stats
   async getStatsDTO(): Promise<ApiSuccess<StatsResponseDTO>> {
     // Call the regular method to get the legacy snake_case response
-    const res = await this.getStats()
-
+    const res = await this.getStats();
+    
     // Validate and transform the response to DTO format
-    const parsed = StatsResponseDTOSchema.safeParse(res.data)
+    const parsed = StatsResponseDTOSchema.safeParse(res.data);
     if (!parsed.success) {
-      throw new APIError(
-        'Invalid stats response shape',
-        500,
-        parsed.error.issues,
-      )
+      throw new APIError('Invalid stats response shape', 500, parsed.error.issues);
     }
-
+    
     // Return only the typed success envelope with validated DTO data
-    const out: ApiSuccess<StatsResponseDTO> = {
-      success: true,
-      data: parsed.data,
-    }
-    return out
+    const out: ApiSuccess<StatsResponseDTO> = { success: true, data: parsed.data };
+    return out;
   }
 
   // Public Metrics API
-  async getMetrics(
-    params: paths['/api/metrics']['get']['parameters']['query'],
-  ) {
-    const searchParams = new URLSearchParams()
+  async getMetrics(params: paths['/api/metrics']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
     Object.entries(params || {}).forEach(([key, value]) => {
-      if (value !== undefined) searchParams.append(key, String(value))
-    })
-    const endpoint = `/api/metrics${
-      searchParams.toString() ? '?' + searchParams.toString() : ''
-    }`
-    return this.request<
-      paths['/api/metrics']['get']['responses']['200']['content']['application/json']
-    >(endpoint)
+      if (value !== undefined) searchParams.append(key, String(value));
+    });
+    const endpoint = `/api/metrics${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    return this.request<paths['/api/metrics']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
   // Typed DTO convenience for metrics (stage view)
   async getMetricsDTO(
-    params: paths['/api/metrics']['get']['parameters']['query'],
+    params: paths['/api/metrics']['get']['parameters']['query']
   ): Promise<ApiSuccess<StageMetricsDTO>> {
     // Call the regular method to get the legacy snake_case response
-    const res = await this.getMetrics(params)
-
+    const res = await this.getMetrics(params);
+    
     // Validate and transform the response to DTO format
-    const parsed = StageMetricsDTOSchema.safeParse(res.data)
+    const parsed = StageMetricsDTOSchema.safeParse(res.data);
     if (!parsed.success) {
-      throw new APIError(
-        'Invalid metrics response shape',
-        500,
-        parsed.error.issues,
-      )
+      throw new APIError('Invalid metrics response shape', 500, parsed.error.issues);
     }
-
+    
     // Return only the typed success envelope with validated DTO data
-    const out: ApiSuccess<StageMetricsDTO> = {
-      success: true,
-      data: parsed.data,
-    }
-    return out
+    const out: ApiSuccess<StageMetricsDTO> = { success: true, data: parsed.data };
+    return out;
   }
 
   // Public Profile API
   async getProfile(handle: string) {
-    return this.request<
-      paths['/api/profile/{handle}']['get']['responses']['200']['content']['application/json']
-    >(`/api/profile/${encodeURIComponent(handle)}`)
+    return this.request<paths['/api/profile/{handle}']['get']['responses']['200']['content']['application/json']>(
+      `/api/profile/${encodeURIComponent(handle)}`
+    );
   }
 
   // Health Check API
   async healthCheck() {
-    return this.request<
-      paths['/api/health']['get']['responses']['200']['content']['application/json']
-    >('/api/health')
+    return this.request<paths['/api/health']['get']['responses']['200']['content']['application/json']>('/api/health');
   }
 
   // Admin APIs (require appropriate permissions)
-  async getAdminSubmissions(
-    params?: paths['/api/admin/submissions']['get']['parameters']['query'],
-  ) {
-    const searchParams = new URLSearchParams()
+  async getAdminSubmissions(params?: paths['/api/admin/submissions']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined) {
-          searchParams.append(key, String(value))
+          searchParams.append(key, String(value));
         }
-      })
+      });
     }
-
-    const endpoint = `/api/admin/submissions${
-      searchParams.toString() ? '?' + searchParams.toString() : ''
-    }`
-    return this.request<
-      paths['/api/admin/submissions']['get']['responses']['200']['content']['application/json']
-    >(endpoint)
+    
+    const endpoint = `/api/admin/submissions${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    return this.request<paths['/api/admin/submissions']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
   async getAdminSubmissionById(id: string) {
-    const endpoint = `/api/admin/submissions/${encodeURIComponent(id)}`
-    return this.request<
-      paths['/api/admin/submissions/{id}']['get']['responses']['200']['content']['application/json']
-    >(endpoint)
+    const endpoint = `/api/admin/submissions/${encodeURIComponent(id)}`;
+    return this.request<paths['/api/admin/submissions/{id}']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
-  async reviewSubmission(
-    body: NonNullable<
-      paths['/api/admin/submissions']['patch']['requestBody']
-    >['content']['application/json'],
-  ) {
-    return this.request<
-      paths['/api/admin/submissions']['patch']['responses']['200']['content']['application/json']
-    >('/api/admin/submissions', { method: 'PATCH', body: JSON.stringify(body) })
+  async reviewSubmission(body: NonNullable<paths['/api/admin/submissions']['patch']['requestBody']>['content']['application/json']) {
+    return this.request<paths['/api/admin/submissions']['patch']['responses']['200']['content']['application/json']>(
+      '/api/admin/submissions',
+      { method: 'PATCH', body: JSON.stringify(body) }
+    );
   }
 
-  async bulkReview(
-    body: NonNullable<
-      paths['/api/admin/submissions']['post']['requestBody']
-    >['content']['application/json'],
-  ) {
-    return this.request<
-      paths['/api/admin/submissions']['post']['responses']['200']['content']['application/json']
-    >('/api/admin/submissions', { method: 'POST', body: JSON.stringify(body) })
+  async bulkReview(body: NonNullable<paths['/api/admin/submissions']['post']['requestBody']>['content']['application/json']) {
+    return this.request<paths['/api/admin/submissions']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/submissions',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
   }
 
-  async getAdminUsers(
-    params?: paths['/api/admin/users']['get']['parameters']['query'],
-  ) {
-    const searchParams = new URLSearchParams()
+  async getAdminUsers(params?: paths['/api/admin/users']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined) {
-          searchParams.append(key, String(value))
+          searchParams.append(key, String(value));
         }
-      })
+      });
     }
-    const endpoint = `/api/admin/users${
-      searchParams.toString() ? '?' + searchParams.toString() : ''
-    }`
-    return this.request<
-      paths['/api/admin/users']['get']['responses']['200']['content']['application/json']
-    >(endpoint)
+    const endpoint = `/api/admin/users${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    return this.request<paths['/api/admin/users']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
-  async updateAdminUser(
-    body: NonNullable<
-      paths['/api/admin/users']['patch']['requestBody']
-    >['content']['application/json'],
-  ) {
-    return this.request<
-      paths['/api/admin/users']['patch']['responses']['200']['content']['application/json']
-    >('/api/admin/users', { method: 'PATCH', body: JSON.stringify(body) })
+  async updateAdminUser(body: NonNullable<paths['/api/admin/users']['patch']['requestBody']>['content']['application/json']) {
+    return this.request<paths['/api/admin/users']['patch']['responses']['200']['content']['application/json']>(
+      '/api/admin/users',
+      { method: 'PATCH', body: JSON.stringify(body) }
+    );
   }
 
-  async bulkUpdateAdminUsers(
-    body: NonNullable<
-      paths['/api/admin/users']['post']['requestBody']
-    >['content']['application/json'],
-  ) {
-    return this.request<
-      paths['/api/admin/users']['post']['responses']['200']['content']['application/json']
-    >('/api/admin/users', { method: 'POST', body: JSON.stringify(body) })
+  async bulkUpdateAdminUsers(body: NonNullable<paths['/api/admin/users']['post']['requestBody']>['content']['application/json']) {
+    return this.request<paths['/api/admin/users']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/users',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
   }
 
-  async getAdminBadges(
-    params?: paths['/api/admin/badges']['get']['parameters']['query'],
-  ) {
-    const searchParams = new URLSearchParams()
+  async getAdminBadges(params?: paths['/api/admin/badges']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) searchParams.append(key, String(value))
-      })
+        if (value !== undefined) searchParams.append(key, String(value));
+      });
     }
-    const endpoint = `/api/admin/badges${
-      searchParams.toString() ? '?' + searchParams.toString() : ''
-    }`
-    return this.request<
-      paths['/api/admin/badges']['get']['responses']['200']['content']['application/json']
-    >(endpoint)
+    const endpoint = `/api/admin/badges${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    return this.request<paths['/api/admin/badges']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
 
-  async createAdminBadge(
-    body: NonNullable<
-      paths['/api/admin/badges']['post']['requestBody']
-    >['content']['application/json'],
-  ) {
-    return this.request<
-      paths['/api/admin/badges']['post']['responses']['200']['content']['application/json']
-    >('/api/admin/badges', { method: 'POST', body: JSON.stringify(body) })
+  async createAdminBadge(body: NonNullable<paths['/api/admin/badges']['post']['requestBody']>['content']['application/json']) {
+    return this.request<paths['/api/admin/badges']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/badges',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
   }
 
-  async updateAdminBadge(
-    body: NonNullable<
-      paths['/api/admin/badges']['patch']['requestBody']
-    >['content']['application/json'],
-  ) {
-    return this.request<
-      paths['/api/admin/badges']['patch']['responses']['200']['content']['application/json']
-    >('/api/admin/badges', { method: 'PATCH', body: JSON.stringify(body) })
+  async updateAdminBadge(body: NonNullable<paths['/api/admin/badges']['patch']['requestBody']>['content']['application/json']) {
+    return this.request<paths['/api/admin/badges']['patch']['responses']['200']['content']['application/json']>(
+      '/api/admin/badges',
+      { method: 'PATCH', body: JSON.stringify(body) }
+    );
   }
 
   async deleteAdminBadge(code: string) {
-    const url = `/api/admin/badges?code=${encodeURIComponent(code)}`
-    return this.request<
-      paths['/api/admin/badges']['delete']['responses']['200']['content']['application/json']
-    >(url, { method: 'DELETE' })
+    const url = `/api/admin/badges?code=${encodeURIComponent(code)}`;
+    return this.request<paths['/api/admin/badges']['delete']['responses']['200']['content']['application/json']>(url, { method: 'DELETE' });
   }
 
-  async assignAdminBadge(
-    body: NonNullable<
-      paths['/api/admin/badges/assign']['post']['requestBody']
-    >['content']['application/json'],
-  ) {
-    return this.request<
-      paths['/api/admin/badges/assign']['post']['responses']['200']['content']['application/json']
-    >('/api/admin/badges/assign', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    })
+  async assignAdminBadge(body: NonNullable<paths['/api/admin/badges/assign']['post']['requestBody']>['content']['application/json']) {
+    return this.request<paths['/api/admin/badges/assign']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/badges/assign',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
   }
 
-  async removeAdminBadge(
-    body: NonNullable<
-      paths['/api/admin/badges/assign']['delete']['requestBody']
-    >['content']['application/json'],
-  ) {
-    return this.request<
-      paths['/api/admin/badges/assign']['delete']['responses']['200']['content']['application/json']
-    >('/api/admin/badges/assign', {
-      method: 'DELETE',
-      body: JSON.stringify(body),
-    })
+  async removeAdminBadge(body: NonNullable<paths['/api/admin/badges/assign']['delete']['requestBody']>['content']['application/json']) {
+    return this.request<paths['/api/admin/badges/assign']['delete']['responses']['200']['content']['application/json']>(
+      '/api/admin/badges/assign',
+      { method: 'DELETE', body: JSON.stringify(body) }
+    );
   }
 
-  async getAdminAnalytics(
-    params?: paths['/api/admin/analytics']['get']['parameters']['query'],
-  ) {
-    const searchParams = new URLSearchParams()
+  async getAdminAnalytics(params?: paths['/api/admin/analytics']['get']['parameters']['query']) {
+    const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) searchParams.append(key, String(value))
-      })
+        if (value !== undefined) searchParams.append(key, String(value));
+      });
     }
-    const endpoint = `/api/admin/analytics${
-      searchParams.toString() ? '?' + searchParams.toString() : ''
-    }`
-    return this.request<
-      paths['/api/admin/analytics']['get']['responses']['200']['content']['application/json']
-    >(endpoint)
+    const endpoint = `/api/admin/analytics${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    return this.request<paths['/api/admin/analytics']['get']['responses']['200']['content']['application/json']>(endpoint);
   }
   // Typed DTO convenience for admin analytics
   async getAdminAnalyticsDTO(
-    params?: paths['/api/admin/analytics']['get']['parameters']['query'],
+    params?: paths['/api/admin/analytics']['get']['parameters']['query']
   ): Promise<ApiSuccess<AdminAnalyticsDTO>> {
-    const searchParams = new URLSearchParams()
+    const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) searchParams.append(key, String(value))
-      })
+        if (value !== undefined) searchParams.append(key, String(value));
+      });
     }
-    const endpoint = `/api/admin/analytics${
-      searchParams.toString() ? '?' + searchParams.toString() : ''
-    }`
-    const res = await this.request<ApiSuccess<unknown>>(endpoint)
-    const parsed = AdminAnalyticsDTOSchema.safeParse(res.data)
+    const endpoint = `/api/admin/analytics${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    const res = await this.request<ApiSuccess<unknown>>(endpoint);
+    const parsed = AdminAnalyticsDTOSchema.safeParse(res.data);
     if (!parsed.success) {
-      throw new APIError(
-        'Invalid admin analytics response shape',
-        500,
-        parsed.error.issues,
-      )
+      throw new APIError('Invalid admin analytics response shape', 500, parsed.error.issues);
     }
     return {
       success: res.success,
-      data: parsed.data,
-    }
+      data: parsed.data
+    };
   }
 
   async getAdminCohorts() {
-    return this.request<
-      paths['/api/admin/meta/cohorts']['get']['responses']['200']['content']['application/json']
-    >('/api/admin/meta/cohorts')
+    return this.request<paths['/api/admin/meta/cohorts']['get']['responses']['200']['content']['application/json']>(
+      '/api/admin/meta/cohorts'
+    );
   }
 
   async getAdminKajabi() {
-    return this.request<
-      paths['/api/admin/kajabi']['get']['responses']['200']['content']['application/json']
-    >('/api/admin/kajabi')
+    return this.request<paths['/api/admin/kajabi']['get']['responses']['200']['content']['application/json']>(
+      '/api/admin/kajabi'
+    );
   }
 
-  async testAdminKajabi(
-    body: NonNullable<
-      paths['/api/admin/kajabi/test']['post']['requestBody']
-    >['content']['application/json'],
-  ) {
-    return this.request<
-      paths['/api/admin/kajabi/test']['post']['responses']['200']['content']['application/json']
-    >('/api/admin/kajabi/test', { method: 'POST', body: JSON.stringify(body) })
+  async testAdminKajabi(body: NonNullable<paths['/api/admin/kajabi/test']['post']['requestBody']>['content']['application/json']) {
+    return this.request<paths['/api/admin/kajabi/test']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/kajabi/test',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
   }
 
-  async reprocessAdminKajabi(
-    body: NonNullable<
-      paths['/api/admin/kajabi/reprocess']['post']['requestBody']
-    >['content']['application/json'],
-  ) {
-    return this.request<
-      paths['/api/admin/kajabi/reprocess']['post']['responses']['200']['content']['application/json']
-    >('/api/admin/kajabi/reprocess', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    })
+  async reprocessAdminKajabi(body: NonNullable<paths['/api/admin/kajabi/reprocess']['post']['requestBody']>['content']['application/json']) {
+    return this.request<paths['/api/admin/kajabi/reprocess']['post']['responses']['200']['content']['application/json']>(
+      '/api/admin/kajabi/reprocess',
+      { method: 'POST', body: JSON.stringify(body) }
+    );
   }
 
   // Utility methods
   setToken(token: string) {
-    this.token = token
+    this.token = token;
   }
 
   clearToken() {
-    delete this.token
+    delete this.token;
   }
 
   setBaseUrl(baseUrl: string) {
-    this.baseUrl = baseUrl
+    this.baseUrl = baseUrl;
   }
 }
 
@@ -4324,22 +4784,22 @@ export {
   ValidationError,
   AuthenticationError,
   ForbiddenError,
-  RateLimitError,
-} from '@elevate/types/errors'
+  RateLimitError
+} from '@elevate/types/errors';
 
 // Type helpers
-export type SubmissionPayload =
+export type SubmissionPayload = 
   | components['schemas']['LearnSubmission']
-  | components['schemas']['ExploreSubmission']
+  | components['schemas']['ExploreSubmission'] 
   | components['schemas']['AmplifySubmission']
   | components['schemas']['PresentSubmission']
-  | components['schemas']['ShineSubmission']
+  | components['schemas']['ShineSubmission'];
 
-export type ActivityCode = components['schemas']['ActivityCode']
-export type SubmissionStatus = components['schemas']['SubmissionStatus']
-export type Visibility = components['schemas']['Visibility']
+export type ActivityCode = components['schemas']['ActivityCode'];
+export type SubmissionStatus = components['schemas']['SubmissionStatus'];
+export type Visibility = components['schemas']['Visibility'];
 
 // Default export
-export default ElevateAPIClient
+export default ElevateAPIClient;
 // Re-export common DTOs for convenience
 // Types re-export intentionally omitted in generated SDK

@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import type { Prisma } from '@elevate/db'
-import { prisma } from '@elevate/db/client'
+import { prisma } from '@elevate/db'
 import { badRequest, createSuccessResponse } from '@elevate/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
@@ -49,14 +49,25 @@ export async function GET(request: NextRequest) {
     const where: Prisma.ReferralEventWhereInput = {}
     if (referrerId) where.referrer_user_id = referrerId
     if (refereeId) where.referee_user_id = refereeId
-    if (monthStart && monthEnd) where.created_at = { gte: monthStart, lt: monthEnd }
+    if (monthStart && monthEnd)
+      where.created_at = { gte: monthStart, lt: monthEnd }
 
     // If email filter is provided, resolve user id(s)
     if (email) {
-      const u = await prisma.user.findMany({ where: { email: email.toLowerCase() }, select: { id: true } })
+      const u = await prisma.user.findMany({
+        where: { email: email.toLowerCase() },
+        select: { id: true },
+      })
       const ids = u.map((x) => x.id)
-      if (ids.length === 0) return createSuccessResponse({ referrals: [], pagination: { total: 0, limit, offset, pages: 0 } })
-      where.OR = [{ referrer_user_id: { in: ids } }, { referee_user_id: { in: ids } }]
+      if (ids.length === 0)
+        return createSuccessResponse({
+          referrals: [],
+          pagination: { total: 0, limit, offset, pages: 0 },
+        })
+      where.OR = [
+        { referrer_user_id: { in: ids } },
+        { referee_user_id: { in: ids } },
+      ]
     }
 
     const [rows, total] = await Promise.all([
@@ -67,7 +78,9 @@ export async function GET(request: NextRequest) {
         take: limit,
         include: {
           referrer: { select: { id: true, name: true, email: true } },
-          referee: { select: { id: true, name: true, email: true, user_type: true } },
+          referee: {
+            select: { id: true, name: true, email: true, user_type: true },
+          },
         },
       }),
       prisma.referralEvent.count({ where }),

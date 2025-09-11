@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import { readFileSync, existsSync, statSync } from 'fs'
-import { glob } from 'glob'
 import { resolve, dirname, join, normalize } from 'path'
+
+import { glob } from 'glob'
 
 const files = await glob('**/*.md', {
   ignore: ['**/node_modules/**', '**/.git/**', '**/archive/**'],
 })
-let broken = []
+const broken = []
 
 for (const filePath of files) {
   if (filePath.endsWith('docs/SITEMAP.md')) continue // ignore generated sitemap links
@@ -32,6 +33,15 @@ for (const filePath of files) {
     // skip archived paths by policy
     if (href.startsWith('archive/')) continue
     if (href.includes('/temp/')) continue
+    if (filePath.includes('/temp/')) continue
+    // Skip benign package redirect stubs and archived stubs
+    if (filePath.includes('packages/') && href.includes('docs/README.md'))
+      continue
+    if (
+      filePath.includes('docs/architecture/adr/') &&
+      href.includes('../README.md')
+    )
+      continue
 
     // compute absolute path; treat repo-root prefixes as root-based
     const rootPrefixes = [

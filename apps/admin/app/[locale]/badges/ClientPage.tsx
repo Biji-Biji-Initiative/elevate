@@ -1,23 +1,16 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+
 import Image from 'next/image'
 
-import { getApiClient, type APIClient } from '@/lib/api-client'
-import { createBadgeAction, updateBadgeAction, deleteBadgeAction, assignBadgeAction } from '@/lib/actions/badges'
+import { listBadgesAction, createBadgeAction, updateBadgeAction, deleteBadgeAction, assignBadgeAction } from '@/lib/actions/badges'
+import { listUsersAction } from '@/lib/actions/users'
 import { toMsg } from '@/lib/errors'
+import { useCohorts } from '@/lib/hooks/useCohorts'
+import { useModal } from '@/lib/hooks/useModal'
 import type { AdminBadge, AdminUser } from '@elevate/types/admin-api-types'
-import {
-  Button,
-  Input,
-  Textarea,
-  Alert,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@elevate/ui'
+import { Button, Input, Textarea, Alert, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@elevate/ui'
 import { DataTable, Modal, ConfirmModal, type Column } from '@elevate/ui/blocks'
 
 type User = AdminUser
@@ -47,6 +40,8 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const setErrorString = (msg: string) => setError(msg)
+  // Cohorts are not directly used here, but expose a refreshable source for modal drop-downs if needed later
+  const _cohorts = useCohorts([])
 
   // Modal states
   const [badgeModal, setBadgeModal] = useState<{
@@ -55,15 +50,8 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
     mode: 'create' | 'edit'
   }>({ isOpen: false, mode: 'create' })
 
-  const [assignModal, setAssignModal] = useState<{
-    isOpen: boolean
-    badge?: BadgeRow
-  }>({ isOpen: false })
-
-  const [deleteModal, setDeleteModal] = useState<{
-    isOpen: boolean
-    badge?: BadgeRow
-  }>({ isOpen: false })
+  const _assignModal = useModal<BadgeRow>()
+  const _deleteModal = useModal<BadgeRow>()
 
   type BadgeForm = {
     code: string
@@ -183,7 +171,7 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
             style={{ padding: '4px 8px', fontSize: '12px' }}
             onClick={(e) => {
               e.stopPropagation()
-              setAssignModal({ isOpen: true, badge: row })
+              _assignModal.open(row)
               setAssignForm({ userIds: [], reason: '' })
             }}
           >
@@ -194,7 +182,7 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
             style={{ padding: '4px 8px', fontSize: '12px', color: '#dc2626' }}
             onClick={(e) => {
               e.stopPropagation()
-              setDeleteModal({ isOpen: true, badge: row })
+              _deleteModal.open(row)
             }}
           >
             Delete
@@ -209,10 +197,8 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
   const fetchBadges = React.useCallback(async () => {
     setLoading(true)
     try {
-      const api: APIClient = getApiClient()
-      const res = await api.getAdminBadges({ includeStats: 'true' })
-      const srvBadges: AdminBadge[] = res.data.badges as unknown as AdminBadge[]
-      const list: Badge[] = srvBadges.map((b: AdminBadge): Badge => ({
+      const res = await listBadgesAction(true)
+      const list: Badge[] = res.badges.map((b: AdminBadge): Badge => ({
         code: b.code,
         name: b.name,
         description: b.description,
@@ -236,9 +222,8 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
 
   const fetchUsers = React.useCallback(async () => {
     try {
-      const api: APIClient = getApiClient()
-      const res = await api.getAdminUsers({ limit: 1000 })
-      setUsers(Array.isArray(res.data.users) ? (res.data.users as AdminUser[]) : [])
+      const res = await listUsersAction({ limit: 1000 })
+      setUsers(res.users ?? [])
     } catch (error: unknown) {
       const msg = toMsg('User fetch', error)
       setErrorString(msg)
@@ -314,13 +299,22 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
   const handleUpdateBadge = async () => {
     setProcessing(true)
     try {
-      await updateBadgeAction({
+      type UpdateBadgeBody = {
+        code: string
+        name?: string
+        description?: string
+        criteria?: BadgeForm['criteria']
+        icon_url?: string
+      }
+      const updateData: UpdateBadgeBody = {
         code: badgeForm.code,
-        name: badgeForm.name || undefined,
-        description: badgeForm.description || undefined,
         criteria: badgeForm.criteria,
-        icon_url: badgeForm.icon_url || undefined,
-      })
+      }
+      if (badgeForm.name) updateData.name = badgeForm.name
+      if (badgeForm.description) updateData.description = badgeForm.description
+      if (badgeForm.icon_url) updateData.icon_url = badgeForm.icon_url
+
+      await updateBadgeAction(updateData)
       await fetchBadges()
       closeBadgeModal()
     } catch (error: unknown) {
@@ -332,12 +326,12 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
   }
 
   const handleDeleteBadge = async () => {
-    if (!deleteModal.badge) return
+    if (!_deleteModal.data) return
     setProcessing(true)
     try {
-      await deleteBadgeAction(deleteModal.badge.code)
+      await deleteBadgeAction(_deleteModal.data.code)
       await fetchBadges()
-      setDeleteModal({ isOpen: false })
+      _deleteModal.close()
     } catch (error: unknown) {
       const msg = toMsg('Delete badge', error)
       setErrorString(msg)
@@ -347,11 +341,13 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
   }
 
   const handleAssignBadge = async () => {
-    if (!assignModal.badge || assignForm.userIds.length === 0) return
+    if (!_assignModal.data || assignForm.userIds.length === 0) return
     setProcessing(true)
     try {
-      await assignBadgeAction({ badgeCode: assignModal.badge.code, userIds: assignForm.userIds, reason: assignForm.reason || undefined })
-      setAssignModal({ isOpen: false })
+      const assignData: { badgeCode: string; userIds: string[]; reason?: string } = { badgeCode: _assignModal.data.code, userIds: assignForm.userIds }
+      if (assignForm.reason) assignData.reason = assignForm.reason
+      await assignBadgeAction(assignData)
+      _assignModal.close()
       setAssignForm({ userIds: [], reason: '' })
     } catch (error: unknown) {
       const msg = toMsg('Assign badge', error)
@@ -517,13 +513,13 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
 
       {/* Assign Badge Modal */}
       <Modal
-        isOpen={assignModal.isOpen}
-        onClose={() => setAssignModal({ isOpen: false })}
-        title={`Assign Badge: ${assignModal.badge?.name}`}
+        isOpen={_assignModal.isOpen}
+        onClose={() => _assignModal.close()}
+        title={`Assign Badge: ${_assignModal.data?.name ?? ''}`}
         size="md"
         actions={
           <div className="space-x-3">
-            <Button variant="ghost" onClick={() => setAssignModal({ isOpen: false })} disabled={processing}>
+            <Button variant="ghost" onClick={() => _assignModal.close()} disabled={processing}>
               Cancel
             </Button>
             <Button variant="default" onClick={handleAssignBadge} disabled={processing || assignForm.userIds.length === 0}>
@@ -574,11 +570,11 @@ export default function BadgesClient({ initialBadges, initialUsers }: BadgesClie
 
       {/* Delete Badge Modal */}
       <ConfirmModal
-        isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({ isOpen: false })}
+        isOpen={_deleteModal.isOpen}
+        onClose={() => _deleteModal.close()}
         onConfirm={handleDeleteBadge}
         title="Delete Badge"
-        message={`Are you sure you want to delete "${deleteModal.badge?.name}"? This badge has been earned ${deleteModal.badge?.earned_badges || 0} times.`}
+        message={`Are you sure you want to delete "${_deleteModal.data?.name ?? ''}"? This badge has been earned ${_deleteModal.data?.earned_badges ?? 0} times.`}
         confirmText="Delete Badge"
         isLoading={processing}
       />

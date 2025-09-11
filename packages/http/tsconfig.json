@@ -1,18 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true,
-    "jsx": "preserve",
-    "composite": true
+    "noEmit": true
   },
   "include": ["src/**/*"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "src/__tests__/**",
-    "src/**/__tests__/**",
-    "**/*.test.ts",
-    "**/*.test.tsx"
-  ],
-  "references": [{ "path": "../types/tsconfig.build.json" }]
+  "exclude": ["node_modules", "dist", ".turbo", "src/__tests__/**", "**/*.test.ts", "**/*.spec.ts"]
 }

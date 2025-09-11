@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-
+import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -13,7 +13,7 @@ import { AmplifySchema, type AmplifyInput } from '@elevate/types/schemas'
 import { Button, Input, Card, Alert, AlertTitle, AlertDescription, Textarea } from '@elevate/ui'
 import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
 
-import { getApiClient } from '../../../../lib/api-client'
+import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 
 export default function AmplifyFormPage() {
   const { userId } = useAuth()
@@ -27,8 +27,12 @@ export default function AmplifyFormPage() {
     onUpload: async (files) => {
       const uploadPromises = files.map(async (file) => {
         try {
-          const api = getApiClient()
-          const result = await api.uploadFile(file, AMPLIFY)
+          const form = new FormData()
+          form.append('file', file)
+          form.append('activityCode', AMPLIFY)
+          const resp = await fetch('/api/files/upload', { method: 'POST', body: form })
+          if (!resp.ok) throw new Error('Upload failed')
+          const result = (await resp.json()) as { data?: { path: string; hash: string } }
           return {
             file,
             path: result.data.path,
@@ -144,13 +148,20 @@ export default function AmplifyFormPage() {
         const evidenceNote = watch('evidence_note') as string | undefined
         if (evidenceNote) payload.evidenceNote = evidenceNote
 
-        const api = getApiClient()
-        await api.createSubmission({
-          activityCode: AMPLIFY,
-          payload,
-          attachments: successfulUploads.map((f) => f.path),
-          visibility: 'PRIVATE',
+        const tokenRes = await fetch('/api/csrf-token')
+        const tokenJson = (await tokenRes.json().catch(() => ({}))) as { data?: { token?: string } }
+        const token = tokenJson?.data?.token
+        const resp = await fetch('/api/submissions', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', [CSRF_TOKEN_HEADER]: String(token || '') },
+          body: JSON.stringify({
+            activityCode: AMPLIFY,
+            payload,
+            attachments: successfulUploads.map((f) => f.path),
+            visibility: 'PRIVATE',
+          }),
         })
+        if (!resp.ok) throw new Error('Submission failed')
       })
       
       // Override success message with points info

@@ -4,7 +4,6 @@ import { prisma } from '@elevate/db/client'
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { formatActivityBreakdown, formatCohortPerformanceStats, formatMonthlyGrowthStats } from '@elevate/logic'
-import { type ActivityCode } from '@elevate/types'
 
 
 export const runtime = 'nodejs'

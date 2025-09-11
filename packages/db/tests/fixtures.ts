@@ -586,22 +586,45 @@ export class DatabaseFixtures {
    */
   async cleanup(): Promise<void> {
     // Delete in order to respect foreign key constraints
-    await this.prisma.earnedBadge.deleteMany({
-      where: { user_id: { contains: 'test-' } },
-    })
-    await this.prisma.pointsLedger.deleteMany({
-      where: { user_id: { contains: 'test-' } },
-    })
-    await this.prisma.submission.deleteMany({
-      where: { user_id: { contains: 'test-' } },
-    })
-    await this.prisma.auditLog.deleteMany({
-      where: { actor_id: { contains: 'test-' } },
-    })
-    await this.prisma.kajabiEvent.deleteMany({
-      where: { user_match: { contains: 'test-' } },
-    })
-    await this.prisma.user.deleteMany({ where: { id: { contains: 'test-' } } })
+    try {
+      await this.prisma.earnedBadge.deleteMany({
+        where: { user_id: { contains: 'test-' } },
+      })
+    } catch { /* noop */ }
+    try {
+      await this.prisma.pointsLedger.deleteMany({
+        where: { user_id: { contains: 'test-' } },
+      })
+    } catch { /* noop */ }
+    try {
+      await this.prisma.submission.deleteMany({
+        where: { user_id: { contains: 'test-' } },
+      })
+    } catch { /* noop */ }
+    try {
+      await this.prisma.auditLog.deleteMany({
+        where: { actor_id: { contains: 'test-' } },
+      })
+    } catch { /* noop */ }
+    try {
+      // Kajabi event test cleanup: filter by known string fields that may contain test markers
+      await this.prisma.kajabiEvent.deleteMany({
+        where: {
+          OR: [
+            { email: { contains: 'test-' } },
+            { event_id: { contains: 'test-' } },
+            { contact_id: { contains: 'test-' } },
+            { tag_name_raw: { contains: 'test-' } },
+            { tag_name_norm: { contains: 'test-' } },
+          ],
+        },
+      })
+    } catch { /* noop */ }
+    try {
+      await this.prisma.user.deleteMany({
+        where: { id: { contains: 'test-' } },
+      })
+    } catch { /* noop */ }
   }
 
   /**

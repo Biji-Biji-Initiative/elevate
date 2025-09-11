@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "node ../../scripts/emit-openapi-json.mjs",
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node ../../scripts/verify-openapi-json.mjs",
     "build:analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs",
@@ -14,6 +16,7 @@
     "analyze:bundle": "node ../../scripts/analyze-bundles.js"
   },
   "dependencies": {
+    "@clerk/localizations": "^3.25.0",
     "@clerk/nextjs": "^6.31.8",
     "@clerk/themes": "^2.4.16",
     "@elevate/auth": "workspace:*",
@@ -21,10 +24,9 @@
     "@elevate/db": "workspace:*",
     "@elevate/emails": "workspace:*",
     "@elevate/forms": "workspace:*",
-    "@elevate/integrations": "workspace:*",
     "@elevate/http": "workspace:*",
+    "@elevate/integrations": "workspace:*",
     "@elevate/logging": "workspace:*",
-    "@elevate/openapi": "workspace:*",
     "@elevate/logic": "workspace:*",
     "@elevate/security": "workspace:*",
     "@elevate/storage": "workspace:*",

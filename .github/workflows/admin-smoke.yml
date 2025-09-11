@@ -1,0 +1,42 @@
+name: Admin Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Admin Base URL (e.g., https://admin.leaps.mereka.org)'
+        required: true
+      test_user_id:
+        description: 'Test User ID (optional)'
+        required: false
+
+jobs:
+  admin-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Install deps
+        run: pnpm -C elevate install --frozen-lockfile
+
+      - name: Run Admin Smoke
+        working-directory: elevate
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          TEST_USER_ID: ${{ inputs.test_user_id }}
+        run: pnpm tsx scripts/qa/admin-smoke.ts
+

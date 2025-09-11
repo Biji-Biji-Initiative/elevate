@@ -36,6 +36,9 @@ export const GET = withApiErrorHandling(
         handle: true,
         school: true,
         cohort: true,
+        user_type: true,
+        user_type_confirmed: true,
+        kajabi_contact_id: true,
       },
     })
 
@@ -70,6 +73,9 @@ export const GET = withApiErrorHandling(
           email,
           handle,
           role: 'PARTICIPANT',
+          // Default to STUDENT until onboarding confirms role
+          user_type: 'STUDENT',
+          user_type_confirmed: false,
         },
         select: {
           id: true,
@@ -77,29 +83,39 @@ export const GET = withApiErrorHandling(
           handle: true,
           school: true,
           cohort: true,
+          user_type: true,
+          user_type_confirmed: true,
+          kajabi_contact_id: true,
         },
       })
 
-      // Best-effort Kajabi enrollment as a safety net; do not block dashboard
-      try {
-        const emailToUse = email
-        const nameToUse = user.name
+      // Enrollment is educators-only after onboarding, handled there; no-op here
+    }
+
+    // If educator is confirmed and not yet enrolled, best-effort enrollment here as a fallback
+    try {
+      if (
+        user &&
+        user.user_type === 'EDUCATOR' &&
+        user.user_type_confirmed &&
+        !user.kajabi_contact_id
+      ) {
+        const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { email: true, name: true } })
+        const emailToUse = dbUser?.email || ''
+        const nameToUse = dbUser?.name || emailToUse.split('@')[0] || 'Educator'
         const offerId = process.env.KAJABI_OFFER_ID
-        if (offerId && offerId.length > 0) {
-          const result = await enrollUserInKajabi(emailToUse, nameToUse, {
-            offerId,
+        const result = await enrollUserInKajabi(emailToUse, nameToUse, {
+          ...(offerId ? { offerId } : {}),
+        })
+        if (result.success && result.contactId) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { kajabi_contact_id: String(result.contactId) },
           })
-          // If contact was created, persist kajabi_contact_id for future
-          if (result.success && result.contactId) {
-            await prisma.user.update({
-              where: { id: userId },
-              data: { kajabi_contact_id: result.contactId.toString() },
-            })
-          }
         }
-      } catch {
-        // swallow errors here; primary path is webhook
       }
+    } catch {
+      // ignore; webhook + admin tools remain primary path
     }
 
     // Referral attribution and signup bonus (idempotent)
@@ -139,65 +155,69 @@ export const GET = withApiErrorHandling(
           const alreadyReferred =
             Array.isArray(currentRef) && currentRef[0]?.referred_by_user_id
           if (!alreadyReferred) {
-            // Set referred_by_user_id
-            await prisma.$executeRaw`
-              UPDATE users SET referred_by_user_id = ${referrer.id}
-              WHERE id = ${user.id} AND referred_by_user_id IS NULL
-            `
-            // Award referrer points (educators only) with monthly cap 50
-            const referee = await prisma.user.findUnique({
-              where: { id: user.id },
-              select: { user_type: true },
+          // Set referred_by_user_id
+          await prisma.$executeRaw`
+            UPDATE users SET referred_by_user_id = ${referrer.id}
+            WHERE id = ${user.id} AND referred_by_user_id IS NULL
+          `
+          // Award referrer points (referrer must be EDUCATOR) with monthly cap 50
+          const [referee, referrerUser] = await Promise.all([
+            prisma.user.findUnique({ where: { id: user.id }, select: { user_type: true } }),
+            prisma.user.findUnique({ where: { id: referrer.id }, select: { user_type: true } }),
+          ])
+          // Only educators can earn referral points
+          const isReferrerEducator = referrerUser?.user_type === 'EDUCATOR'
+          // Points by referee type: +2 for educator, +1 for student
+          const baseDelta = referee?.user_type === 'EDUCATOR' ? 2 : 1
+          const delta = isReferrerEducator ? baseDelta : 0
+          const externalId = `referral:signup:${user.id}`
+          const existing = await prisma.pointsLedger.findFirst({
+            where: { external_event_id: externalId },
+          })
+          if (!existing) {
+            const now = new Date()
+            const monthStart = new Date(
+              Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0),
+            )
+            const awardedThisMonthAgg = await prisma.pointsLedger.aggregate({
+              _sum: { delta_points: true },
+              where: {
+                user_id: referrer.id,
+                external_source: 'referral',
+                event_time: { gte: monthStart },
+              },
             })
-            const delta = referee?.user_type === 'EDUCATOR' ? 2 : 0
-            const externalId = `referral:signup:${user.id}`
-            const existing = await prisma.pointsLedger.findFirst({
-              where: { external_event_id: externalId },
-            })
-            if (!existing) {
-              const now = new Date()
-              const monthStart = new Date(
-                Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0),
-              )
-              const awardedThisMonthAgg = await prisma.pointsLedger.aggregate({
-                _sum: { delta_points: true },
-                where: {
+            const awardedThisMonth =
+              awardedThisMonthAgg._sum.delta_points || 0
+            const remaining = Math.max(0, 50 - awardedThisMonth)
+            const grant = Math.min(remaining, delta)
+            if (grant > 0) {
+              await prisma.pointsLedger.create({
+                data: {
                   user_id: referrer.id,
+                  activity_code: 'AMPLIFY',
+                  source: 'FORM',
+                  delta_points: grant,
                   external_source: 'referral',
-                  event_time: { gte: monthStart },
+                  external_event_id: externalId,
+                  event_time: new Date(),
+                  meta: { referee_id: user.id },
                 },
               })
-              const awardedThisMonth =
-                awardedThisMonthAgg._sum.delta_points || 0
-              const remaining = Math.max(0, 50 - awardedThisMonth)
-              const grant = Math.min(remaining, delta)
-              if (grant > 0) {
-                await prisma.pointsLedger.create({
-                  data: {
-                    user_id: referrer.id,
-                    activity_code: 'AMPLIFY',
-                    source: 'FORM',
-                    delta_points: grant,
-                    external_source: 'referral',
-                    external_event_id: externalId,
-                    event_time: new Date(),
-                    meta: { referee_id: user.id },
-                  },
-                })
-              }
-              // Record referral event using raw SQL for compatibility (table may be optional)
-              try {
-                await prisma.$executeRaw`
-                  INSERT INTO referral_events (referrer_user_id, referee_user_id, event_type, external_event_id, source)
-                  VALUES (${referrer.id}, ${
-                  user.id
-                }, ${'signup'}, ${externalId}, ${'cookie'})
-                  ON CONFLICT DO NOTHING
-                `
-              } catch {
-                // ignore unique conflict
-              }
             }
+            // Record referral event using raw SQL for compatibility (table may be optional)
+            try {
+              await prisma.$executeRaw`
+                INSERT INTO referral_events (referrer_user_id, referee_user_id, event_type, external_event_id, source)
+                VALUES (${referrer.id}, ${
+                user.id
+              }, ${'signup'}, ${externalId}, ${'cookie'})
+                ON CONFLICT DO NOTHING
+              `
+            } catch {
+              // ignore unique conflict
+            }
+          }
           }
         }
       }

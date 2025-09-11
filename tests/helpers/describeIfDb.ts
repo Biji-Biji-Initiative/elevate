@@ -11,7 +11,7 @@ function isSkip(): boolean {
 
 export const describeIfDb: typeof describe = ((name: string, fn: Parameters<typeof describe>[1], timeout?: number) => {
   if (isSkip() || !hasDbUrl()) {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+     
     return describe.skip(name, () => {}, timeout as any)
   }
   return describe(name, fn, timeout as any)
@@ -19,7 +19,7 @@ export const describeIfDb: typeof describe = ((name: string, fn: Parameters<type
 
 export const itIfDb: typeof it = ((name: string, fn: Parameters<typeof it>[1], timeout?: number) => {
   if (isSkip() || !hasDbUrl()) {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+     
     return it.skip(name, () => {}, timeout as any)
   }
   return it(name, fn, timeout as any)

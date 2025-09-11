@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-
+import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -25,7 +25,7 @@ import {
   FileList,
 } from '@elevate/ui/blocks'
 
-import { getApiClient } from '../../../../lib/api-client'
+import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 import { toMessage } from '../../../lib/error-utils'
 
 export default function ShineFormPage() {
@@ -51,8 +51,12 @@ export default function ShineFormPage() {
     onUpload: async (files) => {
       const uploadPromises = files.map(async (file) => {
         try {
-          const api = getApiClient()
-          const result = await api.uploadFile(file, SHINE)
+          const form = new FormData()
+          form.append('file', file)
+          form.append('activityCode', SHINE)
+          const resp = await fetch('/api/files/upload', { method: 'POST', body: form })
+          if (!resp.ok) throw new Error('Upload failed')
+          const result = (await resp.json()) as { data?: { path: string; hash: string } }
           return {
             file,
             path: result.data.path,
@@ -108,13 +112,23 @@ export default function ShineFormPage() {
         attachments: successfulUploads.map((f) => f.path).filter(Boolean),
       }
 
-      const api = getApiClient()
-      await api.createSubmission({
-        activityCode: SHINE,
-        payload,
-        attachments: successfulUploads.map((f) => f.path),
-        visibility: makePublic ? 'PUBLIC' : 'PRIVATE',
+      const tokenRes = await fetch('/api/csrf-token')
+      const tokenJson = (await tokenRes.json().catch(() => ({}))) as { data?: { token?: string } }
+      const token = tokenJson?.data?.token
+      const resp = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', [CSRF_TOKEN_HEADER]: String(token || '') },
+        body: JSON.stringify({
+          activityCode: SHINE,
+          payload,
+          attachments: successfulUploads.map((f) => f.path).filter(Boolean),
+          visibility: makePublic ? 'PUBLIC' : 'PRIVATE',
+        }),
       })
+      if (!resp.ok) {
+        const err = await resp.text().catch(() => 'Submission failed')
+        throw new Error(err || 'Submission failed')
+      }
     })
   }
 

@@ -57,7 +57,6 @@ const nextConfig = {
     '@elevate/types',
     '@elevate/db',
     '@elevate/storage',
-    '@elevate/openapi',
     '@elevate/security',
     '@elevate/integrations',
     '@elevate/logic',

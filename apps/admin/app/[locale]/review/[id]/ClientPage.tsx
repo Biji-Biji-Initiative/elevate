@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { getApiClient, type APIClient } from '@/lib/api-client'
+import { getSubmissionByIdAction, reviewSubmissionAction } from '@/lib/actions/submissions'
 import { toMsg } from '@/lib/errors'
 import type { AdminSubmission } from '@elevate/types/admin-api-types'
 import { Button, Textarea, Input, Alert } from '@elevate/ui'
@@ -32,10 +32,9 @@ export default function ReviewClient({ initialSubmission }: ReviewClientProps) {
   const refresh = async () => {
     try {
       setLoading(true)
-      const api: APIClient = getApiClient()
-      const res = await api.getAdminSubmissionById(submissionId)
-      setSubmission(res.data.submission as AdminSubmission)
-      setReviewNote((res.data.submission as AdminSubmission).review_note ?? '')
+      const res = await getSubmissionByIdAction(submissionId)
+      setSubmission(res.submission as AdminSubmission)
+      setReviewNote((res.submission as AdminSubmission).review_note ?? '')
     } catch (e: unknown) {
       setError(toMsg('Fetch submission', e))
     } finally {
@@ -47,8 +46,7 @@ export default function ReviewClient({ initialSubmission }: ReviewClientProps) {
     setProcessing(true)
     setError(null)
     try {
-      const api: APIClient = getApiClient()
-      await api.reviewSubmission({
+      await reviewSubmissionAction({
         submissionId,
         action,
         ...(reviewNote.trim() ? { reviewNote: reviewNote.trim() } : {}),
@@ -66,8 +64,14 @@ export default function ReviewClient({ initialSubmission }: ReviewClientProps) {
   function getBasePoints(s: AdminSubmission): number {
     if (s.activity.code === 'AMPLIFY') {
       const payload = s.payload as unknown
-      const peers = (payload && typeof payload === 'object' && (payload as any).peers_trained) || 0
-      const students = (payload && typeof payload === 'object' && (payload as any).students_trained) || 0
+      const peers =
+        payload && typeof payload === 'object' && 'peers_trained' in payload
+          ? Number((payload as Record<string, unknown>).peers_trained) || 0
+          : 0
+      const students =
+        payload && typeof payload === 'object' && 'students_trained' in payload
+          ? Number((payload as Record<string, unknown>).students_trained) || 0
+          : 0
       return Math.min(Number(peers) || 0, 50) * 2 + Math.min(Number(students) || 0, 200) * 1
     }
     return s.activity.default_points || 0
@@ -259,4 +263,3 @@ export default function ReviewClient({ initialSubmission }: ReviewClientProps) {
     </div>
   )
 }
-

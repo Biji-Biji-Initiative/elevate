@@ -103,8 +103,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 client_secret: clientSecret,
               }),
             })
-            const tokenJson = (await tokenRes.json().catch(() => ({}))) as { access_token?: string }
-            const accessToken = tokenJson?.access_token
+            const TokenSchema = z.object({ access_token: z.string().optional() })
+            const tokenJsonUnknown: unknown = await tokenRes.json().catch(() => ({}))
+            const tokenParsed = TokenSchema.safeParse(tokenJsonUnknown)
+            const accessToken = tokenParsed.success ? tokenParsed.data.access_token : undefined
             if (accessToken) {
               const api = async (path: string, method = 'GET', body?: unknown) =>
                 fetch(`https://api.kajabi.com/v1${path}`, {
@@ -114,22 +116,39 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                     'Content-Type': 'application/vnd.api+json',
                     Accept: 'application/vnd.api+json',
                   },
-                  body: body ? JSON.stringify(body) : undefined,
+                  ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
                 })
 
               // Resolve contact id if missing
               if (!contactIdResolved) {
                 const list = await api('/contacts')
-                const listJson = (await list.json().catch(() => ({}))) as any
-                const found = Array.isArray(listJson?.data)
-                  ? listJson.data.find((c: any) => c?.attributes?.email?.toLowerCase() === email.toLowerCase())
-                  : null
-                contactIdResolved = found?.id
+                const ContactsSchema = z.object({
+                  data: z.array(
+                    z.object({
+                      id: z.union([z.string(), z.number()]),
+                      attributes: z.object({ email: z.string().email().optional() }).partial(),
+                    }),
+                  ).default([]),
+                })
+                const listJsonUnknown: unknown = await list.json().catch(() => ({}))
+                const contactsParsed = ContactsSchema.safeParse(listJsonUnknown)
+                if (contactsParsed.success) {
+                  const found = contactsParsed.data.data.find(
+                    (c) => (c.attributes.email || '').toLowerCase() === email.toLowerCase(),
+                  )
+                  if (found) contactIdResolved = String(found.id)
+                }
                 if (!contactIdResolved) {
                   // Create with site relationship
                   const sites = await api('/sites')
-                  const siteJson = (await sites.json().catch(() => ({}))) as any
-                  const siteId = Array.isArray(siteJson?.data) ? siteJson.data[0]?.id : undefined
+                  const SitesSchema = z.object({
+                    data: z.array(z.object({ id: z.union([z.string(), z.number()]) })).default([]),
+                  })
+                  const siteJsonUnknown: unknown = await sites.json().catch(() => ({}))
+                  const sitesParsed = SitesSchema.safeParse(siteJsonUnknown)
+                  const siteId = sitesParsed.success && sitesParsed.data.data[0]
+                    ? String(sitesParsed.data.data[0].id)
+                    : undefined
                   const [firstName, ...rest] = name.split(' ')
                   const lastName = rest.join(' ')
                   const crt = await api('/contacts', 'POST', {
@@ -141,22 +160,54 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                         : {}),
                     },
                   })
-                  const crtJson = (await crt.json().catch(() => ({}))) as any
-                  contactIdResolved = crtJson?.data?.id
+                  const ContactCreateSchema = z.object({
+                    data: z.object({ id: z.union([z.string(), z.number()]) }).optional(),
+                  })
+                  const crtJsonUnknown: unknown = await crt.json().catch(() => ({}))
+                  const crtParsed = ContactCreateSchema.safeParse(crtJsonUnknown)
+                  if (crtParsed.success && crtParsed.data.data) {
+                    contactIdResolved = String(crtParsed.data.data.id)
+                  }
                 }
               }
 
               // Resolve offer id if provided as name/slug
               if (typeof effectiveOfferId === 'string' && !/^\d+$/.test(effectiveOfferId)) {
                 const off = await api('/offers')
-                const offJson = (await off.json().catch(() => ({}))) as any
-                const data = Array.isArray(offJson?.data) ? offJson.data : []
-                const match = data.find((o: any) => {
-                  const a = o?.attributes || {}
-                  const candidates = [a.name, a.title, a.product_title, a.product?.title, a.offer_title]
-                  return candidates?.some((v: any) => typeof v === 'string' && v.toLowerCase() === String(effectiveOfferId).toLowerCase())
+                const OffersSchema = z.object({
+                  data: z.array(
+                    z.object({
+                      id: z.union([z.string(), z.number()]),
+                      attributes: z
+                        .object({
+                          name: z.string().optional(),
+                          title: z.string().optional(),
+                          product_title: z.string().optional(),
+                          offer_title: z.string().optional(),
+                          product: z.object({ title: z.string().optional() }).partial().optional(),
+                        })
+                        .partial(),
+                    }),
+                  ).default([]),
                 })
-                if (match?.id) offerIdResolved = match.id
+                const offJsonUnknown: unknown = await off.json().catch(() => ({}))
+                const offersParsed = OffersSchema.safeParse(offJsonUnknown)
+                if (offersParsed.success) {
+                  const match = offersParsed.data.data.find((o) => {
+                    const a = o.attributes || {}
+                    const candidates = [
+                      a.name,
+                      a.title,
+                      a.product_title,
+                      a.offer_title,
+                      a.product?.title,
+                    ].filter(Boolean) as string[]
+                    return candidates.some(
+                      (v) => v.toLowerCase() === String(effectiveOfferId).toLowerCase(),
+                    )
+                  })
+                  if (match) offerIdResolved = String(match.id)
+                }
               }
 
               // Attempt grant via relationships if we have both ids

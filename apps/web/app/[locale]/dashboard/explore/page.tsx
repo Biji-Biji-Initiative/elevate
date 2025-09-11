@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-
-
+import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslations } from 'next-intl'
@@ -27,7 +26,7 @@ import {
 } from '@elevate/ui'
 import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
 
-import { getApiClient } from '../../../../lib/api-client'
+import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 
 const aiToolOptions = [
   { value: 'ChatGPT', label: 'ChatGPT' },
@@ -52,8 +51,12 @@ export default function ExploreFormPage() {
     onUpload: async (files) => {
       const uploadPromises = files.map(async (file) => {
         try {
-          const api = getApiClient()
-          const result = await api.uploadFile(file, EXPLORE)
+          const form = new FormData()
+          form.append('file', file)
+          form.append('activityCode', EXPLORE)
+          const resp = await fetch('/api/files/upload', { method: 'POST', body: form })
+          if (!resp.ok) throw new Error('Upload failed')
+          const result = (await resp.json()) as { data?: { path: string; hash: string } }
           return {
             file,
             path: result.data.path,
@@ -113,13 +116,20 @@ export default function ExploreFormPage() {
         evidenceFiles: successfulUploads.map((f) => f.path),
       }
 
-      const api = getApiClient()
-      await api.createSubmission({
-        activityCode: EXPLORE,
-        payload,
-        attachments: successfulUploads.map((f) => f.path),
-        visibility: 'PRIVATE',
+      const tokenRes = await fetch('/api/csrf-token')
+      const tokenJson = (await tokenRes.json().catch(() => ({}))) as { data?: { token?: string } }
+      const token = tokenJson?.data?.token
+      const resp = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', [CSRF_TOKEN_HEADER]: String(token || '') },
+        body: JSON.stringify({
+          activityCode: EXPLORE,
+          payload,
+          attachments: successfulUploads.map((f) => f.path),
+          visibility: 'PRIVATE',
+        }),
       })
+      if (!resp.ok) throw new Error('Submission failed')
 
       // Reset form
       setSelectedAiTool('')

@@ -16,9 +16,12 @@ import {
   PageLoading,
 } from '@elevate/ui/blocks'
 
-import { getServerApiClient } from '../../../../lib/api-client'
+import { getPublicProfileByHandleService } from '../../../../lib/server/profile-service'
 
 import type { Metadata } from 'next'
+
+// Cache public profile pages for 5 minutes
+export const revalidate = 300
 
 // Next 15 app router sometimes expects PageProps.params to be a Promise in build workers
 type ProfilePageProps = { params: Promise<{ handle: string }> }
@@ -58,33 +61,30 @@ interface UserProfile {
 }
 
 async function fetchUserProfile(handle: string): Promise<UserProfile | null> {
-  try {
-    const api = await getServerApiClient()
-    const res = await api.getProfile(handle)
-    // The API may return a success envelope: { success, data }
-    // Be tolerant in case the client ever returns raw DTO
-    const hasData = (v: unknown): v is { data: unknown } =>
-      !!v && typeof v === 'object' && 'data' in v
-    const payload: unknown = hasData(res) ? res.data : res
-    const raw =
-      payload &&
-      typeof payload === 'object' &&
-      'success' in payload &&
-      (payload as { success?: boolean }).success
-        ? (payload as { data?: unknown }).data
-        : payload
-    if (
-      raw &&
-      typeof raw === 'object' &&
-      'id' in raw &&
-      'handle' in raw &&
-      'submissions' in raw
-    ) {
-      return raw as UserProfile
-    }
-    return null
-  } catch (_) {
-    return null
+  const dto = await getPublicProfileByHandleService(handle)
+  if (!dto) return null
+  // Adapt DTO to local shape (aligns closely already)
+  return {
+    id: dto.id,
+    handle: dto.handle,
+    name: dto.name,
+    email: dto.email,
+    avatarUrl: dto.avatarUrl ?? undefined,
+    school: dto.school ?? undefined,
+    cohort: dto.cohort ?? undefined,
+    createdAt: dto.createdAt,
+    totalPoints: dto.totalPoints,
+    submissions: dto.submissions.map((s) => ({
+      id: s.id,
+      activityCode: s.activityCode,
+      activity: s.activity,
+      status: s.status,
+      visibility: s.visibility,
+      payload: s.payload as SubmissionPayload,
+      createdAt: s.createdAt,
+      updatedAt: s.updatedAt,
+    })),
+    earnedBadges: dto.earnedBadges,
   }
 }
 

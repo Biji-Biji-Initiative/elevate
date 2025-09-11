@@ -3,13 +3,13 @@
 Purpose: Give agents precise, local rules for working in the Admin app only.
 
 ## Scope & Principles
-- Single client: Use `@elevate/admin-core` `adminActions` for all data access.
+- Prefer server-only services (`apps/admin/lib/services/*`) in server components and server actions (`apps/admin/lib/actions/*`) from client shells. Avoid importing `@elevate/admin-core` in client components.
 - Typed UI: Project API types (`@elevate/types/admin-api-types`) into small, UI‑safe shapes before rendering.
 - Safety by construction: Favor typed locals and small helpers over disabling rules.
 - Import hygiene: Keep import groups orderly and consistent (see below).
 
 ## Do
-- Use `adminActions` (e.g., `getUsers`, `getSubmissions`, `reviewSubmission`, `getAnalytics`).
+- Use server services in server components (e.g., `lib/services/users.listUsers`) and server actions in client components (e.g., `lib/actions/users.listUsersAction`, `reviewSubmissionAction`).
 - Convert results to UI-safe projections (no nullish/unknown access in JSX).
 - Use a tiny error helper for `setError` to avoid propagating error-typed values:
   ```ts
@@ -21,17 +21,12 @@ Purpose: Give agents precise, local rules for working in the Admin app only.
   ```
 - Assign action results to typed locals before calling `setState`:
   ```ts
-  const { users }: { users: AdminUser[] } = await adminActions.getUsers(params)
+  const { users } = await listUsersAction(params)
   setUsers(users.map(toUser))
-  ```
-- If the analyzer complains at call sites, add a page‑local typed alias:
-  ```ts
-  const getBadgesTyped: (include?: boolean) => Promise<{ badges: AdminBadge[] }> = adminActions.getBadges
-  const { badges } = await getBadgesTyped(true)
   ```
 
 ## Don’t
-- Don’t fetch directly in pages or parse JSON with ad‑hoc schemas.
+- Don’t fetch directly in client pages with `fetch` — call server actions instead.
 - Don’t access unknown/any in JSX (e.g., `value as any` in renderers).
 - Don’t regress from alias imports (`@/*`, `@elevate/*`) to deep relative paths.
 
@@ -45,12 +40,12 @@ Purpose: Give agents precise, local rules for working in the Admin app only.
 ## Common Recipes
 - Review modal fetch:
   ```ts
-  const { submission } = await adminActions.getSubmissionById(id)
+  const { submission } = await getSubmissionByIdAction(id)
   setReviewModal((p) => ({ ...p, submission }))
   ```
 - Single review:
   ```ts
-  await adminActions.reviewSubmission({
+  await reviewSubmissionAction({
     submissionId: id,
     action, // 'approve' | 'reject'
     ...(note ? { reviewNote: note } : {}),
@@ -59,7 +54,7 @@ Purpose: Give agents precise, local rules for working in the Admin app only.
   ```
 - Bulk review:
   ```ts
-  await adminActions.bulkReview({
+  await bulkReviewAction({
     submissionIds: Array.from(selectedRows),
     action,
     ...(note ? { reviewNote: note } : {}),
@@ -74,5 +69,5 @@ Purpose: Give agents precise, local rules for working in the Admin app only.
 - Monorepo lint: `pnpm -C elevate lint`
 
 ## Notes
-- Keep Admin thin: validation/typing lives in `@elevate/types` and `@elevate/admin-core`.
-- When adding a page, start from an `adminActions` call, add a small projection, and wire `toMsg()` for errors.
+- Keep Admin thin: validation/typing lives in `@elevate/types`.
+- When adding a page, start from a server service or server action, add a small projection, and wire `toMsg()` for errors.

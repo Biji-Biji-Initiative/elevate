@@ -103,6 +103,372 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin User Detail
+         * @description Get admin view of a single user by id
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                user: {
+                                    id: string;
+                                    email: string;
+                                    name?: string | null;
+                                    handle?: string | null;
+                                    /** @enum {string} */
+                                    user_type: "EDUCATOR" | "STUDENT";
+                                    user_type_confirmed: boolean;
+                                    school?: string | null;
+                                    region?: string | null;
+                                    kajabi_contact_id?: string | null;
+                                    /** Format: date-time */
+                                    created_at: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Admin Update User Profile Fields
+         * @description Update user_type, user_type_confirmed, school, or region
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        userType?: "EDUCATOR" | "STUDENT";
+                        userTypeConfirmed?: boolean;
+                        school?: string;
+                        region?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                user: {
+                                    id: string;
+                                    email: string;
+                                    name?: string | null;
+                                    handle?: string | null;
+                                    /** @enum {string} */
+                                    user_type: "EDUCATOR" | "STUDENT";
+                                    user_type_confirmed: boolean;
+                                    school?: string | null;
+                                    region?: string | null;
+                                    kajabi_contact_id?: string | null;
+                                    /** Format: date-time */
+                                    created_at: string;
+                                };
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/admin/users/leaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Admin Bulk LEAPS Update
+         * @description Bulk update LEAPS fields (userType, userTypeConfirmed, school, region)
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        userIds: string[];
+                        /** @enum {string} */
+                        userType?: "EDUCATOR" | "STUDENT";
+                        userTypeConfirmed?: boolean;
+                        school?: string;
+                        region?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Bulk update results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                processed: number;
+                                failed: number;
+                                errors: {
+                                    userId: string;
+                                    error: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/kajabi/health": {
         parameters: {
             query?: never;
@@ -804,6 +1170,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/referrals/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Admin Referrals Summary
+         * @description Monthly summary for referrals
+         */
+        get: {
+            parameters: {
+                query: {
+                    month: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                month: string;
+                                total: number;
+                                byType: {
+                                    educators: number;
+                                    students: number;
+                                };
+                                uniqueReferrers: number;
+                                pointsAwarded: number;
+                                topReferrers: {
+                                    userId: string;
+                                    points: number;
+                                    user: {
+                                        id: string;
+                                        name: string;
+                                        email: string;
+                                        handle: string;
+                                        /** @enum {string} */
+                                        user_type: "EDUCATOR" | "STUDENT";
+                                    };
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/submissions": {
         parameters: {
             query?: never;
@@ -1134,6 +1569,193 @@ export interface paths {
                 };
                 /** @description Unauthorized */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profile/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Profile Onboarding
+         * @description Complete required onboarding fields (role; educator school+region) and mirror to Clerk
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        userType: "EDUCATOR" | "STUDENT";
+                        school?: string;
+                        region?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            /** @description Response data (varies by endpoint) */
+                            data?: unknown;
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * Error Envelope
+                             * @description Standard error envelope for LEAPS APIs
+                             */
+                            error: {
+                                /**
+                                 * @example validation
+                                 * @enum {string}
+                                 */
+                                type: "validation" | "cap" | "state" | "auth" | "idempotency";
+                                /** @example INVALID_JSON */
+                                code: string;
+                                /** @example Body must be valid JSON */
+                                message: string;
+                                details?: unknown;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/schools": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Schools Search
+         * @description Autocomplete search for schools by name
+         */
+        get: {
+            parameters: {
+                query: {
+                    q: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description Operation success status
+                             * @example true
+                             */
+                            success: boolean;
+                            data: {
+                                name: string;
+                                city?: string | null;
+                                province?: string | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Bad Request */
+                400: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2388,6 +3010,8 @@ export interface paths {
                 query?: {
                     search?: string;
                     role?: "ALL" | "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN";
+                    userType?: "ALL" | "EDUCATOR" | "STUDENT";
+                    kajabi?: "ALL" | "LINKED" | "UNLINKED";
                     cohort?: string;
                     page?: number;
                     limit?: number;

@@ -7,9 +7,12 @@ import { SignedIn } from '@clerk/nextjs'
 
 import { MetricsChart, StatsGrid, PageLoading } from '@elevate/ui/blocks'
 
-import { getServerApiClient } from '../../../../lib/api-client'
+import { getStageMetricsService } from '../../../../lib/server/metrics-service'
 
 import type { Metadata } from 'next'
+
+// Cache this page for 5 minutes to reduce DB load
+export const revalidate = 300
 
 interface MetricsPageProps {
   params: Promise<{
@@ -84,28 +87,9 @@ const stageInfo = {
 }
 
 async function fetchStageMetrics(stage: string): Promise<StageMetrics | null> {
-  try {
-    if (!isValidStage(stage)) return null
-    const api = await getServerApiClient()
-    const res = await api.getMetricsDTO({ stage })
-    const data: unknown = res.data
-    const isStageMetrics = (v: unknown): v is StageMetrics => {
-      if (!v || typeof v !== 'object') return false
-      const obj = v as Record<string, unknown>
-      return (
-        typeof obj.stage === 'string' &&
-        typeof obj.totalSubmissions === 'number' &&
-        typeof obj.approvedSubmissions === 'number' &&
-        typeof obj.pendingSubmissions === 'number' &&
-        typeof obj.rejectedSubmissions === 'number' &&
-        typeof obj.avgPointsEarned === 'number' &&
-        typeof obj.uniqueEducators === 'number'
-      )
-    }
-    return isStageMetrics(data) ? data : null
-  } catch (_) {
-    return null
-  }
+  if (!isValidStage(stage)) return null
+  const dto = await getStageMetricsService(stage)
+  return dto as unknown as StageMetrics
 }
 
 function safeRate(numerator: number, denominator: number): number {

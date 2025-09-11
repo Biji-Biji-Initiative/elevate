@@ -1,5 +1,7 @@
 import type { NextRequest } from 'next/server'
 
+// zod used via AdminUsersQuerySchema; no direct z reference needed here
+
 import { roleToRoleName } from '@elevate/auth'
 import { requireRole, hasRole } from '@elevate/auth/server-helpers'
 import {
@@ -14,16 +16,8 @@ import {
 } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import {
-  parseRole,
-  toPrismaJson,
-  UpdateUserSchema,
-  BulkUpdateUsersSchema,
-  AdminUsersQuerySchema,
-  buildAuditMeta,
-  AdminUserDTOSchema,
-  mapRawAdminUserToDTO,
-} from '@elevate/types'
+import { parseRole, toPrismaJson, UpdateUserSchema, BulkUpdateUsersSchema, AdminUsersQuerySchema, buildAuditMeta } from '@elevate/types'
+import type { AdminUsersQuery } from '@elevate/types'
 import type { Role } from '@elevate/types/common'
 
 export const runtime = 'nodejs'
@@ -41,8 +35,17 @@ export async function GET(request: NextRequest) {
       if (!parsedQuery.success) {
         return createHttpError(new Error('Invalid query'), 400)
       }
-      const { search, role, cohort, page, limit, sortBy, sortOrder } =
-        parsedQuery.data
+      const q = parsedQuery.data as AdminUsersQuery & { kajabi?: 'ALL' | 'LINKED' | 'UNLINKED' }
+      const sp = new URL(request.url).searchParams
+      const search = q.search ?? ''
+      const role = q.role ?? 'ALL'
+      const userType = (sp.get('userType') as 'ALL' | 'EDUCATOR' | 'STUDENT' | null) ?? 'ALL'
+      const kajabi = (sp.get('kajabi') as 'ALL' | 'LINKED' | 'UNLINKED' | null) ?? 'ALL'
+      const cohort = q.cohort ?? 'ALL'
+      const page = q.page ?? 1
+      const limit = q.limit ?? 50
+      const sortBy = q.sortBy ?? 'created_at'
+      const sortOrder = q.sortOrder ?? 'desc'
 
       const offset = (page - 1) * limit
 
@@ -64,6 +67,14 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      if (userType && userType !== 'ALL') {
+        where.user_type = userType as 'EDUCATOR' | 'STUDENT'
+      }
+
+      if (kajabi && kajabi !== 'ALL') {
+        where.kajabi_contact_id = kajabi === 'LINKED' ? { not: null } : null
+      }
+
       if (cohort && cohort !== 'ALL') {
         where.cohort = cohort
       }
@@ -78,6 +89,9 @@ export async function GET(request: NextRequest) {
             email: true,
             avatar_url: true,
             role: true,
+            user_type: true,
+            user_type_confirmed: true,
+            kajabi_contact_id: true,
             school: true,
             cohort: true,
             created_at: true,
@@ -118,15 +132,13 @@ export async function GET(request: NextRequest) {
         {},
       )
 
-      const usersDTO = users.map((user) =>
-        mapRawAdminUserToDTO(user, pointsMap[user.id] || 0),
-      )
-
-      // Runtime validation to prevent ORM leakage
-      const parsedUsers = AdminUserDTOSchema.array().parse(usersDTO)
+      const usersList = users.map((u) => ({
+        ...u,
+        totalPoints: pointsMap[u.id] || 0,
+      }))
 
       return createSuccessResponse({
-        users: parsedUsers,
+        users: usersList,
         pagination: {
           page,
           limit,

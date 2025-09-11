@@ -1,25 +1,21 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "noEmit": false,
+    "emitDeclarationOnly": true,
     "declaration": true,
     "declarationMap": true,
-    "emitDeclarationOnly": true,
     "declarationDir": "dist/types",
+    "rootDir": "src",
     "stripInternal": true,
     "sourceMap": true,
-    "inlineSources": true,
-    "rootDir": "src",
-    "jsx": "react",
-    "tsBuildInfoFile": "dist/.tsbuildinfo",
-    "paths": {}
+    "inlineSources": true
   },
   "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"],
+  "exclude": ["dist", "node_modules", "**/*.test.ts", "**/*.spec.ts"],
   "references": [
+    { "path": "../forms/tsconfig.build.json" },
     { "path": "../types/tsconfig.build.json" },
-    { "path": "../logging/tsconfig.build.json" },
-    { "path": "../forms/tsconfig.build.json" }
+    { "path": "../security/tsconfig.build.json" }
   ]
 }

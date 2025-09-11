@@ -286,6 +286,21 @@ export class AdminApiClient {
     >('/api/admin/kajabi/health')
   }
 
+  // ----- New: Admin user detail endpoints -----
+  async getAdminUserById(id: string) {
+    return this.request<unknown>(`/api/admin/users/${encodeURIComponent(id)}`)
+  }
+
+  async patchAdminUserById(
+    id: string,
+    body: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean; school?: string; region?: string },
+  ) {
+    return this.request<unknown>(`/api/admin/users/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    })
+  }
+
   async postAdminKajabiInvite(
     body: NonNullable<
       paths['/api/admin/kajabi/invite']['post']['requestBody']
@@ -307,6 +322,16 @@ export class AdminApiClient {
     return this.request<
       paths['/api/admin/storage/retention']['post']['responses']['200']['content']['application/json']
     >('/api/admin/storage/retention', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+  }
+
+  // Bulk LEAPS update
+  async postAdminUsersLeaps(
+    body: { userIds: string[]; userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean; school?: string; region?: string },
+  ) {
+    return this.request<unknown>('/api/admin/users/leaps', {
       method: 'POST',
       body: JSON.stringify(body),
     })

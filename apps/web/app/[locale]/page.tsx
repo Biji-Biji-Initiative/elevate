@@ -7,7 +7,6 @@ import { useRouter, usePathname } from 'next/navigation'
 
 import { useTranslations } from 'next-intl'
 
-import { LeaderboardResponseSchema } from '@elevate/openapi/schemas'
 import type { StatsResponseDTO } from '@elevate/types'
 import {
   StoriesGrid,
@@ -30,7 +29,6 @@ import {
 } from '@elevate/ui/blocks/sections'
 
 import { analytics, useScrollDepthTracking } from '../../lib/analytics'
-import { getApiClient } from '../../lib/api-client'
 
 interface PlatformStats {
   totalEducators: number
@@ -59,9 +57,10 @@ interface StoriesResponse {
 
 async function fetchPlatformStats(): Promise<PlatformStats | null> {
   try {
-    const api = getApiClient()
-    const res = await api.getStatsDTO()
-    const stats: StatsResponseDTO = res.data
+    const res = await fetch('/api/stats-optimized')
+    if (!res.ok) return null
+    const body = (await res.json()) as { data?: StatsResponseDTO }
+    const stats = body.data as StatsResponseDTO
 
     const byStage: PlatformStats['byStage'] = Object.fromEntries(
       Object.entries(stats.byStage).map(([key, value]) => [
@@ -87,12 +86,39 @@ async function fetchPlatformStats(): Promise<PlatformStats | null> {
   }
 }
 
+type LeaderboardPreviewApiUser = {
+  name: string
+  handle: string
+  school?: string | null
+  avatarUrl?: string | null
+  totalPoints: number
+  earnedBadges?: Array<{ badge: { code: string; name: string } }>
+}
+type LeaderboardPreviewApiEntry = { rank: number; user: LeaderboardPreviewApiUser }
+
 async function fetchLeaderboardPreview(): Promise<LeaderboardPreviewEntry[]> {
   try {
-    const api = getApiClient()
-    const res = await api.getLeaderboard({ limit: 3 })
-    const parsed = LeaderboardResponseSchema.safeParse(res.data)
-    const rows = parsed.success ? parsed.data.data : []
+    const res = await fetch('/api/leaderboard?limit=3&period=all')
+    if (!res.ok) return []
+    const body: unknown = await res.json()
+    let rows: LeaderboardPreviewApiEntry[] = []
+    if (
+      body &&
+      typeof body === 'object' &&
+      'data' in body &&
+      Array.isArray((body as { data: unknown }).data)
+    ) {
+      rows = (body as { data: LeaderboardPreviewApiEntry[] }).data
+    } else if (
+      body &&
+      typeof body === 'object' &&
+      'data' in body &&
+      typeof (body as { data: unknown }).data === 'object' &&
+      body !== null &&
+      Array.isArray((body as { data: { data?: unknown } }).data?.data)
+    ) {
+      rows = ((body as { data: { data: LeaderboardPreviewApiEntry[] } }).data).data
+    }
 
     return rows.map((entry) => ({
       rank: entry.rank,

@@ -1,6 +1,7 @@
-import { ClientPage } from './ClientPage'
 import { listSubmissions, getCohorts } from '@/lib/services/submissions'
 import { toSubmissionRowUI } from '@/lib/ui-types'
+
+import { ClientPage } from './ClientPage'
 
 export default async function Page() {
   const [cohorts, list] = await Promise.all([
@@ -25,4 +26,3 @@ export default async function Page() {
     />
   )
 }
-

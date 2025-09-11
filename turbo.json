@@ -6,7 +6,7 @@
   "daemon": true,
   "tasks": {
     "type-check": {
-      "outputs": ["**/*.tsbuildinfo"],
+      "outputs": ["packages/*/*.tsbuildinfo"],
       "cache": true,
       "inputs": [
         "src/**/*.ts",
@@ -17,7 +17,7 @@
     },
     "build:types": {
       "dependsOn": ["^type-check"],
-      "outputs": ["packages/*/dist/types/**", "dist/types/**"],
+      "outputs": ["packages/*/dist/types/**"],
       "cache": true,
       "inputs": [
         "src/**/*.ts",
@@ -28,7 +28,7 @@
     },
     "build:js": {
       "dependsOn": ["build:types"],
-      "outputs": ["packages/*/dist/js/**", "dist/js/**"],
+      "outputs": ["packages/*/dist/js/**"],
       "cache": true,
       "inputs": ["src/**/*", "tsup.config.ts", "package.json"]
     },

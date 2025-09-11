@@ -6,6 +6,7 @@ import { headers } from 'next/headers'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 
+import '@elevate/ui/styles/globals.css'
 import './globals.css'
 
 import { Providers } from './providers'

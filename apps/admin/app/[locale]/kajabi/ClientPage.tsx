@@ -4,11 +4,11 @@ import { useState } from 'react'
 
 import { useTranslations } from 'next-intl'
 
+import { testKajabiAction, reprocessKajabiAction, inviteKajabiAction, listKajabiAction, kajabiHealthAction } from '@/lib/actions/kajabi'
 import { toMsg } from '@/lib/errors'
 import type { KajabiEvent, KajabiStats } from '@elevate/types/admin-api-types'
 import { Button, Card, CardContent, Input, Alert } from '@elevate/ui'
 import { LoadingSpinner } from '@elevate/ui/blocks'
-import { testKajabiAction, reprocessKajabiAction, inviteKajabiAction, listKajabiAction, kajabiHealthAction } from '@/lib/actions/kajabi'
 
 export function ClientPage({ initialEvents, initialStats }: { initialEvents: KajabiEvent[]; initialStats: KajabiStats | null }) {
   const t = useTranslations('kajabi')
@@ -95,12 +95,13 @@ export function ClientPage({ initialEvents, initialStats }: { initialEvents: Kaj
     setInviteLoading(true)
     setError(null)
     try {
-      const res = await inviteKajabiAction({
-        userId: inviteUserId || undefined,
-        email: inviteEmail || undefined,
-        name: inviteName || undefined,
-        offerId: inviteOfferId || undefined,
-      })
+      const inviteData: { userId?: string; email?: string; name?: string; offerId?: string } = {}
+      if (inviteUserId) inviteData.userId = inviteUserId
+      if (inviteEmail) inviteData.email = inviteEmail
+      if (inviteName) inviteData.name = inviteName
+      if (inviteOfferId) inviteData.offerId = inviteOfferId
+
+      const res = await inviteKajabiAction(inviteData)
       setInviteResult(res)
       await refresh()
     } catch (error: unknown) {
@@ -214,4 +215,3 @@ export function ClientPage({ initialEvents, initialStats }: { initialEvents: Kaj
     </div>
   )
 }
-

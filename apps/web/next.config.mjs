@@ -54,7 +54,6 @@ const nextConfig = {
     '@elevate/types',
     '@elevate/db',
     '@elevate/storage',
-    '@elevate/openapi',
     '@elevate/security',
     '@elevate/integrations',
     '@elevate/logic',
@@ -115,7 +114,22 @@ const nextConfig = {
   // Security headers configuration - comprehensive security posture
   async headers() {
     const isProduction = process.env.NODE_ENV === 'production'
-    return getSecurityHeaders({ isProduction })
+    const headers = getSecurityHeaders({ isProduction })
+    
+    // In development, add CORS headers for API routes to allow admin panel access
+    if (!isProduction) {
+      headers.push({
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: 'http://localhost:3002' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+        ],
+      })
+    }
+    
+    return headers
   },
 
   // Webpack configuration for optimized bundle splitting

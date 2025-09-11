@@ -43,10 +43,10 @@ import { cleanQueryParams } from './utils'
 function getApiClient() {
   const isServer = typeof window === 'undefined'
   const token = isServer ? undefined : undefined
+  // Use NEXT_PUBLIC_SITE_URL which points to the web app where APIs are hosted
+  // Don't pass empty baseUrl as that would make requests to admin's own origin
   return new AdminApiClient({
-    // Use same-origin relative paths to avoid cross-origin/port mismatches.
-    // Explicitly pass empty baseUrl so any global NEXT_PUBLIC_SITE_URL is ignored.
-    baseUrl: '',
+    baseUrl: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
     token,
   })
 }
@@ -252,6 +252,90 @@ export const adminActions = {
       return validateAndExtract(response, BadgesListResponseSchema, 'getBadges')
     } catch (error) {
       throw new AdminClientError('Failed to fetch badges', error)
+    }
+  },
+
+  // ----- New: Admin user profile fields (LEAPS) -----
+  async getUserById(id: string): Promise<{
+    user: {
+      id: string
+      email: string
+      name?: string | null
+      handle?: string | null
+      user_type: 'EDUCATOR' | 'STUDENT'
+      user_type_confirmed: boolean
+      school?: string | null
+      region?: string | null
+      kajabi_contact_id?: string | null
+      created_at: string
+    }
+  }> {
+    try {
+      const api = getApiClient()
+      const response = await api.getAdminUserById(id)
+      const schema = z.object({
+        success: z.literal(true),
+        data: z.object({
+          user: z.object({
+            id: z.string(),
+            email: z.string(),
+            name: z.string().nullable().optional(),
+            handle: z.string().nullable().optional(),
+            user_type: z.enum(['EDUCATOR', 'STUDENT']),
+            user_type_confirmed: z.boolean(),
+            school: z.string().nullable().optional(),
+            region: z.string().nullable().optional(),
+            kajabi_contact_id: z.string().nullable().optional(),
+            created_at: z.string(),
+          }),
+        }),
+      })
+      const parsed = schema.parse(response)
+      return parsed.data
+    } catch (error) {
+      throw new AdminClientError(`Failed to fetch user ${id}`, error)
+    }
+  },
+
+  async updateUserById(
+    id: string,
+    body: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean; school?: string; region?: string },
+  ): Promise<{ user: {
+    id: string
+    email: string
+    name?: string | null
+    handle?: string | null
+    user_type: 'EDUCATOR' | 'STUDENT'
+    user_type_confirmed: boolean
+    school?: string | null
+    region?: string | null
+    kajabi_contact_id?: string | null
+    created_at: string
+  } }> {
+    try {
+      const api = getApiClient()
+      const response = await api.patchAdminUserById(id, body)
+      const schema = z.object({
+        success: z.literal(true),
+        data: z.object({
+          user: z.object({
+            id: z.string(),
+            email: z.string(),
+            name: z.string().nullable().optional(),
+            handle: z.string().nullable().optional(),
+            user_type: z.enum(['EDUCATOR', 'STUDENT']),
+            user_type_confirmed: z.boolean(),
+            school: z.string().nullable().optional(),
+            region: z.string().nullable().optional(),
+            kajabi_contact_id: z.string().nullable().optional(),
+            created_at: z.string(),
+          }),
+        }),
+      })
+      const parsed = schema.parse(response)
+      return parsed.data
+    } catch (error) {
+      throw new AdminClientError(`Failed to update user ${id}`, error)
     }
   },
 
@@ -478,6 +562,27 @@ export const adminActions = {
       return parsed.data
     } catch (error) {
       throw new AdminClientError('Failed to enforce storage retention', error)
+    }
+  },
+
+  async bulkUpdateLeapsUsers(body: {
+    userIds: string[]
+    userType?: 'EDUCATOR' | 'STUDENT'
+    userTypeConfirmed?: boolean
+    school?: string
+    region?: string
+  }): Promise<{ processed: number; failed: number; errors: Array<{ userId: string; error: string }> }> {
+    try {
+      const api = getApiClient()
+      const response = await api.postAdminUsersLeaps(body)
+      const schema = z.object({
+        success: z.literal(true),
+        data: z.object({ processed: z.number().int(), failed: z.number().int(), errors: z.array(z.object({ userId: z.string(), error: z.string() })) }),
+      })
+      const parsed = schema.parse(response)
+      return parsed.data
+    } catch (error) {
+      throw new AdminClientError('Failed to bulk update LEAPS users', error)
     }
   },
 }

@@ -71,3 +71,26 @@ pnpm -C elevate tsx scripts/qa/validate-staging.ts
 ```
 
 The script probes public endpoints (`/api/health`, `/api/stats`, `/api/leaderboard`), optional internal SLO (`/api/slo`), admin endpoints (`/api/admin/kajabi/health`, `/api/admin/slo/summary`) when an admin token is provided, and retention cron behavior.
+
+### Admin API smoke (GitHub Actions)
+
+You can trigger the "Admin Smoke" workflow in GitHub Actions to lightly exercise Users, LEAPS bulk, and Audit APIs against a deployed Admin app.
+
+- Workflow: Admin Smoke (workflow_dispatch)
+- Inputs:
+  - base_url: e.g., https://admin.staging.your.org
+  - admin_jwt: Clerk Admin JWT for Authorization: Bearer
+  - test_user_id: optional target user id for detail/leaps/audit
+
+### Kajabi E2E (GitHub Actions)
+
+End-to-end check of Kajabi enrollment and webhook crediting:
+
+- Workflow: Kajabi E2E (workflow_dispatch)
+- Inputs:
+  - base_url: e.g., https://staging.your.org
+  - admin_jwt: Clerk Admin JWT for Authorization: Bearer
+  - webhook_secret: KAJABI_WEBHOOK_SECRET configured in the app
+  - test_email: email to enroll and tag
+  - test_name: optional display name
+  - offer_id: optional Offer ID or name to grant

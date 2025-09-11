@@ -43,6 +43,7 @@ Visit:
 - **[Security Guide](docs/security/index.md)** - Auth, RBAC, privacy
 - **[Contributing Guide](docs/CONTRIBUTING.md)** - How to contribute
 - **[Onboarding Guide](docs/ONBOARDING.md)** - New engineer setup
+ - Role & User Onboarding: see `docs/leaps/ONBOARDING.md` (users default to STUDENT until they confirm role; Educators must provide School + Region)
 
 ## Key Commands
 

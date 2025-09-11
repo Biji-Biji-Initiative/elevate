@@ -24,7 +24,6 @@
     "@elevate/http": "workspace:*",
     "@elevate/logic": "workspace:*",
     "@elevate/utils": "workspace:*",
-    "@elevate/openapi": "workspace:*",
     "@elevate/storage": "workspace:*",
     "@elevate/security": "workspace:*",
     "@elevate/types": "workspace:*",

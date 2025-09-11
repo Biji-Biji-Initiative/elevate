@@ -1,7 +1,8 @@
 import { headers } from 'next/headers'
 import Link from 'next/link'
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { enUS, idID } from '@clerk/localizations'
+import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations } from 'next-intl/server'
 
@@ -119,8 +120,21 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages()
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      <ClientHeader
+    <ClerkProvider
+      localization={locale === 'id' ? idID : enUS}
+      signInUrl={`/${locale}/sign-in`}
+      signUpUrl={`/${locale}/sign-up`}
+    >
+      <NextIntlClientProvider messages={messages}>
+        {process.env.NEXT_PUBLIC_ENABLE_API_DOCS === 'true' && (
+          <div className="w-full bg-blue-50 text-blue-800 text-sm">
+            <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+              <span>Developer resources available</span>
+              <Link href="/docs" className="underline hover:no-underline">API Docs</Link>
+            </div>
+          </div>
+        )}
+        <ClientHeader
         signInButton={
           <SignedOut>
             <SignInButton mode="modal">
@@ -141,9 +155,18 @@ export default async function LocaleLayout({ children, params }: Props) {
           </SignedIn>
         }
         languageSwitcher={<LanguageSwitcher />}
-      />
-      <main className="flex-1">{children}</main>
-      <Footer />
+        />
+        <main className="flex-1">{children}</main>
+        {process.env.NEXT_PUBLIC_ENABLE_API_DOCS === 'true' && (
+          <div className="w-full bg-gray-50 border-t">
+            <div className="max-w-7xl mx-auto px-4 py-3 text-sm text-gray-700 flex items-center gap-3">
+              <Link href="/docs" className="underline hover:no-underline">API Docs</Link>
+              <span className="text-gray-400">|</span>
+              <a href="/openapi.json" className="underline hover:no-underline">OpenAPI JSON</a>
+            </div>
+          </div>
+        )}
+        <Footer />
 
       {/* JSON-LD structured data (use @graph to avoid client parsing issues) */}
       <script
@@ -240,6 +263,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           }),
         }}
       />
-    </NextIntlClientProvider>
+      </NextIntlClientProvider>
+    </ClerkProvider>
   )
 }

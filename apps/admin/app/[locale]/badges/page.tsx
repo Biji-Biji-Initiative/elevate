@@ -1,7 +1,8 @@
-import { toBadgeUI } from '@/lib/ui-types'
-import BadgesClient from './ClientPage'
 import { listBadges } from '@/lib/services/badges'
 import { listUsers } from '@/lib/services/users'
+import { toBadgeUI } from '@/lib/ui-types'
+
+import BadgesClient from './ClientPage'
 
 export default async function BadgesPage() {
   const [{ badges }, usersResp] = await Promise.all([

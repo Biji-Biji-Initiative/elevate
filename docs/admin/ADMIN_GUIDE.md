@@ -43,3 +43,44 @@ This guide walks through using the Admin Console for Kajabi enrollment, evidence
 - LEARN points come from Kajabi tags only; admin approvals do not award LEARN points.
 - Dashboard points derive from the ledger (Option B); LEARN completion is based on tag grants.
 - Starter badge requires both course completion tags.
+
+## Manage LEAPS Profile Fields (Admin)
+
+- Users list: `/{locale}/users` shows all users with search/filters.
+- Per-user LEAPS management:
+  - Click "Manage LEAPS" on a user row to edit LEAPS fields:
+    - Role (Educator | Student)
+    - Role confirmed (onboarding complete)
+    - School
+    - Region / Province
+  - Changes update the database and mirror `user_type` to Clerk public metadata.
+- API endpoints (admin-only):
+  - `GET /api/admin/users/{id}` — Returns LEAPS fields for a single user.
+  - `PATCH /api/admin/users/{id}` — Updates LEAPS fields; mirrors to Clerk.
+  - `POST /api/admin/users/leaps` — Bulk update LEAPS fields for multiple users.
+
+### Bulk LEAPS Update
+
+- From Users page, select users and click "Update LEAPS".
+- Choose LEAPS role (Educator/Student) and whether to mark role as confirmed.
+- Confirms update for all selected users. Changes mirror to Clerk metadata.
+
+## Referrals
+
+- Navigate to `/{locale}/referrals`.
+- Filter by email (referrer or referee), referrerId, refereeId, and month (YYYY-MM). Use month presets for quick selection.
+- API: `GET /api/admin/referrals?email=&referrerId=&refereeId=&month=&limit=&offset=`
+- Summary: `GET /api/admin/referrals/summary?month=YYYY-MM` returns totals, unique referrers, points awarded, and top referrers for the month.
+- CSV Export: Client CSV export (current page) and Server Export (full dataset under current filters):
+  - `GET /api/admin/referrals/export.csv?email=&referrerId=&refereeId=&month=`
+
+## Audit Logs Viewer
+
+- Route: `/{locale}/audit?targetId=<userId>&action=<action>&actorId=<actorId>&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
+- Use case: Inspect recent admin actions for a specific user or endpoint.
+- API: `GET /api/admin/audit?targetId=&action=&actorId=&startDate=&endDate=&page=&limit=`
+
+## Clerk Dashboard Deep Link
+
+- Add `NEXT_PUBLIC_CLERK_DASHBOARD_URL` in Admin `.env` to enable the “Open in Clerk” link in Users table.
+- Example: `NEXT_PUBLIC_CLERK_DASHBOARD_URL=https://dashboard.clerk.com/apps/<your_app_id>`

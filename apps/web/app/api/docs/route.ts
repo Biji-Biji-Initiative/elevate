@@ -1,11 +1,10 @@
-import { createSuccessResponse } from '@elevate/http'
-import { getOpenApiSpec } from '@elevate/openapi'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 
-export async function GET() {
-  const res = createSuccessResponse(getOpenApiSpec())
-  res.headers.set('Content-Type', 'application/json')
-  res.headers.set('Cache-Control', 'public, max-age=3600')
-  return res
+export function GET(request: NextRequest) {
+  const url = new URL('/openapi.json', request.url)
+  return NextResponse.redirect(url)
 }
+

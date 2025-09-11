@@ -45,13 +45,16 @@ export type UserUI = {
   school: string
   cohort: string
   role: 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
+  userType?: 'EDUCATOR' | 'STUDENT'
+  userTypeConfirmed?: boolean
+  kajabiLinked?: boolean
   totalPoints: number
   _count: { submissions: number; earned_badges: number }
   created_at: string
 }
 
 export function toUserUI(u: AdminUser): UserUI {
-  return {
+  const base: UserUI = {
     id: u.id,
     name: u.name ?? '',
     handle: u.handle ?? '',
@@ -66,6 +69,12 @@ export function toUserUI(u: AdminUser): UserUI {
     },
     created_at: u.created_at,
   }
+  const out: UserUI = { ...base }
+  const ut = (u as { user_type?: string }).user_type
+  if (ut === 'EDUCATOR' || ut === 'STUDENT') out.userType = ut
+  if ('user_type_confirmed' in u && typeof u.user_type_confirmed === 'boolean') out.userTypeConfirmed = u.user_type_confirmed
+  if ('kajabi_contact_id' in u && typeof u.kajabi_contact_id === 'string') out.kajabiLinked = true
+  return out
 }
 
 // Submission row UI projection

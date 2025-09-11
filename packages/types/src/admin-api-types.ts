@@ -97,6 +97,9 @@ export const AdminUserSchema = z.object({
   email: z.string().email(),
   avatar_url: z.string().nullable().optional(),
   role: UserRoleSchema,
+  user_type: z.enum(['EDUCATOR', 'STUDENT']).optional(),
+  user_type_confirmed: z.boolean().optional(),
+  kajabi_contact_id: z.string().nullable().optional(),
   school: z.string().nullable().optional(),
   cohort: z.string().nullable().optional(),
   created_at: z.string(),
@@ -422,6 +425,7 @@ export const SubmissionsQuerySchema = z.object({
 export const UsersQuerySchema = z.object({
   search: z.string().optional(),
   role: RoleFilterSchema.optional(),
+  userType: z.enum(['ALL', 'EDUCATOR', 'STUDENT']).optional(),
   cohort: z.string().optional(),
   page: z.number().int().positive().optional(),
   limit: z.number().int().positive().max(100).optional(),

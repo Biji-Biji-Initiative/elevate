@@ -4,7 +4,6 @@ import { Inter } from 'next/font/google'
 import { headers } from 'next/headers'
 import Script from 'next/script'
 
-import { ClerkProvider } from '@clerk/nextjs'
 
 import type { Metadata } from 'next'
 import '@elevate/ui/styles/globals.css'
@@ -40,38 +39,36 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
-        <head>
-          <link rel="icon" href="/favicon.ico" sizes="any" />
-          <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-          <link rel="manifest" href="/manifest.json" />
-          
-          {/* Preconnect to external domains */}
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        </head>
-        <body className={`${inter.className} min-h-screen flex flex-col`}>
-          {children}
-          
-          {/* Analytics and performance monitoring would go here */}
-          {process.env.NODE_ENV === 'production' && (
-            <>
-              {/* Google Analytics */}
-              <Script src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID" strategy="afterInteractive" />
-              <Script id="ga" strategy="afterInteractive">
-                {`
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);} 
-                  gtag('js', new Date());
-                  gtag('config', 'GA_MEASUREMENT_ID');
-                `}
-              </Script>
-            </>
-          )}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        
+        {/* Preconnect to external domains */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body className={`${inter.className} min-h-screen flex flex-col`}>
+        {children}
+        
+        {/* Analytics and performance monitoring would go here */}
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            {/* Google Analytics */}
+            <Script src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID" strategy="afterInteractive" />
+            <Script id="ga" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);} 
+                gtag('js', new Date());
+                gtag('config', 'GA_MEASUREMENT_ID');
+              `}
+            </Script>
+          </>
+        )}
+      </body>
+    </html>
   )
 }

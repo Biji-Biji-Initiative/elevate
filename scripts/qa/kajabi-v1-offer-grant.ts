@@ -92,7 +92,7 @@ async function main() {
         } : {}),
       },
     }
-    let crt = await apiCall('/contacts', token, 'POST', createBody)
+    const crt = await apiCall('/contacts', token, 'POST', createBody)
     console.log('   create status:', crt.status)
     if (!crt.ok) {
       // Try to look up by filter[email]

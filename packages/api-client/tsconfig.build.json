@@ -8,10 +8,11 @@
     "declarationDir": "dist/types",
     "rootDir": "src",
     "stripInternal": true,
-    "inlineSources": false,
-    "tsBuildInfoFile": "dist/.tsbuildinfo"
+    "sourceMap": true,
+    "inlineSources": true
   },
   "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules", "**/*.test.ts", "**/*.spec.ts"],
   "references": [
     { "path": "../openapi/tsconfig.build.json" },
     { "path": "../types/tsconfig.build.json" },

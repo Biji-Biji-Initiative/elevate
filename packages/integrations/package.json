@@ -21,7 +21,8 @@
   "main": "./dist/js/index.js",
   "types": "./dist/types/index.d.ts",
   "scripts": {
-    "build": "pnpm run build:types && tsup --config tsup.config.ts",
+    "build:js": "tsup --config tsup.config.ts",
+    "build": "pnpm run build:types && pnpm run build:js",
     "clean": "rm -rf dist",
     "build:types": "tsc -b tsconfig.build.json",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --max-warnings 0",
