@@ -16,7 +16,7 @@ import {
   PageLoading,
 } from '@elevate/ui/blocks'
 
-import { getPublicProfileByHandleService } from '../../../../lib/server/profile-service'
+import { getPublicProfileByHandleService } from '@elevate/app-services'
 
 import type { Metadata } from 'next'
 

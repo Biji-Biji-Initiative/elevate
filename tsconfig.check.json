@@ -12,6 +12,7 @@
     { "path": "./packages/integrations" },
     { "path": "./packages/logic" },
     { "path": "./packages/openapi" },
+    { "path": "./packages/app-services" },
     { "path": "./apps/web" },
     { "path": "./apps/admin" }
   ]

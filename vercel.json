@@ -15,11 +15,6 @@
       "schedule": "0 2 * * *"
     }
   ],
-  "functions": {
-    "apps/web/app/api/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     {
       "source": "/api/:path*",

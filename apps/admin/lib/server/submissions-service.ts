@@ -4,6 +4,7 @@ import 'server-only'
 import { toAdminSubmission, type SubmissionRow } from '@/lib/server/mappers'
 import { requireRole } from '@elevate/auth/server-helpers'
 import { findSubmissionById, findSubmissionsWithFilters, countSubmissionsWithFilters, prisma } from '@elevate/db'
+import { sloMonitor } from '@elevate/logging/slo-monitor'
 import {
   parseSubmissionStatus,
   parseActivityCode,
@@ -29,6 +30,7 @@ export type ListParams = {
 
 export async function listSubmissionsService(params: ListParams): Promise<{ submissions: AdminSubmission[]; pagination: Pagination }> {
   await requireRole('reviewer')
+  const start = Date.now()
   const { status, activity, userId, page, limit, sortBy, sortOrder } = params
   const offset = (page - 1) * limit
   const where: SubmissionWhereClause = {}
@@ -60,6 +62,8 @@ export async function listSubmissionsService(params: ListParams): Promise<{ subm
 
   const mapped: AdminSubmission[] = (submissions as SubmissionRow[]).map((s) => toAdminSubmission(s))
 
+  sloMonitor.recordApiAvailability('/admin/service/submissions/list', 'SERVICE', 200)
+  sloMonitor.recordApiResponseTime('/admin/service/submissions/list', 'SERVICE', Date.now() - start, 200)
   return {
     submissions: mapped,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
@@ -68,16 +72,20 @@ export async function listSubmissionsService(params: ListParams): Promise<{ subm
 
 export async function getSubmissionByIdService(id: string): Promise<{ submission: AdminSubmission }> {
   await requireRole('reviewer')
+  const start = Date.now()
   const s = await findSubmissionById(id)
   if (!s) throw new Error('Submission not found')
 
   const sRow = s as SubmissionRow
   const submission = toAdminSubmission(sRow)
+  sloMonitor.recordApiAvailability('/admin/service/submissions/get', 'SERVICE', 200)
+  sloMonitor.recordApiResponseTime('/admin/service/submissions/get', 'SERVICE', Date.now() - start, 200)
   return { submission }
 }
 
 export async function reviewSubmissionService(body: unknown) {
   const reviewer = await requireRole('reviewer')
+  const start = Date.now()
   const parsed = ReviewSubmissionSchema.parse(body)
   const { submissionId, action, reviewNote, pointAdjustment } = parsed
 
@@ -115,11 +123,14 @@ export async function reviewSubmissionService(body: unknown) {
   })
   const logger = await (await import('@elevate/logging/safe-server')).getSafeServerLogger('admin-submissions')
   logger.info('Reviewed submission', { submissionId, action })
+  sloMonitor.recordApiAvailability('/admin/service/submissions/review', 'SERVICE', 200)
+  sloMonitor.recordApiResponseTime('/admin/service/submissions/review', 'SERVICE', Date.now() - start, 200)
   return { message: 'Review processed' }
 }
 
 export async function bulkReviewService(body: unknown) {
   await requireRole('reviewer')
+  const start = Date.now()
   const parsed = BulkReviewSubmissionsSchema.parse(body)
   const { submissionIds, action, reviewNote } = parsed
 
@@ -135,5 +146,7 @@ export async function bulkReviewService(body: unknown) {
   }
   const logger = await (await import('@elevate/logging/safe-server')).getSafeServerLogger('admin-submissions')
   logger.info('Bulk review', { action, processed, failed: submissionIds.length - processed })
+  sloMonitor.recordApiAvailability('/admin/service/submissions/bulk-review', 'SERVICE', 200)
+  sloMonitor.recordApiResponseTime('/admin/service/submissions/bulk-review', 'SERVICE', Date.now() - start, 200)
   return { processed, failed: submissionIds.length - processed, errors }
 }

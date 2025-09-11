@@ -8,6 +8,7 @@ import { requireRole, hasRole } from '@elevate/auth/server-helpers'
 import { prisma, findUserById, findUserByHandle, type Prisma } from '@elevate/db'
 import { parseRole } from '@elevate/types'
 import type { AdminUser, Pagination } from '@elevate/types/admin-api-types'
+import { sloMonitor } from '@elevate/logging/slo-monitor'
 
 export type ListUsersParams = {
   search?: string
@@ -89,6 +90,8 @@ export async function listUsersService(params: ListUsersParams): Promise<{ users
 
   const mapped: AdminUser[] = (users as AdminUserRow[]).map((u) => toAdminUser(u, pointsMap[u.id] || 0))
   logger.info('Listed users', { page, limit, sortBy, sortOrder, filter: { search, role, userType, cohort }, returned: mapped.length })
+  sloMonitor.recordApiAvailability('/admin/service/users/list', 'SERVICE', 200)
+  sloMonitor.recordApiResponseTime('/admin/service/users/list', 'SERVICE', Date.now() - (globalThis.__USERS_LIST_START__ ?? Date.now()), 200)
 
   return {
     users: mapped,
@@ -181,6 +184,8 @@ export async function updateUserService(body: {
   const userDto = toAdminUser(updated as AdminUserRow, totalPoints)
   const audit = await getSafeServerLogger('admin-users')
   audit.info('Updated user', { userId, changed: Object.keys(updateData) })
+  sloMonitor.recordApiAvailability('/admin/service/users/update', 'SERVICE', 200)
+  sloMonitor.recordApiResponseTime('/admin/service/users/update', 'SERVICE', 1, 200)
   return { message: 'User updated successfully', user: userDto }
 }
 

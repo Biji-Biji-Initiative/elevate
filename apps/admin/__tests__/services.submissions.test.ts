@@ -39,7 +39,7 @@ describe('services/submissions (server-first)', () => {
   })
 
   it('listSubmissions returns data', async () => {
-    const result = await listSubmissions({ page: 1, limit: 50 })
+    const result = await listSubmissions({ page: 1, limit: 50, sortBy: 'created_at', sortOrder: 'desc' })
     expect(result.pagination.total).toBe(1)
     expect(result.submissions).toHaveLength(1)
     const first = result.submissions[0]!

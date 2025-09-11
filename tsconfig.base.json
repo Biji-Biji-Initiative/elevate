@@ -53,7 +53,9 @@
       "@elevate/utils": ["packages/utils/src/index.ts"],
       "@elevate/utils/*": ["packages/utils/src/*"],
       "@elevate/admin-core": ["packages/admin-core/src/index.ts"],
-      "@elevate/admin-core/*": ["packages/admin-core/src/*"]
+      "@elevate/admin-core/*": ["packages/admin-core/src/*"],
+      "@elevate/app-services": ["packages/app-services/src/index.ts"],
+      "@elevate/app-services/*": ["packages/app-services/src/*"]
     }
   }
 }

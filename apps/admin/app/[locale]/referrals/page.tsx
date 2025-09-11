@@ -5,6 +5,6 @@ import { ClientPage } from './ClientPage'
 export default async function Page() {
   const d = new Date()
   const month = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
-  const { referrals } = await listReferrals({ month })
+  const { referrals } = await listReferrals({ month, limit: 50, offset: 0 })
   return <ClientPage initialRows={referrals} initialMonth={month} />
 }

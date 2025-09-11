@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,9 +28,12 @@ import {
 
 import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 import { toMessage } from '../../../lib/error-utils'
+import { useCurrentLocale } from '@elevate/ui/next'
 
 export default function ShineFormPage() {
   const { userId } = useAuth()
+  const router = useRouter()
+  const { withLocale } = useCurrentLocale()
   const [makePublic, setMakePublic] = useState(true) // Default to public for Shine
 
   const {
@@ -318,3 +322,22 @@ export default function ShineFormPage() {
     </main>
   )
 }
+  // Gate: students -> educators-only; unconfirmed educators -> onboarding
+  useEffect(() => {
+    const guard = async () => {
+      try {
+        const res = await fetch('/api/profile/me')
+        if (!res.ok) return
+        const me = (await res.json()) as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
+        if (me?.data?.userType === 'STUDENT') {
+          router.push(withLocale('/educators-only'))
+          return
+        }
+        if (me?.data?.userTypeConfirmed === false) {
+          router.push(withLocale('/onboarding/user-type'))
+          return
+        }
+      } catch { /* noop */ }
+    }
+    void guard()
+  }, [router, withLocale])

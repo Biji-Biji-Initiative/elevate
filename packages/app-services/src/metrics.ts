@@ -1,12 +1,53 @@
-"use server"
-import 'server-only'
-
 import { Prisma } from '@prisma/client'
-
 import { prisma } from '@elevate/db/client'
 import type { StageMetricsDTO } from '@elevate/types/dto-mappers'
 
-import { buildStageMetricsDTO } from '../../lib/metrics-helpers'
+type RawStageCounts = {
+  stage: string
+  totalSubmissions: number
+  approvedSubmissions: number
+  pendingSubmissions: number
+  rejectedSubmissions: number
+  uniqueEducators: number
+  points: Array<{ points_awarded: number | null }>
+  topSchools: Array<{ name: string; count: number }>
+  cohortBreakdown: Array<{ cohort: string; count: number }>
+  monthly: Array<{ month: string; submissions: number; approvals: number }>
+}
+
+function buildStageMetricsDTO(raw: RawStageCounts): StageMetricsDTO {
+  const totalApprovedPoints = raw.points.reduce(
+    (sum, s) => sum + (s.points_awarded || 0),
+    0,
+  )
+  const avgPointsEarned =
+    raw.approvedSubmissions > 0
+      ? totalApprovedPoints / raw.approvedSubmissions
+      : 0
+
+  const monthlyTrend = [...raw.monthly].sort((a, b) =>
+    a.month.localeCompare(b.month),
+  )
+
+  const completionRate =
+    raw.totalSubmissions > 0
+      ? raw.approvedSubmissions / raw.totalSubmissions
+      : 0
+
+  return {
+    stage: raw.stage,
+    totalSubmissions: raw.totalSubmissions,
+    approvedSubmissions: raw.approvedSubmissions,
+    pendingSubmissions: raw.pendingSubmissions,
+    rejectedSubmissions: raw.rejectedSubmissions,
+    avgPointsEarned,
+    uniqueEducators: raw.uniqueEducators,
+    topSchools: raw.topSchools,
+    cohortBreakdown: raw.cohortBreakdown,
+    monthlyTrend,
+    completionRate,
+  }
+}
 
 const validStages = ['learn', 'explore', 'amplify', 'present', 'shine'] as const
 type ValidStage = (typeof validStages)[number]
@@ -60,7 +101,7 @@ export async function getStageMetricsService(stage: string): Promise<StageMetric
   ])
 
   const pointsNormalized = points.map((p) => ({ points_awarded: p.delta_points ?? 0 }))
-  const raw = {
+  const raw: RawStageCounts = {
     stage: activityCode,
     totalSubmissions,
     approvedSubmissions,
@@ -68,9 +109,14 @@ export async function getStageMetricsService(stage: string): Promise<StageMetric
     rejectedSubmissions,
     uniqueEducators: uniqueEducatorGroups.length,
     points: pointsNormalized,
-    topSchools: topSchoolsRaw.filter((r) => r.school).map((r) => ({ name: String(r.school), count: r._count.id })),
-    cohortBreakdown: cohortRaw.filter((r) => r.cohort).map((r) => ({ cohort: String(r.cohort), count: r._count.id })),
+    topSchools: topSchoolsRaw
+      .filter((r) => r.school)
+      .map((r) => ({ name: String(r.school), count: r._count.id })),
+    cohortBreakdown: cohortRaw
+      .filter((r) => r.cohort)
+      .map((r) => ({ cohort: String(r.cohort), count: r._count.id })),
     monthly: monthlyRaw,
   }
   return buildStageMetricsDTO(raw)
 }
+

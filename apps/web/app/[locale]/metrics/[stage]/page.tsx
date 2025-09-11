@@ -7,7 +7,7 @@ import { SignedIn } from '@clerk/nextjs'
 
 import { MetricsChart, StatsGrid, PageLoading } from '@elevate/ui/blocks'
 
-import { getStageMetricsService } from '../../../../lib/server/metrics-service'
+import { getStageMetricsService } from '@elevate/app-services'
 
 import type { Metadata } from 'next'
 

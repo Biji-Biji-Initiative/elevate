@@ -158,6 +158,9 @@ export default function UserTypeOnboardingPage() {
             </Button>
             <LearnPortalLink />
           </div>
+          <p className="text-xs text-gray-500">
+            I’m a student — I just want to learn. Use the Learn Portal.
+          </p>
         </Card>
       </div>
     </main>

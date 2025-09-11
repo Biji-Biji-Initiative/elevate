@@ -29,7 +29,7 @@ describe('services/users.listUsers (server-first)', () => {
   })
 
   it('returns users + pagination', async () => {
-    const result = await listUsers({ page: 1, limit: 50 })
+    const result = await listUsers({ page: 1, limit: 50, sortBy: 'created_at', sortOrder: 'desc' })
     expect(result.pagination.total).toBe(1)
     expect(result.users).toHaveLength(1)
     const first = result.users[0]!

@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,16 +20,14 @@ import {
   AlertTitle,
   AlertDescription,
 } from '@elevate/ui'
-import {
-  FormField,
-  LoadingSpinner,
-  FileUpload,
-  FileList,
-} from '@elevate/ui/blocks'
+import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
+import { useCurrentLocale } from '@elevate/ui/next'
 
 import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 
 export default function PresentFormPage() {
+  const router = useRouter()
+  const { withLocale } = useCurrentLocale()
   const t = useTranslations('homepage')
   const { userId } = useAuth()
   const [makePublic, setMakePublic] = useState(false)
@@ -314,3 +313,22 @@ export default function PresentFormPage() {
     </main>
   )
 }
+  // Gate: students -> educators-only; unconfirmed educators -> onboarding
+  useEffect(() => {
+    const guard = async () => {
+      try {
+        const res = await fetch('/api/profile/me')
+        if (!res.ok) return
+        const me = (await res.json()) as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
+        if (me?.data?.userType === 'STUDENT') {
+          router.push(withLocale('/educators-only'))
+          return
+        }
+        if (me?.data?.userTypeConfirmed === false) {
+          router.push(withLocale('/onboarding/user-type'))
+          return
+        }
+      } catch { /* noop */ }
+    }
+    void guard()
+  }, [router, withLocale])
