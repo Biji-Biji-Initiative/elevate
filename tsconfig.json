@@ -15,7 +15,8 @@
     { "path": "./packages/logging/tsconfig.build.json" },
     { "path": "./packages/openapi/tsconfig.build.json" },
     { "path": "./packages/api-client/tsconfig.build.json" },
-
+    { "path": "./packages/app-services/tsconfig.build.json" },
+    { "path": "./packages/admin-core/tsconfig.build.json" },
     { "path": "./packages/http/tsconfig.build.json" },
     { "path": "./packages/security/tsconfig.build.json" }
   ]
