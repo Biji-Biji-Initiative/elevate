@@ -21,6 +21,7 @@ export default function EducatorsOnlyPage() {
             <Link href={withLocale('/account')}>
               <Button variant="ghost">Account Settings</Button>
             </Link>
+            <LearnPortalLink />
             <SignOutButton>
               <Button variant="default">Sign out</Button>
             </SignOutButton>
@@ -31,3 +32,12 @@ export default function EducatorsOnlyPage() {
   )
 }
 
+function LearnPortalLink() {
+  const portal = (typeof window === 'undefined' ? '' : (process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL || ''))
+  if (!portal) return null
+  return (
+    <a href={portal} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50">
+      Open Learn Portal
+    </a>
+  )
+}

@@ -218,6 +218,7 @@ export async function bulkUpdateUsersService(body: {
     if (hasRestricted) throw new Error('Cannot modify admin users without superadmin role')
   }
 
+  const start = Date.now()
   const results = await prisma.$transaction(async (tx) => {
     const updates: Array<{ id: string }> = []
     for (const user of users) {
@@ -230,6 +231,9 @@ export async function bulkUpdateUsersService(body: {
   })
   const logger2 = await getSafeServerLogger('admin-users')
   logger2.info('Bulk role update', { role, processed: results.length })
+  const { sloMonitor } = await import('@elevate/logging/slo-monitor')
+  sloMonitor.recordApiAvailability('/admin/service/users/bulk-update', 'SERVICE', 200)
+  sloMonitor.recordApiResponseTime('/admin/service/users/bulk-update', 'SERVICE', Date.now() - start, 200)
   return { processed: results.length, failed: 0, errors: [] as Array<{ userId: string; error: string }> }
 }
 
@@ -245,6 +249,7 @@ export async function bulkUpdateLeapsUsersService(body: {
   if (!Array.isArray(userIds) || userIds.length === 0) throw new Error('userIds array is required')
   const results = { processed: 0, failed: 0, errors: [] as Array<{ userId: string; error: string }> }
   const client = (await import('@clerk/nextjs/server')).clerkClient
+  const start = Date.now()
   for (const id of userIds) {
     try {
       const updated = await prisma.user.update({
@@ -274,6 +279,9 @@ export async function bulkUpdateLeapsUsersService(body: {
   }
   const log = await getSafeServerLogger('admin-users')
   log.info('Bulk LEAPS update', { processed: results.processed, failed: results.failed })
+  const { sloMonitor } = await import('@elevate/logging/slo-monitor')
+  sloMonitor.recordApiAvailability('/admin/service/users/bulk-leaps', 'SERVICE', 200)
+  sloMonitor.recordApiResponseTime('/admin/service/users/bulk-leaps', 'SERVICE', Date.now() - start, 200)
   return results
 }
 

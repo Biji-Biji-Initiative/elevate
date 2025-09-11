@@ -67,12 +67,14 @@ export default function DashboardPage() {
         const meRes = await fetch('/api/profile/me')
         if (meRes.ok) {
           const me = (await meRes.json()) as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
-          if (me?.data?.userTypeConfirmed === false) {
-            router.push(withLocale('/onboarding/user-type'))
-            return
-          }
+          // Always send Students to the info page, even if unconfirmed
           if (me?.data?.userType === 'STUDENT') {
             router.push(withLocale('/educators-only'))
+            return
+          }
+          // Educators without confirmation go to onboarding
+          if (me?.data?.userTypeConfirmed === false) {
+            router.push(withLocale('/onboarding/user-type'))
             return
           }
         }

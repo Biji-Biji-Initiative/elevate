@@ -9,7 +9,8 @@ import { LoadingSpinner } from '@elevate/ui/blocks'
 
 export default function UserTypeOnboardingPage() {
   const { isLoaded, userId } = useAuth()
-  const [userType, setUserType] = useState<'EDUCATOR' | 'STUDENT' | null>(null)
+  // Educator-focused onboarding: default selection to EDUCATOR
+  const [userType, setUserType] = useState<'EDUCATOR' | 'STUDENT' | null>('EDUCATOR')
   const [school, setSchool] = useState('')
   const [region, setRegion] = useState('')
   const [suggestions, setSuggestions] = useState<Array<{ name: string; city?: string | null; province?: string | null }>>([])
@@ -88,20 +89,16 @@ export default function UserTypeOnboardingPage() {
   return (
     <main style={{ padding: 24 }}>
       <div className="max-w-xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold">Tell us who you are</h1>
-        <p className="text-gray-600">Choose Educator or Student. Educators also confirm School and Region.</p>
+        <h1 className="text-2xl font-bold">Confirm you are an Educator</h1>
+        <p className="text-gray-600">Educators confirm School and Region to unlock LEAPS submissions and points. Students can still learn in our Kajabi portal.</p>
 
         {error && <Alert variant="destructive">{error}</Alert>}
 
         <Card className="p-4 space-y-4">
           <div className="space-y-3">
             <label className="flex items-center gap-2">
-              <input type="radio" name="ut" onChange={() => setUserType('EDUCATOR')} />
+              <input type="radio" name="ut" checked={userType === 'EDUCATOR'} onChange={() => setUserType('EDUCATOR')} />
               Educator
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="radio" name="ut" onChange={() => setUserType('STUDENT')} />
-              Student
             </label>
           </div>
 
@@ -155,13 +152,24 @@ export default function UserTypeOnboardingPage() {
             </div>
           )}
 
-          <div>
+          <div className="flex items-center gap-3">
             <Button onClick={onSave} disabled={!userType || (userType === 'EDUCATOR' && (!school.trim() || !region.trim())) || saving}>
               {saving ? 'Saving…' : 'Continue'}
             </Button>
+            <LearnPortalLink />
           </div>
         </Card>
       </div>
     </main>
+  )
+}
+
+function LearnPortalLink() {
+  const portal = (typeof window === 'undefined' ? '' : (process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL || ''))
+  if (!portal) return null
+  return (
+    <a href={portal} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50">
+      Open Learn Portal
+    </a>
   )
 }

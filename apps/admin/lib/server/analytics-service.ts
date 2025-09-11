@@ -149,7 +149,7 @@ async function getRecentApprovals(limit: number) {
     take: limit,
     select: { id: true, activity_code: true, updated_at: true, reviewer: { select: { name: true } }, user: { select: { name: true } } },
   })
-  return rows.map((r) => toRecentApproval({ id: r.id, activity_code: r.activity_code, updated_at: r.updated_at, points_awarded: 0, reviewer: r.reviewer, user: r.user }))
+  return rows.map((r) => toRecentApproval({ id: r.id, activity_code: r.activity_code, updated_at: r.updated_at ?? null, points_awarded: 0, reviewer: r.reviewer ?? null, user: r.user ?? null }))
 }
 
 async function getRecentUsers(limit: number) {

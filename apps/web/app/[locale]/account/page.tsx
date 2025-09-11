@@ -146,17 +146,13 @@ function LeapsProfileForm() {
   return (
     <div className="p-4">
       <h2 className="text-lg font-semibold mb-2">LEAPS Profile</h2>
-      <p className="text-sm text-gray-600 mb-4">Choose your role and, if you are an Educator, set your School and Region. This controls your access to LEAPS features and referral points.</p>
+      <p className="text-sm text-gray-600 mb-4">If you are an Educator, set your School and Region to unlock LEAPS submissions and points. Students can still learn in our Kajabi portal.</p>
       {error && <div className="rounded border border-red-200 bg-red-50 text-red-800 text-sm p-2 mb-3">{error}</div>}
       {info && <div className="rounded border border-green-200 bg-green-50 text-green-800 text-sm p-2 mb-3">{info}</div>}
       <div className="space-y-3 mb-4">
         <label className="flex items-center gap-2">
           <input type="radio" name="ut" checked={userType === 'EDUCATOR'} onChange={() => setUserType('EDUCATOR')} />
           Educator
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="radio" name="ut" checked={userType === 'STUDENT'} onChange={() => setUserType('STUDENT')} />
-          Student
         </label>
       </div>
       {userType === 'EDUCATOR' && (
@@ -209,13 +205,26 @@ function LeapsProfileForm() {
           </div>
         </div>
       )}
-      <button
-        onClick={onSave}
-        disabled={!userType || (userType === 'EDUCATOR' && (!school.trim() || !region.trim())) || saving}
-        className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50"
-      >
-        {saving ? 'Saving…' : 'Save'}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onSave}
+          disabled={!userType || (userType === 'EDUCATOR' && (!school.trim() || !region.trim())) || saving}
+          className="px-4 py-2 rounded bg-blue-600 text-white disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+        <LearnPortalLink />
+      </div>
     </div>
+  )
+}
+
+function LearnPortalLink() {
+  const portal = (typeof window === 'undefined' ? '' : (process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL || ''))
+  if (!portal) return null
+  return (
+    <a href={portal} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50">
+      Open Learn Portal
+    </a>
   )
 }

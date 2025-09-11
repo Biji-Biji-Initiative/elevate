@@ -1,6 +1,7 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -12,10 +13,13 @@ import { computeAmplifyPoints, activityCanon } from '@elevate/types/activity-can
 import { AmplifySchema, type AmplifyInput } from '@elevate/types/schemas'
 import { Button, Input, Card, Alert, AlertTitle, AlertDescription, Textarea } from '@elevate/ui'
 import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
+import { useCurrentLocale } from '@elevate/ui/next'
 
 import { CSRF_TOKEN_HEADER } from '@elevate/security/csrf'
 
 export default function AmplifyFormPage() {
+  const router = useRouter()
+  const { withLocale } = useCurrentLocale()
   const { userId } = useAuth()
 
   const { isSubmitting, submitStatus, handleSubmit: handleFormSubmit, setSubmitStatus } = useFormSubmission({
@@ -412,3 +416,22 @@ export default function AmplifyFormPage() {
     </main>
   )
 }
+  // Gate: students -> educators-only; unconfirmed educators -> onboarding
+  useEffect(() => {
+    const guard = async () => {
+      try {
+        const res = await fetch('/api/profile/me')
+        if (!res.ok) return
+        const me = (await res.json()) as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
+        if (me?.data?.userType === 'STUDENT') {
+          router.push(withLocale('/educators-only'))
+          return
+        }
+        if (me?.data?.userTypeConfirmed === false) {
+          router.push(withLocale('/onboarding/user-type'))
+          return
+        }
+      } catch { /* noop */ }
+    }
+    void guard()
+  }, [router, withLocale])

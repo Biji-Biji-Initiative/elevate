@@ -135,6 +135,20 @@ export default async function LocaleLayout({ children, params }: Props) {
           </div>
         )}
         <ClientHeader
+        navigation={(() => {
+          const base = [
+            { name: 'Home', href: '/' },
+            { name: 'Leaderboard', href: '/leaderboard' },
+            { name: 'Learn', href: '/metrics/learn' },
+            { name: 'Explore', href: '/metrics/explore' },
+            { name: 'Amplify', href: '/metrics/amplify' },
+            { name: 'Present', href: '/metrics/present' },
+            { name: 'Shine', href: '/metrics/shine' },
+          ]
+          return process.env.NEXT_PUBLIC_ENABLE_API_DOCS === 'true'
+            ? [...base, { name: 'API Docs', href: '/docs' }]
+            : base
+        })()}
         signInButton={
           <SignedOut>
             <SignInButton mode="modal">

@@ -36,6 +36,9 @@ KAJABI_LEARN_TAGS=elevate-ai-1-completed,elevate-ai-2-completed
 # Offer configuration for course access
 KAJABI_OFFER_ID=2150602564
 KAJABI_OFFER_NAME=QA Test API
+
+# Optional: Public Learn portal URL (used in web UI CTAs)
+NEXT_PUBLIC_KAJABI_PORTAL_URL=https://academy.mereka.my/
 ```
 
 #### Current Development Values

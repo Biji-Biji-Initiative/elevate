@@ -47,3 +47,31 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 - Avoid importing `@elevate/admin-core` in client components; use services and actions instead.
 
 Refer to `docs/DEV_TROUBLESHOOTING.md` for additional patterns and common resolutions.
+
+## Server-First Patterns (Admin)
+
+The Admin app uses server-only services and pure mappers to avoid intra-app HTTP and keep DTOs consistent.
+
+- Services (apps/admin/lib/server/*-service.ts)
+  - Enforce authorization with `requireRole('...')`
+  - Parse inputs via Zod where needed
+  - Fetch via `@elevate/db`
+  - Map rows → DTOs via `lib/server/mappers.ts`
+  - Validate final DTO once with Zod and return typed data
+
+- Mappers (apps/admin/lib/server/mappers.ts)
+  - Pure, minimal-typed functions that normalize dates and apply defaults
+  - One Zod parse at the boundary (e.g., AdminSubmissionSchema)
+  - Central place to evolve DTO shape safely
+
+- Actions (apps/admin/lib/actions/*.ts)
+  - Thin wrappers for client calls; no cross-app `fetch`
+  - Compose parameters, call services directly
+
+Example (Adding a new admin endpoint):
+1. Create a `*-service.ts` function with `requireRole`, input parsing, and DB calls
+2. Add a mapper for rows → DTO (validate with Zod once at return)
+3. Expose a thin action for UI (if needed)
+4. Optional: add a small mapper unit test under `apps/admin/__tests__`
+
+See also `lib/server/README.md` for more details.

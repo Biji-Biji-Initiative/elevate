@@ -4,6 +4,7 @@
   "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD .",
   "crons": [
     {
       "path": "/api/cron/refresh-leaderboards",
@@ -14,6 +15,11 @@
       "schedule": "0 2 * * *"
     }
   ],
+  "functions": {
+    "apps/web/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/api/:path*",
