@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 import type { NextRequest } from 'next/server'
 
 // Mock rate limiter to pass through
@@ -47,7 +48,7 @@ describe('POST /api/kajabi/webhook', () => {
     const { POST } = await import('../app/api/kajabi/webhook/route')
     const res = await POST(req)
     expect(res.status).toBe(401)
-    const json = await res.json()
+    const json = await readJson<{ success: boolean }>(res)
     expect(json.success).toBe(false)
   })
 
@@ -87,7 +88,7 @@ describe('POST /api/kajabi/webhook', () => {
     const { POST } = await import('../app/api/kajabi/webhook/route')
     const res = await POST(req)
     expect(res.status).toBe(200)
-    const json = await res.json()
+    const json = await readJson<{ success: boolean; data: { duplicate?: boolean } }>(res)
     expect(json.success).toBe(true)
     expect(json.data.duplicate).toBe(true)
   })

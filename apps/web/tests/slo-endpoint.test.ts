@@ -27,8 +27,8 @@ describe('GET /api/slo', () => {
       makeRequest('http://localhost/api/slo', { authorization: 'Bearer secret' }),
     )
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const { readJson } = await import('./test-utils')
+    const body = await readJson(res)
     expect(body?.success).toBe(true)
   })
 })
-

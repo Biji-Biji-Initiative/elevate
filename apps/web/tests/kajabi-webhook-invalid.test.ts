@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 
 vi.mock('@elevate/security/rate-limiter', async () => ({
   webhookRateLimiter: {},
@@ -43,7 +44,7 @@ describe('Kajabi webhook invalid cases', () => {
       const req = new Request('http://localhost/api/kajabi/webhook', { method: 'POST', body })
       const res = await POST(req)
       expect(res.status).toBe(401)
-      const json = await res.json()
+      const json = await readJson<{ success: boolean }>(res)
       expect(json.success).toBe(false)
     } finally {
       process.env.NODE_ENV = prevEnv
@@ -57,7 +58,7 @@ describe('Kajabi webhook invalid cases', () => {
     const req = new Request('http://localhost/api/kajabi/webhook', { method: 'POST', body: badBody })
     const res = await POST(req)
     expect(res.status).toBe(400)
-    const json = await res.json()
+    const json = await readJson<{ success: boolean }>(res)
     expect(json.success).toBe(false)
   })
 })

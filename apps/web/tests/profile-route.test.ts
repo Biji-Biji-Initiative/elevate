@@ -46,9 +46,9 @@ describe('GET /api/profile/[handle]', () => {
     const mod = await import('../app/api/profile/[handle]/route')
     const res = await mod.GET(req)
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const text = await res.text()
+    const body = JSON.parse(text) as { success: boolean; data?: { handle?: string } }
     expect(body?.success).toBe(true)
     expect(body?.data?.handle).toBe('tester')
   })
 })
-

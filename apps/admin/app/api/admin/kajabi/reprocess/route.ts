@@ -2,7 +2,8 @@ import type { NextRequest } from 'next/server'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
-import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { grantBadgesForUser } from '@elevate/logic'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -56,12 +57,12 @@ export async function POST(request: NextRequest) {
       const body: unknown = await request.json()
       const parsed = KajabiReprocessSchema.safeParse(body)
       if (!parsed.success) {
-        return createErrorResponse(new Error('Invalid request body'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid request body'))
       }
       const { event_id } = parsed.data
 
       if (!event_id) {
-        return createErrorResponse(new Error('event_id is required'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'event_id is required'))
       }
 
       // Find the Kajabi event
@@ -70,13 +71,13 @@ export async function POST(request: NextRequest) {
       })
 
       if (!kajabiEvent) {
-        return createErrorResponse(new Error('Event not found'), 404)
+        return toErrorResponse(new AdminError('NOT_FOUND', 'Event not found'))
       }
 
       // If already marked processed/duplicate/ignored, bail early
       const status = getStringField(kajabiEvent, 'status')
       if (status && status !== 'queued_unmatched') {
-        return createErrorResponse(new Error('Event already processed'), 400)
+        return toErrorResponse(new AdminError('CONFLICT', 'Event already processed'))
       }
 
       // Parse and validate the event payload
@@ -85,18 +86,12 @@ export async function POST(request: NextRequest) {
       )
 
       if (!eventData) {
-        return createErrorResponse(
-          new Error('Invalid event payload format'),
-          400,
-        )
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid event payload format'))
       }
 
       // Process tag-based events only (same logic as webhook)
       if (eventData.event_type !== 'contact.tagged') {
-        return createErrorResponse(
-          new Error('Only contact.tagged events can be reprocessed'),
-          400,
-        )
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Only contact.tagged events can be reprocessed'))
       }
 
       const { contact, tag } = eventData
@@ -108,16 +103,13 @@ export async function POST(request: NextRequest) {
       const tagNorm = tagRaw.toLowerCase().trim()
 
       if (!email || !tagNorm) {
-        return createErrorResponse(
-          new Error('Required fields missing: email and tag name'),
-          400,
-        )
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Required fields missing: email and tag name'))
       }
 
       // Accept only official course completion tags
       const COURSE_TAGS = new Set(['elevate-ai-1-completed', 'elevate-ai-2-completed'])
       if (!COURSE_TAGS.has(tagNorm)) {
-        return createErrorResponse(new Error('Unsupported tag for reprocessing'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Unsupported tag for reprocessing'))
       }
 
       // Try to find user by kajabi_contact_id, then by email
@@ -135,7 +127,7 @@ export async function POST(request: NextRequest) {
           where: { id: event_id },
           data: { status: 'queued_unmatched' },
         })
-        return createSuccessResponse({ queued: true }, 202)
+        return toSuccessResponse({ queued: true }, 202)
       }
 
       if (user.user_type === 'STUDENT') {
@@ -143,7 +135,7 @@ export async function POST(request: NextRequest) {
           where: { id: event_id },
           data: { status: 'student' },
         })
-        return createErrorResponse(new Error('Student accounts are not eligible'), 403)
+        return toErrorResponse(new AdminError('FORBIDDEN', 'Student accounts are not eligible'))
       }
 
       const eventTime = kajabiEvent.created_at_utc
@@ -251,14 +243,14 @@ export async function POST(request: NextRequest) {
         duplicate: result.duplicate,
       })
 
-      return createSuccessResponse({
+      return toSuccessResponse({
         message: result.duplicate
           ? 'Event marked as duplicate'
           : 'Event reprocessed successfully',
         ...result,
       })
     } catch (error) {
-      return createErrorResponse(error, 500)
+      return toErrorResponse(error)
     }
   })
 }

@@ -41,13 +41,10 @@ import { cleanQueryParams } from './utils'
 // via Clerk middleware; a Bearer token is optional and intentionally omitted
 // in client environments to prevent bundling server-only modules.
 function getApiClient() {
-  const isServer = typeof window === 'undefined'
-  const token = isServer ? undefined : undefined
   // Use NEXT_PUBLIC_SITE_URL which points to the web app where APIs are hosted
   // Don't pass empty baseUrl as that would make requests to admin's own origin
   return new AdminApiClient({
     baseUrl: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-    token,
   })
 }
 
@@ -97,6 +94,68 @@ function validateAndExtract<T>(
   }
 }
 
+// Helper to clean up user objects for exactOptionalPropertyTypes
+function cleanUserObject(user: {
+  id: string
+  email: string
+  name?: string | null | undefined
+  handle?: string | null | undefined
+  user_type: 'EDUCATOR' | 'STUDENT'
+  user_type_confirmed: boolean
+  school?: string | null | undefined
+  region?: string | null | undefined
+  kajabi_contact_id?: string | null | undefined
+  created_at: string
+}): {
+  id: string
+  email: string
+  name?: string | null
+  handle?: string | null
+  user_type: 'EDUCATOR' | 'STUDENT'
+  user_type_confirmed: boolean
+  school?: string | null
+  region?: string | null
+  kajabi_contact_id?: string | null
+  created_at: string
+} {
+  const cleaned: {
+    id: string
+    email: string
+    name?: string | null
+    handle?: string | null
+    user_type: 'EDUCATOR' | 'STUDENT'
+    user_type_confirmed: boolean
+    school?: string | null
+    region?: string | null
+    kajabi_contact_id?: string | null
+    created_at: string
+  } = {
+    id: user.id,
+    email: user.email,
+    user_type: user.user_type,
+    user_type_confirmed: user.user_type_confirmed,
+    created_at: user.created_at,
+  }
+  
+  if (user.name !== undefined) {
+    cleaned.name = user.name
+  }
+  if (user.handle !== undefined) {
+    cleaned.handle = user.handle
+  }
+  if (user.school !== undefined) {
+    cleaned.school = user.school
+  }
+  if (user.region !== undefined) {
+    cleaned.region = user.region
+  }
+  if (user.kajabi_contact_id !== undefined) {
+    cleaned.kajabi_contact_id = user.kajabi_contact_id
+  }
+  
+  return cleaned
+}
+
 export const adminActions = {
   async getCohorts(): Promise<string[]> {
     try {
@@ -137,11 +196,19 @@ export const adminActions = {
     try {
       const api = getApiClient()
       const response = await api.reviewSubmission(body)
-      return validateAndExtract(
+      const result = validateAndExtract(
         response,
         ReviewResponseSchema,
         'reviewSubmission',
       )
+      // Clean up the result to match exact optional property types
+      const cleanResult: { message: string; pointsAwarded?: number } = {
+        message: result.message,
+      }
+      if (result.pointsAwarded !== undefined) {
+        cleanResult.pointsAwarded = result.pointsAwarded
+      }
+      return cleanResult
     } catch (error) {
       throw new AdminClientError('Failed to review submission', error)
     }
@@ -175,11 +242,19 @@ export const adminActions = {
     try {
       const api = getApiClient()
       const response = await api.getAdminSubmissionById(id)
-      return validateAndExtract(
+      const result = validateAndExtract(
         response,
         SubmissionDetailResponseSchema,
         'getSubmissionById',
       )
+      // Clean up the result to match exact optional property types
+      const cleanResult: { submission: AdminSubmission; evidence?: string } = {
+        submission: result.submission,
+      }
+      if (result.evidence !== undefined) {
+        cleanResult.evidence = result.evidence
+      }
+      return cleanResult
     } catch (error) {
       throw new AdminClientError(`Failed to fetch submission ${id}`, error)
     }
@@ -291,7 +366,9 @@ export const adminActions = {
         }),
       })
       const parsed = schema.parse(response)
-      return parsed.data
+      return {
+        user: cleanUserObject(parsed.data.user)
+      }
     } catch (error) {
       throw new AdminClientError(`Failed to fetch user ${id}`, error)
     }
@@ -333,7 +410,9 @@ export const adminActions = {
         }),
       })
       const parsed = schema.parse(response)
-      return parsed.data
+      return {
+        user: cleanUserObject(parsed.data.user)
+      }
     } catch (error) {
       throw new AdminClientError(`Failed to update user ${id}`, error)
     }
@@ -401,11 +480,22 @@ export const adminActions = {
     try {
       const api = await getApiClient()
       const response = await api.assignAdminBadge(body)
-      return validateAndExtract(
+      const result = validateAndExtract(
         response,
         BadgeOperationResponseSchema,
         'assignBadge',
       )
+      // Clean up the result to match exact optional property types
+      const cleanResult: { message: string; processed?: number; failed?: number } = {
+        message: result.message,
+      }
+      if (result.processed !== undefined) {
+        cleanResult.processed = result.processed
+      }
+      if (result.failed !== undefined) {
+        cleanResult.failed = result.failed
+      }
+      return cleanResult
     } catch (error) {
       throw new AdminClientError('Failed to assign badge', error)
     }
@@ -419,11 +509,22 @@ export const adminActions = {
     try {
       const api = await getApiClient()
       const response = await api.removeAdminBadge(body)
-      return validateAndExtract(
+      const result = validateAndExtract(
         response,
         BadgeOperationResponseSchema,
         'removeBadge',
       )
+      // Clean up the result to match exact optional property types
+      const cleanResult: { message: string; processed?: number; failed?: number } = {
+        message: result.message,
+      }
+      if (result.processed !== undefined) {
+        cleanResult.processed = result.processed
+      }
+      if (result.failed !== undefined) {
+        cleanResult.failed = result.failed
+      }
+      return cleanResult
     } catch (error) {
       throw new AdminClientError('Failed to remove badge', error)
     }
@@ -438,9 +539,20 @@ export const adminActions = {
   }> {
     try {
       const validatedParams = AnalyticsQuerySchema.parse(params)
+      // Clean up the params for exactOptionalPropertyTypes
+      const cleanedParams: { startDate?: string; endDate?: string; cohort?: string } = {}
+      if (validatedParams.startDate !== undefined) {
+        cleanedParams.startDate = validatedParams.startDate
+      }
+      if (validatedParams.endDate !== undefined) {
+        cleanedParams.endDate = validatedParams.endDate
+      }
+      if (validatedParams.cohort !== undefined) {
+        cleanedParams.cohort = validatedParams.cohort
+      }
 
       const api = await getApiClient()
-      const response = await api.getAdminAnalytics(validatedParams)
+      const response = await api.getAdminAnalytics(cleanedParams)
       return validateAndExtract(
         response,
         AnalyticsResponseSchema,
@@ -474,7 +586,26 @@ export const adminActions = {
       const api = await getApiClient()
       const response = await api.testAdminKajabi(body)
       // Note: Test response has different structure, parse directly
-      return KajabiTestResponseSchema.parse(response)
+      const result = KajabiTestResponseSchema.parse(response)
+      // Clean up the result to match exact optional property types
+      const cleanResult: {
+        success: boolean
+        message?: string
+        test_mode?: boolean
+        data?: Record<string, unknown>
+      } = {
+        success: result.success,
+      }
+      if (result.message !== undefined) {
+        cleanResult.message = result.message
+      }
+      if (result.test_mode !== undefined) {
+        cleanResult.test_mode = result.test_mode
+      }
+      if (result.data !== undefined) {
+        cleanResult.data = result.data
+      }
+      return cleanResult
     } catch (error) {
       throw new AdminClientError('Failed to test Kajabi webhook', error)
     }
@@ -537,7 +668,15 @@ export const adminActions = {
         }),
       })
       const parsed = schema.parse(response)
-      return parsed.data
+      // Clean up the result to match exact optional property types
+      const cleanResult: { invited: boolean; contactId?: number; withOffer: boolean } = {
+        invited: parsed.data.invited,
+        withOffer: parsed.data.withOffer,
+      }
+      if (parsed.data.contactId !== undefined) {
+        cleanResult.contactId = parsed.data.contactId
+      }
+      return cleanResult
     } catch (error) {
       throw new AdminClientError('Failed to send Kajabi invite', error)
     }

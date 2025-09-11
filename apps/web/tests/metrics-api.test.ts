@@ -72,7 +72,8 @@ describe('GET /api/metrics (stage)', () => {
     const { GET } = await import('../app/api/metrics/route')
     const res = await GET(req)
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const text = await res.text()
+    const body = JSON.parse(text) as { success: boolean; data: unknown }
     expect(body?.success).toBe(true)
     const parsed = StageMetricsDTOSchema.safeParse(body.data)
     expect(parsed.success).toBe(true)

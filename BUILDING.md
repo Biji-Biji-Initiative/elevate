@@ -118,6 +118,23 @@ This document is the authoritative blueprint for building, publishing, and consu
 
 Each library uses Microsoft API Extractor to manage its public API surface:
 
+## 10) Playwright E2E Artifacts (How to Inspect)
+
+Our E2E workflows (Student Gating E2E, Educator Flow E2E) upload Playwright artifacts for every run. To debug a failure:
+
+- Download artifacts from the GitHub Actions job summary:
+  - HTML report: `playwright-report/` (open `index.html` or run `npx playwright show-report elevate/playwright-report`)
+  - Raw results: `test-results/` (contains traces, screenshots, and videos)
+  - Traces: `test-results/**/*.zip` (open with `npx playwright show-trace <trace.zip>`)
+  - Screenshots/Videos: `test-results/**/*.png` and `**/*.webm`
+
+Local inspection commands:
+```bash
+# After extracting artifacts into ./elevate
+npx playwright show-report elevate/playwright-report
+npx playwright show-trace elevate/test-results/<some-trace>.zip
+```
+
 - **Configuration**: Standardized `api-extractor.json` in each package
   - Entry point: `dist/types/index.d.ts` (single API surface)
   - Reports: `api-reports/<package>.api.md` (committed to git)

@@ -7,7 +7,7 @@ import {
   getKajabiEventStats,
   getKajabiPointsAwarded,
 } from '@elevate/db'
-import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       const logger = await getSafeServerLogger('admin-kajabi')
       logger.info('Fetched Kajabi events', { count: mapped.length })
 
-      return createSuccessResponse({
+      return toSuccessResponse({
         events: mapped,
         stats: {
           ...stats,
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
         },
       })
     } catch (error) {
-      return createErrorResponse(error, 500)
+      return toErrorResponse(error)
     }
   })
 }

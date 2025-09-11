@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 
 // Mock rate limiter to pass-through
 vi.mock('@elevate/security/rate-limiter', async () => ({
@@ -89,7 +90,7 @@ describe('Kajabi webhook - idempotency behavior', () => {
     })
     const res1 = await POST(req1)
     expect(res1.status).toBe(200)
-    const json1 = await res1.json()
+    const json1 = await readJson<{ success: boolean; data: { awarded?: boolean } }>(res1)
     expect(json1.success).toBe(true)
     expect(json1.data.awarded).toBe(true)
 
@@ -101,7 +102,7 @@ describe('Kajabi webhook - idempotency behavior', () => {
     })
     const res2 = await POST(req2)
     expect(res2.status).toBe(200)
-    const json2 = await res2.json()
+    const json2 = await readJson<{ success: boolean; data: { duplicate?: boolean } }>(res2)
     expect(json2.success).toBe(true)
     expect(json2.data.duplicate).toBe(true)
   })

@@ -42,12 +42,12 @@
     "dist/openapi.json"
   ],
   "scripts": {
-    "build": "pnpm run clean && pnpm run generate:all && pnpm run build:types && tsup --config tsup.config.ts",
-    "generate": "tsx src/generator.ts",
-    "generate:spec": "tsx src/generator.ts",
+    "build": "pnpm run clean && pnpm run build:types && tsup --config tsup.config.ts && node scripts/build-json.mjs",
+    "generate": "node scripts/build-json.mjs",
+    "generate:spec": "node scripts/build-json.mjs",
     "generate:client": "openapi-typescript dist/openapi.json -o src/client.ts",
-    "generate:sdk": "tsx src/client-generator.ts",
-    "generate:all": "pnpm run generate && pnpm run generate:sdk",
+    "generate:sdk": "node -e \"console.log('SDK generation deferred to CI')\"",
+    "generate:all": "node scripts/build-json.mjs",
     "dev": "tsx watch src/generator.ts",
     "clean": "rm -rf dist api-reports/*.api.md",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx,.mjs,.cjs --max-warnings 0",

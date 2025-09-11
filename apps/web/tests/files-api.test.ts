@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 
 // Mock rate limiter passthrough
 vi.mock('@elevate/security', async () => ({
@@ -63,7 +64,7 @@ describe('Files API', () => {
     const ctx: { params: { path: string[] } } = { params: { path: ['evidence', 'learn', 'user_1', 'file.pdf'] } }
     const res = await GET(req, ctx)
     expect(res.status).toBe(200)
-    const json = await res.json()
+    const json = await readJson<{ success: boolean; data: { url: string } }>(res)
     expect(json.success).toBe(true)
     expect(json.data.url).toContain('https://signed.url/test')
   })

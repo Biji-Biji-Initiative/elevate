@@ -64,7 +64,8 @@ describe('Leaderboard API - basic shape', () => {
     )
     const res = await GET(req)
     expect(res.status).toBe(200)
-    const json = await res.json()
+    const text = await res.text()
+    const json = JSON.parse(text) as { success: boolean; data: { data: unknown[]; total: number; limit: number; offset: number } }
     expect(json.success).toBe(true)
     // New envelope shape: { success, data: { period, data: [...], total, limit, offset } }
     expect(Array.isArray(json.data.data)).toBe(true)

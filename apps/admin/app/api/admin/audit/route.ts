@@ -4,7 +4,8 @@ import { z } from 'zod'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
-import { createErrorResponse, createSuccessResponse } from '@elevate/http'
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       const { searchParams } = new URL(request.url)
       const parsed = AuditQuerySchema.safeParse(Object.fromEntries(searchParams))
       if (!parsed.success) {
-        return createErrorResponse(new Error('Invalid query'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid query'))
       }
       const { targetId, actorId, action, startDate, endDate, page, limit } = parsed.data
       const offset = (page - 1) * limit
@@ -42,12 +43,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         const created_at: any = {}
         if (startDate) {
           const d = new Date(startDate)
-          if (isNaN(d.getTime())) return createErrorResponse(new Error('Invalid startDate'), 400)
+          if (isNaN(d.getTime())) return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid startDate'))
           created_at.gte = d
         }
         if (endDate) {
           const d = new Date(endDate)
-          if (isNaN(d.getTime())) return createErrorResponse(new Error('Invalid endDate'), 400)
+          if (isNaN(d.getTime())) return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid endDate'))
           created_at.lte = d
         }
         where.created_at = created_at
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         prisma.auditLog.count({ where }),
       ])
 
-      const res = createSuccessResponse({ logs: rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } })
+      const res = toSuccessResponse({ logs: rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } })
       recordApiAvailability('/api/admin/audit', 'GET', 200)
       recordApiResponseTime('/api/admin/audit', 'GET', Date.now() - start, 200)
       return res
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       logger.error('Admin audit GET failed', error instanceof Error ? error : new Error(String(error)))
       recordApiAvailability('/api/admin/audit', 'GET', 500)
       recordApiResponseTime('/api/admin/audit', 'GET', Date.now() - start, 500)
-      return createErrorResponse(new Error('Internal Server Error'), 500)
+      return toErrorResponse(error)
     }
   })
 }

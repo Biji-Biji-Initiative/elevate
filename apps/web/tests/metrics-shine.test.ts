@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 import type { NextRequest } from 'next/server'
 import { StageMetricsDTOSchema } from '@elevate/types/dto-mappers'
 
@@ -68,7 +69,7 @@ describe('GET /api/metrics (stage=shine)', () => {
     const { GET } = await import('../app/api/metrics/route')
     const res = await GET(req)
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const body = await readJson<{ success?: boolean; data?: unknown }>(res)
     expect(body?.success).toBe(true)
     const parsed = StageMetricsDTOSchema.safeParse(body.data)
     expect(parsed.success).toBe(true)

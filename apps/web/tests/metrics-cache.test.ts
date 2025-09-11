@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 import type { NextRequest } from 'next/server'
 
 // Mock Prisma client used by the route
@@ -69,7 +70,7 @@ describe('GET /api/metrics cache headers', () => {
     expect(res.status).toBe(200)
     const cc = res.headers.get('Cache-Control') || ''
     expect(cc).toMatch(/s-maxage=\d+/)
-    const json = await res.json()
+    const json = await readJson<{ success: boolean; data: { stage: string } }>(res)
     expect(json.success).toBe(true)
     expect(json.data.stage).toBe('EXPLORE')
   })

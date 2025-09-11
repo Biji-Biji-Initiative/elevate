@@ -280,6 +280,7 @@ export default [
             '^@elevate/ui/styles/',
             '^@elevate/openapi($|/.*)',
             '^@elevate/app-services($|/.*)',
+            '^@elevate/security($|/.*)',
             '^@clerk/localizations$',
             '^server-only$',
           ],

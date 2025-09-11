@@ -5,7 +5,8 @@ import { z } from 'zod'
 import { requireRole } from '@elevate/auth/server-helpers'
 import type { Prisma } from '@elevate/db'
 import { prisma } from '@elevate/db'
-import { badRequest, createSuccessResponse } from '@elevate/http'
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs'
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const raw = Object.fromEntries(url.searchParams)
     const parsed = QuerySchema.safeParse(raw)
-    if (!parsed.success) return badRequest('Invalid query')
+    if (!parsed.success) return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid query'))
     const { referrerId, refereeId, email, month, limit, offset } = parsed.data
 
     let monthStart: Date | undefined
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
       })
       const ids = u.map((x) => x.id)
       if (ids.length === 0)
-        return createSuccessResponse({
+        return toSuccessResponse({
           referrals: [],
           pagination: { total: 0, limit, offset, pages: 0 },
         })
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
       prisma.referralEvent.count({ where }),
     ])
 
-    return createSuccessResponse({
+    return toSuccessResponse({
       referrals: rows.map((r) => ({
         id: r.id,
         eventType: r.event_type,

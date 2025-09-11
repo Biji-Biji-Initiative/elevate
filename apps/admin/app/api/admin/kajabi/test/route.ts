@@ -4,7 +4,8 @@ import type { NextRequest } from 'next/server'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
-import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import { KajabiTestSchema, buildAuditMeta, toPrismaJson } from '@elevate/types'
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     const body: unknown = await request.json()
     const parsed = KajabiTestSchema.safeParse(body)
     if (!parsed.success) {
-      return createErrorResponse(new Error('Invalid request body'), 400)
+      return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid request body'))
     }
     const { user_email, course_name = 'Test Course - Admin Console' } =
       parsed.data
@@ -33,10 +34,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!user) {
-      return createErrorResponse(
-        new Error('User not found for email: ' + email),
-        404,
-      )
+      return toErrorResponse(new AdminError('NOT_FOUND', 'User not found for email: ' + email))
     }
 
     // Generate unique event ID
@@ -57,10 +55,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!learnActivity) {
-      return createErrorResponse(
-        new Error('LEARN activity not found in database'),
-        500,
-      )
+      return toErrorResponse(new AdminError('INTERNAL', 'LEARN activity not found in database'))
     }
 
     // Resolve first learn tag from env (fallback to default)
@@ -181,14 +176,14 @@ export async function POST(request: NextRequest) {
     const logger = await getSafeServerLogger('admin-kajabi')
     logger.info('Created Kajabi test event', { event_id: result.event_id, user_id: result.user_id })
 
-    return createSuccessResponse({
+    return toSuccessResponse({
       message: 'Test Kajabi event created successfully',
       test_mode: true,
       timestamp: new Date().toISOString(),
       ...result,
     })
     } catch (error) {
-      return createErrorResponse(error, 500)
+      return toErrorResponse(error)
     }
   })
 }

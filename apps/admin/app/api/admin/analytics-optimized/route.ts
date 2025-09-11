@@ -2,7 +2,8 @@ import type { NextRequest } from 'next/server'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, Prisma } from '@elevate/db'
-import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { computeApprovalRate, computeActivationRate } from '@elevate/logic'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
         Object.fromEntries(searchParams),
       )
       if (!parsed.success) {
-        return createErrorResponse(new Error('Invalid query'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid query'))
       }
       const { startDate, endDate, cohort } = parsed.data
 
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
         getOptimizedPerformanceMetrics(),
       ])
 
-      const res = createSuccessResponse({
+      const res = toSuccessResponse({
         overview: overviewData,
         distributions: distributionData,
         trends: trendsData,
@@ -101,7 +102,7 @@ export async function GET(request: NextRequest) {
           operation: 'admin_analytics_optimized',
         },
       )
-      return createErrorResponse(error, 500)
+      return toErrorResponse(error)
     }
   })
 }

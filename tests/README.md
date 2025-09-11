@@ -277,6 +277,22 @@ test('slow operation', async () => {
 }, 30000) // 30 second timeout
 ```
 
+### 🧪 Playwright E2E Reports
+
+E2E workflows upload artifacts you can download from the GitHub Actions run page:
+
+- HTML report: `playwright-report/` (open `index.html` or run `npx playwright show-report elevate/playwright-report`)
+- Raw results: `test-results/` (contains traces, screenshots, videos)
+- Traces: `test-results/**/*.zip` (open via `npx playwright show-trace <trace.zip>`)
+- Screenshots/Videos: `test-results/**/*.png` and `**/*.webm`
+
+Local usage:
+```bash
+# After downloading & extracting artifacts into ./elevate
+npx playwright show-report elevate/playwright-report
+npx playwright show-trace elevate/test-results/<some-trace>.zip
+```
+
 ### 📝 Debug Commands
 ```bash
 # Run with debug output

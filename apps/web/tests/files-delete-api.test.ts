@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 
 vi.mock('@elevate/security', async () => ({
   withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
@@ -51,7 +52,7 @@ describe('Files API - DELETE', () => {
     const ctx: { params: { path: string[] } } = { params: { path: ['evidence', 'learn', 'user_1', 'file.pdf'] } }
     const res = await DELETE(req, ctx)
     expect(res.status).toBe(200)
-    const json = await res.json()
+    const json = await readJson<{ success: boolean }>(res)
     expect(json.success).toBe(true)
   })
 })

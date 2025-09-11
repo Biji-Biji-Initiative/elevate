@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 import type { NextRequest } from 'next/server'
 
 vi.mock('@elevate/db/client', () => ({
@@ -42,7 +43,7 @@ describe('GET /api/metrics', () => {
     const mod = await import('../app/api/metrics/route')
     const res = await mod.GET(req)
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const body = await readJson<{ success?: boolean }>(res)
     expect(body?.success).toBe(true)
   })
 })

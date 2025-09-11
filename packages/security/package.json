@@ -28,6 +28,10 @@
       "types": "./dist/types/sanitizer.d.ts",
       "import": "./dist/js/sanitizer.js"
     },
+    "./constants": {
+      "types": "./dist/types/constants.d.ts",
+      "import": "./dist/js/constants.js"
+    },
     "./csrf": {
       "types": "./dist/types/csrf.d.ts",
       "import": "./dist/js/csrf.js"

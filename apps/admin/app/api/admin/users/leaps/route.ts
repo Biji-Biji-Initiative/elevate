@@ -5,7 +5,8 @@ import { z } from 'zod'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
-import { createErrorResponse, createSuccessResponse } from '@elevate/http'
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -33,16 +34,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const json: unknown = await request.json()
       const parsed = BulkLeapsUpdateSchema.safeParse(json)
       if (!parsed.success) {
-        return createErrorResponse(
-          new Error(parsed.error.issues?.[0]?.message || 'Invalid body'),
-          400,
-        )
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', parsed.error.issues?.[0]?.message || 'Invalid body'))
       }
   const { userIds, userType, userTypeConfirmed, school, region } = parsed.data
 
       // Limit bulk operations to prevent abuse
       if (userIds.length > 100) {
-        return createErrorResponse(new Error('Maximum 100 users per bulk operation'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Maximum 100 users per bulk operation'))
       }
 
       const results = { processed: 0, failed: 0, errors: [] as Array<{ userId: string; error: string }> }
@@ -74,14 +72,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
       }
 
-      const res = createSuccessResponse(results)
+      const res = toSuccessResponse(results)
       recordApiAvailability('/api/admin/users/leaps', 'POST', 200)
       recordApiResponseTime('/api/admin/users/leaps', 'POST', Date.now() - start, 200)
       return res
     } catch (error) {
       recordApiAvailability('/api/admin/users/leaps', 'POST', 500)
       recordApiResponseTime('/api/admin/users/leaps', 'POST', Date.now() - start, 500)
-      return createErrorResponse(new Error('Internal Server Error'), 500)
+      return toErrorResponse(error)
     }
   })
 }

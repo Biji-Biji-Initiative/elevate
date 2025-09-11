@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/* eslint-disable import/first */
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createRoot } from 'react-dom/client'
@@ -16,9 +17,8 @@ vi.mock('@elevate/ui/next', () => ({
 }))
 
 // Import after mocks
+import * as navigation from 'next/navigation'
 import { useEducatorGuard } from '../hooks/useEducatorGuard'
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const navigation = require('next/navigation') as { pushMock: ReturnType<typeof vi.fn> }
 
 function HookHost() {
   useEducatorGuard()

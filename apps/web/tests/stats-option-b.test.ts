@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 import type { NextRequest } from 'next/server'
 
 // Mock Prisma client used by the route
@@ -64,7 +65,7 @@ describe('GET /api/stats (Option B parity)', () => {
     const { GET } = await import('../app/api/stats/route')
     const res = await GET(req)
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const body = await readJson<{ success?: boolean; data?: any }>(res)
     expect(body?.success).toBe(true)
     expect(body?.data?.counters).toBeTruthy()
     const c = body.data.counters

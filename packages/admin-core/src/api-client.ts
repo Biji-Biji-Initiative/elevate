@@ -1,8 +1,8 @@
 import type { paths } from '@elevate/openapi/client'
 
 export type ApiClientOptions = {
-  baseUrl?: string
-  token?: string
+  baseUrl?: string | undefined
+  token?: string | undefined
 }
 
 /**
@@ -11,14 +11,14 @@ export type ApiClientOptions = {
  */
 export class AdminApiClient {
   private baseUrl: string
-  private token?: string
+  private token?: string | undefined
 
   constructor(opts: ApiClientOptions = {}) {
     this.baseUrl = opts.baseUrl ?? process.env.NEXT_PUBLIC_SITE_URL ?? ''
     this.token = opts.token
   }
 
-  setToken(token?: string) {
+  setToken(token?: string | undefined) {
     this.token = token
   }
 

@@ -4,7 +4,8 @@ import { z } from 'zod'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
-import { createErrorResponse, createSuccessResponse } from '@elevate/http'
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     try {
       const { searchParams } = new URL(request.url)
       const parsed = QuerySchema.safeParse(Object.fromEntries(searchParams))
-      if (!parsed.success) return createErrorResponse(new Error('Invalid query'), 400)
+      if (!parsed.success) return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid query'))
       const { month } = parsed.data
       const [ys, ms] = month.split('-') as [string, string]
       const y = Number.parseInt(ys, 10)
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         user: byId.get(t.user_id) || { id: t.user_id, name: '', email: '', handle: '', user_type: 'EDUCATOR' },
       }))
 
-      const res = createSuccessResponse({
+      const res = toSuccessResponse({
         month,
         total,
         byType: { educators, students },
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       logger.error('Referrals summary failed', error instanceof Error ? error : new Error(String(error)))
       recordApiAvailability('/api/admin/referrals/summary', 'GET', 500)
       recordApiResponseTime('/api/admin/referrals/summary', 'GET', Date.now() - start, 500)
-      return createErrorResponse(new Error('Internal Server Error'), 500)
+      return toErrorResponse(error)
     }
   })
 }
