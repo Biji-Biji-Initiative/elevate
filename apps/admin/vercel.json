@@ -1,7 +1,7 @@
 {
   "name": "elevate-admin",
-  "buildCommand": "cd ../.. && pnpm turbo run build --filter=elevate-admin",
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm db:generate",
+  "buildCommand": "pnpm turbo run build --filter=elevate-admin",
+  "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD .",
