@@ -17,7 +17,6 @@
     { "path": "./packages/api-client/tsconfig.build.json" },
 
     { "path": "./packages/http/tsconfig.build.json" },
-    { "path": "./packages/security/tsconfig.build.json" },
-    { "path": "./packages/emails/tsconfig.build.json" }
+    { "path": "./packages/security/tsconfig.build.json" }
   ]
 }
