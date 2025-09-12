@@ -225,6 +225,9 @@ importers:
       '@elevate/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@prisma/client':
+        specifier: 6.15.0
+        version: 6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -256,9 +259,6 @@ importers:
       '@next/bundle-analyzer':
         specifier: ^15.5.2
         version: 15.5.2
-      '@prisma/client':
-        specifier: 6.15.0
-        version: 6.15.0(prisma@6.15.0(magicast@0.3.5)(typescript@5.9.2))(typescript@5.9.2)
       '@types/node':
         specifier: ^20.14.0
         version: 20.19.11
