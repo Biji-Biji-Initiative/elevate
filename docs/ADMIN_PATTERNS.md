@@ -86,3 +86,38 @@ Use `AdminError` for predictable error handling across services. Suggested codes
 Patterns:
 - Throw `new AdminError(code, message, meta?)` at service boundaries when a known condition occurs.
 - Otherwise, `handleApiError(err, context)` to create a safe message; log details with `getSafeServerLogger`.
+
+## HTTP Envelopes
+
+Use the local helpers in `apps/admin/lib/server/http.ts` for API routes:
+
+```ts
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+
+export async function GET() {
+  try {
+    const data = await doSomething()
+    return toSuccessResponse({ data })
+  } catch (err) {
+    // Map known conditions
+    if (err instanceof SomeDomainError) {
+      return toErrorResponse(new AdminError('NOT_FOUND', 'Item missing'))
+    }
+    // Default
+    return toErrorResponse(err)
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const body = await request.json().catch(() => ({}))
+  const parsed = MySchema.safeParse(body)
+  if (!parsed.success) {
+    return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid body'))
+  }
+  const result = await createSomething(parsed.data)
+  return toSuccessResponse({ result }, 201)
+}
+```
+
+This standardizes responses and status codes while keeping code concise.

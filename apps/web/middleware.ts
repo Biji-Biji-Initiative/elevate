@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { TRACE_HEADER, generateTraceId } from '@elevate/http'
 import { parseClerkPublicMetadata } from '@elevate/auth'
 import createIntlMiddleware from 'next-intl/middleware'
 
@@ -54,6 +55,7 @@ const isMetricsRoute = createRouteMatcher([
 
 // Create the Clerk middleware with i18n integration
 export default clerkMiddleware(async (auth, request: NextRequest) => {
+  const traceId = generateTraceId()
   const { pathname } = request.nextUrl
 
   // Skip middleware for static files and Next.js internals
@@ -62,7 +64,9 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     pathname.includes('/static/') ||
     pathname.includes('.')
   ) {
-    return NextResponse.next()
+    const res = NextResponse.next()
+    res.headers.set(TRACE_HEADER, traceId)
+    return res
   }
 
   // Call auth() for all non-static requests to ensure Clerk context is established
@@ -83,6 +87,7 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
         const locale = localeMatch ? localeMatch[1] : defaultLocale
         const redirectUrl = new URL(`/${locale}/sign-up`, url)
         const res = NextResponse.redirect(redirectUrl)
+        res.headers.set(TRACE_HEADER, traceId)
         if (!cookies.get('ref')) {
           res.cookies.set('ref', ref, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 90 })
         }
@@ -90,11 +95,13 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
       }
       // Otherwise, just set cookie and continue
       const res = NextResponse.next()
+      res.headers.set(TRACE_HEADER, traceId)
       if (!cookies.get('ref')) {
         res.cookies.set('ref', ref, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 90 })
       }
       if (pathname.startsWith('/api/')) return res
       const intlResponse = intlMiddleware(request)
+      intlResponse.headers.set(TRACE_HEADER, traceId)
       if (isPublicRoute(request)) return intlResponse
     }
   } catch (err) {
@@ -103,10 +110,15 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
   }
 
   // Handle API routes without i18n; allow handlers to enforce auth explicitly
-  if (pathname.startsWith('/api/')) return NextResponse.next()
+  if (pathname.startsWith('/api/')) {
+    const res = NextResponse.next()
+    res.headers.set(TRACE_HEADER, traceId)
+    return res
+  }
 
   // Handle i18n for page routes
   const intlResponse = intlMiddleware(request)
+  intlResponse.headers.set(TRACE_HEADER, traceId)
 
   // Check authentication for protected page routes
   if (!isPublicRoute(request)) {
@@ -123,7 +135,9 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
       if (userType === 'STUDENT') {
         const localeMatch = pathname.match(/^\/(en|id)(\/|$)/)
         const locale = localeMatch ? localeMatch[1] : defaultLocale
-        return NextResponse.redirect(new URL(`/${locale}/educators-only`, request.url))
+        const res = NextResponse.redirect(new URL(`/${locale}/educators-only`, request.url))
+        res.headers.set(TRACE_HEADER, traceId)
+        return res
       }
     }
   }
@@ -140,7 +154,9 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
         if (userType === 'STUDENT') {
           const localeMatch = pathname.match(/^\/(en|id)(\/|$)/)
           const locale = localeMatch ? localeMatch[1] : defaultLocale
-          return NextResponse.redirect(new URL(`/${locale}/educators-only`, request.url))
+          const res = NextResponse.redirect(new URL(`/${locale}/educators-only`, request.url))
+          res.headers.set(TRACE_HEADER, traceId)
+          return res
         }
       }
     }

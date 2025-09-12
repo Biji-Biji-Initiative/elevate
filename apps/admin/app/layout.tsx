@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-// Use system fonts to avoid network fetch during offline builds
+import { getRootFontClass } from './lib/local-fonts'
 import { headers } from 'next/headers'
 
 import { NextIntlClientProvider } from 'next-intl'
@@ -22,10 +22,11 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const rootFontClass = await getRootFontClass()
   const messages = await getMessages()
   return (
     <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
-      <body className="font-sans">
+      <body className={`${rootFontClass} font-sans`}>
         <NextIntlClientProvider messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>

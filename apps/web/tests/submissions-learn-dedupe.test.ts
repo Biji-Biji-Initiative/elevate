@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 import type { NextRequest } from 'next/server'
 
 vi.mock('@clerk/nextjs/server', () => ({
@@ -53,8 +54,7 @@ describe('POST /api/submissions (LEARN certificate dedupe)', () => {
     })
     const res = await mod.POST(req, { traceId: 't' } as unknown as { traceId: string })
     expect(res.status).toBe(400)
-    const body = await res.json()
+    const body = await readJson<{ success?: boolean }>(res)
     expect(body?.success).toBe(false)
   })
 })
-

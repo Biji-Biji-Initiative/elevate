@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 import type { NextRequest } from 'next/server'
 
 // Mock auth to return a user
@@ -34,8 +35,7 @@ describe('POST /api/files/upload (invalid file)', () => {
     const mod = await import('../app/api/files/upload/route')
     const res = await mod.POST(makeRequest(form), { traceId: 't' } as unknown as { traceId: string })
     expect([400, 422]).toContain(res.status)
-    const json = await res.json()
+    const json = await readJson<{ success: boolean }>(res)
     expect(json.success).toBe(false)
   })
 })
-

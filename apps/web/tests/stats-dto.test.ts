@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 import type { NextRequest } from 'next/server'
 
 import { StatsResponseDTOSchema } from '@elevate/types/dto-mappers'
@@ -38,7 +39,7 @@ describe('GET /api/stats - DTO shape', () => {
     const mod = await import('../app/api/stats/route')
     const res = await mod.GET(req)
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const body = await readJson<{ success?: boolean; data?: unknown }>(res)
     expect(body?.success).toBe(true)
     // Validate DTO structure
     const parsed = StatsResponseDTOSchema.safeParse(body.data)

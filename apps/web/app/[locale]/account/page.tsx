@@ -70,10 +70,11 @@ function LeapsProfileForm() {
       try {
         const res = await fetch('/api/profile/me')
         if (res.ok) {
-          const json: unknown = await res.json()
-          const data = (json && typeof json === 'object' && 'data' in json)
-            ? (json as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; school?: string | null; region?: string | null } }).data
-            : undefined
+          const text = await res.text()
+          type MeData = { userType?: 'EDUCATOR' | 'STUDENT'; school?: string | null; region?: string | null }
+          type MeResp = { data?: MeData }
+          const parsed = safeJsonParse<MeResp>(text)
+          const { data } = (parsed ?? {}) as MeResp
           const ut = (data?.userType ?? null) as 'EDUCATOR' | 'STUDENT' | null
           setUserType(ut)
           setSchool(data?.school || '')

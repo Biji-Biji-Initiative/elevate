@@ -225,6 +225,32 @@ export default [
     },
   },
 
+  // Client code should not import root @elevate/security (use subpaths)
+  {
+    files: ['apps/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@elevate/security',
+              message:
+                'Do not import root @elevate/security from app/client code. Use subpaths: @elevate/security/constants in client; /csrf or /rate-limiter in server routes.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Allow server API routes to import root @elevate/security
+  {
+    files: ['apps/**/app/api/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+
   // Import rules configuration
   {
     plugins: {

@@ -8,6 +8,7 @@ import { useAuth } from '@clerk/nextjs'
 import { Button, Card, Alert } from '@elevate/ui'
 import { LoadingSpinner } from '@elevate/ui/blocks'
 import { useEducatorGuard } from '@/hooks/useEducatorGuard'
+import { safeJsonParse } from '@/lib/utils/safe-json'
 
 export default function AmplifyInvitePage() {
   const { isLoaded, userId } = useAuth()
@@ -32,8 +33,12 @@ export default function AmplifyInvitePage() {
         const locale = typeof window !== 'undefined' ? (window.location.pathname.split('/')[1] || 'en') : 'en'
         const linkRes = await fetch('/api/referrals/link')
         if (!linkRes.ok) throw new Error('Failed to get link')
-        const linkJson = (await linkRes.json()) as { data?: { link?: string; refCode?: string } }
-        const handle = linkJson?.data?.refCode || null
+        const text = await linkRes.text()
+        type LinkResp = { data?: { link?: string; refCode?: string } }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const parsed: LinkResp | undefined = safeJsonParse<LinkResp>(text)
+        const { data } = (parsed ?? {}) as LinkResp
+        const handle = data?.refCode || null
         setState({ handle, locale, loading: false, error: null })
       } catch (e) {
         setState((s) => ({ ...s, loading: false, error: 'Failed to prepare invite' }))

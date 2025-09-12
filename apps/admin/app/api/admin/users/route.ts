@@ -10,10 +10,8 @@ import {
   prisma, // Still need for complex queries and transactions
   type Prisma,
 } from '@elevate/db'
-import {
-  createSuccessResponse,
-  createErrorResponse as createHttpError,
-} from '@elevate/http'
+import { AdminError } from '@/lib/server/admin-error'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import { parseRole, toPrismaJson, UpdateUserSchema, BulkUpdateUsersSchema, AdminUsersQuerySchema, buildAuditMeta } from '@elevate/types'
@@ -33,7 +31,7 @@ export async function GET(request: NextRequest) {
         Object.fromEntries(searchParams),
       )
       if (!parsedQuery.success) {
-        return createHttpError(new Error('Invalid query'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid query'))
       }
       const q = parsedQuery.data as AdminUsersQuery & { kajabi?: 'ALL' | 'LINKED' | 'UNLINKED' }
       const sp = new URL(request.url).searchParams
@@ -137,7 +135,7 @@ export async function GET(request: NextRequest) {
         totalPoints: pointsMap[u.id] || 0,
       }))
 
-      return createSuccessResponse({
+      return toSuccessResponse({
         users: usersList,
         pagination: {
           page,
@@ -151,7 +149,7 @@ export async function GET(request: NextRequest) {
         'Admin users GET failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      return createHttpError(error, 500)
+      return toErrorResponse(error)
     }
   })
 }
@@ -164,18 +162,18 @@ export async function PATCH(request: NextRequest) {
       const body = await request.json()
       const parsed = UpdateUserSchema.safeParse(body)
       if (!parsed.success) {
-        return createHttpError(new Error('Invalid request body'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid request body'))
       }
       const { userId, role, school, cohort, name, handle } = parsed.data
 
       if (!userId) {
-        return createHttpError(new Error('userId is required'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'userId is required'))
       }
 
       const targetUser = await findUserById(userId)
 
       if (!targetUser) {
-        return createHttpError(new Error('User not found'), 404)
+        return toErrorResponse(new AdminError('NOT_FOUND', 'User not found'))
       }
 
       // Role change validation
@@ -187,10 +185,7 @@ export async function PATCH(request: NextRequest) {
             restrictedRoles.includes(role) ||
             restrictedRoles.includes(targetUser.role)
           ) {
-            return createHttpError(
-              new Error('Insufficient permissions to modify admin roles'),
-              403,
-            )
+            return toErrorResponse(new AdminError('FORBIDDEN', 'Insufficient permissions to modify admin roles'))
           }
         }
 
@@ -201,7 +196,7 @@ export async function PATCH(request: NextRequest) {
           parsedNewRole &&
           !hasRole(currentUser.role, roleToRoleName(parsedNewRole))
         ) {
-          return createHttpError(new Error('Cannot demote your own role'), 403)
+          return toErrorResponse(new AdminError('FORBIDDEN', 'Cannot demote your own role'))
         }
       }
 
@@ -225,7 +220,7 @@ export async function PATCH(request: NextRequest) {
         const existingHandle = await findUserByHandle(handle)
 
         if (existingHandle && existingHandle.id !== userId) {
-          return createHttpError(new Error('Handle is already taken'), 400)
+          return toErrorResponse(new AdminError('DUPLICATE', 'Handle is already taken'))
         }
 
         updateData.handle = handle
@@ -266,7 +261,7 @@ export async function PATCH(request: NextRequest) {
         },
       })
 
-      return createSuccessResponse({
+      return toSuccessResponse({
         message: 'User updated successfully',
         user: updatedUser,
       })
@@ -275,7 +270,7 @@ export async function PATCH(request: NextRequest) {
         'Admin users PATCH failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      return createHttpError(error, 500)
+      return toErrorResponse(error)
     }
   })
 }
@@ -289,34 +284,28 @@ export async function POST(request: NextRequest) {
       const body = await request.json()
       const parsed = BulkUpdateUsersSchema.safeParse(body)
       if (!parsed.success) {
-        return createHttpError(new Error('Invalid request body'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Invalid request body'))
       }
       const { userIds, role } = parsed.data
 
       if (!Array.isArray(userIds) || userIds.length === 0) {
-        return createHttpError(new Error('userIds array is required'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'userIds array is required'))
       }
 
       if (!role) {
-        return createHttpError(new Error('role is required'), 400)
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'role is required'))
       }
 
       // Limit bulk operations
       if (userIds.length > 100) {
-        return createHttpError(
-          new Error('Maximum 100 users per bulk operation'),
-          400,
-        )
+        return toErrorResponse(new AdminError('VALIDATION_ERROR', 'Maximum 100 users per bulk operation'))
       }
 
       // Role validation
       if (currentUser.role !== 'superadmin') {
         const restrictedRoles = ['ADMIN', 'SUPERADMIN']
         if (restrictedRoles.includes(role)) {
-          return createHttpError(
-            new Error('Insufficient permissions to assign admin roles'),
-            403,
-          )
+          return toErrorResponse(new AdminError('FORBIDDEN', 'Insufficient permissions to assign admin roles'))
         }
       }
 
@@ -327,10 +316,7 @@ export async function POST(request: NextRequest) {
         parsedBulkRole &&
         !hasRole(currentUser.role, roleToRoleName(parsedBulkRole))
       ) {
-        return createHttpError(
-          new Error('Cannot demote your own role in bulk operation'),
-          403,
-        )
+        return toErrorResponse(new AdminError('FORBIDDEN', 'Cannot demote your own role in bulk operation'))
       }
 
       const users = await prisma.user.findMany({
@@ -344,7 +330,7 @@ export async function POST(request: NextRequest) {
       })
 
       if (users.length === 0) {
-        return createHttpError(new Error('No users found'), 404)
+        return toErrorResponse(new AdminError('NOT_FOUND', 'No users found'))
       }
 
       // Additional validation for existing admin users
@@ -354,10 +340,7 @@ export async function POST(request: NextRequest) {
         )
 
         if (hasRestrictedUsers) {
-          return createHttpError(
-            new Error('Cannot modify admin users without superadmin role'),
-            403,
-          )
+          return toErrorResponse(new AdminError('FORBIDDEN', 'Cannot modify admin users without superadmin role'))
         }
       }
 
@@ -404,7 +387,7 @@ export async function POST(request: NextRequest) {
         return updates
       })
 
-      return createSuccessResponse({
+      return toSuccessResponse({
         processed: results.length,
         failed: 0,
         errors: [],
@@ -414,7 +397,7 @@ export async function POST(request: NextRequest) {
         'Admin users POST failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      return createHttpError(error, 500)
+      return toErrorResponse(error)
     }
   })
 }

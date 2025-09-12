@@ -8,6 +8,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 
 import type { StatsResponseDTO } from '@elevate/types'
+import { safeJsonParse } from '@/lib/utils/safe-json'
 import {
   StoriesGrid,
   LeaderboardPreview,
@@ -59,8 +60,11 @@ async function fetchPlatformStats(): Promise<PlatformStats | null> {
   try {
     const res = await fetch('/api/stats-optimized')
     if (!res.ok) return null
-    const body = (await res.json()) as { data?: StatsResponseDTO }
-    const stats = body.data as StatsResponseDTO
+    const text = await res.text()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const body: { data?: StatsResponseDTO } | undefined = safeJsonParse<{ data?: StatsResponseDTO }>(text)
+    const stats = (body?.data ?? null) as StatsResponseDTO | null
+    if (!stats) return null
 
     const byStage: PlatformStats['byStage'] = Object.fromEntries(
       Object.entries(stats.byStage).map(([key, value]) => [
@@ -100,7 +104,9 @@ async function fetchLeaderboardPreview(): Promise<LeaderboardPreviewEntry[]> {
   try {
     const res = await fetch('/api/leaderboard?limit=3&period=all')
     if (!res.ok) return []
-    const body: unknown = await res.json()
+    const text = await res.text()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const body: unknown = safeJsonParse<unknown>(text)
     let rows: LeaderboardPreviewApiEntry[] = []
     if (
       body &&
@@ -156,7 +162,9 @@ async function fetchStories(): Promise<StoryEntry[]> {
     const response = await fetch('/api/stories?limit=6')
     if (!response.ok) return []
 
-    const raw = (await response.json()) as unknown
+    const text = await response.text()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    const raw: unknown = safeJsonParse<unknown>(text)
     if (isStoriesResponse(raw)) return raw.stories || []
     return []
   } catch (_) {

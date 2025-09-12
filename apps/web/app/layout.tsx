@@ -1,6 +1,7 @@
 import * as React from 'react'
 
-// Use system fonts to avoid network fetch during offline builds
+// Local font loader with offline fallback
+import { getRootFontClass } from './lib/local-fonts'
 import { headers } from 'next/headers'
 import Script from 'next/script'
 
@@ -32,11 +33,12 @@ export const viewport = {
   userScalable: true,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const rootFontClass = await getRootFontClass()
   return (
     <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
       <head>
@@ -46,7 +48,7 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         {/* No external font preconnects in offline-friendly build */}
       </head>
-      <body className={`min-h-screen flex flex-col font-sans`}>
+      <body className={`${rootFontClass} min-h-screen flex flex-col font-sans`}>
         {children}
         
         {/* Analytics and performance monitoring would go here */}

@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { CSRF_TOKEN_HEADER } from '@elevate/security/constants'
 
 import { useFormSubmission, useFileUpload } from '@elevate/forms'
 import { SHINE } from '@elevate/types'
@@ -27,8 +28,8 @@ import {
 
 import { toMessage } from '../../../lib/error-utils'
 import { useEducatorGuard } from '@/hooks/useEducatorGuard'
+import { safeJsonParse } from '@/lib/utils/safe-json'
 
-const CSRF_TOKEN_HEADER = 'X-CSRF-Token'
 
 export default function ShineFormPage() {
   const { userId } = useAuth()
@@ -60,8 +61,11 @@ export default function ShineFormPage() {
           form.append('activityCode', SHINE)
           const resp = await fetch('/api/files/upload', { method: 'POST', body: form })
           if (!resp.ok) throw new Error('Upload failed')
-          const result = (await resp.json()) as { data?: { path: string; hash: string } }
-          const data = result?.data
+          const text = await resp.text()
+          type UploadResp = { data?: { path: string; hash: string } }
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          const parsed: UploadResp | undefined = safeJsonParse<UploadResp>(text)
+          const { data } = (parsed ?? {}) as UploadResp
           if (!data) throw new Error('Malformed upload response')
           return { file, path: data.path, hash: data.hash }
         } catch (error) {
@@ -117,8 +121,11 @@ export default function ShineFormPage() {
       }
 
       const tokenRes = await fetch('/api/csrf-token')
-      const tokenJson = (await tokenRes.json().catch(() => ({}))) as { data?: { token?: string } }
-      const token = tokenJson?.data?.token
+      const tokenText = await tokenRes.text().catch(() => '')
+      type TokenResp = { data?: { token?: string } }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const parsedToken: TokenResp | undefined = safeJsonParse<TokenResp>(tokenText)
+      const token = ((parsedToken ?? {}) as TokenResp).data?.token
       const resp = await fetch('/api/submissions', {
         method: 'POST',
         headers: { 'content-type': 'application/json', [CSRF_TOKEN_HEADER]: String(token || '') },

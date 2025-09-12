@@ -1,24 +1,19 @@
 // @vitest-environment jsdom
-/* eslint-disable import/first */
 import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createRoot } from 'react-dom/client'
+import { useEducatorGuard } from '../hooks/useEducatorGuard'
 
 // Mock next/navigation useRouter with exported pushMock for assertions
 const pushMock = vi.fn()
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: pushMock }),
-  pushMock,
 }))
 
 // Mock useCurrentLocale to return identity withLocale
 vi.mock('@elevate/ui/next', () => ({
   useCurrentLocale: () => ({ withLocale: (p: string) => p }),
 }))
-
-// Import after mocks
-import * as navigation from 'next/navigation'
-import { useEducatorGuard } from '../hooks/useEducatorGuard'
 
 function HookHost() {
   useEducatorGuard()
@@ -45,7 +40,7 @@ describe('useEducatorGuard', () => {
     root.render(React.createElement(HookHost))
     // Allow effect to run
     await new Promise((r) => setTimeout(r, 0))
-    expect(navigation.pushMock).toHaveBeenCalledWith('/educators-only')
+    expect(pushMock).toHaveBeenCalledWith('/educators-only')
     root.unmount()
   })
 
@@ -60,10 +55,10 @@ describe('useEducatorGuard', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
     const root = createRoot(container)
-    navigation.pushMock.mockClear()
+    pushMock.mockClear()
     root.render(React.createElement(HookHost))
     await new Promise((r) => setTimeout(r, 0))
-    expect(navigation.pushMock).toHaveBeenCalledWith('/onboarding/user-type')
+    expect(pushMock).toHaveBeenCalledWith('/onboarding/user-type')
     root.unmount()
   })
 
@@ -78,10 +73,10 @@ describe('useEducatorGuard', () => {
     const container = document.createElement('div')
     document.body.appendChild(container)
     const root = createRoot(container)
-    navigation.pushMock.mockClear()
+    pushMock.mockClear()
     root.render(React.createElement(HookHost))
     await new Promise((r) => setTimeout(r, 0))
-    expect(navigation.pushMock).not.toHaveBeenCalled()
+    expect(pushMock).not.toHaveBeenCalled()
     root.unmount()
   })
 })

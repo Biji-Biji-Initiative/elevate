@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { readJson } from './test-utils'
 
 const queryRawMock = vi.fn()
 
@@ -46,7 +47,7 @@ describe('stats-optimized contract', () => {
     expect(res.headers.get('X-Stats-Source')).toBe('materialized-views')
     expect(res.headers.get('Cache-Control')).toContain('s-maxage')
     expect(res.headers.get('X-Stats-Last-Updated')).toBeTruthy()
-    const json = await res.json()
+    const json = await readJson<{ success: boolean; data: { totalEducators: number } }>(res)
     expect(json.success).toBe(true)
     expect(json.data.totalEducators).toBe(10)
   })

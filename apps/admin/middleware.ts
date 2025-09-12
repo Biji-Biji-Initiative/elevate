@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { TRACE_HEADER, generateTraceId } from '@elevate/http'
 import createIntlMiddleware from 'next-intl/middleware'
 
 import {
@@ -32,6 +33,7 @@ const isPublicRoute = createRouteMatcher([
 
 // Main admin middleware with internationalization, authentication, and role checking
 const adminMiddleware = clerkMiddleware(async (auth, req) => {
+  const traceId = generateTraceId()
   const method = req.method
   const isGetLike = method === 'GET' || method === 'HEAD'
   const pathname = req.nextUrl.pathname
@@ -46,22 +48,34 @@ const adminMiddleware = clerkMiddleware(async (auth, req) => {
   // Allow public routes (intl only for GET/HEAD)
   if (isPublicRoute(req)) {
     // Never run i18n on API paths
-    return isApi
-      ? NextResponse.next()
-      : isGetLike
-      ? intlMiddleware(req)
-      : NextResponse.next()
+    if (isApi) {
+      const r = NextResponse.next()
+      r.headers.set(TRACE_HEADER, traceId)
+      return r
+    }
+    if (isGetLike) {
+      const r = intlMiddleware(req)
+      r.headers.set(TRACE_HEADER, traceId)
+      return r
+    }
+    const r = NextResponse.next()
+    r.headers.set(TRACE_HEADER, traceId)
+    return r
   }
 
   // All other routes require authentication
   const { userId, sessionClaims, redirectToSignIn } = await auth()
 
   if (!userId) {
-    if (isApi)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    return isGetLike
-      ? redirectToSignIn()
-      : NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (isApi) {
+      const r = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      r.headers.set(TRACE_HEADER, traceId)
+      return r
+    }
+    if (isGetLike) return redirectToSignIn()
+    const r = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    r.headers.set(TRACE_HEADER, traceId)
+    return r
   }
 
   // Check if user has minimum required role for admin access
@@ -84,16 +98,32 @@ const adminMiddleware = clerkMiddleware(async (auth, req) => {
   // Auth check passed for route
 
   if (!allowedRoles.includes(userRole)) {
-    if (isApi) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    return isGetLike
-      ? NextResponse.redirect(new URL('/unauthorized', req.url))
-      : NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (isApi) {
+      const r = NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      r.headers.set(TRACE_HEADER, traceId)
+      return r
+    }
+    if (isGetLike) return NextResponse.redirect(new URL('/unauthorized', req.url))
+    const r = NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    r.headers.set(TRACE_HEADER, traceId)
+    return r
   }
 
   // After authz, apply intl locale handling only for GET/HEAD. Other methods
   // must pass through untouched so Next.js can handle RSC/server actions.
-  if (isApi) return NextResponse.next()
-  return isGetLike ? intlMiddleware(req) : NextResponse.next()
+  if (isApi) {
+    const r = NextResponse.next()
+    r.headers.set(TRACE_HEADER, traceId)
+    return r
+  }
+  if (isGetLike) {
+    const r = intlMiddleware(req)
+    r.headers.set(TRACE_HEADER, traceId)
+    return r
+  }
+  const r = NextResponse.next()
+  r.headers.set(TRACE_HEADER, traceId)
+  return r
 })
 
 // Security configuration handled centrally; no per-middleware overrides here.

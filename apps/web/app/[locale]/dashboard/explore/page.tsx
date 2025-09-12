@@ -26,8 +26,9 @@ import {
 } from '@elevate/ui'
 import { FormField, LoadingSpinner, FileUpload, FileList } from '@elevate/ui/blocks'
 import { useEducatorGuard } from '@/hooks/useEducatorGuard'
+import { CSRF_TOKEN_HEADER } from '@elevate/security/constants'
+import { safeJsonParse } from '@/lib/utils/safe-json'
 
-const CSRF_TOKEN_HEADER = 'X-CSRF-Token'
 
 const aiToolOptions = [
   { value: 'ChatGPT', label: 'ChatGPT' },
@@ -58,8 +59,11 @@ export default function ExploreFormPage() {
           form.append('activityCode', EXPLORE)
           const resp = await fetch('/api/files/upload', { method: 'POST', body: form })
           if (!resp.ok) throw new Error('Upload failed')
-          const result = (await resp.json()) as { data?: { path: string; hash: string } }
-          const data = result?.data
+          const text = await resp.text()
+          type UploadResp = { data?: { path: string; hash: string } }
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          const parsed: UploadResp | undefined = safeJsonParse<UploadResp>(text)
+          const { data } = (parsed ?? {}) as UploadResp
           if (!data) throw new Error('Malformed upload response')
           return { file, path: data.path, hash: data.hash }
         } catch (error) {
@@ -120,8 +124,11 @@ export default function ExploreFormPage() {
       }
 
       const tokenRes = await fetch('/api/csrf-token')
-      const tokenJson = (await tokenRes.json().catch(() => ({}))) as { data?: { token?: string } }
-      const token = tokenJson?.data?.token
+      const tokenText = await tokenRes.text().catch(() => '')
+      type TokenResp = { data?: { token?: string } }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const parsedToken: TokenResp | undefined = safeJsonParse<TokenResp>(tokenText)
+      const token = ((parsedToken ?? {}) as TokenResp).data?.token
       const resp = await fetch('/api/submissions', {
         method: 'POST',
         headers: { 'content-type': 'application/json', [CSRF_TOKEN_HEADER]: String(token || '') },

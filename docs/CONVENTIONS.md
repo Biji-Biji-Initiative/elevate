@@ -38,3 +38,6 @@ Examples
   if (role !== 'ALL') params = { ...params, role }
   // Call service with params
 
+Testing
+
+- Prefer Response.text + JSON.parse in tests. Use `apps/web/tests/test-utils.ts#readJson` to avoid `res.json()` throwing when handlers sometimes return non-JSON during errors.

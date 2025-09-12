@@ -6,6 +6,8 @@ import { useAuth } from '@clerk/nextjs'
 
 import { Button, Card, Alert, Input, Label } from '@elevate/ui'
 import { LoadingSpinner } from '@elevate/ui/blocks'
+import { safeJsonParse } from '@/lib/utils/safe-json'
+import { buildQueryString } from '@/lib/utils/query'
 
 export default function ProfilePage() {
   const { isLoaded, userId } = useAuth()
@@ -25,10 +27,12 @@ export default function ProfilePage() {
       try {
         const res = await fetch('/api/profile/me')
         if (res.ok) {
-          const json: unknown = await res.json()
-          const data = (json && typeof json === 'object' && 'data' in json)
-            ? (json as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; school?: string | null; region?: string | null } }).data
-            : undefined
+          const text = await res.text()
+          type MeData = { userType?: 'EDUCATOR' | 'STUDENT'; school?: string | null; region?: string | null }
+          type MeResp = { data?: MeData }
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+          const parsed: MeResp | undefined = safeJsonParse<MeResp>(text)
+          const data = parsed?.data
           const ut = (data?.userType ?? null) as 'EDUCATOR' | 'STUDENT' | null
           setUserType(ut)
           setSchool(data?.school || '')
@@ -57,12 +61,14 @@ export default function ProfilePage() {
         try {
           setLoadingSuggestions(true)
           setLastQuery(q)
-          const res = await fetch(`/api/schools?q=${encodeURIComponent(q)}&limit=10`)
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          const res = await fetch(`/api/schools?${buildQueryString({ q, limit: 10 })}`)
           if (res.ok) {
-            const json: unknown = await res.json()
-            const data = (json && typeof json === 'object' && 'data' in json)
-              ? (json as { data?: Array<{ name: string; city?: string | null; province?: string | null }> }).data
-              : []
+            const text = await res.text()
+            type SchoolsResp = { data?: Array<{ name: string; city?: string | null; province?: string | null }> }
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+            const parsed: SchoolsResp | undefined = safeJsonParse<SchoolsResp>(text)
+            const data = parsed?.data ?? []
             setSuggestions(Array.isArray(data) ? data : [])
             setShowSuggestions(true)
           }

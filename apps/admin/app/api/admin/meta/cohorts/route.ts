@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
-import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs'
@@ -23,9 +23,9 @@ export async function GET(request: NextRequest) {
 
       const cohorts = rows.map((r) => r.cohort).filter((c): c is string => !!c)
 
-      return createSuccessResponse({ cohorts })
+      return toSuccessResponse({ cohorts })
     } catch (error) {
-      return createErrorResponse(error, 500)
+      return toErrorResponse(error)
     }
   })
 }

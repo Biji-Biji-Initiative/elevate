@@ -65,7 +65,10 @@ describe('GET /api/stats (Option B parity)', () => {
     const { GET } = await import('../app/api/stats/route')
     const res = await GET(req)
     expect(res.status).toBe(200)
-    const body = await readJson<{ success?: boolean; data?: any }>(res)
+    const body = await readJson<{
+      success?: boolean
+      data?: { counters?: Record<string, number> }
+    }>(res)
     expect(body?.success).toBe(true)
     expect(body?.data?.counters).toBeTruthy()
     const c = body.data.counters

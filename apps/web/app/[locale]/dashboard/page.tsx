@@ -12,6 +12,7 @@ import { getProfilePath, type SafeDashboardData } from '@elevate/types'
 import { Button, Card, Alert, AlertTitle, AlertDescription } from '@elevate/ui'
 import { LoadingSpinner } from '@elevate/ui/blocks'
 import { useCurrentLocale } from '@elevate/ui/next'
+import { safeJsonParse } from '@/lib/utils/safe-json'
 
 // Use public API for client-side fetch
 
@@ -60,20 +61,28 @@ export default function DashboardPage() {
       setLoading(true)
       const res = await fetch('/api/dashboard')
       if (!res.ok) throw new Error('Failed to load dashboard')
-      const body = (await res.json()) as { data?: DashboardData }
-      const result = { data: body.data as DashboardData }
+      const text = await res.text()
+      type DashResp = { data?: DashboardData }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+      const parsedDash: DashResp | undefined = safeJsonParse<DashResp>(text)
+      const { data: dashData } = (parsedDash ?? {}) as DashResp
+      const result = { data: (dashData ?? null) as DashboardData }
       // Post sign-in role check: redirect to onboarding if not confirmed
       try {
         const meRes = await fetch('/api/profile/me')
         if (meRes.ok) {
-          const me = (await meRes.json()) as { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
+          const text2 = await meRes.text()
+          type MeResp = { data?: { userType?: 'EDUCATOR' | 'STUDENT'; userTypeConfirmed?: boolean } }
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+          const parsedMe: MeResp | undefined = safeJsonParse<MeResp>(text2)
+          const { data: me } = (parsedMe ?? {}) as MeResp
           // Always send Students to the info page, even if unconfirmed
-          if (me?.data?.userType === 'STUDENT') {
+          if (me?.userType === 'STUDENT') {
             router.push(withLocale('/educators-only'))
             return
           }
           // Educators without confirmation go to onboarding
-          if (me?.data?.userTypeConfirmed === false) {
+          if (me?.userTypeConfirmed === false) {
             router.push(withLocale('/onboarding/user-type'))
             return
           }

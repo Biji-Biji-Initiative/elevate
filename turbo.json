@@ -150,5 +150,7 @@
     // Admin analytics configuration
     "ANALYTICS_POINTS_BUCKETS",
     "ANALYTICS_POINTS_QUANTILES"
+    ,
+    "NEXT_USE_LOCAL_FONTS"
   ]
 }

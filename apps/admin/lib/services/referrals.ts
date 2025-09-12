@@ -2,10 +2,14 @@
 import 'server-only'
 
 import type { ReferralsQuery } from '@/lib/server/referrals-service'
+import { listReferralsService } from '@/lib/server/referrals-service'
 
-export async function listReferrals(params: ReferralsQuery) {
-  const { listReferralsService } = await import('@/lib/server/referrals-service')
-  return listReferralsService(params)
+export type ReferralsPagination = { total: number; limit: number; offset: number; pages: number }
+
+export async function listReferrals(params: ReferralsQuery): Promise<{ referrals: ReferralRow[]; pagination: ReferralsPagination }> {
+  const svc = listReferralsService as unknown as (p: ReferralsQuery) => Promise<{ referrals: ReferralRow[]; pagination: ReferralsPagination }>
+  const out = await svc(params)
+  return out
 }
 
 export type ReferralRow = {

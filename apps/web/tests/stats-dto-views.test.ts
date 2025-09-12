@@ -60,7 +60,10 @@ describe('GET /api/stats (views path)', () => {
     const mod = await import('../app/api/stats/route')
     const res = await mod.GET(req)
     expect(res.status).toBe(200)
-    const body = await readJson<{ success?: boolean; data?: any }>(res)
+    const body = await readJson<{
+      success?: boolean
+      data?: { totalEducators?: number; studentsImpacted?: number; byStage?: { learn?: { total?: number } } }
+    }>(res)
     expect(body?.success).toBe(true)
     expect(body?.data?.totalEducators).toBe(10)
     expect(body?.data?.studentsImpacted).toBe(100)
