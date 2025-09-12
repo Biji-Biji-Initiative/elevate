@@ -325,9 +325,17 @@ export function validateClerkConfig(): void {
  * Validate Supabase configuration
  */
 export function validateSupabaseConfig(): void {
-  const supabaseUrl = getRequiredUrl('NEXT_PUBLIC_SUPABASE_URL')
-  getRequiredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', isValidJWT)
-  getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY', isValidJWT)
+  // Support new naming (SUPABASE_URL, SUPABASE_PUBLIC_KEY, SUPABASE_SECRET_KEY)
+  const supabaseUrl =
+    getOptionalEnv('NEXT_PUBLIC_SUPABASE_URL') || getRequiredUrl('SUPABASE_URL')
+
+  const publicKey =
+    getOptionalEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY') ||
+    getRequiredEnv('SUPABASE_PUBLIC_KEY', isValidJWT)
+
+  const secretKey =
+    getOptionalEnv('SUPABASE_SERVICE_ROLE_KEY') ||
+    getRequiredEnv('SUPABASE_SECRET_KEY', isValidJWT)
 
   // Allow localhost Supabase URL in development; enforce hosted URL in production
   const isHostedSupabase = /^https:\/\/[a-z0-9]+\.supabase\.co$/.test(
@@ -338,7 +346,7 @@ export function validateSupabaseConfig(): void {
   if (isProduction()) {
     if (!isHostedSupabase) {
       throw new InvalidEnvironmentVariableError(
-        'NEXT_PUBLIC_SUPABASE_URL',
+        'SUPABASE_URL',
         'hosted Supabase project URL in production (https://project.supabase.co)',
         supabaseUrl,
       )
@@ -346,7 +354,7 @@ export function validateSupabaseConfig(): void {
   } else {
     if (!isHostedSupabase && !isLocalSupabase) {
       throw new InvalidEnvironmentVariableError(
-        'NEXT_PUBLIC_SUPABASE_URL',
+        'SUPABASE_URL',
         'valid Supabase URL (https://project.supabase.co) or http://localhost:<port> in development',
         supabaseUrl,
       )

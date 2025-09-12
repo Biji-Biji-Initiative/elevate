@@ -439,8 +439,20 @@ class EnvironmentValidator {
       return this.generateReport();
     }
 
-    // Step 2: Load environment variables
-    this.loadEnvironment();
+  // Step 2: Load environment variables
+  this.loadEnvironment();
+
+  // Step 2.1: Normalize Supabase variable names (support new public/secret naming)
+  // Prefer new names if provided; backfill legacy names for downstream consumers
+  if (process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.SUPABASE_URL;
+  }
+  if (process.env.SUPABASE_PUBLIC_KEY && !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.SUPABASE_PUBLIC_KEY;
+  }
+  if (process.env.SUPABASE_SECRET_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY;
+  }
 
     // Step 3: Validate all variables
     const variablesValid = this.validateAllVariables();
