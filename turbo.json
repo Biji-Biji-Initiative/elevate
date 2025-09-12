@@ -36,7 +36,6 @@
       "dependsOn": ["^build", "build:js"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
       "cache": true,
-      "persistent": true,
       "inputs": [
         "src/**/*",
         "public/**/*",
