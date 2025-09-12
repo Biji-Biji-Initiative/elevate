@@ -113,7 +113,7 @@
     "ui:dev": "pnpm -F @elevate/ui build --watch",
     "ui:lint": "pnpm -F @elevate/ui lint",
     "ui:type-check": "pnpm -F @elevate/ui type-check",
-    "verify:exports": "node scripts/validate-exports.mjs", 
+    "verify:exports": "node scripts/validate-exports.mjs",
     "verify:build-health": "node scripts/verify-build-health.mjs",
     "verify:consumer": "pnpm -C fixtures/consumer-node run test && pnpm -C fixtures/consumer-next15 run type-check && pnpm -C fixtures/consumer-next15 run build",
     "verify:secrets": "node scripts/scan-secrets.js",
@@ -153,10 +153,9 @@
     "prerelease:exit": "changeset pre exit"
   },
   "devDependencies": {
-    "yaml": "^2.8.0",
-    "@elevate/app-services": "workspace:*",
     "@asteasolutions/zod-to-openapi": "^7.3.4",
     "@changesets/cli": "^2.29.6",
+    "@elevate/app-services": "workspace:*",
     "@eslint/js": "^9.34.0",
     "@microsoft/api-extractor": "^7.45.1",
     "@neshca/cache-handler": "^1.9.0",
@@ -193,6 +192,7 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
     "webpack-bundle-analyzer": "^4.10.2",
+    "yaml": "^2.8.0",
     "zod": "^3.25.76"
   },
   "lint-staged": {
