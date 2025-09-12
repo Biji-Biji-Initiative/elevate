@@ -50,7 +50,8 @@ export interface SecurityHeaders {
 export function generateNonce(): string {
   // Prefer Node crypto for tests that stub randomBytes; fallback to Web Crypto
   try {
-    // @ts-expect-error - node:crypto may not be available in edge
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - node:crypto may not be available in edge
     const nodeCrypto: typeof import('node:crypto') | undefined = (globalThis as any).require
       ? (globalThis as any).require('node:crypto')
       : undefined
@@ -62,7 +63,8 @@ export function generateNonce(): string {
   }
   const array = new Uint8Array(16)
   // Web Crypto API
-  // @ts-expect-error - web crypto exists in modern runtimes
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore - web crypto exists in modern runtimes
   (globalThis.crypto as Crypto).getRandomValues(array)
   // Convert to base64
   if (typeof Buffer !== 'undefined') {
