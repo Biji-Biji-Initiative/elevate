@@ -97,6 +97,29 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: 🔎 Validate production env schema (patterns only)
+        env:
+          NODE_ENV: production
+          DATABASE_URL: postgresql://user:pass@db.example.com:5432/app
+          DIRECT_URL: postgresql://user:pass@db.example.com:5432/app
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_abcdefghijklmnopqrstuvwxyz1234
+          CLERK_SECRET_KEY: sk_test_abcdefghijklmnopqrstuvwxyz1234
+          NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+          NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+          NEXT_PUBLIC_SUPABASE_URL: https://exampleproj.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJleGFtcGxlIn0.signature
+          SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXJ2aWNlIjoicm9sZSJ9.signature
+          NEXT_PUBLIC_SITE_URL: https://example.org
+          KAJABI_WEBHOOK_SECRET: whsec_abcdefghijklmnopqrstuvwxyz1234
+          KAJABI_API_KEY: ka_exampleapikey123456
+          KAJABI_CLIENT_SECRET: cs_exampleclientsecret1234
+          KAJABI_SITE: academy.mereka.my
+          KAJABI_BASE_URL: https://academy.mereka.my/api
+          KAJABI_OFFER_ID: r8LNCZ3f
+          KAJABI_OFFER_NAME: Elevate Offer
+          SENTRY_DSN: https://abc123@def456.ingest.sentry.io/789
+        run: pnpm run env:validate:prod -- --ci --json
+
       - name: 🔒 Security scan - secrets
         run: pnpm run verify:secrets
 

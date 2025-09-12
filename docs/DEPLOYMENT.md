@@ -275,7 +275,7 @@ GET https://<your-web-domain>/api/slo
 Authorization: Bearer <INTERNAL_METRICS_TOKEN>
 ```
 
-### Root `vercel.json` (Web App)
+### Root `vercel-web.json` (Web App)
 
 ```json
 {
@@ -283,38 +283,32 @@ Authorization: Bearer <INTERNAL_METRICS_TOKEN>
   "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
-  "functions": {
-    "apps/web/app/api/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
+  "crons": [
+    { "path": "/api/cron/refresh-leaderboards", "schedule": "*/15 * * * *" },
+    { "path": "/api/cron/enforce-retention", "schedule": "0 2 * * *" }
+  ],
   "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    }
+    { "source": "/api/:path*", "destination": "/api/:path*" }
+  ],
+  "headers": [
+    { "source": "/api/(.*)", "headers": [ { "key": "X-App-Name", "value": "elevate-web" } ] }
   ]
 }
 ```
 
-### `apps/admin/vercel.json` (Admin App)
+### Root `vercel-admin.json` (Admin App)
 
 ```json
 {
-  "buildCommand": "cd ../.. && pnpm turbo run build --filter=elevate-admin",
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm db:generate",
-  "outputDirectory": ".next",
+  "buildCommand": "pnpm turbo run build --filter=elevate-admin",
+  "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
+  "outputDirectory": "apps/admin/.next",
   "framework": "nextjs",
-  "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    }
+    { "source": "/api/:path*", "destination": "/api/:path*" }
+  ],
+  "headers": [
+    { "source": "/api/(.*)", "headers": [ { "key": "X-App-Name", "value": "elevate-admin" } ] }
   ]
 }
 ```
@@ -346,6 +340,21 @@ Authorization: Bearer <INTERNAL_METRICS_TOKEN>
 - **Integrations**: Mock/test endpoints
 
 ## Monitoring and Troubleshooting
+
+### Runtime Env Checklist
+
+Set these variables in Vercel Project Settings before production deploys. Values below are examples; use your real secrets.
+
+- Database: `DATABASE_URL`, `DIRECT_URL`
+- Clerk: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, `NEXT_PUBLIC_CLERK_SIGN_UP_URL`, `CLERK_WEBHOOK_SECRET`
+- Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- Kajabi: `KAJABI_WEBHOOK_SECRET`, `KAJABI_API_KEY`, `KAJABI_CLIENT_SECRET`, `KAJABI_SITE`, `KAJABI_BASE_URL` (optional), `KAJABI_OFFER_ID`, `KAJABI_OFFER_NAME`
+- App URLs: `NEXT_PUBLIC_SITE_URL`
+- Observability (optional): `SENTRY_DSN`
+
+Validation:
+- Locally: `pnpm -C elevate env:validate:prod`
+- CI: see Monorepo CI workflow step “Validate production env schema”.
 
 ### Deployment Status
 
