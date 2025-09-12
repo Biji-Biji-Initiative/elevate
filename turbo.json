@@ -33,7 +33,7 @@
       "inputs": ["src/**/*", "tsup.config.ts", "package.json"]
     },
     "build": {
-      "dependsOn": ["build:js"],
+      "dependsOn": ["^build", "build:js"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
       "cache": true,
       "persistent": true,
