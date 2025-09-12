@@ -86,7 +86,7 @@ async function runSetup() {
     console.log('🎉 Setup completed successfully!');
     console.log('\nNext steps:');
     console.log('1. cd apps/web && pnpm dev  # Start the web application');
-    console.log('2. Visit http://localhost:5000 in your browser');
+    console.log('2. Visit http://localhost:3000 in your browser');
     console.log('\n💡 For troubleshooting, see: TROUBLESHOOTING.md');
   } else {
     console.log('❌ Setup failed with the following issues:\n');
