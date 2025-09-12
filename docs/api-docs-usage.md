@@ -1,4 +1,4 @@
-API Docs in Web App
+## API Docs in Web App
 
 Overview
 
@@ -9,6 +9,7 @@ Overview
 How it works
 
 - Prebuild hook (`apps/web/package.json`):
+
   - Runs `node ../../scripts/emit-openapi-json.mjs` to emit the OpenAPI JSON.
   - The script imports `getOpenApiSpec` from `@elevate/openapi` (workspace package) and writes the JSON to `apps/web/public/openapi.json`.
 
@@ -24,8 +25,9 @@ Enable docs locally
    - `pnpm -C elevate -F web build`
    - `pnpm -C elevate -F web start`
 3. Visit `/docs` to view the API.
-  - `/api/docs` redirects to `/openapi.json`.
-  - `/docs.html` is a simple static viewer alternative.
+
+- `/api/docs` redirects to `/openapi.json`.
+- `/docs.html` is a simple static viewer alternative.
 
 Notes
 

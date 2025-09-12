@@ -1,43 +1,4 @@
--- Migration 010: Add Critical Unique Indexes for Materialized Views
--- These unique indexes are essential for data integrity and performance
-
--- =============================================================================
--- MATERIALIZED VIEW UNIQUE CONSTRAINTS  
--- =============================================================================
-
--- leaderboard_totals: Each user should appear only once in the all-time leaderboard
--- This index ensures data integrity and enables efficient user lookups
-CREATE UNIQUE INDEX IF NOT EXISTS idx_leaderboard_totals_user_unique
-ON leaderboard_totals(user_id);
-
--- leaderboard_30d: Each user should appear only once in the 30-day leaderboard
--- This index ensures data integrity and enables efficient user lookups  
-CREATE UNIQUE INDEX IF NOT EXISTS idx_leaderboard_30d_user_unique
-ON leaderboard_30d(user_id);
-
--- activity_metrics: Each activity should have only one metrics record
--- This index ensures data integrity for activity-specific statistics
-CREATE UNIQUE INDEX IF NOT EXISTS idx_activity_metrics_code_unique
-ON activity_metrics(code);
-
--- cohort_metrics: Each cohort should have only one metrics record
--- This index ensures data integrity for cohort performance statistics
-CREATE UNIQUE INDEX IF NOT EXISTS idx_cohort_metrics_cohort_unique
-ON cohort_metrics(cohort);
-
--- school_metrics: Each school should have only one metrics record  
--- This index ensures data integrity for school performance statistics
-CREATE UNIQUE INDEX IF NOT EXISTS idx_school_metrics_school_unique
-ON school_metrics(school);
-
--- time_series_metrics: Each (date, activity_code) combination should be unique
--- This index ensures data integrity for daily metrics and prevents duplicates
-CREATE UNIQUE INDEX IF NOT EXISTS idx_time_series_metrics_date_activity_unique
-ON time_series_metrics(date, activity_code);
-
--- =============================================================================
--- ADDITIONAL PERFORMANCE INDEXES FOR MATERIALIZED VIEWS
--- =============================================================================
+========================================================================
 
 -- leaderboard_totals performance optimizations
 CREATE INDEX IF NOT EXISTS idx_leaderboard_totals_points_desc
@@ -150,3 +111,4 @@ BEGIN
     RAISE NOTICE '================================================================================';
     RAISE NOTICE '';
 END $$;
+

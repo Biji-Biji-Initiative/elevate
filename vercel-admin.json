@@ -2,9 +2,9 @@
   "name": "elevate-admin",
   "buildCommand": "pnpm turbo run build --filter=elevate-admin",
   "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
-  "outputDirectory": ".next",
+  "outputDirectory": "apps/admin/.next",
   "framework": "nextjs",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD .",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD apps/admin",
   "rewrites": [
     {
       "source": "/api/:path*",

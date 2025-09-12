@@ -10,10 +10,9 @@ import {
   withApiErrorHandling,
   type ApiContext,
 } from '@elevate/http'
-import {
-  recordApiAvailability,
-  recordApiResponseTime,
-} from '@elevate/logging/slo-monitor'
+import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { withRateLimit, publicApiRateLimiter } from '@elevate/security'
 import { LeaderboardQuerySchema } from '@elevate/types'
 import {
@@ -27,6 +26,8 @@ export const GET = withApiErrorHandling(
   async (request: NextRequest, _context: ApiContext): Promise<NextResponse> => {
     return withRateLimit(request, publicApiRateLimiter, async () => {
       const start = Date.now()
+      const baseLogger = await getSafeServerLogger('leaderboard')
+      const logger = createRequestLogger(baseLogger, request)
       try {
         const { searchParams } = new URL(request.url)
         const parsed = LeaderboardQuerySchema.safeParse(
@@ -225,6 +226,7 @@ export const GET = withApiErrorHandling(
         )
         return response
       } catch (error) {
+        logger.error('Leaderboard fetch failed', error instanceof Error ? error : new Error(String(error)))
         recordApiAvailability('/api/leaderboard', 'GET', 500)
         recordApiResponseTime(
           '/api/leaderboard',

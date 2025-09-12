@@ -69,6 +69,7 @@
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "jsdom": "^24.0.0",
     "@next/bundle-analyzer": "^15.5.2",
     "@types/node": "^20.14.0",
     "@types/react": "^19.1.12",

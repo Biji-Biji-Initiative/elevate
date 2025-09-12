@@ -19,6 +19,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     await requireRole('admin')
     const start = Date.now()
     const logger = await getSafeServerLogger('admin-referrals-summary')
+    const traceId = request.headers.get('x-trace-id') || undefined
     try {
       const { searchParams } = new URL(request.url)
       const parsed = QuerySchema.safeParse(Object.fromEntries(searchParams))
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       recordApiResponseTime('/api/admin/referrals/summary', 'GET', Date.now() - start, 200)
       return res
     } catch (error) {
-      logger.error('Referrals summary failed', error instanceof Error ? error : new Error(String(error)))
+      logger.error('Referrals summary failed', error instanceof Error ? error : new Error(String(error)), { traceId })
       recordApiAvailability('/api/admin/referrals/summary', 'GET', 500)
       recordApiResponseTime('/api/admin/referrals/summary', 'GET', Date.now() - start, 500)
       return toErrorResponse(error)

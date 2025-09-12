@@ -9,6 +9,7 @@ import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { enrollUserInKajabi } from '@elevate/integrations'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
@@ -28,7 +29,8 @@ const InviteRequestSchema = z
 export async function POST(request: NextRequest): Promise<NextResponse> {
   return withRateLimit(request, adminRateLimiter, async () => {
     await requireRole('admin')
-    const logger = await getSafeServerLogger('admin-kajabi-invite')
+    const baseLogger = await getSafeServerLogger('admin-kajabi-invite')
+    const logger = createRequestLogger(baseLogger, request)
     try {
       const start = Date.now()
       const json = (await request.json()) as unknown
@@ -229,7 +231,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           }
         }
       } catch (e) {
-        logger.warn('Kajabi v1 grant fallback failed', { error: e instanceof Error ? e.message : String(e) })
+        logger.warn('Kajabi v1 grant fallback failed', { error: e instanceof Error ? e.message : String(e), traceId })
       }
 
       const meta: Prisma.InputJsonValue = {
@@ -252,7 +254,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       })
 
       if (!result.success) {
-        logger.warn('Kajabi invite failed', { email, error: result.error })
+        logger.warn('Kajabi invite failed', { email, error: result.error, traceId })
         recordApiAvailability('/api/admin/kajabi/invite', 'POST', 502)
         recordApiResponseTime('/api/admin/kajabi/invite', 'POST', Date.now() - start, 502)
         return toErrorResponse(new AdminError('INTEGRATION_FAILED', result.error || 'Kajabi invite failed'))
@@ -263,6 +265,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         contactId: result.contactId || contactIdResolved,
         withOffer: !!effectiveOfferId,
         offerIdResolved,
+        traceId,
       })
       const res = toSuccessResponse({
         invited: true,
@@ -274,6 +277,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       recordApiResponseTime('/api/admin/kajabi/invite', 'POST', Date.now() - start, 200)
       return res
     } catch (error) {
+      logger.error('Kajabi invite exception', error instanceof Error ? error : new Error(String(error)), { traceId })
       recordApiAvailability('/api/admin/kajabi/invite', 'POST', 500)
       recordApiResponseTime('/api/admin/kajabi/invite', 'POST', 0, 500)
       return toErrorResponse(error)

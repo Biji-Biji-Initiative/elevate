@@ -2,8 +2,9 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
-import { createErrorResponse as createHttpError } from '@elevate/http'
+import { createErrorResponse as createHttpError, TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import {
   parseActivityCode,
@@ -28,7 +29,8 @@ function cell(v: unknown) {
 }
 
 export async function GET(request: NextRequest) {
-  const logger = await getSafeServerLogger('admin-exports')
+  const baseLogger = await getSafeServerLogger('admin-exports')
+  const logger = createRequestLogger(baseLogger, request)
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       const user = await requireRole('admin')
@@ -118,13 +120,11 @@ export async function GET(request: NextRequest) {
         format,
         filename,
         bytes: csvContent.length,
+        traceId,
       })
       return response
     } catch (error) {
-      logger.error(
-        'Admin export failed',
-        error instanceof Error ? error : new Error(String(error)),
-      )
+      logger.error('Admin export failed', error instanceof Error ? error : new Error(String(error)), { traceId })
       return createHttpError(error, 500)
     }
   })

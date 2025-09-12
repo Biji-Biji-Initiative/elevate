@@ -41,6 +41,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 - Do not import deep internals or `dist/` outputs.
 - Keep server-only modules out of client components.
 
+### CSRF constants in client code
+- In client components/pages, import the CSRF header name from `@elevate/security/constants`:
+
+```ts
+import { CSRF_TOKEN_HEADER } from '@elevate/security/constants'
+```
+
+Avoid importing root `@elevate/security` in client code; it includes server-only helpers.
+
 ### Dashboard split (server + client)
 - `[locale]/page.tsx` is now a server component that loads initial analytics and cohorts via `apps/admin/lib/services/*` and renders a client shell.
 - `[locale]/ClientPage.tsx` contains the interactive UI and calls server actions like `lib/actions/analytics.getAnalyticsAction` to fetch on-demand.
@@ -75,3 +84,14 @@ Example (Adding a new admin endpoint):
 4. Optional: add a small mapper unit test under `apps/admin/__tests__`
 
 See also `lib/server/README.md` for more details.
+
+## Local Fonts (Inter, offline-friendly)
+
+To ensure consistent typography without relying on Google Fonts during builds, the Admin app supports local fonts via `next/font/local`.
+
+Steps:
+1. Place the Inter variable font at `apps/admin/app/fonts/Inter-Variable.woff2`
+2. Set `NEXT_USE_LOCAL_FONTS=true` in your env
+3. Build or run dev; the layout uses the local font automatically, with `display: swap`
+
+If not set, the app falls back to the system font stack (still offline-safe).

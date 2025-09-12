@@ -1,0 +1,35 @@
+{
+  "name": "elevate-web",
+  "buildCommand": "pnpm turbo run build --filter=web",
+  "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs",
+  
+  "crons": [
+    {
+      "path": "/api/cron/refresh-leaderboards",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/enforce-retention",
+      "schedule": "0 2 * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "X-App-Name",
+          "value": "elevate-web"
+        }
+      ]
+    }
+  ]
+}

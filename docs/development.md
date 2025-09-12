@@ -41,7 +41,7 @@ This runs both web (`:3000`) and admin (`:3001`) apps with hot reload.
 ### Core Commands (From Actual package.json)
 
 ```bash
-# Development (216 total scripts available)
+# Development (144 total scripts available)
 pnpm dev                    # Complex: env validation + DB sync + start both apps
 pnpm dev:web               # Web app only (port 3000)
 pnpm dev:admin             # Admin app only (port 3001)

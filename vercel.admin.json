@@ -1,25 +1,16 @@
 {
   "name": "elevate-admin",
-  "buildCommand": "cd apps/admin && pnpm build",
+  "buildCommand": "pnpm turbo run build --filter=elevate-admin",
   "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
   "outputDirectory": "apps/admin/.next",
   "framework": "nextjs",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD apps/admin",
   "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    }
+    { "source": "/api/:path*", "destination": "/api/:path*" }
   ],
   "headers": [
     {
       "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "X-App-Name",
-          "value": "elevate-admin"
-        }
-      ]
+      "headers": [ { "key": "X-App-Name", "value": "elevate-admin" } ]
     }
   ]
 }

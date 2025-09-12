@@ -2,6 +2,5 @@
 . "$(dirname "$0")/_/husky.sh"
 
 echo "Running pre-commit checks (lint + type-check)"
-pnpm -C elevate lint:fix
-pnpm -C elevate type-check
-
+pnpm lint:fix
+pnpm type-check

@@ -541,3 +541,16 @@ When adding new features or modifying CSP policies:
 ## License
 
 Private package for MS Elevate LEAPS Tracker project.
+## Client vs Server Imports
+
+This package exposes both server-only helpers (which depend on `next/headers` and `next/server`) and client-safe constants. To maintain clear boundaries and avoid bundling server APIs into client components:
+
+- In client components (files with `"use client"`), only import from subpaths that are client-safe:
+  - `@elevate/security/constants` — provides `CSRF_TOKEN_HEADER`, `CSRF_COOKIE_NAME` for client requests.
+
+- In server route handlers or server components, import from the root or server subpaths:
+  - `@elevate/security` — general helpers like `withRateLimit`, `publicApiRateLimiter`, etc.
+  - `@elevate/security/csrf` — CSRF managers and middleware using `next/headers`.
+  - `@elevate/security/security-middleware` — CSP, headers, and report handlers.
+
+The repo’s ESLint config enforces this boundary: root `@elevate/security` is disallowed in client components, while API routes are permitted to import server-only helpers.

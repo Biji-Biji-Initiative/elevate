@@ -1,6 +1,7 @@
-Admin lib utils
+## Admin lib utils
 
 - param-builder.ts
+
   - mergeOptional(obj, key, value): immutably add a key only when value is defined. Helps satisfy exactOptionalPropertyTypes without unsafe casts.
   - isOneOf(value, options): runtime guard to narrow string unions.
   - nonEmptyString(value): guard for present, non-empty strings.
@@ -30,4 +31,3 @@ Examples
   import { buildQueryString } from '@/lib/utils/query'
   const qs = buildQueryString({ userId: id, cohort: cohort || undefined })
   const href = `/admin/audit?${qs}`
-

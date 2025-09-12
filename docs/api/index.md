@@ -16,15 +16,15 @@ The platform provides REST APIs for both internal use (between web/admin apps an
 
 ### API Endpoints
 
-- **Web App API**: `https://leaps.mereka.org/api/*` (30 routes)
-- **Admin App API**: `https://admin.leaps.mereka.org/api/*` (20 routes)
+- **Web App API**: `https://leaps.mereka.org/api/*` (32 routes)
+- **Admin App API**: `https://admin.leaps.mereka.org/api/*` (19 routes)
 - **OpenAPI Spec**: Available at `/api/openapi.json` on each app
 
-#### Web App Routes (30 total)
+#### Web App Routes (32 total)
 
 Core endpoints include: `/api/health`, `/api/dashboard`, `/api/submissions`, `/api/leaderboard`, `/api/profile/*`, `/api/badges`, `/api/metrics`, `/api/files/*`, `/api/webhooks/clerk`, `/api/kajabi/webhook`, `/api/emails/*`, `/api/cron/*`, and admin performance routes.
 
-#### Admin App Routes (20 total)
+#### Admin App Routes (19 total)
 
 Admin-specific endpoints include: `/api/admin/submissions`, `/api/admin/users`, `/api/admin/badges/*`, `/api/admin/analytics`, `/api/admin/exports`, `/api/admin/kajabi/*`, `/api/admin/meta/*`, and storage management routes.
 

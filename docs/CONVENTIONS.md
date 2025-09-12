@@ -1,22 +1,26 @@
-Code Conventions (Admin & Web)
+## Code Conventions (Admin & Web)
 
 Core patterns
 
 - buildQueryString: Build URL query strings by skipping undefined/null.
+
   - Admin: '@/lib/utils/query'
   - Web: '@/lib/utils/query'
   - Use for all client-side link/query construction, not manual string concat.
 
 - safeJsonParse: Parse fetch responses safely.
+
   - Web: '@/lib/utils/safe-json'
   - Prefer text() then safeJsonParse<T>(text) to avoid throwing JSON.parse.
 
 - exactOptionalPropertyTypes: Avoid adding undefined keys.
+
   - Use mergeOptional (Admin) when building objects conditionally.
   - Include optional fields only when present (conditional object spreads).
 
 - Server services as single source of truth (Admin):
-  - apps/admin/lib/server/* are the domain services.
+
+  - apps/admin/lib/server/\* are the domain services.
   - Actions/SSR helpers call services directly; no intra-app HTTP.
 
 - Next 15 Page props: params/searchParams as Promise in some build workers.

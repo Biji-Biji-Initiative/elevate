@@ -4,8 +4,9 @@ import { type NextRequest } from 'next/server'
 
 import type { Prisma as PrismaNS } from '@elevate/db'
 import { prisma } from '@elevate/db/client'
-import { createErrorResponse, createSuccessResponse } from '@elevate/http'
+import { createErrorResponse, createSuccessResponse, TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { grantBadgesForUser } from '@elevate/logic'
 import {
@@ -52,14 +53,16 @@ function isUniqueConstraintError(
 }
 
 export async function POST(request: NextRequest) {
-  const logger = await getSafeServerLogger('kajabi-webhook')
+  const baseLogger = await getSafeServerLogger('kajabi-webhook')
+  const logger = createRequestLogger(baseLogger, request)
   const start = Date.now()
+  const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
   return withRateLimit(request, webhookRateLimiter, async () => {
     const bodyText = await request.text()
     const allowUnsigned = process.env.ALLOW_UNSIGNED_KAJABI_WEBHOOK === 'true' || process.env.NODE_ENV !== 'production'
     const signedOk = verifySignature(bodyText, request.headers.get('x-kajabi-signature'))
     if (!signedOk && !allowUnsigned) {
-      logger.warn('Invalid webhook signature', { url: request.url })
+      logger.warn('Invalid webhook signature', { url: request.url, traceId })
       recordApiAvailability('/api/kajabi/webhook', 'POST', 401)
       recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 401)
       return createErrorResponse(new Error('Invalid webhook signature'), 401)
@@ -69,7 +72,7 @@ export async function POST(request: NextRequest) {
     try {
       payloadUnknown = JSON.parse(bodyText)
     } catch {
-      logger.warn('Invalid JSON body for Kajabi webhook')
+      logger.warn('Invalid JSON body for Kajabi webhook', { traceId })
       recordApiAvailability('/api/kajabi/webhook', 'POST', 400)
       recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 400)
       return createErrorResponse(new Error('Body must be valid JSON'), 400)
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
         if (!email || !tagName) throw new Error('Missing email or tag name in JSON:API payload')
         payload = { event_type: String(eventType), contact: { id: contactNode?.id || 0, email: String(email) }, tag: { name: String(tagName) } }
       } catch (e) {
-        logger.warn('Invalid Kajabi webhook payload', { issues: base.error?.issues, fallbackError: (e as Error).message })
+        logger.warn('Invalid Kajabi webhook payload', { issues: base.error?.issues, fallbackError: (e as Error).message, traceId })
         recordApiAvailability('/api/kajabi/webhook', 'POST', 400)
         recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 400)
         return createErrorResponse(new Error('Invalid Kajabi webhook payload'), 400)
@@ -110,7 +113,7 @@ export async function POST(request: NextRequest) {
       if (!Number.isNaN(t)) createdAt = t
     }
     if (Number.isNaN(createdAt)) {
-      logger.warn('Kajabi webhook missing created_at')
+      logger.warn('Kajabi webhook missing created_at', { traceId })
       recordApiAvailability('/api/kajabi/webhook', 'POST', 400)
       recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 400)
       return createErrorResponse(new Error('created_at required'), 400)
@@ -121,6 +124,7 @@ export async function POST(request: NextRequest) {
       logger.warn('Kajabi webhook outside allowed window', {
         createdAt,
         replay,
+        traceId,
       })
       recordApiAvailability('/api/kajabi/webhook', 'POST', 400)
       recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 400)
@@ -161,6 +165,7 @@ export async function POST(request: NextRequest) {
             logger.info('Kajabi event deduplicated (create)', {
               eventId,
               tagNorm,
+              traceId,
             })
             const res = createSuccessResponse({ duplicate: true })
             recordApiAvailability('/api/kajabi/webhook', 'POST', 200)
@@ -252,6 +257,7 @@ export async function POST(request: NextRequest) {
             logger.info('Kajabi grant deduplicated', {
               userId: user.id,
               tagNorm,
+              traceId,
             })
             const res = createSuccessResponse({ duplicate: true })
             recordApiAvailability('/api/kajabi/webhook', 'POST', 200)
@@ -288,6 +294,7 @@ export async function POST(request: NextRequest) {
             logger.info('Kajabi points deduplicated', {
               userId: user.id,
               externalEventId,
+              traceId,
             })
             return createSuccessResponse({ duplicate: true })
           }
@@ -312,11 +319,7 @@ export async function POST(request: NextRequest) {
         return res
       })
     } catch (error: unknown) {
-      logger.error(
-        'Error processing Kajabi webhook',
-        error instanceof Error ? error : new Error(String(error)),
-        { eventId, tagNorm, contactId },
-      )
+      logger.error('Error processing Kajabi webhook', error instanceof Error ? error : new Error(String(error)), { eventId, tagNorm, contactId, traceId })
       recordApiAvailability('/api/kajabi/webhook', 'POST', 500)
       recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 500)
       return createErrorResponse(new Error('Internal Server Error'), 500)

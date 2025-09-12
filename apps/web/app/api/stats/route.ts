@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@elevate/db/client'
 import { createErrorResponse, createSuccessResponse } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import {
   recordApiAvailability,
   recordApiResponseTime,
@@ -21,7 +22,8 @@ export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   return withRateLimit(request, publicApiRateLimiter, async () => {
     const start = Date.now()
-    const logger = await getSafeServerLogger('stats')
+    const baseLogger = await getSafeServerLogger('stats')
+    const logger = createRequestLogger(baseLogger, request)
     try {
       // Try optimized materialized views first
       const [platformStats, cohortStats, monthlyStats, amplifyData] =
