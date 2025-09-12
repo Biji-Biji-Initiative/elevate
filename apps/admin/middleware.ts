@@ -13,6 +13,54 @@ import {
 
 import { locales, defaultLocale } from './i18n'
 
+// Dev-only Supabase env guard (warn once at module init; non-fatal)
+(() => {
+  if (process.env.NODE_ENV === 'production') return
+  const missingNew: string[] = []
+  if (!process.env.SUPABASE_URL) missingNew.push('SUPABASE_URL')
+  if (!process.env.SUPABASE_PUBLIC_KEY) missingNew.push('SUPABASE_PUBLIC_KEY')
+  if (!process.env.SUPABASE_SECRET_KEY) missingNew.push('SUPABASE_SECRET_KEY')
+  if (missingNew.length > 0) {
+    console.warn(
+      '[env] Supabase new variable names missing (using legacy if configured):',
+      missingNew.join(', '),
+    )
+  }
+})()
+
+// Environment variable validation for runtime config
+const requiredEnvVars = {
+  // Clerk Auth (critical for admin)
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+  // Database (critical for admin operations)
+  DATABASE_URL: process.env.DATABASE_URL,
+  // Supabase (for file operations)
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE: process.env.SUPABASE_SERVICE_ROLE,
+}
+
+// Log missing env vars on startup (non-fatal in development/preview)
+const missingEnvVars = Object.entries(requiredEnvVars)
+  .filter(([_, value]) => !value)
+  .map(([key]) => key)
+
+if (missingEnvVars.length > 0) {
+  console.warn(
+    `⚠️  Missing required environment variables in admin app middleware:\n${missingEnvVars
+      .map(v => `   - ${v}`)
+      .join('\n')}\n   This may cause runtime failures.`
+  )
+  
+  // In production, these missing vars will likely cause immediate failures
+  if (process.env.NODE_ENV === 'production' && missingEnvVars.some(v => v.includes('CLERK'))) {
+    console.error('❌ Critical: Clerk environment variables are missing. The admin app will fail to initialize.')
+  }
+  if (process.env.NODE_ENV === 'production' && missingEnvVars.includes('DATABASE_URL')) {
+    console.error('❌ Critical: DATABASE_URL is missing. Admin operations will fail.')
+  }
+}
+
 // Create the intl middleware
 const intlMiddleware = createIntlMiddleware({
   locales,
