@@ -1,4 +1,5 @@
 import { type NextRequest, type NextResponse } from 'next/server';
+import { getWebRuntimeConfig } from '@elevate/config/runtime'
 
 import { Prisma } from '@elevate/db';
 import { prisma } from '@elevate/db/client';
@@ -62,8 +63,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     // Verify this is coming from Vercel Cron or authorized request
     const authHeader = request.headers.get('authorization');
-    const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
-    if (authHeader !== expectedAuth) {
+    const { cronSecret } = getWebRuntimeConfig()
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return createErrorResponse(new Error('Unauthorized'), 401)
     }
 

@@ -114,6 +114,26 @@
     "SENTRY_DSN",
     // Admin analytics config
     "ANALYTICS_POINTS_BUCKETS",
-    "ANALYTICS_POINTS_QUANTILES"
+    "ANALYTICS_POINTS_QUANTILES",
+    // Logging config
+    "LOG_LEVEL",
+    "LOG_PRETTY",
+    "LOG_REDACT",
+    "LOG_NAME",
+    // Database logging toggles
+    "DB_LOG_LEVEL",
+    "DB_LOG_QUERY_PARAMS",
+    "DB_LOG_DURATION",
+    "DB_LOG_PERFORMANCE",
+    "DB_MAX_QUERY_LOG_LENGTH",
+    "DB_LOGGING",
+    // Storage / AV scan toggle
+    "AV_SCAN_ENABLED",
+    // Integrations
+    "KAJABI_SITE",
+    // Client flags
+    "NEXT_PUBLIC_ENABLE_API_DOCS",
+    // Admin dev helpers
+    "ADMIN_DEV_BYPASS_USER_IDS"
   ]
 }

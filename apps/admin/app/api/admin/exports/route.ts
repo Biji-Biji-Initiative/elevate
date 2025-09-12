@@ -31,6 +31,7 @@ function cell(v: unknown) {
 export async function GET(request: NextRequest) {
   const baseLogger = await getSafeServerLogger('admin-exports')
   const logger = createRequestLogger(baseLogger, request)
+  const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       const user = await requireRole('admin')
@@ -39,13 +40,13 @@ export async function GET(request: NextRequest) {
         Object.fromEntries(searchParams),
       )
       if (!parsed.success) {
-        return createHttpError(new Error('Invalid export query'), 400)
+        return createHttpError(new Error('Invalid export query'), 400, traceId)
       }
       const { type, format, startDate, endDate, activity, status, cohort } =
         parsed.data
 
       if (format !== 'csv') {
-        return createHttpError(new Error('Only CSV format is supported'), 400)
+        return createHttpError(new Error('Only CSV format is supported'), 400, traceId)
       }
 
       let csvContent = ''
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
           break
 
         default:
-          return createHttpError(new Error('Invalid export type'), 400)
+          return createHttpError(new Error('Invalid export type'), 400, traceId)
       }
 
       // Create audit log
@@ -115,17 +116,17 @@ export async function GET(request: NextRequest) {
           'Content-Disposition': `attachment; filename="${filename}"`,
         },
       })
+      if (traceId) response.headers.set(TRACE_HEADER, traceId)
       logger.info('Generated CSV export', {
         type,
         format,
         filename,
         bytes: csvContent.length,
-        traceId,
       })
       return response
     } catch (error) {
-      logger.error('Admin export failed', error instanceof Error ? error : new Error(String(error)), { traceId })
-      return createHttpError(error, 500)
+      logger.error('Admin export failed', error instanceof Error ? error : new Error(String(error)))
+      return createHttpError(error, 500, traceId)
     }
   })
 }

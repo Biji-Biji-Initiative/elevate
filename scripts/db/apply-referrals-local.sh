@@ -1,16 +1,10 @@
 #!/bin/bash
 
-# Apply referral migrations to local Docker Postgres container
+# Apply referral migrations to the configured local database (Supabase Local or any PostgreSQL reachable via DATABASE_URL)
 # Usage: ./scripts/db/apply-referrals-local.sh
-# Override defaults: CONTAINER_NAME=your_container DB_NAME=your_db DB_USER=your_user ./scripts/db/apply-referrals-local.sh
+# Requires: DATABASE_URL set in environment or .env.local
 
 set -euo pipefail
-
-# Default values (can be overridden via environment)
-CONTAINER_NAME=${CONTAINER_NAME:-elevate-postgres}
-DB_NAME=${DB_NAME:-elevate_leaps}
-DB_USER=${DB_USER:-postgres}
-DB_PASSWORD=${DB_PASSWORD:-postgres}
 
 # Colors for output
 RED='\033[0;31m'
@@ -18,53 +12,31 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}🚀 Applying referral migrations to local Docker Postgres${NC}"
-echo -e "${YELLOW}Container: ${CONTAINER_NAME}${NC}"
-echo -e "${YELLOW}Database: ${DB_NAME}${NC}"
-echo -e "${YELLOW}User: ${DB_USER}${NC}"
-echo ""
+echo -e "${GREEN}🚀 Applying referral migrations to local database${NC}"
 
-# Check if Docker is running
-if ! docker info >/dev/null 2>&1; then
-    echo -e "${RED}❌ Docker is not running. Please start Docker and try again.${NC}"
-    exit 1
+# Ensure DATABASE_URL is set
+if [ -z "${DATABASE_URL:-}" ]; then
+  if [ -f ".env.local" ]; then
+    export $(grep -v '^#' .env.local | xargs)
+  fi
 fi
 
-# Check if container exists
-if ! docker ps -a --format "table {{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
-    echo -e "${RED}❌ Container '${CONTAINER_NAME}' not found.${NC}"
-    echo -e "${YELLOW}💡 Make sure you're using the correct container name or start your Docker Compose setup.${NC}"
-    exit 1
+if [ -z "${DATABASE_URL:-}" ]; then
+  echo -e "${RED}❌ DATABASE_URL is not set. Set it or create .env.local${NC}"
+  exit 1
 fi
 
-# Start container if not running
-if ! docker ps --format "table {{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
-    echo -e "${YELLOW}🔄 Starting container '${CONTAINER_NAME}'...${NC}"
-    docker start "${CONTAINER_NAME}" >/dev/null
-    sleep 2
+# Quick connectivity check
+if ! pnpm exec prisma db execute --stdin --schema=packages/db/schema.prisma <<< "SELECT 1;" >/dev/null 2>&1; then
+  echo -e "${RED}❌ Cannot connect to database at DATABASE_URL${NC}"
+  echo -e "${YELLOW}💡 For Supabase Local: run 'supabase start' and ensure port 54322${NC}"
+  exit 1
 fi
 
-# Wait for container to be ready
-echo -e "${YELLOW}⏳ Waiting for database to be ready...${NC}"
-for i in {1..30}; do
-    if docker exec "${CONTAINER_NAME}" pg_isready -U "${DB_USER}" -d "${DB_NAME}" >/dev/null 2>&1; then
-        break
-    fi
-    if [ $i -eq 30 ]; then
-        echo -e "${RED}❌ Database not ready after 30 seconds${NC}"
-        exit 1
-    fi
-    sleep 1
-done
-
-echo -e "${GREEN}✅ Database is ready${NC}"
-
-# Apply migrations
 echo -e "${YELLOW}📝 Applying referral migrations...${NC}"
 
-# Migration 1: Referral support
 echo -e "${YELLOW}  → Applying referral support migration...${NC}"
-docker exec -i "${CONTAINER_NAME}" psql -U "${DB_USER}" -d "${DB_NAME}" << 'EOF'
+pnpm exec prisma db execute --stdin --schema=packages/db/schema.prisma << 'EOF'
 -- Referral support: user columns and events table
 
 -- Add referral columns to users
@@ -102,9 +74,8 @@ else
     exit 1
 fi
 
-# Migration 2: User type confirmation
 echo -e "${YELLOW}  → Applying user type confirmation migration...${NC}"
-docker exec -i "${CONTAINER_NAME}" psql -U "${DB_USER}" -d "${DB_NAME}" << 'EOF'
+pnpm exec prisma db execute --stdin --schema=packages/db/schema.prisma << 'EOF'
 -- Track explicit confirmation of user_type
 DO $$ BEGIN
   ALTER TABLE users ADD COLUMN IF NOT EXISTS user_type_confirmed boolean NOT NULL DEFAULT false;

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { TRACE_HEADER } from '@elevate/http'
 
 export const runtime = 'nodejs'
 
@@ -83,7 +84,7 @@ export async function GET(request: NextRequest) {
       offset += pageSize
     }
 
-    return new NextResponse(out.join('\n'), {
+    const res = new NextResponse(out.join('\n'), {
       status: 200,
       headers: new Headers({
         'Content-Type': 'text/csv; charset=utf-8',
@@ -91,5 +92,8 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'no-store',
       }),
     })
+    const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+    if (traceId) res.headers.set(TRACE_HEADER, traceId)
+    return res
   })
 }

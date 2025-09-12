@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { withRateLimit, adminRateLimiter, getRateLimitStats, resetRateLimitStats } from '@elevate/security'
 
 export const runtime = 'nodejs';
@@ -14,6 +15,9 @@ export async function GET(request: NextRequest) {
     const reset = url.searchParams.get('reset') === 'true'
     const stats = getRateLimitStats()
     if (reset) resetRateLimitStats()
-    return toSuccessResponse({ stats, reset })
+    const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+    const res = toSuccessResponse({ stats, reset })
+    if (traceId) res.headers.set(TRACE_HEADER, traceId)
+    return res
   })
 }

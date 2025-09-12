@@ -39,6 +39,7 @@ export interface TestPointsEntry {
   delta_points: number
   external_source?: string | null
   external_event_id?: string | null
+  event_time?: Date
 }
 
 // Indonesian context data
@@ -291,6 +292,7 @@ export class DatabaseFixtures {
       delta_points: defaultPoints,
       external_source: null,
       external_event_id: null,
+      event_time: overrides.event_time ?? new Date(),
       ...overrides,
     }
   }
@@ -388,6 +390,7 @@ export class DatabaseFixtures {
         delta_points: entry.delta_points,
         external_source: entry.external_source ?? null,
         external_event_id: entry.external_event_id ?? null,
+        event_time: entry.event_time ?? new Date(),
       },
     })
 
@@ -607,18 +610,8 @@ export class DatabaseFixtures {
       })
     } catch { /* noop */ }
     try {
-      // Kajabi event test cleanup: filter by known string fields that may contain test markers
-      await this.prisma.kajabiEvent.deleteMany({
-        where: {
-          OR: [
-            { email: { contains: 'test-' } },
-            { event_id: { contains: 'test-' } },
-            { contact_id: { contains: 'test-' } },
-            { tag_name_raw: { contains: 'test-' } },
-            { tag_name_norm: { contains: 'test-' } },
-          ],
-        },
-      })
+      // Clean all Kajabi events to avoid test pollution across runs
+      await this.prisma.kajabiEvent.deleteMany({})
     } catch { /* noop */ }
     try {
       await this.prisma.user.deleteMany({

@@ -5,6 +5,7 @@ import { createSuccessResponse, createErrorResponse } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { enforceUserRetention } from '@elevate/storage'
+import { getWebRuntimeConfig } from '@elevate/config/runtime'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300
@@ -17,8 +18,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // Auth via cron secret
   const authHeader = request.headers.get('authorization')
-  const expectedAuth = `Bearer ${process.env.CRON_SECRET}`
-  if (authHeader !== expectedAuth) {
+  const { cronSecret } = getWebRuntimeConfig()
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     return createErrorResponse(new Error('Unauthorized'), 401)
   }
 

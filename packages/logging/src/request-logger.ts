@@ -33,7 +33,8 @@ export function bindTrace(logger: SafeLogger, traceId?: string): SafeLogger {
   }
   // Preserve optional forRequestWithHeaders if present
   if (typeof logger.forRequestWithHeaders === 'function') {
-    wrapped.forRequestWithHeaders = (request: Request) => logger.forRequestWithHeaders!(request)
+    const f = logger.forRequestWithHeaders as NonNullable<SafeLogger['forRequestWithHeaders']>
+    wrapped.forRequestWithHeaders = (request: Request) => f(request)
   }
   return wrapped as SafeLogger
 }
@@ -61,4 +62,3 @@ export function createRequestLogger(logger: SafeLogger, request: Request): SafeL
   const traceId = getTraceIdFromRequest(request)
   return bindTrace(logger, traceId)
 }
-

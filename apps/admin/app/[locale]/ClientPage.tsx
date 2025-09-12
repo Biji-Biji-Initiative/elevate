@@ -121,8 +121,8 @@ export default function ClientPage({ initialAnalytics, initialCohorts }: Props) 
         const results = await Promise.allSettled(months.map((m) => fetchReferralsSummaryAction(m)))
         const data = results.map((r, idx) => (
           r.status === 'fulfilled' && r.value
-            ? { month: months[idx], total: r.value.total || 0, points: r.value.pointsAwarded || 0 }
-            : { month: months[idx], total: 0, points: 0 }
+            ? { month: months[idx] ?? '', total: r.value.total || 0, points: r.value.pointsAwarded || 0 }
+            : { month: months[idx] ?? '', total: 0, points: 0 }
         ))
         setReferralsTrend(data)
       } catch {

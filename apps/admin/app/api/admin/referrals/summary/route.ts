@@ -7,6 +7,8 @@ import { prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
+import { TRACE_HEADER } from '@elevate/http'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
@@ -18,7 +20,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return withRateLimit(request, adminRateLimiter, async () => {
     await requireRole('admin')
     const start = Date.now()
-    const logger = await getSafeServerLogger('admin-referrals-summary')
+    const baseLogger = await getSafeServerLogger('admin-referrals-summary')
+    const logger = createRequestLogger(baseLogger, request)
     const traceId = request.headers.get('x-trace-id') || undefined
     try {
       const { searchParams } = new URL(request.url)
@@ -74,14 +77,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         pointsAwarded,
         topReferrers,
       })
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/referrals/summary', 'GET', 200)
       recordApiResponseTime('/api/admin/referrals/summary', 'GET', Date.now() - start, 200)
       return res
     } catch (error) {
-      logger.error('Referrals summary failed', error instanceof Error ? error : new Error(String(error)), { traceId })
+      logger.error('Referrals summary failed', error instanceof Error ? error : new Error(String(error)))
       recordApiAvailability('/api/admin/referrals/summary', 'GET', 500)
       recordApiResponseTime('/api/admin/referrals/summary', 'GET', Date.now() - start, 500)
-      return toErrorResponse(error)
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

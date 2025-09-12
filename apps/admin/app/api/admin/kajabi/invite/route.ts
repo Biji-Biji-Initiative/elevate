@@ -7,6 +7,7 @@ import { prisma, type Prisma } from '@elevate/db'
 // Standardized envelopes: prefer local helpers
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { enrollUserInKajabi } from '@elevate/integrations'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     await requireRole('admin')
     const baseLogger = await getSafeServerLogger('admin-kajabi-invite')
     const logger = createRequestLogger(baseLogger, request)
+    const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
     try {
       const start = Date.now()
       const json = (await request.json()) as unknown
@@ -231,7 +233,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           }
         }
       } catch (e) {
-        logger.warn('Kajabi v1 grant fallback failed', { error: e instanceof Error ? e.message : String(e), traceId })
+        logger.warn('Kajabi v1 grant fallback failed', { error: e instanceof Error ? e.message : String(e) })
       }
 
       const meta: Prisma.InputJsonValue = {
@@ -254,10 +256,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       })
 
       if (!result.success) {
-        logger.warn('Kajabi invite failed', { email, error: result.error, traceId })
+        logger.warn('Kajabi invite failed', { email, error: result.error })
         recordApiAvailability('/api/admin/kajabi/invite', 'POST', 502)
         recordApiResponseTime('/api/admin/kajabi/invite', 'POST', Date.now() - start, 502)
-        return toErrorResponse(new AdminError('INTEGRATION_FAILED', result.error || 'Kajabi invite failed'))
+        const errRes = toErrorResponse(new AdminError('INTEGRATION_FAILED', result.error || 'Kajabi invite failed'))
+        if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+        return errRes
       }
 
       logger.info('Kajabi invite sent', {
@@ -265,7 +269,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         contactId: result.contactId || contactIdResolved,
         withOffer: !!effectiveOfferId,
         offerIdResolved,
-        traceId,
       })
       const res = toSuccessResponse({
         invited: true,
@@ -273,14 +276,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         withOffer: !!effectiveOfferId,
         offerIdResolved,
       })
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/kajabi/invite', 'POST', 200)
       recordApiResponseTime('/api/admin/kajabi/invite', 'POST', Date.now() - start, 200)
       return res
     } catch (error) {
-      logger.error('Kajabi invite exception', error instanceof Error ? error : new Error(String(error)), { traceId })
+      logger.error('Kajabi invite exception', error instanceof Error ? error : new Error(String(error)))
       recordApiAvailability('/api/admin/kajabi/invite', 'POST', 500)
       recordApiResponseTime('/api/admin/kajabi/invite', 'POST', 0, 500)
-      return toErrorResponse(error)
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

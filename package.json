@@ -141,6 +141,7 @@
     "qa:kajabi:v1": "tsx scripts/qa/kajabi-v1-offer-grant.ts",
     "qa:kajabi:webhook": "tsx scripts/qa/send-kajabi-webhook.ts",
     "qa:kajabi:e2e": "tsx scripts/qa/kajabi-e2e.ts",
+    "test:e2e:all": "bash scripts/test-e2e-all.sh",
     "docs:sitemap": "node scripts/generate-docs-sitemap.mjs",
     "lint:fix:verify": "node scripts/lint-fix-verify.mjs",
     "api:extract": "pnpm -r --filter @elevate/* --filter=!@elevate/admin-core --filter=!@elevate/logic run api:extract",

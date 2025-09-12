@@ -127,7 +127,7 @@ async function getPointsDistribution(filter: { user?: { cohort: string } }): Pro
     const bins: Array<{ label: string; upper: number | null; count: number }> = []
     for (let i = 1; i <= quantiles; i += 1) {
       const idx = i === quantiles ? sorted.length - 1 : Math.max(0, Math.ceil((sorted.length * i) / quantiles) - 1)
-      const upper = i === quantiles ? null : sorted[idx]
+      const upper = i === quantiles ? null : (sorted[idx] ?? null)
       bins.push({ label: `Q${i}${upper === null ? ' (+)' : ` (≤ ${upper})`}`, upper, count: 0 })
     }
     for (const v of sorted) {

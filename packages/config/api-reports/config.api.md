@@ -46,6 +46,15 @@ export const AdminEnvSchema: z.ZodObject<{
 }>;
 
 // @public (undocumented)
+export type AppSettings = typeof appSettings;
+
+// @public (undocumented)
+export const appSettings: {
+    readonly learnPortalUrl: string | null;
+    readonly showLearnPortal: boolean;
+};
+
+// @public (undocumented)
 export const EnvSchema: z.ZodObject<{
     DATABASE_URL: z.ZodEffects<z.ZodString, string, string>;
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.ZodString;
@@ -60,6 +69,7 @@ export const EnvSchema: z.ZodObject<{
     KAJABI_LEARN_TAGS: z.ZodOptional<z.ZodEffects<z.ZodString, string[], string>>;
     KAJABI_OFFER_NAME: z.ZodOptional<z.ZodString>;
     NEXT_PUBLIC_SITE_URL: z.ZodDefault<z.ZodString>;
+    NEXT_PUBLIC_KAJABI_PORTAL_URL: z.ZodOptional<z.ZodString>;
     NODE_ENV: z.ZodDefault<z.ZodEnum<["development", "production", "test"]>>;
     RATE_LIMIT_RPM: z.ZodDefault<z.ZodPipeline<z.ZodEffects<z.ZodString, number, string>, z.ZodNumber>>;
     WEBHOOK_RATE_LIMIT_RPM: z.ZodDefault<z.ZodPipeline<z.ZodEffects<z.ZodString, number, string>, z.ZodNumber>>;
@@ -90,6 +100,7 @@ export const EnvSchema: z.ZodObject<{
     KAJABI_BASE_URL?: string | undefined;
     KAJABI_LEARN_TAGS?: string[] | undefined;
     KAJABI_OFFER_NAME?: string | undefined;
+    NEXT_PUBLIC_KAJABI_PORTAL_URL?: string | undefined;
     RESEND_API_KEY?: string | undefined;
     OPENAI_API_KEY?: string | undefined;
     CRON_SECRET?: string | undefined;
@@ -115,6 +126,7 @@ export const EnvSchema: z.ZodObject<{
     KAJABI_LEARN_TAGS?: string | undefined;
     KAJABI_OFFER_NAME?: string | undefined;
     NEXT_PUBLIC_SITE_URL?: string | undefined;
+    NEXT_PUBLIC_KAJABI_PORTAL_URL?: string | undefined;
     RATE_LIMIT_RPM?: string | undefined;
     WEBHOOK_RATE_LIMIT_RPM?: string | undefined;
     RESEND_API_KEY?: string | undefined;
@@ -128,6 +140,14 @@ export const EnvSchema: z.ZodObject<{
     SENTRY_DSN?: string | undefined;
     LOGTAIL_TOKEN?: string | undefined;
 }>;
+
+// @public (undocumented)
+export type FeatureFlags = typeof featureFlags;
+
+// @public (undocumented)
+export const featureFlags: {
+    readonly apiDocsEnabled: boolean;
+};
 
 // @public (undocumented)
 export function getSecurityHeaders({ isProduction }: SecurityHeadersOptions): {
@@ -171,6 +191,7 @@ export const WebEnvSchema: z.ZodObject<{
     KAJABI_BASE_URL: z.ZodOptional<z.ZodString>;
     KAJABI_OFFER_NAME: z.ZodOptional<z.ZodString>;
     NEXT_PUBLIC_SITE_URL: z.ZodDefault<z.ZodString>;
+    NEXT_PUBLIC_KAJABI_PORTAL_URL: z.ZodOptional<z.ZodString>;
     NODE_ENV: z.ZodDefault<z.ZodEnum<["development", "production", "test"]>>;
     RATE_LIMIT_RPM: z.ZodDefault<z.ZodPipeline<z.ZodEffects<z.ZodString, number, string>, z.ZodNumber>>;
     WEBHOOK_RATE_LIMIT_RPM: z.ZodDefault<z.ZodPipeline<z.ZodEffects<z.ZodString, number, string>, z.ZodNumber>>;
@@ -207,6 +228,7 @@ export const WebEnvSchema: z.ZodObject<{
     KAJABI_BASE_URL?: string | undefined;
     KAJABI_LEARN_TAGS?: string[] | undefined;
     KAJABI_OFFER_NAME?: string | undefined;
+    NEXT_PUBLIC_KAJABI_PORTAL_URL?: string | undefined;
     RESEND_API_KEY?: string | undefined;
     OPENAI_API_KEY?: string | undefined;
     CRON_SECRET?: string | undefined;
@@ -232,6 +254,7 @@ export const WebEnvSchema: z.ZodObject<{
     KAJABI_LEARN_TAGS?: string | undefined;
     KAJABI_OFFER_NAME?: string | undefined;
     NEXT_PUBLIC_SITE_URL?: string | undefined;
+    NEXT_PUBLIC_KAJABI_PORTAL_URL?: string | undefined;
     RATE_LIMIT_RPM?: string | undefined;
     WEBHOOK_RATE_LIMIT_RPM?: string | undefined;
     RESEND_API_KEY?: string | undefined;

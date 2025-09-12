@@ -5,6 +5,7 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import { AdminUsersQuerySchema } from '@elevate/types'
+import { TRACE_HEADER } from '@elevate/http'
 import type { AdminUsersQuery } from '@elevate/types'
 
 export const runtime = 'nodejs'
@@ -121,6 +122,8 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'no-store',
       }),
     })
+    const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+    if (traceId) res.headers.set(TRACE_HEADER, traceId)
     return res
   })
 }

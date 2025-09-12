@@ -4,6 +4,7 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import {
@@ -130,17 +131,27 @@ export async function POST(request: NextRequest) {
         processed: results.length,
         requested: userIds.length,
       })
-      return toSuccessResponse({
-        message: `Badge "${badge.name}" assigned to ${results.length} users`,
-        processed: results.length,
-        failed: userIds.length - results.length,
-      })
+      {
+        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+        const res = toSuccessResponse({
+          message: `Badge "${badge.name}" assigned to ${results.length} users`,
+          processed: results.length,
+          failed: userIds.length - results.length,
+        })
+        if (traceId) res.headers.set(TRACE_HEADER, traceId)
+        return res
+      }
     } catch (error) {
-      logger.error(
-        'Assign badge failed',
-        error instanceof Error ? error : new Error(String(error)),
-      )
-      return toErrorResponse(error)
+      {
+        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+        logger.error(
+          'Assign badge failed',
+          error instanceof Error ? error : new Error(String(error)),
+        )
+        const errRes = toErrorResponse(error)
+        if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+        return errRes
+      }
     }
   })
 }
@@ -225,17 +236,27 @@ export async function DELETE(request: NextRequest) {
         processed: assignments.length,
         requested: userIds.length,
       })
-      return toSuccessResponse({
-        message: `Badge "${badgeName}" removed from ${assignments.length} users`,
-        processed: assignments.length,
-        failed: 0,
-      })
+      {
+        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+        const res = toSuccessResponse({
+          message: `Badge "${badgeName}" removed from ${assignments.length} users`,
+          processed: assignments.length,
+          failed: 0,
+        })
+        if (traceId) res.headers.set(TRACE_HEADER, traceId)
+        return res
+      }
     } catch (error) {
-      logger.error(
-        'Remove badge failed',
-        error instanceof Error ? error : new Error(String(error)),
-      )
-      return toErrorResponse(error)
+      {
+        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+        logger.error(
+          'Remove badge failed',
+          error instanceof Error ? error : new Error(String(error)),
+        )
+        const errRes = toErrorResponse(error)
+        if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+        return errRes
+      }
     }
   })
 }

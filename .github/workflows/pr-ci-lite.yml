@@ -1,0 +1,104 @@
+name: PR CI (Lite)
+
+on:
+  pull_request:
+    branches: [ main, staging ]
+
+concurrency:
+  group: pr-lite-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Type + Lint + Env Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: pnpm store path
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Env validate (CI)
+        run: pnpm -w run env:validate:ci
+
+      - name: Type-check (root)
+        run: pnpm -w run type-check
+
+      - name: Lint (root)
+        run: pnpm -w run lint
+
+      - name: Type-check (apps)
+        run: |
+          pnpm -F web type-check
+          pnpm -F elevate-admin type-check
+
+  web-tests:
+    name: Web Unit Tests
+    runs-on: ubuntu-latest
+    needs: check
+    env:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
+      CLERK_SECRET_KEY: sk_test_dummy
+      CLERK_WEBHOOK_SECRET: whsec_dummy
+      KAJABI_WEBHOOK_SECRET: test_secret
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: pnpm store path
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Web tests (vitest)
+        working-directory: apps/web
+        run: pnpm test

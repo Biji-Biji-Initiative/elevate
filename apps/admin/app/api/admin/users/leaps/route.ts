@@ -7,6 +7,7 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -72,14 +73,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
       }
 
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const res = toSuccessResponse(results)
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/users/leaps', 'POST', 200)
       recordApiResponseTime('/api/admin/users/leaps', 'POST', Date.now() - start, 200)
       return res
     } catch (error) {
       recordApiAvailability('/api/admin/users/leaps', 'POST', 500)
       recordApiResponseTime('/api/admin/users/leaps', 'POST', Date.now() - start, 500)
-      return toErrorResponse(error)
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

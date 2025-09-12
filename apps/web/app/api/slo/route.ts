@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 
 import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { getWebRuntimeConfig } from '@elevate/config/runtime'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { sloMonitor } from '@elevate/logging/slo-monitor'
 
@@ -13,13 +14,14 @@ export async function GET(request: NextRequest) {
     : baseLogger
 
   try {
-    // Gate internal endpoint via env
-    if (process.env.ENABLE_INTERNAL_ENDPOINTS !== '1') {
+    // Gate internal endpoint via typed runtime config
+    const cfg = getWebRuntimeConfig()
+    if (!cfg.enableInternalEndpoints) {
       return new Response(null, { status: 404 })
     }
     // Check for authorization - only internal monitoring should access this
     const authHeader = request.headers.get('authorization')
-    const token = process.env.INTERNAL_METRICS_TOKEN
+    const token = cfg.internalMetricsToken
     // In production, fail closed if token missing
     if (!token && process.env.NODE_ENV === 'production') {
       return createErrorResponse(new Error('SLO token not configured'), 403)

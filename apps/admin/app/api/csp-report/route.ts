@@ -7,7 +7,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { createErrorResponse } from '@elevate/http'
+import { createErrorResponse, TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createCSPReportHandler } from '@elevate/security/security-middleware'
 
@@ -82,6 +82,7 @@ const handleCSPReport = createCSPReportHandler({
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
     // Validate content type
     const contentType = request.headers.get('content-type')
     if (
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           'Invalid content type. Expected application/csp-report or application/json',
         ),
         400,
+        traceId,
       )
     }
 
@@ -117,7 +119,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Implementation would be environment-specific
 
     // Process the violation report
-    return await handleCSPReport(request)
+    {
+      const res = await handleCSPReport(request)
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
+      return res
+    }
   } catch (error: unknown) {
     if (logger) {
       logger.error(

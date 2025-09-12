@@ -1,10 +1,8 @@
 {
-  "name": "elevate-web",
   "buildCommand": "pnpm turbo run build --filter=web",
   "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
-  
   "crons": [
     {
       "path": "/api/cron/refresh-leaderboards",

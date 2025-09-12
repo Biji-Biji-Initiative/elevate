@@ -82,14 +82,15 @@ const adminMiddleware = clerkMiddleware(async (auth, req) => {
   const publicMetadata = parseClerkPublicMetadata(sessionClaims?.publicMetadata)
   let userRole = safeParseRole(publicMetadata.role)
   
-  // Development bypass for specific user IDs
-  // Since email is not available in sessionClaims by default, use userId for dev bypass
+  // Development bypass for specific user IDs (opt-in via env)
+  // Use CSV in ADMIN_DEV_BYPASS_USER_IDS, only in development
   if (process.env.NODE_ENV === 'development') {
-    // This is your userId from the logs
-    const devAdminUserIds = ['user_328teXv7Od0N4I9ck6W7Q65SuaL']
-    if (devAdminUserIds.includes(userId)) {
-      userRole = 'superadmin'
-      // Dev bypass: elevating user to superadmin
+    const csv = (process.env.ADMIN_DEV_BYPASS_USER_IDS || '').trim()
+    if (csv.length > 0) {
+      const allow = new Set(csv.split(',').map((s) => s.trim()).filter(Boolean))
+      if (allow.has(userId)) {
+        userRole = 'superadmin'
+      }
     }
   }
   

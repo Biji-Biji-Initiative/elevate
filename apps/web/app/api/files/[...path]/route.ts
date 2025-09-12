@@ -12,8 +12,10 @@ import {
   forbidden,
   notFound,
   badRequest,
+  TRACE_HEADER,
 } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { withRateLimit, apiRateLimiter } from '@elevate/security'
 import {
   getSignedUrl,
@@ -73,9 +75,7 @@ export async function GET(
   return withRateLimit(request, apiRateLimiter, async () => {
     try {
       const baseLogger = await getSafeServerLogger('files')
-      const logger = baseLogger.forRequestWithHeaders
-        ? baseLogger.forRequestWithHeaders(request)
-        : baseLogger
+      const logger = createRequestLogger(baseLogger, request)
       const timerStart = Date.now()
       const { userId } = await auth()
 
@@ -110,23 +110,19 @@ export async function GET(
 
       if (!currentUser) return notFound('User')
 
-      const isOwner = pathInfo.userId === userId
+      // Require that the file path is attached to a submission
+      const attachment = await prisma.submissionAttachment.findFirst({
+        where: { path: filePath },
+        include: { submission: { select: { user_id: true, status: true } } },
+      })
+      if (!attachment) return notFound('File')
+
+      const isOwner = attachment.submission.user_id === userId
       const isReviewer = ['REVIEWER', 'ADMIN', 'SUPERADMIN'].includes(
         currentUser.role,
       )
 
       if (!isOwner && !isReviewer) return forbidden('Access denied')
-
-      // Additional check: ensure the file is associated with an existing submission
-      // For JSON fields, we need to check if the array contains the filePath
-      const submission = await prisma.submission.findFirst({
-        where: {
-          user_id: pathInfo.userId,
-          activity_code: pathInfo.activityCode,
-        },
-      })
-
-      if (!submission) return notFound('File')
 
       // Generate signed URL (1 hour expiry)
       const signedUrl = await getSignedUrl(filePath, 3600)
@@ -136,6 +132,8 @@ export async function GET(
         url: signedUrl,
         expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
       })
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      if (traceId) response.headers.set(TRACE_HEADER, traceId)
 
       // Add security headers
       response.headers.set(
@@ -175,9 +173,7 @@ export async function DELETE(
   return withRateLimit(request, apiRateLimiter, async () => {
     try {
       const baseLogger = await getSafeServerLogger('files')
-      const logger = baseLogger.forRequestWithHeaders
-        ? baseLogger.forRequestWithHeaders(request)
-        : baseLogger
+      const logger = createRequestLogger(baseLogger, request)
       const timerStart = Date.now()
       const { userId } = await auth()
 
@@ -203,20 +199,17 @@ export async function DELETE(
       const pathInfo = parseStoragePath(filePath)
       if (!pathInfo) return badRequest('Invalid file path structure')
 
-      // Check if the current user owns this file
-      if (pathInfo.userId !== userId) return forbidden('Access denied')
+      // Require that the file path is attached to a submission belonging to the user
+      const attachment = await prisma.submissionAttachment.findFirst({
+        where: { path: filePath },
+        include: { submission: { select: { id: true, user_id: true, status: true } } },
+      })
+      if (!attachment) return notFound('File')
+
+      if (attachment.submission.user_id !== userId) return forbidden('Access denied')
 
       // Only allow deletion if the associated submission is still pending
-      const submission = await prisma.submission.findFirst({
-        where: {
-          user_id: pathInfo.userId,
-          activity_code: pathInfo.activityCode,
-        },
-      })
-
-      if (!submission) return notFound('File')
-
-      if (submission.status !== 'PENDING') {
+      if (attachment.submission.status !== 'PENDING') {
         return badRequest(
           'Cannot delete files from approved or rejected submissions',
           'INVALID_INPUT',
@@ -226,6 +219,8 @@ export async function DELETE(
       // Remove file from Supabase Storage (implemented in storage package)
       try {
         await deleteEvidenceFile(filePath)
+        // Remove DB attachment record to avoid orphan rows
+        await prisma.submissionAttachment.delete({ where: { id: attachment.id } })
       } catch (e) {
         logger.error(
           'file.delete.error',
@@ -241,7 +236,10 @@ export async function DELETE(
         durationMs: Date.now() - timerStart,
       })
 
-      return createSuccessResponse({ message: 'File deleted' })
+      const res = createSuccessResponse({ message: 'File deleted' })
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
+      return res
     } catch (error) {
       const logger = await getSafeServerLogger('files')
       logger.error(

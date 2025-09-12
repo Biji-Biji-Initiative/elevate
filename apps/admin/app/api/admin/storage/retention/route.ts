@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { requireRole } from '@elevate/auth/server-helpers'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import {
   recordApiAvailability,
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const logger = await getSafeServerLogger('admin-storage-retention')
     try {
       const start = Date.now()
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const json = (await request.json()) as unknown
       const parsed = RetentionSchema.safeParse(json)
       if (!parsed.success) {
@@ -37,6 +39,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       const deleted = await enforceUserRetention(userId, cutoff)
       logger.info('Retention enforcement completed', { userId, days, deleted })
       const res = toSuccessResponse({ userId, days, deleted })
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/storage/retention', 'POST', 200)
       recordApiResponseTime(
         '/api/admin/storage/retention',
@@ -48,7 +51,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     } catch (error) {
       recordApiAvailability('/api/admin/storage/retention', 'POST', 500)
       recordApiResponseTime('/api/admin/storage/retention', 'POST', 0, 500)
-      return toErrorResponse(error)
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

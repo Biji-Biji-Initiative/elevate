@@ -161,6 +161,13 @@ tests/
 
 ## Running Tests
 
+### 🚀 One‑Shot Local E2E
+Run everything (Supabase Local up, DB init, lint, types, Vitest + coverage, Playwright E2E):
+
+```bash
+pnpm test:e2e:all
+```
+
 ### 🏃‍♂️ Local Development
 ```bash
 # Run all tests

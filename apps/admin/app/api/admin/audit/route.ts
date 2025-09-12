@@ -6,6 +6,7 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -65,7 +66,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         prisma.auditLog.count({ where }),
       ])
 
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const res = toSuccessResponse({ logs: rows, pagination: { page, limit, total, pages: Math.ceil(total / limit) } })
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/audit', 'GET', 200)
       recordApiResponseTime('/api/admin/audit', 'GET', Date.now() - start, 200)
       return res
@@ -73,7 +76,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       logger.error('Admin audit GET failed', error instanceof Error ? error : new Error(String(error)))
       recordApiAvailability('/api/admin/audit', 'GET', 500)
       recordApiResponseTime('/api/admin/audit', 'GET', Date.now() - start, 500)
-      return toErrorResponse(error)
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

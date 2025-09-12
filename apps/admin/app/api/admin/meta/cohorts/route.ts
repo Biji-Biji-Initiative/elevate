@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs'
@@ -23,9 +24,15 @@ export async function GET(request: NextRequest) {
 
       const cohorts = rows.map((r) => r.cohort).filter((c): c is string => !!c)
 
-      return toSuccessResponse({ cohorts })
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const res = toSuccessResponse({ cohorts })
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
+      return res
     } catch (error) {
-      return toErrorResponse(error)
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

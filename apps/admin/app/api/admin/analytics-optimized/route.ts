@@ -4,7 +4,9 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, Prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { computeApprovalRate, computeActivationRate } from '@elevate/logic'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import { parseActivityCode, AnalyticsQuerySchema } from '@elevate/types'
@@ -32,10 +34,12 @@ import type {
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
-  const logger = await getSafeServerLogger('admin-analytics-optimized')
+  const baseLogger = await getSafeServerLogger('admin-analytics-optimized')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       await requireRole('reviewer')
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const logger = createRequestLogger(baseLogger, request)
       const { searchParams } = new URL(request.url)
       const parsed = AnalyticsQuerySchema.safeParse(
         Object.fromEntries(searchParams),
@@ -93,8 +97,11 @@ export async function GET(request: NextRequest) {
       })
       res.headers.set('Cache-Control', 'private, s-maxage=300')
       res.headers.set('X-Analytics-Source', 'optimized-queries')
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       return res
     } catch (error) {
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const logger = createRequestLogger(baseLogger, request)
       logger.error(
         'Optimized analytics failed',
         error instanceof Error ? error : new Error(String(error)),
@@ -102,7 +109,9 @@ export async function GET(request: NextRequest) {
           operation: 'admin_analytics_optimized',
         },
       )
-      return toErrorResponse(error)
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

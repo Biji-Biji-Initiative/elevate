@@ -8,7 +8,9 @@ import {
   getKajabiPointsAwarded,
 } from '@elevate/db'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs'
@@ -33,10 +35,12 @@ function getObjectField<T extends object = Record<string, unknown>>(
 }
 
 export async function GET(request: NextRequest) {
+  const baseLogger = await getSafeServerLogger('admin-kajabi')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       // Check admin role
       await requireRole('admin')
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
 
       // Fetch Kajabi events using service layer
       const [events, stats, pointsAwarded] = await Promise.all([
@@ -64,18 +68,25 @@ export async function GET(request: NextRequest) {
         }
       })
 
-      const logger = await getSafeServerLogger('admin-kajabi')
+      const logger = createRequestLogger(baseLogger, request)
       logger.info('Fetched Kajabi events', { count: mapped.length })
 
-      return toSuccessResponse({
+      const res = toSuccessResponse({
         events: mapped,
         stats: {
           ...stats,
           points_awarded: pointsAwarded,
         },
       })
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
+      return res
     } catch (error) {
-      return toErrorResponse(error)
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const logger = createRequestLogger(baseLogger, request)
+      logger.error('Kajabi admin list failed', error instanceof Error ? error : new Error(String(error)))
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

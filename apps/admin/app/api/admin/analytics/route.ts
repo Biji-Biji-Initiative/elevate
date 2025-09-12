@@ -5,7 +5,9 @@ import { prisma } from '@elevate/db'
 // Standard envelopes provided via local helpers
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import {
   computeApprovalRate,
   computeActivationRate,
@@ -48,10 +50,12 @@ import type {
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
-  const logger = await getSafeServerLogger('admin-analytics')
+  const baseLogger = await getSafeServerLogger('admin-analytics')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       await requireRole('reviewer')
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const logger = createRequestLogger(baseLogger, request)
       const { searchParams } = new URL(request.url)
       const parsed = AnalyticsQuerySchema.safeParse(
         Object.fromEntries(searchParams),
@@ -157,7 +161,7 @@ export async function GET(request: NextRequest) {
         getReviewerPerformance(),
       ])
 
-      return toSuccessResponse({
+      const res = toSuccessResponse({
         overview: {
           submissions: submissionStats,
           users: userStats,
@@ -187,7 +191,11 @@ export async function GET(request: NextRequest) {
           topBadges,
         },
       })
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
+      return res
     } catch (error) {
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const logger = createRequestLogger(baseLogger, request)
       logger.error(
         'Admin analytics failed',
         error instanceof Error ? error : new Error(String(error)),
@@ -195,7 +203,9 @@ export async function GET(request: NextRequest) {
           operation: 'admin_analytics',
         },
       )
-      return toErrorResponse(error)
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

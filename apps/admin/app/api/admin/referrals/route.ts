@@ -7,7 +7,10 @@ import type { Prisma } from '@elevate/db'
 import { prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
+import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 
 export const runtime = 'nodejs'
 
@@ -24,8 +27,10 @@ const QuerySchema = z.object({
 })
 
 export async function GET(request: NextRequest) {
+  const baseLogger = await getSafeServerLogger('admin-referrals')
   return withRateLimit(request, adminRateLimiter, async () => {
     await requireRole('admin')
+    const logger = createRequestLogger(baseLogger, request)
     const url = new URL(request.url)
     const raw = Object.fromEntries(url.searchParams)
     const parsed = QuerySchema.safeParse(raw)
@@ -61,10 +66,15 @@ export async function GET(request: NextRequest) {
       })
       const ids = u.map((x) => x.id)
       if (ids.length === 0)
-        return toSuccessResponse({
+        {
+          const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+          const res = toSuccessResponse({
           referrals: [],
           pagination: { total: 0, limit, offset, pages: 0 },
-        })
+          })
+          if (traceId) res.headers.set(TRACE_HEADER, traceId)
+          return res
+        }
       where.OR = [
         { referrer_user_id: { in: ids } },
         { referee_user_id: { in: ids } },
@@ -87,7 +97,9 @@ export async function GET(request: NextRequest) {
       prisma.referralEvent.count({ where }),
     ])
 
-    return toSuccessResponse({
+    {
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const res = toSuccessResponse({
       referrals: rows.map((r) => ({
         id: r.id,
         eventType: r.event_type,
@@ -103,6 +115,10 @@ export async function GET(request: NextRequest) {
         offset,
         pages: Math.ceil(total / limit),
       },
-    })
+      })
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
+      logger.info('Referrals fetched', { total })
+      return res
+    }
   })
 }

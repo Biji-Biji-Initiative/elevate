@@ -11,7 +11,7 @@ export type AdminErrorCode =
 
 export class AdminError extends Error {
   code: AdminErrorCode
-  meta?: Record<string, unknown>
+  meta: Record<string, unknown> | undefined
 
   constructor(code: AdminErrorCode, message: string, meta?: Record<string, unknown>) {
     super(message)
@@ -25,4 +25,3 @@ export function asAdminError(err: unknown, fallback: { code?: AdminErrorCode; me
   const message = err instanceof Error ? err.message : fallback.message || 'Internal error'
   return new AdminError(fallback.code || 'INTERNAL', message)
 }
-

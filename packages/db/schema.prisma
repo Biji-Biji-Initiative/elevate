@@ -124,15 +124,19 @@ model LearnTagGrant {
 }
 
 model KajabiEvent {
-  id             String   @id @default(cuid())
+  // Align tests: use event_id as primary key value
+  id             String   @id
   event_id       String
   tag_name_raw   String
   tag_name_norm  String   @db.Citext
   contact_id     String
   email          String?
   created_at_utc DateTime
+  processed_at   DateTime?
+  user_match     String?
   status         String
   raw            Json
+  payload        Json?
 
   @@unique([event_id, tag_name_norm], map: "ux_kajabi_event_tag")
   @@index([status, created_at_utc], map: "ix_kajabi_events_status_time")

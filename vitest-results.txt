@@ -1,0 +1,208 @@
+
+ RUN  v3.2.4 /Users/agent-g/elevate/elevate
+
+🧪 Setting up global test environment...
+⏭️  SKIP_DB_TESTS enabled or no DB URL; skipping DB setup
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Role-based Access Control > should allow participants to access their own data only 316ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Role-based Access Control > should prevent participants from accessing admin endpoints 113ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Role-based Access Control > should allow reviewers to access review endpoints 68ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Role-based Access Control > should allow admins to access all endpoints 82ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Data Access Boundaries > should restrict submission access by user 57ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Data Access Boundaries > should allow reviewers to see all pending submissions 155ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Data Access Boundaries > should enforce visibility rules for public data 94ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Authentication Edge Cases > should handle missing authentication tokens 112ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Authentication Edge Cases > should handle invalid authentication tokens 94ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Authentication Edge Cases > should handle expired authentication tokens 63ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Role Hierarchy and Permissions > should enforce proper role hierarchy 44ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Role Hierarchy and Permissions > should handle role transitions correctly 43ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Audit Trail for Privileged Actions > should log admin actions for audit 54ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Audit Trail for Privileged Actions > should track unauthorized access attempts 58ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/03-authentication-authorization.test.ts > Integration: Authentication and Authorization > Session Security > should validate session integrity 58ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating submission with invalid user_id 59ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating submission with invalid activity_code 37ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating points ledger with invalid user_id 30ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating points ledger with invalid activity_code 27ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should cascade delete submissions when user is deleted 36ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should cascade delete points when user is deleted 36ms
+ × tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent deleting activity if it has associated data 35ms
+   → promise resolved "{ code: 'LEARN', name: 'Learn', …(1) }" instead of rejecting
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Unique Constraints > should prevent duplicate user handles 52ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Unique Constraints > should prevent duplicate user emails 94ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Unique Constraints > should prevent duplicate external_event_id in points ledger 102ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Unique Constraints > should prevent duplicate badge awards per user 164ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Unique Constraints > should prevent duplicate submission attachments 80ms
+ × tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Data Consistency Checks > should maintain consistent points totals 78ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Data Consistency Checks > should maintain submission and points consistency 98ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Data Consistency Checks > should maintain audit log integrity 137ms
+ × tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Transaction Integrity > should rollback transaction on error 140ms
+   → expected [Function] to throw error including 'Simulated transaction error' but got '\nInvalid `tx.pointsLedger.create()` …'
+ × tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Transaction Integrity > should handle concurrent transactions correctly 83ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`kajabi_contact_id`)
+ × tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Transaction Integrity > should prevent duplicate external_event_id in concurrent transactions 119ms

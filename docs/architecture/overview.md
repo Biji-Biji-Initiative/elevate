@@ -226,7 +226,7 @@ sequenceDiagram
 
 ### Environments
 
-- **Development**: Local with Docker Compose
+- **Development**: Local with Supabase (CLI)
 - **Staging**: Vercel preview deployments
 - **Production**: Vercel production deployments
 

@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { readJson } from './test-utils'
 import type { NextRequest } from 'next/server'
+// Bypass CSRF and rate limiting for unit test
+vi.mock('@elevate/security/csrf', async () => ({
+  withCSRFProtection: (handler: (req: Request) => Promise<Response> | Response) => handler,
+}))
+vi.mock('@elevate/security/rate-limiter', async () => ({
+  submissionRateLimiter: {},
+  withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
+}))
 
 vi.mock('@clerk/nextjs/server', () => ({
   auth: async () => ({ userId: 'u1' }),

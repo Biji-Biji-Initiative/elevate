@@ -148,8 +148,8 @@ cp apps/admin/.env.example apps/admin/.env.local
 
 #### Development
 
-- Use local database (PostgreSQL via Docker)
-- Local Supabase instance or development project
+- Use local database via Supabase Local (Supabase CLI)
+- Alternatively, use a hosted Supabase development project
 - Development Clerk keys
 - Placeholder webhook secrets are acceptable
 

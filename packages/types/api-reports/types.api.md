@@ -1828,6 +1828,9 @@ export const AdminUserSchema: z.ZodObject<{
     email: z.ZodString;
     avatar_url: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     role: z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
+    user_type: z.ZodOptional<z.ZodEnum<["EDUCATOR", "STUDENT"]>>;
+    user_type_confirmed: z.ZodOptional<z.ZodBoolean>;
+    kajabi_contact_id: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     created_at: z.ZodString;
@@ -1860,7 +1863,10 @@ export const AdminUserSchema: z.ZodObject<{
     totalPoints: number;
     school?: string | null | undefined;
     cohort?: string | null | undefined;
+    kajabi_contact_id?: string | null | undefined;
     avatar_url?: string | null | undefined;
+    user_type?: "EDUCATOR" | "STUDENT" | undefined;
+    user_type_confirmed?: boolean | undefined;
 }, {
     created_at: string;
     name: string;
@@ -1876,7 +1882,10 @@ export const AdminUserSchema: z.ZodObject<{
     totalPoints: number;
     school?: string | null | undefined;
     cohort?: string | null | undefined;
+    kajabi_contact_id?: string | null | undefined;
     avatar_url?: string | null | undefined;
+    user_type?: "EDUCATOR" | "STUDENT" | undefined;
+    user_type_confirmed?: boolean | undefined;
 }>;
 
 // @public (undocumented)
@@ -1886,6 +1895,8 @@ export type AdminUsersQuery = z.infer<typeof AdminUsersQuerySchema>;
 export const AdminUsersQuerySchema: z.ZodObject<{
     search: z.ZodDefault<z.ZodOptional<z.ZodString>>;
     role: z.ZodDefault<z.ZodEnum<["ALL", "PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>>;
+    userType: z.ZodDefault<z.ZodEnum<["ALL", "EDUCATOR", "STUDENT"]>>;
+    kajabi: z.ZodDefault<z.ZodEnum<["ALL", "LINKED", "UNLINKED"]>>;
     cohort: z.ZodDefault<z.ZodOptional<z.ZodString>>;
     page: z.ZodDefault<z.ZodNumber>;
     limit: z.ZodDefault<z.ZodNumber>;
@@ -1896,17 +1907,21 @@ export const AdminUsersQuerySchema: z.ZodObject<{
     limit: number;
     cohort: string;
     role: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL";
+    kajabi: "ALL" | "LINKED" | "UNLINKED";
     sortBy: "created_at" | "name" | "email";
     sortOrder: "desc" | "asc";
     search: string;
+    userType: "EDUCATOR" | "STUDENT" | "ALL";
 }, {
     page?: number | undefined;
     limit?: number | undefined;
     cohort?: string | undefined;
     role?: "PARTICIPANT" | "REVIEWER" | "ADMIN" | "SUPERADMIN" | "ALL" | undefined;
+    kajabi?: "ALL" | "LINKED" | "UNLINKED" | undefined;
     sortBy?: "created_at" | "name" | "email" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
     search?: string | undefined;
+    userType?: "EDUCATOR" | "STUDENT" | "ALL" | undefined;
 }>;
 
 // @public (undocumented)
@@ -12640,6 +12655,9 @@ export const UsersListResponseSchema: z.ZodObject<{
             email: z.ZodString;
             avatar_url: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             role: z.ZodEnum<["PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>;
+            user_type: z.ZodOptional<z.ZodEnum<["EDUCATOR", "STUDENT"]>>;
+            user_type_confirmed: z.ZodOptional<z.ZodBoolean>;
+            kajabi_contact_id: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             school: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             cohort: z.ZodOptional<z.ZodNullable<z.ZodString>>;
             created_at: z.ZodString;
@@ -12672,7 +12690,10 @@ export const UsersListResponseSchema: z.ZodObject<{
             totalPoints: number;
             school?: string | null | undefined;
             cohort?: string | null | undefined;
+            kajabi_contact_id?: string | null | undefined;
             avatar_url?: string | null | undefined;
+            user_type?: "EDUCATOR" | "STUDENT" | undefined;
+            user_type_confirmed?: boolean | undefined;
         }, {
             created_at: string;
             name: string;
@@ -12688,7 +12709,10 @@ export const UsersListResponseSchema: z.ZodObject<{
             totalPoints: number;
             school?: string | null | undefined;
             cohort?: string | null | undefined;
+            kajabi_contact_id?: string | null | undefined;
             avatar_url?: string | null | undefined;
+            user_type?: "EDUCATOR" | "STUDENT" | undefined;
+            user_type_confirmed?: boolean | undefined;
         }>, "many">;
         pagination: z.ZodObject<{
             page: z.ZodNumber;
@@ -12728,7 +12752,10 @@ export const UsersListResponseSchema: z.ZodObject<{
             totalPoints: number;
             school?: string | null | undefined;
             cohort?: string | null | undefined;
+            kajabi_contact_id?: string | null | undefined;
             avatar_url?: string | null | undefined;
+            user_type?: "EDUCATOR" | "STUDENT" | undefined;
+            user_type_confirmed?: boolean | undefined;
         }[];
     }, {
         pagination: {
@@ -12752,7 +12779,10 @@ export const UsersListResponseSchema: z.ZodObject<{
             totalPoints: number;
             school?: string | null | undefined;
             cohort?: string | null | undefined;
+            kajabi_contact_id?: string | null | undefined;
             avatar_url?: string | null | undefined;
+            user_type?: "EDUCATOR" | "STUDENT" | undefined;
+            user_type_confirmed?: boolean | undefined;
         }[];
     }>;
 }, "strip", z.ZodTypeAny, {
@@ -12779,7 +12809,10 @@ export const UsersListResponseSchema: z.ZodObject<{
             totalPoints: number;
             school?: string | null | undefined;
             cohort?: string | null | undefined;
+            kajabi_contact_id?: string | null | undefined;
             avatar_url?: string | null | undefined;
+            user_type?: "EDUCATOR" | "STUDENT" | undefined;
+            user_type_confirmed?: boolean | undefined;
         }[];
     };
 }, {
@@ -12806,7 +12839,10 @@ export const UsersListResponseSchema: z.ZodObject<{
             totalPoints: number;
             school?: string | null | undefined;
             cohort?: string | null | undefined;
+            kajabi_contact_id?: string | null | undefined;
             avatar_url?: string | null | undefined;
+            user_type?: "EDUCATOR" | "STUDENT" | undefined;
+            user_type_confirmed?: boolean | undefined;
         }[];
     };
 }>;
@@ -12815,6 +12851,7 @@ export const UsersListResponseSchema: z.ZodObject<{
 export const UsersQuerySchema: z.ZodObject<{
     search: z.ZodOptional<z.ZodString>;
     role: z.ZodOptional<z.ZodEnum<["ALL", "PARTICIPANT", "REVIEWER", "ADMIN", "SUPERADMIN"]>>;
+    userType: z.ZodOptional<z.ZodEnum<["ALL", "EDUCATOR", "STUDENT"]>>;
     cohort: z.ZodOptional<z.ZodString>;
     page: z.ZodOptional<z.ZodNumber>;
     limit: z.ZodOptional<z.ZodNumber>;
@@ -12828,6 +12865,7 @@ export const UsersQuerySchema: z.ZodObject<{
     sortBy?: "created_at" | "name" | "email" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
     search?: string | undefined;
+    userType?: "EDUCATOR" | "STUDENT" | "ALL" | undefined;
 }, {
     page?: number | undefined;
     limit?: number | undefined;
@@ -12836,6 +12874,7 @@ export const UsersQuerySchema: z.ZodObject<{
     sortBy?: "created_at" | "name" | "email" | undefined;
     sortOrder?: "desc" | "asc" | undefined;
     search?: string | undefined;
+    userType?: "EDUCATOR" | "STUDENT" | "ALL" | undefined;
 }>;
 
 // @public (undocumented)

@@ -8,7 +8,9 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
@@ -32,7 +34,8 @@ export async function GET(
   return withRateLimit(_request, adminRateLimiter, async () => {
     await requireRole('admin')
     const start = Date.now()
-    const logger = await getSafeServerLogger('admin-users')
+    const baseLogger = await getSafeServerLogger('admin-users')
+    const logger = createRequestLogger(baseLogger, _request)
     try {
       const { id } = await params
       const user = await prisma.user.findUnique({
@@ -51,7 +54,9 @@ export async function GET(
         },
       })
       if (!user) return toErrorResponse(new AdminError('NOT_FOUND', 'User not found'))
+      const traceId = _request.headers.get('x-trace-id') || _request.headers.get(TRACE_HEADER) || undefined
       const res = toSuccessResponse({ user })
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/users/[id]', 'GET', 200)
       recordApiResponseTime('/api/admin/users/[id]', 'GET', Date.now() - start, 200)
       return res
@@ -59,7 +64,10 @@ export async function GET(
       logger.error('GET admin user failed', error instanceof Error ? error : new Error(String(error)))
       recordApiAvailability('/api/admin/users/[id]', 'GET', 500)
       recordApiResponseTime('/api/admin/users/[id]', 'GET', Date.now() - start, 500)
-      return toErrorResponse(error)
+      const traceId = _request.headers.get('x-trace-id') || _request.headers.get(TRACE_HEADER) || undefined
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }
@@ -71,7 +79,8 @@ export async function PATCH(
   return withRateLimit(request, adminRateLimiter, async () => {
     await requireRole('admin')
     const start = Date.now()
-    const logger = await getSafeServerLogger('admin-users')
+    const baseLogger = await getSafeServerLogger('admin-users')
+    const logger = createRequestLogger(baseLogger, request)
     try {
       const json: unknown = await request.json()
       const parsed = UpdateBodySchema.safeParse(json)
@@ -122,7 +131,9 @@ export async function PATCH(
         }
       }
 
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const res = toSuccessResponse({ user: updated })
+      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/users/[id]', 'PATCH', 200)
       recordApiResponseTime('/api/admin/users/[id]', 'PATCH', Date.now() - start, 200)
       return res
@@ -130,7 +141,10 @@ export async function PATCH(
       logger.error('PATCH admin user failed', error instanceof Error ? error : new Error(String(error)))
       recordApiAvailability('/api/admin/users/[id]', 'PATCH', 500)
       recordApiResponseTime('/api/admin/users/[id]', 'PATCH', Date.now() - start, 500)
-      return toErrorResponse(error)
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

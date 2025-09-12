@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { TRACE_HEADER } from '@elevate/http'
 
 import { z } from 'zod'
 
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest) {
       offset += pageSize
     }
 
-    return new NextResponse(out.join('\n'), {
+    const res = new NextResponse(out.join('\n'), {
       status: 200,
       headers: new Headers({
         'Content-Type': 'text/csv; charset=utf-8',
@@ -84,5 +85,8 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'no-store',
       }),
     })
+    const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+    if (traceId) res.headers.set(TRACE_HEADER, traceId)
+    return res
   })
 }

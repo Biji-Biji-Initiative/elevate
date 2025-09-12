@@ -1,12 +1,12 @@
 "use server"
 import 'server-only'
 
-import type { ListSubmissionsParams } from '@/lib/server/submissions-service'
+import type { ListParams } from '@/lib/server/submissions-service'
 import { listSubmissionsService, getSubmissionByIdService } from '@/lib/server/submissions-service'
 import type { AdminSubmission, Pagination } from '@elevate/types/admin-api-types'
 
-export async function listSubmissions(params: ListSubmissionsParams): Promise<{ submissions: AdminSubmission[]; pagination: Pagination }> {
-  const svc = listSubmissionsService as unknown as (p: ListSubmissionsParams) => Promise<{ submissions: AdminSubmission[]; pagination: Pagination }>
+export async function listSubmissions(params: ListParams): Promise<{ submissions: AdminSubmission[]; pagination: Pagination }> {
+  const svc = listSubmissionsService as unknown as (p: ListParams) => Promise<{ submissions: AdminSubmission[]; pagination: Pagination }>
   const out = await svc(params)
   return out
 }

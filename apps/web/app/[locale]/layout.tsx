@@ -7,7 +7,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations } from 'next-intl/server'
 
 import { Button } from '@elevate/ui'
-import { featureFlags } from '@elevate/config'
+import { featureFlags, appSettings } from '@elevate/config'
 import { ClientHeader, Footer } from '@elevate/ui/next'
 
 import { locales } from '../../i18n'
@@ -153,9 +153,9 @@ export default async function LocaleLayout({ children, params }: Props) {
         signInButton={
           <SignedOut>
             <div className="flex items-center gap-2">
-              {process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL ? (
+              {appSettings.showLearnPortal && appSettings.learnPortalUrl ? (
                 <a
-                  href={process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL}
+                  href={appSettings.learnPortalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50"
@@ -180,9 +180,9 @@ export default async function LocaleLayout({ children, params }: Props) {
               <Link href={`/${locale}/dashboard`}>
                 <Button variant="default">Dashboard</Button>
               </Link>
-              {process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL ? (
+              {appSettings.showLearnPortal && appSettings.learnPortalUrl ? (
                 <a
-                  href={process.env.NEXT_PUBLIC_KAJABI_PORTAL_URL}
+                  href={appSettings.learnPortalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center px-3 py-2 text-sm rounded border hover:bg-gray-50"

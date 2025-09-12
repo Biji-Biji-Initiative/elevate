@@ -4,6 +4,7 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
+import { TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { grantBadgesForUser } from '@elevate/logic'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
     try {
       // Check admin role
       await requireRole('admin')
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
 
       const body: unknown = await request.json()
       const parsed = KajabiReprocessSchema.safeParse(body)
@@ -127,7 +129,11 @@ export async function POST(request: NextRequest) {
           where: { id: event_id },
           data: { status: 'queued_unmatched' },
         })
-        return toSuccessResponse({ queued: true }, 202)
+        {
+          const res = toSuccessResponse({ queued: true }, 202)
+          if (traceId) res.headers.set(TRACE_HEADER, traceId)
+          return res
+        }
       }
 
       if (user.user_type === 'STUDENT') {
@@ -135,7 +141,11 @@ export async function POST(request: NextRequest) {
           where: { id: event_id },
           data: { status: 'student' },
         })
-        return toErrorResponse(new AdminError('FORBIDDEN', 'Student accounts are not eligible'))
+        {
+          const errRes = toErrorResponse(new AdminError('FORBIDDEN', 'Student accounts are not eligible'))
+          if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+          return errRes
+        }
       }
 
       const eventTime = kajabiEvent.created_at_utc
@@ -243,14 +253,21 @@ export async function POST(request: NextRequest) {
         duplicate: result.duplicate,
       })
 
-      return toSuccessResponse({
+      {
+        const res = toSuccessResponse({
         message: result.duplicate
           ? 'Event marked as duplicate'
           : 'Event reprocessed successfully',
         ...result,
-      })
+        })
+        if (traceId) res.headers.set(TRACE_HEADER, traceId)
+        return res
+      }
     } catch (error) {
-      return toErrorResponse(error)
+      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      const errRes = toErrorResponse(error)
+      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
+      return errRes
     }
   })
 }

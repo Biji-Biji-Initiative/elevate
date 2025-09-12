@@ -6,25 +6,24 @@ This directory contains database setup scripts and configurations for the MS Ele
 
 The application uses PostgreSQL as its database. You can set it up in several ways:
 
-### Option 1: Docker Compose (Recommended for Local Development)
+### Option 1: Supabase Local (Recommended)
 
-1. **Start PostgreSQL container:**
-   ```bash
-   docker-compose up -d postgres
-   ```
+1. **Install Supabase CLI:**
+   https://supabase.com/docs/guides/local-development
 
-2. **Verify PostgreSQL is running:**
+2. **Start local stack:**
    ```bash
-   docker-compose logs postgres
+   supabase start
    ```
 
 3. **Update your environment:**
-   Ensure your `.env.local` has:
+   Ensure your `.env.local` has (ports match `supabase/config.toml`):
    ```bash
-   DATABASE_URL=postgresql://postgres:password@localhost:5432/elevate_leaps
+   DATABASE_URL=postgresql://postgres:postgres@localhost:54322/postgres
+   DIRECT_URL=postgresql://postgres:postgres@localhost:54322/postgres
    ```
 
-### Option 2: Supabase (Cloud PostgreSQL)
+### Option 2: Hosted PostgreSQL (Supabase Cloud)
 
 1. Create a new project at [supabase.com](https://supabase.com)
 2. Get your database URL from Settings > Database
@@ -33,11 +32,9 @@ The application uses PostgreSQL as its database. You can set it up in several wa
    DATABASE_URL=postgresql://postgres:[password]@[host]:5432/postgres
    ```
 
-### Option 3: Local PostgreSQL Installation
+### Option 3: Local PostgreSQL Installation (Alternative)
 
-1. Install PostgreSQL on your system
-2. Create a database named `elevate_leaps`
-3. Update your `.env.local` with the appropriate connection string
+If you prefer a native Postgres install, configure your connection string accordingly in `.env.local`. The project does not require Docker Compose.
 
 ## Database Initialization
 
@@ -76,27 +73,16 @@ pnpm db:setup
 
 ### Connection Issues
 
-1. **Port already in use:**
+1. **Supabase Local not running:**
    ```bash
-   # Check what's using port 5432
-   lsof -i :5432
-   
-   # Stop Docker container and try again
-   docker-compose down
-   docker-compose up -d postgres
+   supabase status   # Check status
+   supabase start    # Start services
    ```
 
-2. **Database doesn't exist:**
+2. **Wrong port:**
    ```bash
-   # Recreate the database
-   docker-compose down -v  # Remove volumes
-   docker-compose up -d postgres
-   ```
-
-3. **Permission denied:**
-   ```bash
-   # Fix Docker permissions (macOS/Linux)
-   sudo chown -R $(whoami) ~/.docker
+   # Ensure your DATABASE_URL uses port 54322 (see supabase/config.toml)
+   export DATABASE_URL=postgresql://postgres:postgres@localhost:54322/postgres
    ```
 
 ### Schema Issues
@@ -117,8 +103,8 @@ pnpm db:setup
 Required for database connection:
 
 ```bash
-# PostgreSQL connection string
-DATABASE_URL=postgresql://postgres:password@localhost:5432/elevate_leaps
+# PostgreSQL connection string (Supabase Local default)
+DATABASE_URL=postgresql://postgres:postgres@localhost:54322/postgres
 
 # Optional: Database pool settings (production)
 DATABASE_POOL_MAX=10
@@ -137,5 +123,5 @@ DATABASE_POOL_TIMEOUT=30000
 
 - Check the main project documentation in `/CLAUDE.md`
 - Review Prisma documentation for schema changes
-- Check Docker logs: `docker-compose logs postgres`
+- Check Supabase Local status: `supabase status` (or restart with `supabase stop && supabase start`)
 - Verify environment variables: `pnpm env:check`
