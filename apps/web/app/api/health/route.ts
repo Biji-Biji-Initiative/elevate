@@ -11,31 +11,88 @@ export async function GET(): Promise<NextResponse> {
     // Check database connection
     await prisma.$connect()
 
-    // Check environment variables
-    const requiredEnvVars = [
-      'DATABASE_URL',
-      'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY',
-      'CLERK_SECRET_KEY',
-      'NEXT_PUBLIC_SUPABASE_URL',
-      'SUPABASE_SERVICE_ROLE_KEY',
-    ]
+    // Resolve Supabase using new naming first, fallback to legacy
+    const supabaseUrl =
+      process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabasePublicKey =
+      process.env.SUPABASE_PUBLIC_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseSecretKey =
+      process.env.SUPABASE_SECRET_KEY ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    const missingEnvVars = requiredEnvVars.filter(
-      (envVar) => !process.env[envVar],
-    )
-
-    if (missingEnvVars.length > 0) {
-      return createErrorResponse(new Error('Missing required environment variables'), 500)
+    // Check required environment variables (minimal set for runtime)
+    const required = {
+      DATABASE_URL: process.env.DATABASE_URL,
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+        process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+      CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+      SUPABASE_URL: supabaseUrl,
+      SUPABASE_PUBLIC_KEY: supabasePublicKey,
+      SUPABASE_SECRET_KEY: supabaseSecretKey,
+      NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     }
+
+    const missing = Object.entries(required)
+      .filter(([_, v]) => !v)
+      .map(([k]) => k)
+
+    if (missing.length > 0) {
+      return createErrorResponse(
+        new Error(
+          `Missing required environment variables: ${missing.join(', ')}`,
+        ),
+        500,
+      )
+    }
+
+    // Helper maskers
+    const mask = (value: string, start = 4, end = 4) => {
+      if (!value) return ''
+      if (value.length <= start + end) return '*'.repeat(value.length)
+      return `${value.slice(0, start)}…${value.slice(-end)}`
+    }
+
+    const redactUrl = (dbUrl?: string) => {
+      if (!dbUrl) return undefined
+      try {
+        const u = new URL(dbUrl)
+        return { host: u.hostname, port: u.port || undefined, db: u.pathname.replace(/^\//, '') }
+      } catch {
+        return undefined
+      }
+    }
+
+    const now = new Date().toISOString()
+    const version = process.env.VERCEL_GIT_COMMIT_SHA || 'unknown'
+    const environment = process.env.VERCEL_ENV || process.env.NODE_ENV || 'development'
 
     return createSuccessResponse({
       status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: process.env.VERCEL_GIT_COMMIT_SHA || 'unknown',
-      environment: process.env.VERCEL_ENV || 'development',
+      timestamp: now,
+      version,
+      environment,
       checks: {
         database: 'connected',
         environment: 'configured',
+      },
+      config: {
+        database: redactUrl(process.env.DATABASE_URL),
+        siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
+        clerk: {
+          publishableKey: mask(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!),
+          secretKey: mask(process.env.CLERK_SECRET_KEY!),
+        },
+        supabase: {
+          url: supabaseUrl,
+          publicKey: mask(supabasePublicKey!),
+          secretKey: mask(supabaseSecretKey!),
+          usingLegacyNames: Boolean(
+            process.env.NEXT_PUBLIC_SUPABASE_URL ||
+              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+              process.env.SUPABASE_SERVICE_ROLE_KEY,
+          ),
+        },
       },
     })
   } catch (error) {
