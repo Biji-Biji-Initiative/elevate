@@ -47,145 +47,87 @@ function main() {
   let hasErrors = false;
   let hasWarnings = false;
 
-  // Check root vercel.json (web app)
-  log('📱 Web App Configuration', 'cyan');
-  log('-------------------------', 'cyan');
-  
-  const rootVercelConfig = path.join(rootDir, 'vercel.json');
-  if (!checkFileExists(rootVercelConfig)) {
-    log('❌ Root vercel.json not found', 'red');
+  // Check root-level Vercel configs (one per app)
+  log('📱 Web App (root vercel-web.json)', 'cyan');
+  log('----------------------------------', 'cyan');
+
+  const webRootConfigPath = path.join(rootDir, 'vercel-web.json');
+  if (!checkFileExists(webRootConfigPath)) {
+    log('❌ vercel-web.json not found at repo root', 'red');
     hasErrors = true;
   } else {
-    const config = loadJsonFile(rootVercelConfig);
+    const config = loadJsonFile(webRootConfigPath);
     if (!config) {
-      log('❌ Root vercel.json is invalid JSON', 'red');
+      log('❌ vercel-web.json is invalid JSON', 'red');
       hasErrors = true;
     } else {
-      log('✅ Root vercel.json exists and is valid', 'green');
-      
-      // Check key properties
-      if (config.name === 'elevate-web') {
-        log('✅ Correct project name: elevate-web', 'green');
-      } else {
-        log(`⚠️  Project name should be 'elevate-web', found: ${config.name}`, 'yellow');
-        hasWarnings = true;
-      }
-
+      log('✅ vercel-web.json exists and is valid', 'green');
       if (config.buildCommand === 'pnpm turbo run build --filter=web') {
-        log('✅ Correct build command for web app', 'green');
+        log('✅ Web build command OK', 'green');
       } else {
-        log('❌ Incorrect build command for web app', 'red');
+        log(`❌ Web build command incorrect: ${config.buildCommand}`, 'red');
         hasErrors = true;
       }
-
+      if (config.installCommand && config.installCommand.startsWith('pnpm install')) {
+        log('✅ Web install command present', 'green');
+      } else {
+        log('❌ Web install command missing/incorrect', 'red');
+        hasErrors = true;
+      }
       if (config.outputDirectory === 'apps/web/.next') {
-        log('✅ Correct output directory', 'green');
+        log('✅ Web output directory OK', 'green');
       } else {
-        log('❌ Incorrect output directory', 'red');
+        log('❌ Web output directory incorrect', 'red');
         hasErrors = true;
-      }
-
-      if (config.functions && config.functions['apps/web/app/api/**/*.ts']) {
-        log('✅ API function configuration present', 'green');
-      } else {
-        log('⚠️  API function configuration missing', 'yellow');
-        hasWarnings = true;
-      }
-
-      if (config.headers && config.headers.some(h => h.headers.some(hdr => hdr.value === 'elevate-web'))) {
-        log('✅ App identification header present', 'green');
-      } else {
-        log('⚠️  App identification header missing', 'yellow');
-        hasWarnings = true;
       }
     }
   }
 
-  // Check .vercel directory for web app
-  const webVercelDir = path.join(rootDir, '.vercel');
-  if (checkFileExists(webVercelDir)) {
-    log('✅ Web app .vercel directory exists', 'green');
-    const webProjectJson = path.join(webVercelDir, 'project.json');
-    if (checkFileExists(webProjectJson)) {
-      log('✅ Web app project.json exists', 'green');
-      const projectConfig = loadJsonFile(webProjectJson);
-      if (projectConfig && projectConfig.projectId) {
-        log(`✅ Project ID: ${projectConfig.projectId}`, 'green');
+  // Skip .vercel checks; project linking varies locally
+
+  log('\n🔧 Admin App (root vercel-admin.json)', 'cyan');
+  log('------------------------------------', 'cyan');
+  const adminRootConfigPath = path.join(rootDir, 'vercel-admin.json');
+  if (!checkFileExists(adminRootConfigPath)) {
+    log('❌ vercel-admin.json not found at repo root', 'red');
+    hasErrors = true;
+  } else {
+    const config = loadJsonFile(adminRootConfigPath);
+    if (!config) {
+      log('❌ vercel-admin.json is invalid JSON', 'red');
+      hasErrors = true;
+    } else {
+      log('✅ vercel-admin.json exists and is valid', 'green');
+      if (config.buildCommand === 'pnpm turbo run build --filter=elevate-admin') {
+        log('✅ Admin build command OK', 'green');
+      } else {
+        log(`❌ Admin build command incorrect: ${config.buildCommand}`, 'red');
+        hasErrors = true;
+      }
+      if (config.installCommand && config.installCommand.startsWith('pnpm install')) {
+        log('✅ Admin install command present', 'green');
+      } else {
+        log('❌ Admin install command missing/incorrect', 'red');
+        hasErrors = true;
+      }
+      if (config.outputDirectory === 'apps/admin/.next') {
+        log('✅ Admin output directory OK', 'green');
+      } else {
+        log('❌ Admin output directory incorrect', 'red');
+        hasErrors = true;
       }
     }
-  } else {
-    log('⚠️  Web app .vercel directory not found (will be created on first deploy)', 'yellow');
+  }
+
+  // Warn if app-level vercel.json files exist (deprecated)
+  const webAppVercel = path.join(webAppDir, 'vercel.json');
+  const adminAppVercel = path.join(adminAppDir, 'vercel.json');
+  if (checkFileExists(webAppVercel)) {
+    log('⚠️  apps/web/vercel.json present but deprecated. Delete it.', 'yellow');
     hasWarnings = true;
   }
-
-  log('\n🔧 Admin App Configuration', 'cyan');
-  log('---------------------------', 'cyan');
-
-  // Check admin vercel.json
-  const adminVercelConfig = path.join(adminAppDir, 'vercel.json');
-  if (!checkFileExists(adminVercelConfig)) {
-    log('❌ Admin vercel.json not found', 'red');
-    hasErrors = true;
-  } else {
-    const config = loadJsonFile(adminVercelConfig);
-    if (!config) {
-      log('❌ Admin vercel.json is invalid JSON', 'red');
-      hasErrors = true;
-    } else {
-      log('✅ Admin vercel.json exists and is valid', 'green');
-      
-      // Check key properties
-      if (config.name === 'elevate-admin') {
-        log('✅ Correct project name: elevate-admin', 'green');
-      } else {
-        log(`⚠️  Project name should be 'elevate-admin', found: ${config.name}`, 'yellow');
-        hasWarnings = true;
-      }
-
-      if (config.buildCommand === 'cd ../.. && pnpm turbo run build --filter=elevate-admin') {
-        log('✅ Correct build command for admin app', 'green');
-      } else {
-        log('❌ Incorrect build command for admin app', 'red');
-        hasErrors = true;
-      }
-
-      if (config.outputDirectory === '.next') {
-        log('✅ Correct output directory', 'green');
-      } else {
-        log('❌ Incorrect output directory', 'red');
-        hasErrors = true;
-      }
-
-      if (config.functions && config.functions['app/api/**/*.ts']) {
-        log('✅ API function configuration present', 'green');
-      } else {
-        log('⚠️  API function configuration missing', 'yellow');
-        hasWarnings = true;
-      }
-
-      if (config.headers && config.headers.some(h => h.headers.some(hdr => hdr.value === 'elevate-admin'))) {
-        log('✅ App identification header present', 'green');
-      } else {
-        log('⚠️  App identification header missing', 'yellow');
-        hasWarnings = true;
-      }
-    }
-  }
-
-  // Check admin .vercel directory
-  const adminVercelDir = path.join(adminAppDir, '.vercel');
-  if (checkFileExists(adminVercelDir)) {
-    log('✅ Admin app .vercel directory exists', 'green');
-    const adminProjectJson = path.join(adminVercelDir, 'project.json');
-    if (checkFileExists(adminProjectJson)) {
-      log('✅ Admin app project.json exists', 'green');
-      const projectConfig = loadJsonFile(adminProjectJson);
-      if (projectConfig && projectConfig.projectId) {
-        log(`✅ Project ID: ${projectConfig.projectId}`, 'green');
-      }
-    }
-  } else {
-    log('⚠️  Admin app .vercel directory not found (will be created on first deploy)', 'yellow');
+  if (checkFileExists(adminAppVercel)) {
+    log('⚠️  apps/admin/vercel.json present but deprecated. Delete it.', 'yellow');
     hasWarnings = true;
   }
 

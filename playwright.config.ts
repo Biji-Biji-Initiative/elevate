@@ -94,8 +94,9 @@ export default defineConfig({
         NODE_ENV: 'test',
         DATABASE_URL: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
         KAJABI_WEBHOOK_SECRET: 'test-secret-123',
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'test-clerk-key',
-        CLERK_SECRET_KEY: 'test-clerk-secret'
+        // Use valid-looking Clerk test keys to satisfy format validators in test/dev
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_abcdefghijklmnopqrstuvwxyz012345',
+        CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || 'sk_test_abcdefghijklmnopqrstuvwxyz012345'
       }
     },
     {
@@ -106,8 +107,8 @@ export default defineConfig({
         NODE_ENV: 'test',
         DATABASE_URL: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
         KAJABI_WEBHOOK_SECRET: 'test-secret-123',
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: 'test-clerk-key',
-        CLERK_SECRET_KEY: 'test-clerk-secret'
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_abcdefghijklmnopqrstuvwxyz012345',
+        CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || 'sk_test_abcdefghijklmnopqrstuvwxyz012345'
       }
     }
   ],

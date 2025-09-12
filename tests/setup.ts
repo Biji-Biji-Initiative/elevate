@@ -53,6 +53,7 @@ vi.mock('fs/promises', () => ({
 vi.mock('@elevate/security', async () => ({
   withRateLimit: async (_req: unknown, _limiter: unknown, handler: () => unknown) => handler(),
   publicApiRateLimiter: {},
+  adminRateLimiter: {},
   fileUploadRateLimiter: {},
   webhookRateLimiter: {},
   apiRateLimiter: {},

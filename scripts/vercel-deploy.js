@@ -16,10 +16,10 @@ const ENV_VARS = {
   CLERK_SECRET_KEY: 'sk_test_tWQvYNgYTjrtpr5JARVLwaT8rqGAkwNQWRpbEbcxsa',
   CLERK_WEBHOOK_SECRET: 'whsec_2v7DTTZcJytslXWs8SjOMfwjV+vmVeQvft7zHMJL5Zw=',
   
-  // Supabase
-  NEXT_PUBLIC_SUPABASE_URL: 'https://gsvhfcjmjnocxxosjloi.supabase.co',
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzdmhmY2ptam5vY3h4b3NqbG9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4MDAwNDgsImV4cCI6MjA3MjM3NjA0OH0.yNzspqL27r9ML_yT7JZiaCSXDnLPdvOibEDeyIJmav0',
-  SUPABASE_SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzdmhmY2ptam5vY3h4b3NqbG9pIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjgwMDA0OCwiZXhwIjoyMDcyMzc2MDQ4fQ._EMvj8nN3SSB_p0WmTSR9VC0pd5e6wPWWCB32Se0was',
+  // Supabase (new naming)
+  SUPABASE_URL: 'https://gsvhfcjmjnocxxosjloi.supabase.co',
+  SUPABASE_PUBLIC_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzdmhmY2ptam5vY3h4b3NqbG9pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4MDAwNDgsImV4cCI6MjA3MjM3NjA0OH0.yNzspqL27r9ML_yT7JZiaCSXDnLPdvOibEDeyIJmav0',
+  SUPABASE_SECRET_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzdmhmY2ptam5vY3h4b3NqbG9pIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjgwMDA0OCwiZXhwIjoyMDcyMzc2MDQ4fQ._EMvj8nN3SSB_p0WmTSR9VC0pd5e6wPWWCB32Se0was',
   DATABASE_URL: 'postgresql://postgres.gsvhfcjmjnocxxosjloi:ElevateIndo2025!@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres',
   
   // Kajabi

@@ -8,7 +8,7 @@ import {
   getKajabiPointsAwarded,
 } from '@elevate/db'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -34,14 +34,12 @@ function getObjectField<T extends object = Record<string, unknown>>(
   return undefined
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const baseLogger = await getSafeServerLogger('admin-kajabi')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       // Check admin role
       await requireRole('admin')
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
-
       // Fetch Kajabi events using service layer
       const [events, stats, pointsAwarded] = await Promise.all([
         findKajabiEvents(50),
@@ -78,15 +76,12 @@ export async function GET(request: NextRequest) {
           points_awarded: pointsAwarded,
         },
       })
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       return res
     } catch (error) {
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const logger = createRequestLogger(baseLogger, request)
       logger.error('Kajabi admin list failed', error instanceof Error ? error : new Error(String(error)))
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})

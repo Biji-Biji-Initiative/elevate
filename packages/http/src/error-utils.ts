@@ -240,6 +240,32 @@ export function createSuccessResponse<T>(
   return NextResponse.json(response, { status })
 }
 
+/**
+ * Create a standardized paginated response envelope.
+ */
+export function createPaginatedResponse<T>(
+  items: T[],
+  pagination: { page: number; perPage: number; total: number },
+  meta?: Record<string, unknown>,
+  traceId?: string,
+): NextResponse {
+  const body = {
+    success: true as const,
+    data: items,
+    pagination: {
+      page: pagination.page,
+      perPage: pagination.perPage,
+      total: pagination.total,
+      totalPages: Math.max(1, Math.ceil(pagination.total / Math.max(1, pagination.perPage))),
+    },
+    ...(meta ? { meta } : {}),
+    timestamp: new Date().toISOString(),
+  }
+  const res = NextResponse.json(body, { status: 200 })
+  res.headers.set(TRACE_HEADER, traceId || generateTraceId())
+  return res
+}
+
 // Create standardized error response
 export function createErrorResponse(
   error: unknown,

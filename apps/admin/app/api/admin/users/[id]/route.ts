@@ -8,7 +8,7 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandlingParams, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
@@ -27,10 +27,11 @@ const UpdateBodySchema = z
     message: 'At least one field must be provided',
   })
 
-export async function GET(
+export const GET = withApiErrorHandlingParams(async (
   _request: NextRequest,
+  _context: ApiContext,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse> {
+): Promise<NextResponse> => {
   return withRateLimit(_request, adminRateLimiter, async () => {
     await requireRole('admin')
     const start = Date.now()
@@ -54,9 +55,7 @@ export async function GET(
         },
       })
       if (!user) return toErrorResponse(new AdminError('NOT_FOUND', 'User not found'))
-      const traceId = _request.headers.get('x-trace-id') || _request.headers.get(TRACE_HEADER) || undefined
       const res = toSuccessResponse({ user })
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/users/[id]', 'GET', 200)
       recordApiResponseTime('/api/admin/users/[id]', 'GET', Date.now() - start, 200)
       return res
@@ -64,18 +63,17 @@ export async function GET(
       logger.error('GET admin user failed', error instanceof Error ? error : new Error(String(error)))
       recordApiAvailability('/api/admin/users/[id]', 'GET', 500)
       recordApiResponseTime('/api/admin/users/[id]', 'GET', Date.now() - start, 500)
-      const traceId = _request.headers.get('x-trace-id') || _request.headers.get(TRACE_HEADER) || undefined
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})
 
-export async function PATCH(
+export const PATCH = withApiErrorHandlingParams(async (
   request: NextRequest,
+  _context: ApiContext,
   { params }: { params: Promise<{ id: string }> },
-): Promise<NextResponse> {
+): Promise<NextResponse> => {
   return withRateLimit(request, adminRateLimiter, async () => {
     await requireRole('admin')
     const start = Date.now()
@@ -131,9 +129,7 @@ export async function PATCH(
         }
       }
 
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const res = toSuccessResponse({ user: updated })
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/users/[id]', 'PATCH', 200)
       recordApiResponseTime('/api/admin/users/[id]', 'PATCH', Date.now() - start, 200)
       return res
@@ -141,10 +137,8 @@ export async function PATCH(
       logger.error('PATCH admin user failed', error instanceof Error ? error : new Error(String(error)))
       recordApiAvailability('/api/admin/users/[id]', 'PATCH', 500)
       recordApiResponseTime('/api/admin/users/[id]', 'PATCH', Date.now() - start, 500)
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})

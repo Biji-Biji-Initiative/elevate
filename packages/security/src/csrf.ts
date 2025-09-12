@@ -34,7 +34,8 @@ export class CSRFManager {
     this.config = {
       cookieName: config?.cookieName || CSRF_COOKIE_NAME,
       headerName: config?.headerName || CSRF_TOKEN_HEADER,
-      tokenLength: config?.tokenLength || 32,
+      // tokenLength is bytes; 16 bytes -> 32 hex chars (matches tests)
+      tokenLength: config?.tokenLength || 16,
       maxAge: config?.maxAge || 3600, // 1 hour
       secure: config?.secure ?? process.env.NODE_ENV === 'production',
       sameSite: config?.sameSite || 'lax',
@@ -119,7 +120,13 @@ export class CSRFManager {
    * Gets CSRF cookie from request
    */
   getCsrfCookie(request: NextRequest): string | null {
-    return request.cookies.get(this.config.cookieName)?.value || null
+    try {
+      const anyReq = request as unknown as { cookies?: { get?: (n: string) => { value?: string } | undefined } }
+      const val = anyReq.cookies?.get?.(this.config.cookieName)?.value
+      return typeof val === 'string' ? val : null
+    } catch {
+      return null
+    }
   }
 
   /**

@@ -12,7 +12,7 @@ import {
 } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -22,12 +22,12 @@ import type { Role } from '@elevate/types/common'
 
 export const runtime = 'nodejs'
 
-export async function GET(request: NextRequest) {
+export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const baseLogger = await getSafeServerLogger('admin-users')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       await requireRole('admin')
-      const logger = createRequestLogger(baseLogger, request)
+      const _logger = createRequestLogger(baseLogger, request)
       const { searchParams } = new URL(request.url)
 
       const parsedQuery = AdminUsersQuerySchema.safeParse(
@@ -139,7 +139,6 @@ export async function GET(request: NextRequest) {
       }))
 
       {
-        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
         const res = toSuccessResponse({
         users: usersList,
         pagination: {
@@ -149,29 +148,26 @@ export async function GET(request: NextRequest) {
           pages: Math.ceil(total / limit),
         },
         })
-        if (traceId) res.headers.set(TRACE_HEADER, traceId)
         return res
       }
     } catch (error) {
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const logger = createRequestLogger(baseLogger, request)
       logger.error(
         'Admin users GET failed',
         error instanceof Error ? error : new Error(String(error)),
       )
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const baseLogger = await getSafeServerLogger('admin-users')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       const currentUser = await requireRole('admin')
-      const logger = createRequestLogger(baseLogger, request)
+      const _logger = createRequestLogger(baseLogger, request)
       const body = await request.json()
       const parsed = UpdateUserSchema.safeParse(body)
       if (!parsed.success) {
@@ -275,35 +271,31 @@ export async function PATCH(request: NextRequest) {
       })
 
       {
-        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
         const res = toSuccessResponse({
         message: 'User updated successfully',
         user: updatedUser,
         })
-        if (traceId) res.headers.set(TRACE_HEADER, traceId)
         return res
       }
     } catch (error) {
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const logger = createRequestLogger(baseLogger, request)
       logger.error(
         'Admin users PATCH failed',
         error instanceof Error ? error : new Error(String(error)),
       )
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})
 
 // Bulk role updates
-export async function POST(request: NextRequest) {
+export const POST = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const baseLogger = await getSafeServerLogger('admin-users')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       const currentUser = await requireRole('admin')
-      const logger = createRequestLogger(baseLogger, request)
+      const _logger = createRequestLogger(baseLogger, request)
       const body = await request.json()
       const parsed = BulkUpdateUsersSchema.safeParse(body)
       if (!parsed.success) {
@@ -411,25 +403,21 @@ export async function POST(request: NextRequest) {
       })
 
       {
-        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
         const res = toSuccessResponse({
         processed: results.length,
         failed: 0,
         errors: [],
         })
-        if (traceId) res.headers.set(TRACE_HEADER, traceId)
         return res
       }
     } catch (error) {
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const logger = createRequestLogger(baseLogger, request)
       logger.error(
         'Admin users POST failed',
         error instanceof Error ? error : new Error(String(error)),
       )
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})

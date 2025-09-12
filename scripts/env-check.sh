@@ -34,13 +34,7 @@ ENVIRONMENT=${1:-development}
 
 print_status "Checking environment variables for $ENVIRONMENT..."
 
-# Normalize alias variables to avoid naming drift
-if [ -z "${SUPABASE_URL:-}" ] && [ -n "${NEXT_PUBLIC_SUPABASE_URL:-}" ]; then
-  export SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL"
-fi
-if [ -z "${SUPABASE_SERVICE_ROLE:-}" ] && [ -n "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
-  export SUPABASE_SERVICE_ROLE="$SUPABASE_SERVICE_ROLE_KEY"
-fi
+# No normalization; enforce new naming only
 
 # Define required environment variables by category
 declare -A REQUIRED_VARS
@@ -49,9 +43,10 @@ declare -A OPTIONAL_VARS
 # Database
 REQUIRED_VARS[DATABASE_URL]="PostgreSQL database connection string"
 
-# Supabase
+# Supabase (new naming)
 REQUIRED_VARS[SUPABASE_URL]="Supabase project URL"
-REQUIRED_VARS[SUPABASE_SERVICE_ROLE]="Supabase service role key for server-side operations"
+REQUIRED_VARS[SUPABASE_PUBLIC_KEY]="Supabase public anon key (JWT)"
+REQUIRED_VARS[SUPABASE_SECRET_KEY]="Supabase service role key (JWT) for server-side operations"
 
 # Clerk Authentication  
 REQUIRED_VARS[NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY]="Clerk publishable key for client-side auth"
@@ -194,7 +189,8 @@ DATABASE_URL=postgresql://user:password@localhost:5432/elevate_leaps
 
 # Supabase
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE=your-service-role-key
+SUPABASE_PUBLIC_KEY=your-anon-key
+SUPABASE_SECRET_KEY=your-service-role-key
 
 # Clerk Authentication
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your-publishable-key

@@ -4,8 +4,9 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 import {
   AssignBadgeSchema,
@@ -15,10 +16,11 @@ import {
 
 export const runtime = 'nodejs'
 
-export async function POST(request: NextRequest) {
-  const logger = await getSafeServerLogger('admin-badges-assign')
+export const POST = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
+  const baseLogger = await getSafeServerLogger('admin-badges-assign')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
+      const logger = createRequestLogger(baseLogger, request)
       const user = await requireRole('admin')
       const body: unknown = await request.json()
       const parsed = AssignBadgeSchema.safeParse(body)
@@ -132,35 +134,33 @@ export async function POST(request: NextRequest) {
         requested: userIds.length,
       })
       {
-        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
         const res = toSuccessResponse({
           message: `Badge "${badge.name}" assigned to ${results.length} users`,
           processed: results.length,
           failed: userIds.length - results.length,
         })
-        if (traceId) res.headers.set(TRACE_HEADER, traceId)
         return res
       }
     } catch (error) {
       {
-        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+        const logger = createRequestLogger(baseLogger, request)
         logger.error(
           'Assign badge failed',
           error instanceof Error ? error : new Error(String(error)),
         )
         const errRes = toErrorResponse(error)
-        if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
         return errRes
       }
     }
   })
-}
+})
 
 // Remove badge from users
-export async function DELETE(request: NextRequest) {
-  const logger = await getSafeServerLogger('admin-badges-assign')
+export const DELETE = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
+  const baseLogger = await getSafeServerLogger('admin-badges-assign')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
+      const logger = createRequestLogger(baseLogger, request)
       const user = await requireRole('admin')
       const body: unknown = await request.json()
       const parsed = RemoveBadgeSchema.safeParse(body)
@@ -237,26 +237,23 @@ export async function DELETE(request: NextRequest) {
         requested: userIds.length,
       })
       {
-        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
         const res = toSuccessResponse({
           message: `Badge "${badgeName}" removed from ${assignments.length} users`,
           processed: assignments.length,
           failed: 0,
         })
-        if (traceId) res.headers.set(TRACE_HEADER, traceId)
         return res
       }
     } catch (error) {
       {
-        const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+        const logger = createRequestLogger(baseLogger, request)
         logger.error(
           'Remove badge failed',
           error instanceof Error ? error : new Error(String(error)),
         )
         const errRes = toErrorResponse(error)
-        if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
         return errRes
       }
     }
   })
-}
+})

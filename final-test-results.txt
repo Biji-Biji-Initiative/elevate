@@ -1,0 +1,206 @@
+
+ RUN  v3.2.4 /Users/agent-g/elevate/elevate
+
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating submission with invalid user_id 152ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating submission with invalid activity_code 173ms
+ × packages/db/tests/triggers.test.ts > Database Triggers and Automation > Timestamp Triggers > should set created_at automatically on insert 339ms
+   → expected undefined to be defined
+ ✓ packages/db/tests/constraints.test.ts > Database Constraints and Integrity > User Constraints > should enforce unique handle constraint 338ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating points ledger with invalid user_id 87ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating points ledger with invalid activity_code 163ms
+ ✓ packages/db/tests/constraints.test.ts > Database Constraints and Integrity > User Constraints > should enforce unique email constraint 248ms
+ × packages/db/tests/test-utils.test.ts > Test Utilities and Common Patterns > DatabaseFixtures Testing > should generate consistent Indonesian user data 470ms
+   → expected false to be true // Object.is equality
+ × packages/db/tests/triggers.test.ts > Database Triggers and Automation > Timestamp Triggers > should update updated_at automatically on submission changes 295ms
+   → 
+Invalid `db.prisma.submission.update()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/triggers.test.ts:61:60
+
+  58 await new Promise(resolve => setTimeout(resolve, 10));
+  59 
+  60 // Update the submission
+→ 61 const updatedSubmission = await db.prisma.submission.update(
+An operation failed because it depends on one or more records that were required but not found. No record was found for an update.
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should cascade delete submissions when user is deleted 96ms
+ × packages/db/tests/rls.test.ts > Row Level Security Policies > User Table Policies > should allow users to view their own profile 684ms
+   → expected null to be truthy
+ ✓ packages/db/tests/constraints.test.ts > Database Constraints and Integrity > User Constraints > should enforce unique kajabi_contact_id constraint when not null 134ms
+ × packages/db/tests/performance.test.ts > Database Performance Benchmarks > Materialized Views Performance > should refresh leaderboard views within time limits 696ms
+   → 
+Invalid `this.prisma.submission.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:360:60
+
+  357   })
+  358 }
+  359 
+→ 360 const createdSubmission = await this.prisma.submission.create(
+Foreign key constraint violated on the constraint: `submissions_user_id_fkey`
+ ✓ packages/db/tests/triggers.test.ts > Database Triggers and Automation > Timestamp Triggers > should set created_at on points ledger entries 147ms
+ × packages/db/tests/analytics.test.ts > Analytics Views and Performance > Leaderboard Totals View > should calculate total points correctly 162ms
+   → 
+Invalid `this.prisma.submission.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:360:60
+
+  357   })
+  358 }
+  359 
+→ 360 const createdSubmission = await this.prisma.submission.create(
+Foreign key constraint violated on the constraint: `submissions_user_id_fkey`
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should cascade delete points when user is deleted 98ms
+stderr | packages/db/tests/secure-logging.test.ts > logSecureDatabaseQuery > should log failed operations with error
+{
+  "timestamp": "2025-09-12T05:38:20.222Z",
+  "level": "ERROR",
+  "service": "elevate-db",
+  "message": "Database operation failed: SELECT",
+  "error": {
+    "message": "Connection timeout",
+    "name": "Error"
+  },
+  "context": {
+    "operation": "SELECT",
+    "table": "users",
+    "duration": 5000,
+    "recordCount": 0,
+    "error": "Connection timeout"
+  }
+}
+
+stdout | packages/db/tests/secure-logging.test.ts > Database Integration with Secure Logging > PII Protection in Database Operations > should protect PII in database error logs
+prisma:query INSERT INTO "public"."activities" ("code","name","default_points") VALUES ($1,$2,$3) ON CONFLICT ("code") DO UPDATE SET "code" = $4, "name" = $5, "default_points" = $6 WHERE ("public"."activities"."code" = $7 AND 1=1) RETURNING "public"."activities"."code", "public"."activities"."name", "public"."activities"."default_points"
+
+ ✓ packages/db/tests/rls.test.ts > Row Level Security Policies > User Table Policies > should allow users to view public profiles 172ms
+stdout | packages/db/tests/secure-logging.test.ts > Database Integration with Secure Logging > PII Protection in Database Operations > should protect PII in database error logs
+prisma:query INSERT INTO "public"."activities" ("code","name","default_points") VALUES ($1,$2,$3) ON CONFLICT ("code") DO UPDATE SET "code" = $4, "name" = $5, "default_points" = $6 WHERE ("public"."activities"."code" = $7 AND 1=1) RETURNING "public"."activities"."code", "public"."activities"."name", "public"."activities"."default_points"
+
+ × packages/db/tests/integration.test.ts > End-to-End Integration Tests > Complete LEAPS Journey Workflow > should handle complete user journey from registration to leaderboard 688ms
+   → Submission test-submission-1-05d00589 does not exist
+stdout | packages/db/tests/secure-logging.test.ts > Database Integration with Secure Logging > PII Protection in Database Operations > should protect PII in database error logs
+prisma:query INSERT INTO "public"."activities" ("code","name","default_points") VALUES ($1,$2,$3) ON CONFLICT ("code") DO UPDATE SET "code" = $4, "name" = $5, "default_points" = $6 WHERE ("public"."activities"."code" = $7 AND 1=1) RETURNING "public"."activities"."code", "public"."activities"."name", "public"."activities"."default_points"
+
+ × packages/db/tests/test-utils.test.ts > Test Utilities and Common Patterns > DatabaseFixtures Testing > should generate realistic LEAPS activity payloads 316ms
+   → expected { …(5) } to have property "students_trained"
+ × packages/db/tests/analytics.test.ts > Analytics Views and Performance > Leaderboard Totals View > should only include participants with points 149ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+ × tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent deleting activity if it has associated data 123ms
+   → 
+Invalid `this.prisma.submissionAttachment.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:377:44
+
+  374 if (submission.attachments && submission.attachments.length > 0) {
+  375   await Promise.all(
+  376     submission.attachments.map((attachment) =>
+→ 377       this.prisma.submissionAttachment.create(
+Foreign key constraint violated on the constraint: `submission_attachments_submission_id_fkey`
+ × packages/db/tests/triggers.test.ts > Database Triggers and Automation > Timestamp Triggers > should set created_at on all other models with timestamps 154ms
+   → 
+Invalid `this.prisma.submission.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:360:60
+
+  357   })
+  358 }
+  359 
+→ 360 const createdSubmission = await this.prisma.submission.create(
+Foreign key constraint violated on the constraint: `submissions_user_id_fkey`
+stdout | packages/db/tests/secure-logging.test.ts > Database Integration with Secure Logging > PII Protection in Database Operations > should protect PII in database error logs
+prisma:query INSERT INTO "public"."activities" ("code","name","default_points") VALUES ($1,$2,$3) ON CONFLICT ("code") DO UPDATE SET "code" = $4, "name" = $5, "default_points" = $6 WHERE ("public"."activities"."code" = $7 AND 1=1) RETURNING "public"."activities"."code", "public"."activities"."name", "public"."activities"."default_points"
+
+stdout | packages/db/tests/secure-logging.test.ts > Database Integration with Secure Logging > PII Protection in Database Operations > should protect PII in database error logs
+prisma:query INSERT INTO "public"."activities" ("code","name","default_points") VALUES ($1,$2,$3) ON CONFLICT ("code") DO UPDATE SET "code" = $4, "name" = $5, "default_points" = $6 WHERE ("public"."activities"."code" = $7 AND 1=1) RETURNING "public"."activities"."code", "public"."activities"."name", "public"."activities"."default_points"
+
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > redactPII > should redact email addresses 1ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > redactPII > should redact multiple email addresses 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > redactPII > should redact phone numbers 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > redactPII > should redact IP addresses 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > redactPII > should redact tokens and secrets 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > redactPII > should handle empty or null input safely 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > sanitizeSQLQuery > should sanitize queries with user_id parameters 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > sanitizeSQLQuery > should sanitize queries with email parameters 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > sanitizeSQLQuery > should replace parameter placeholders 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > sanitizeSQLQuery > should simplify queries in production environment 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > sanitizeSQLQuery > should handle invalid queries gracefully 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > redactSQLParams > should redact email parameters 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > redactSQLParams > should handle empty or invalid parameters 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > redactSQLParams > should redact objects in production 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > sanitizeError > should sanitize Error objects 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > sanitizeError > should sanitize string errors 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > sanitizeError > should include stack trace only in development 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > PIIRedactor > sanitizeError > should handle unknown error types 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > SecureDatabaseLogger > should create secure logger instance 1ms
+ ✓ packages/db/tests/secure-logging.test.ts > SecureDatabaseLogger > should log database operations securely 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > SecureDatabaseLogger > should log errors with PII redaction 1ms
+ ✓ packages/db/tests/secure-logging.test.ts > SecureDatabaseLogger > should respect log levels 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > logSecureDatabaseQuery > should log successful operations 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > logSecureDatabaseQuery > should log failed operations with error 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > logSecureDatabaseQuery > should handle operations without table info 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > Environment Configuration > should respect NODE_ENV=production settings 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > Environment Configuration > should handle missing environment variables gracefully 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > Integration with Real PII Data > should completely remove PII from realistic log scenarios 0ms
+ ✓ packages/db/tests/secure-logging.test.ts > Integration with Real PII Data > should handle Indonesian names and contexts 0ms
+ × packages/db/tests/secure-logging.test.ts > Integration with Real PII Data > should handle Indonesian school data and education context 6ms
+   → expected '\n      Sekolah: SMAN 1 Jakarta\n    …' to contain '2024****'
+stdout | packages/db/tests/secure-logging.test.ts > Database Integration with Secure Logging > PII Protection in Database Operations > should protect PII in database error logs
+prisma:query INSERT INTO "public"."badges" ("code","name","description","criteria") VALUES ($1,$2,$3,$4) ON CONFLICT ("code") DO UPDATE SET "code" = $5, "name" = $6, "description" = $7, "criteria" = $8 WHERE ("public"."badges"."code" = $9 AND 1=1) RETURNING "public"."badges"."code", "public"."badges"."name", "public"."badges"."description", "public"."badges"."criteria", "public"."badges"."icon_url"
+
+stdout | packages/db/tests/secure-logging.test.ts > Database Integration with Secure Logging > PII Protection in Database Operations > should protect PII in database error logs
+prisma:query INSERT INTO "public"."badges" ("code","name","description","criteria") VALUES ($1,$2,$3,$4) ON CONFLICT ("code") DO UPDATE SET "code" = $5, "name" = $6, "description" = $7, "criteria" = $8 WHERE ("public"."badges"."code" = $9 AND 1=1) RETURNING "public"."badges"."code", "public"."badges"."name", "public"."badges"."description", "public"."badges"."criteria", "public"."badges"."icon_url"
+
+ × packages/db/tests/constraints.test.ts > Database Constraints and Integrity > User Constraints > should allow multiple users with null kajabi_contact_id 187ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+ ✓ packages/db/tests/rls.test.ts > Row Level Security Policies > User Table Policies > should allow users to update their own profile 139ms
+ × packages/db/tests/performance.test.ts > Database Performance Benchmarks > Materialized Views Performance > should query leaderboard views efficiently under load 225ms
+   → 
+Invalid `this.prisma.submissionAttachment.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:377:44
+
+  374 if (submission.attachments && submission.attachments.length > 0) {
+  375   await Promise.all(
+  376     submission.attachments.map((attachment) =>
+→ 377       this.prisma.submissionAttachment.create(
+Foreign key constraint violated on the constraint: `submission_attachments_submission_id_fkey`
+ × packages/db/tests/integration.test.ts > End-to-End Integration Tests > Complete LEAPS Journey Workflow > should handle multi-user competitive scenario 249ms
+   → 
+Invalid `this.prisma.pointsLedger.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:414:36
+
+  411   })
+  412 }
+  413 
+→ 414 await this.prisma.pointsLedger.create(
+Foreign key constraint violated on the constraint: `points_ledger_user_id_fkey`
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Unique Constraints > should prevent duplicate user handles 83ms
+stdout | packages/db/tests/secure-logging.test.ts > Database Integration with Secure Logging > PII Protection in Database Operations > should protect PII in database error logs
+prisma:query INSERT INTO "public"."badges" ("code","name","description","criteria") VALUES ($1,$2,$3,$4) ON CONFLICT ("code") DO UPDATE SET "code" = $5, "name" = $6, "description" = $7, "criteria" = $8 WHERE ("public"."badges"."code" = $9 AND 1=1) RETURNING "public"."badges"."code", "public"."badges"."name", "public"."badges"."description", "public"."badges"."criteria", "public"."badges"."icon_url"
+
+stdout | packages/db/tests/secure-logging.test.ts > Database Integration with Secure Logging > PII Protection in Database Operations > should protect PII in database error logs
+prisma:query INSERT INTO "public"."badges" ("code","name","description","criteria") VALUES ($1,$2,$3,$4) ON CONFLICT ("code") DO UPDATE SET "code" = $5, "name" = $6, "description" = $7, "criteria" = $8 WHERE ("public"."badges"."code" = $9 AND 1=1) RETURNING "public"."badges"."code", "public"."badges"."name", "public"."badges"."description", "public"."badges"."criteria", "public"."badges"."icon_url"
+
+ × packages/db/tests/test-utils.test.ts > Test Utilities and Common Patterns > DatabaseFixtures Testing > should create complete test scenarios 182ms
+   → 
+Invalid `this.prisma.submissionAttachment.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:377:44
+
+  374 if (submission.attachments && submission.attachments.length > 0) {
+  375   await Promise.all(
+  376     submission.attachments.map((attachment) =>
+→ 377       this.prisma.submissionAttachment.create(
+Foreign key constraint violated on the constraint: `submission_attachments_submission_id_fkey`
+stdout | packages/db/tests/secure-logging.test.ts > Database Integration with Secure Logging > PII Protection in Database Operations > should protect PII in database error logs
+prisma:query INSERT INTO "public"."badges" ("code","name","description","criteria") VALUES ($1,$2,$3,$4) ON CONFLICT ("code") DO UPDATE SET "code" = $5, "name" = $6, "description" = $7, "criteria" = $8 WHERE ("public"."badges"."code" = $9 AND 1=1) RETURNING "public"."badges"."code", "public"."badges"."name", "public"."badges"."description", "public"."badges"."criteria", "public"."badges"."icon_url"
+

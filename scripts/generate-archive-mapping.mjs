@@ -37,3 +37,4 @@ const lines = [
 ]
 writeFileSync('docs/ARCHIVE_MAPPING.md', lines.join('\n'))
 console.log('✅ Generated docs/ARCHIVE_MAPPING.md')
+

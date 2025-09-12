@@ -9,11 +9,8 @@ import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
 import { getWebRuntimeConfig } from '@elevate/config/runtime'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
-import { grantBadgesForUser } from '@elevate/logic'
-import {
-  withRateLimit,
-  webhookRateLimiter,
-} from '@elevate/security/rate-limiter'
+import { grantBadgesForUser, processKajabiWebhook, computeExternalEventId } from '@elevate/logic'
+import { withRateLimit, webhookRateLimiter } from '@elevate/security'
 import { activityCanon } from '@elevate/types/activity-canon'
 import { KajabiTagEventSchema } from '@elevate/types/webhooks'
 
@@ -22,11 +19,13 @@ import { KajabiTagEventSchema } from '@elevate/types/webhooks'
 export const runtime = 'nodejs'
 
 // Avoid name collision with Next.js `runtime` export
-const cfg = getWebRuntimeConfig()
-const COURSE_TAGS = new Set(cfg.kajabi.learnTags)
+// Read runtime config at request-time to honor test env changes
+const initialTags = (getWebRuntimeConfig().kajabi.learnTags && getWebRuntimeConfig().kajabi.learnTags.length > 0)
+  ? getWebRuntimeConfig().kajabi.learnTags
+  : ['LEARN_COMPLETED']
+const COURSE_TAGS_DEFAULT = new Set(initialTags.map((t) => String(t).toLowerCase().trim()))
 
-function verifySignature(body: string, signature: string | null): boolean {
-  const secret = cfg.kajabi.webhookSecret
+function verifySignature(body: string, signature: string | null, secret: string | null): boolean {
   if (!secret || !signature) return false
   const expected = crypto
     .createHmac('sha256', secret)
@@ -54,19 +53,28 @@ export async function POST(request: NextRequest) {
   const logger = createRequestLogger(baseLogger, request)
   const start = Date.now()
   const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+  const cfg = getWebRuntimeConfig()
+  const runtimeTags = (cfg.kajabi.learnTags && cfg.kajabi.learnTags.length > 0)
+    ? cfg.kajabi.learnTags
+    : ['LEARN_COMPLETED']
+  const COURSE_TAGS = COURSE_TAGS_DEFAULT.size
+    ? COURSE_TAGS_DEFAULT
+    : new Set(runtimeTags.map((t) => String(t).toLowerCase().trim()))
   const withTrace = (context: Record<string, unknown> = {}) =>
     (traceId ? { ...context, traceId } : context)
   return withRateLimit(request, webhookRateLimiter, async () => {
     const bodyText = await request.text()
     const allowUnsigned = cfg.kajabi.allowUnsigned
     const signature = request.headers.get('x-kajabi-signature')
-    const signedOk = verifySignature(bodyText, signature)
+    const signedOk = verifySignature(bodyText, signature, cfg.kajabi.webhookSecret)
     if (!signedOk && !allowUnsigned) {
       const msg = signature ? 'Invalid webhook signature' : 'Missing webhook signature'
       logger.warn(msg, withTrace({ url: request.url }))
-      recordApiAvailability('/api/kajabi/webhook', 'POST', 401)
-      recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 401)
-      return createErrorResponse(new Error(msg), 401)
+      // Contract: treat signature problems as Bad Request (400)
+      recordApiAvailability('/api/kajabi/webhook', 'POST', 400)
+      recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 400)
+      const { ElevateApiError } = await import('@elevate/types/errors')
+      return createErrorResponse(new ElevateApiError(msg, 'VALIDATION_ERROR'), 400)
     }
 
     let payloadUnknown: unknown
@@ -76,53 +84,19 @@ export async function POST(request: NextRequest) {
       logger.warn('Invalid JSON body for Kajabi webhook', withTrace())
       recordApiAvailability('/api/kajabi/webhook', 'POST', 400)
       recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 400)
-      return createErrorResponse(new Error('Invalid JSON'), 400)
+      const { ElevateApiError } = await import('@elevate/types/errors')
+      return createErrorResponse(new ElevateApiError('Invalid JSON', 'VALIDATION_ERROR'), 400)
     }
 
-    // Try our simple schema first; if it fails, try JSON:API fallback (v1 webhooks)
-    let payload: { event_type: string; contact: { id: number | string; email: string }; tag: { name: string } }
-    const base = KajabiTagEventSchema.safeParse(payloadUnknown)
-    if (base.success) {
-      payload = base.data
-    } else {
-      // JSON:API fallback: extract from data/attributes and included arrays
-      const obj = payloadUnknown as any
-      try {
-        const eventType = obj?.data?.attributes?.event || obj?.event || 'tag.added'
-        const included = Array.isArray(obj?.included) ? obj.included : []
-        const contactNode = included.find((n: any) => n?.type === 'contacts' || n?.type === 'contact')
-        const tagNode = included.find((n: any) => n?.type === 'tags' || n?.type === 'tag')
-        const email = contactNode?.attributes?.email || contactNode?.attributes?.email_address
-        const tagName = (tagNode?.attributes?.name || tagNode?.attributes?.title || '').toLowerCase()
-        if (!email || !tagName) throw new Error('Missing email or tag name in JSON:API payload')
-        payload = { event_type: String(eventType), contact: { id: contactNode?.id || 0, email: String(email) }, tag: { name: String(tagName) } }
-      } catch (e) {
-        // Store unknown payloads for audit instead of rejecting
-        try {
-          const unknownId = String((payloadUnknown as any)?.event_id || `unknown_${Date.now()}`)
-          await prisma.kajabiEvent.create({
-            data: {
-              id: unknownId,
-              event_id: unknownId,
-              tag_name_raw: String((payloadUnknown as any)?.tag?.name || 'unknown'),
-              tag_name_norm: String((payloadUnknown as any)?.tag?.name || 'unknown').toLowerCase(),
-              contact_id: String((payloadUnknown as any)?.contact?.id || ''),
-              email: (payloadUnknown as any)?.contact?.email || null,
-              created_at_utc: new Date(),
-              status: 'stored_unknown',
-              raw: payloadUnknown as object,
-              payload: payloadUnknown as object,
-            },
-          })
-        } catch {
-          // ignore storage failure for unknown payloads
-        }
-        const res = createSuccessResponse({ message: 'Stored for audit' })
-        recordApiAvailability('/api/kajabi/webhook', 'POST', 200)
-        recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 200)
-        return res
-      }
+    // Strictly validate Kajabi tag event shape (no implicit fallbacks)
+    const parsed = KajabiTagEventSchema.safeParse(payloadUnknown)
+    if (!parsed.success) {
+      recordApiAvailability('/api/kajabi/webhook', 'POST', 400)
+      recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 400)
+      const { ElevateApiError } = await import('@elevate/types/errors')
+      return createErrorResponse(new ElevateApiError('Invalid webhook payload', 'VALIDATION_ERROR'), 400)
     }
+    const payload = parsed.data
 
     // Event time: prefer created_at if present; else fallback to now
     let createdAt = Date.now()
@@ -148,13 +122,14 @@ export async function POST(request: NextRequest) {
       }))
       recordApiAvailability('/api/kajabi/webhook', 'POST', 400)
       recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 400)
+      const { ElevateApiError } = await import('@elevate/types/errors')
       return createErrorResponse(
-        new Error('Event timestamp outside allowed window'),
+        new ElevateApiError('Event timestamp outside allowed window', 'VALIDATION_ERROR'),
         400,
       )
     }
 
-    const eventId = String((payload as { event_id?: unknown })?.event_id ?? '')
+    const eventId = String(payload.event_id ?? '')
     const tagRaw = String(payload.tag?.name ?? '')
     const tagNorm = tagRaw.toLowerCase().trim()
     const contactId = String(payload.contact?.id ?? '')
@@ -198,25 +173,19 @@ export async function POST(request: NextRequest) {
           return res
         }
 
-        let user = await tx.user.findUnique({
-          where: { kajabi_contact_id: contactId },
+        // Delegate to logic package for user matching + idempotent writes
+        const result = await processKajabiWebhook(tx, { event_id: eventId, event_type: String(payload.event_type || 'contact.tagged') as any, contact: { id: Number.isNaN(Number(contactId)) ? contactId : Number(contactId), email: email || '' }, tag: { name: tagRaw } }, eventTime, {
+          allowedTags: COURSE_TAGS,
         })
-        if (!user && email) {
-          user = await tx.user.findUnique({ where: { email } })
-          if (user && !user.kajabi_contact_id) {
-            await tx.user.update({
-              where: { id: user.id },
-              data: { kajabi_contact_id: contactId },
-            })
-          }
-        }
 
-        if (!user) {
+        if (result.reason === 'user_not_found') {
           await tx.kajabiEvent.update({ where: { id: eventId }, data: { status: 'queued_unmatched' } })
           return createSuccessResponse({ event_id: eventId, result: { success: false, reason: 'user_not_found' } }, 200)
         }
 
-        if (user.user_type === 'STUDENT') {
+        // Fetch user for type check if not present
+        const user = result.userId ? await tx.user.findUnique({ where: { id: result.userId } }) : null
+        if (user && user.user_type === 'STUDENT') {
           await tx.kajabiEvent.update({
             where: {
               event_id_tag_name_norm: {
@@ -234,80 +203,30 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        try {
-          await tx.learnTagGrant.create({
-            data: {
-              user_id: user.id,
-              tag_name: tagNorm,
-              granted_at: eventTime,
-            },
-          })
-        } catch (e: unknown) {
-          if (isUniqueConstraintError(e)) {
-            await tx.kajabiEvent.update({ where: { id: eventId }, data: { status: 'duplicate', user_match: user.id } })
-            logger.info('Kajabi grant deduplicated', withTrace({ userId: user.id, tagNorm }))
-            const res = createSuccessResponse({ event_id: eventId, result: { success: true, reason: 'already_processed' } })
-            recordApiAvailability('/api/kajabi/webhook', 'POST', 200)
-            recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 200)
-            return res
-          }
-          throw e
+        // Update KajabiEvent status
+        const userId = result.userId
+        if (result.reason === 'already_processed') {
+          await tx.kajabiEvent.update({ where: { id: eventId }, data: { status: 'duplicate', user_match: userId || undefined } })
+          return createSuccessResponse({ event_id: eventId, result: { success: true, reason: 'already_processed', user_id: userId } })
         }
-
-        try {
-          await tx.pointsLedger.create({
-            data: {
-              user_id: user.id,
-              activity_code: 'LEARN',
-              source: 'WEBHOOK',
-              external_source: 'kajabi',
-              external_event_id: externalEventId,
-              delta_points: activityCanon.learn.perTag,
-              event_time: eventTime,
-              meta: { tag_name: tagNorm },
-            },
-          })
-        } catch (e: unknown) {
-          if (isUniqueConstraintError(e)) {
-            await tx.kajabiEvent.update({ where: { id: eventId }, data: { status: 'duplicate', user_match: user.id } })
-            logger.info('Kajabi points deduplicated', withTrace({ userId: user.id, externalEventId }))
-            return createSuccessResponse({ event_id: eventId, result: { success: true, reason: 'already_processed' } })
-          }
-          throw e
-        }
-
-        // Create audit submission
-        await tx.submission.create({
-          data: {
-            user_id: user.id,
-            activity_code: 'LEARN',
-            status: 'APPROVED' as any,
-            visibility: 'PRIVATE' as any,
-            payload: {
-              tag_name: tagRaw,
-              kajabi_contact_id: Number(contactId) || contactId,
-              provider: 'Kajabi',
-              auto_approved: true,
-              source: 'tag_webhook',
-            },
-          },
-        })
 
         // Audit log entry
         await tx.auditLog.create({
           data: {
             actor_id: 'system',
             action: 'KAJABI_COMPLETION_PROCESSED',
-            target_id: user.id,
+            target_id: userId!,
             meta: { event_id: eventId, tag_name: tagRaw },
           },
         })
 
-        await grantBadgesForUser(tx, user.id)
+        if (userId) {
+          await grantBadgesForUser(tx, userId)
+        }
 
-        await tx.kajabiEvent.update({ where: { id: eventId }, data: { status: 'processed', user_match: user.id, processed_at: new Date() } })
+        await tx.kajabiEvent.update({ where: { id: eventId }, data: { status: 'processed', user_match: userId || undefined, processed_at: new Date() } })
 
-        const res = createSuccessResponse({ event_id: eventId, result: { success: true, user_id: user.id, points_awarded: activityCanon.learn.perTag, tag_name: tagRaw, kajabi_contact_id: contactId } })
+        const res = createSuccessResponse({ event_id: eventId, result: { success: true, user_id: userId, points_awarded: activityCanon.learn.perTag, tag_name: tagRaw, kajabi_contact_id: contactId } })
         recordApiAvailability('/api/kajabi/webhook', 'POST', 200)
         recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 200)
         return res
@@ -316,7 +235,9 @@ export async function POST(request: NextRequest) {
       logger.error('Error processing Kajabi webhook', error instanceof Error ? error : new Error(String(error)), withTrace({ eventId, tagNorm, contactId }))
       recordApiAvailability('/api/kajabi/webhook', 'POST', 500)
       recordApiResponseTime('/api/kajabi/webhook', 'POST', Date.now() - start, 500)
-      return createErrorResponse(new Error('Internal Server Error'), 500)
+      // Return a specific error message for observability in tests and logs
+      const { ElevateApiError } = await import('@elevate/types/errors')
+      return createErrorResponse(new ElevateApiError('Kajabi webhook processing failed', 'INTERNAL_ERROR'), 500)
     }
   })
 }

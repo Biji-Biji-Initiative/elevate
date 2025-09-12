@@ -36,8 +36,8 @@ const requiredEnvVars = {
   // Database (critical for admin operations)
   DATABASE_URL: process.env.DATABASE_URL,
   // Supabase (for file operations)
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE: process.env.SUPABASE_SERVICE_ROLE,
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
 }
 
 // Log missing env vars on startup (non-fatal in development/preview)

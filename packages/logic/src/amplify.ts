@@ -26,10 +26,27 @@ export interface ApproveAmplifyOptions {
   duplicateWindowMinutes?: number
 }
 
+function normalizeTimezone(tz: string): string {
+  const v = tz.trim()
+  // Map common non-IANA timezones to IANA to satisfy Intl APIs
+  if (/^GMT\+7$|^UTC\+7$|^WIB$/i.test(v)) return 'Asia/Jakarta'
+  if (/^GMT\+8$|^UTC\+8$|^WITA$/i.test(v)) return 'Asia/Makassar'
+  if (/^GMT\+9$|^UTC\+9$|^WIT$/i.test(v)) return 'Asia/Jayapura'
+  if (/^GMT[+-]\d{1,2}$/i.test(v)) {
+    // Generic GMT offset fallback: pick a representative IANA; use Etc/GMT-<offset>
+    // Note: Etc/GMT signs are inverted: Etc/GMT-7 equals UTC+7
+    const sign = v.includes('-') ? '+' : '-'
+    const hours = v.match(/\d{1,2}/)?.[0] ?? '0'
+    return `Etc/GMT${sign}${hours}`
+  }
+  return v
+}
+
 function toUtc(date: string, time: string | undefined, tz: string): Date {
   const dt = new Date(`${date}T${time ?? '00:00'}:00Z`)
+  const tzNorm = normalizeTimezone(tz)
   const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: tz,
+    timeZone: tzNorm,
     timeZoneName: 'short',
     hour12: false,
     year: 'numeric',

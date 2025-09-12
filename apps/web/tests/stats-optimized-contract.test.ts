@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { TRACE_HEADER } from '@elevate/http'
 import { readJson } from './test-utils'
 
 const queryRawMock = vi.fn()
@@ -44,6 +45,7 @@ describe('stats-optimized contract', () => {
     const req = new Request('http://localhost/api/stats-optimized')
     const res = await GET(req)
     expect(res.status).toBe(200)
+    expect(res.headers.get(TRACE_HEADER)).toBeTruthy()
     expect(res.headers.get('X-Stats-Source')).toBe('materialized-views')
     expect(res.headers.get('Cache-Control')).toContain('s-maxage')
     expect(res.headers.get('X-Stats-Last-Updated')).toBeTruthy()

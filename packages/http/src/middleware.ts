@@ -33,7 +33,9 @@ export type SimpleHandler = (request: NextRequest) => Promise<NextResponse>
 // Global error boundary for API routes
 export function withApiErrorHandling(handler: ApiHandler): SimpleHandler {
   return async (request: NextRequest) => {
-    const traceId = generateTraceId()
+    // Prefer inbound trace header for correlation; generate if absent
+    const inboundTrace = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+    const traceId = inboundTrace || generateTraceId()
     const startTime = Date.now()
     const context: ApiContext = { traceId, startTime, request }
 
@@ -74,6 +76,57 @@ export function withApiErrorHandling(handler: ApiHandler): SimpleHandler {
       const response = createErrorResponse(error, 500, traceId)
       response.headers.set(TRACE_HEADER, traceId)
       // Best-effort Server-Timing on errors as well
+      response.headers.set('Server-Timing', `api;desc=handler_error;dur=${Date.now() - startTime}`)
+      return response
+    }
+  }
+}
+
+// API handler type with params (for dynamic routes)
+export type ApiHandlerWithParams<P extends Record<string, string> = Record<string, string>> = (
+  request: NextRequest,
+  context: ApiContext,
+  route: { params: P } | { params: Promise<P> }
+) => Promise<NextResponse>
+
+// Wrapper for dynamic routes that receive { params }
+export function withApiErrorHandlingParams<P extends Record<string, string> = Record<string, string>>(
+  handler: ApiHandlerWithParams<P>,
+) {
+  return async (request: NextRequest, route: { params: P } | { params: Promise<P> }) => {
+    const inboundTrace = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+    const traceId = inboundTrace || generateTraceId()
+    const startTime = Date.now()
+    const context: ApiContext = { traceId, startTime, request }
+
+    try {
+      // Normalize params in case Next provides a Promise
+      const paramsValue = 'then' in route.params ? await (route.params as Promise<P>) : (route.params as P)
+      const response = await handler(request, context, { params: paramsValue })
+      response.headers.set(TRACE_HEADER, traceId)
+      const duration = Date.now() - startTime
+      response.headers.set('Server-Timing', `api;desc=handler;dur=${duration}`)
+      if (duration > 1000) {
+        console.warn(`[SLOW API] ${request.method} ${request.url} took ${duration}ms`, {
+          traceId,
+          method: request.method,
+          url: request.url,
+          duration,
+        })
+      }
+      return response
+    } catch (error) {
+      const errorObj = error instanceof Error ? error : new Error(String(error))
+      logError(errorObj, traceId, {
+        method: request.method,
+        url: request.url,
+        duration: Date.now() - startTime,
+        userAgent: request.headers.get('user-agent'),
+        referer: request.headers.get('referer'),
+        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+      })
+      const response = createErrorResponse(error, 500, traceId)
+      response.headers.set(TRACE_HEADER, traceId)
       response.headers.set('Server-Timing', `api;desc=handler_error;dur=${Date.now() - startTime}`)
       return response
     }

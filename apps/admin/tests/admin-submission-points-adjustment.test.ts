@@ -84,6 +84,6 @@ describe('Admin submissions PATCH - point adjustment bounds', () => {
     expect(res.status).toBe(400)
     const json = await res.json()
     expect(json.success).toBe(false)
-    expect(String(json.error || '')).toContain('POINT_ADJUSTMENT_OUT_OF_BOUNDS')
+    expect(json.code).toBe('POINT_ADJUSTMENT_OUT_OF_BOUNDS')
   })
 })

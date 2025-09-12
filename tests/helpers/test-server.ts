@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { vi } from 'vitest'
+import * as AuthHelpers from '@elevate/auth/server-helpers'
 
 export interface MockRequestInit {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'
@@ -60,13 +61,16 @@ export function createMockRequest(url: string, init: MockRequestInit = {}): Next
 /**
  * Mock authentication for a test user
  */
+let requireRoleSpy: ReturnType<typeof vi.spyOn> | null = null
+
 export function mockAuthentication(user: {
   userId: string
   role: 'PARTICIPANT' | 'REVIEWER' | 'ADMIN' | 'SUPERADMIN'
 }) {
-  const { requireRole } = require('@elevate/auth/server-helpers')
-  
-  vi.mocked(requireRole).mockImplementation(async (requiredRole: string) => {
+  if (!requireRoleSpy) {
+    requireRoleSpy = vi.spyOn(AuthHelpers, 'requireRole')
+  }
+  requireRoleSpy.mockImplementation(async (requiredRole: string) => {
     const roleHierarchy = {
       'PARTICIPANT': 0,
       'REVIEWER': 1,
@@ -89,8 +93,9 @@ export function mockAuthentication(user: {
  * Clear authentication mocks
  */
 export function clearAuthenticationMock() {
-  const { requireRole } = require('@elevate/auth/server-helpers')
-  vi.mocked(requireRole).mockClear()
+  if (requireRoleSpy) {
+    requireRoleSpy.mockReset()
+  }
 }
 
 /**
@@ -132,7 +137,7 @@ export async function executeApiRoute(
 export function createWebhookRequest(
   url: string,
   payload: Record<string, unknown>,
-  secret = 'test-webhook-secret-123'
+  secret = process.env.KAJABI_WEBHOOK_SECRET || 'test-webhook-secret-123'
 ): NextRequest {
   const crypto = require('crypto')
   const body = JSON.stringify(payload)
@@ -194,9 +199,10 @@ export function createMockFile(file: MockFile): File {
 export const TestData = {
   user: (overrides = {}) => ({
     id: `test-user-${Date.now()}`,
-    handle: 'testuser',
+    handle: `testuser-${Math.floor(Math.random() * 1e6)}`,
     name: 'Test User',
-    email: 'test@example.com',
+    // Ensure unique email across tests to avoid unique constraint conflicts
+    email: `test+${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`,
     role: 'PARTICIPANT' as const,
     school: 'Test School',
     cohort: 'Test Cohort',

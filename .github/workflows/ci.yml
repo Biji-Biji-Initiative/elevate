@@ -17,9 +17,9 @@ env:
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: test_dummy
   CLERK_SECRET_KEY: test_dummy
   # Use CI-safe, format-valid placeholders for env validation
-  NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy_key
-  SUPABASE_SERVICE_ROLE: dummy_key
+  SUPABASE_URL: https://example.supabase.co
+  SUPABASE_PUBLIC_KEY: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZW1vIn0.signature
+  SUPABASE_SECRET_KEY: eyJhbGciOiJIUzI1NiJ9.eyJzZXJ2aWNlIjoicm9sZSJ9.signature
   CLERK_WEBHOOK_SECRET: whsec_dummy
   KAJABI_WEBHOOK_SECRET: test_secret
   NEXT_PUBLIC_SITE_URL: http://localhost:3000
@@ -106,9 +106,9 @@ jobs:
           CLERK_SECRET_KEY: sk_test_abcdefghijklmnopqrstuvwxyz1234
           NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
           NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
-          NEXT_PUBLIC_SUPABASE_URL: https://exampleproj.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJleGFtcGxlIn0.signature
-          SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXJ2aWNlIjoicm9sZSJ9.signature
+          SUPABASE_URL: https://exampleproj.supabase.co
+          SUPABASE_PUBLIC_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJleGFtcGxlIn0.signature
+          SUPABASE_SECRET_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXJ2aWNlIjoicm9sZSJ9.signature
           NEXT_PUBLIC_SITE_URL: https://example.org
           KAJABI_WEBHOOK_SECRET: whsec_abcdefghijklmnopqrstuvwxyz1234
           KAJABI_API_KEY: ka_exampleapikey123456

@@ -336,21 +336,51 @@ Uses Supabase Storage with signed URLs:
 
 ### Kajabi Course Completion
 
-```typescript
-// POST /api/kajabi/webhook
-{
-  "event_id": "evt_123",
-  "tag_name": "ai-fundamentals-completed",
-  "contact_id": "12345",
-  "email": "educator@school.edu",
-  "created_at": "2025-09-10T12:00:00Z"
-}
+POST `\u002Fapi\u002Fkajabi\u002Fwebhook` with `X-Kajabi-Signature` header.
 
-// Automatic processing:
-1. Find user by email or kajabi_contact_id
-2. Award Learn points if user found
-3. Queue for manual review if user not found
+- Tag matching uses normalized lowercase (`learnTags` config and incoming tag.name)
+- Core logic: `@elevate/logic: processKajabiWebhook(tx, event, eventTime, { allowedTags })`
+- Idempotency: `points_ledger.external_event_id` unique; replays return `already_processed`
+
+Responses
+
+- Success (processed):
 ```
+{
+  success: true,
+  data: {
+    event_id: "evt_123",
+    result: {
+      success: true,
+      user_id: "user_abc",
+      points_awarded: 20,
+      tag_name: "LEARN_COMPLETED",
+      kajabi_contact_id: "12345"
+    }
+  }
+}
+```
+
+- Success (already processed):
+```
+{
+  success: true,
+  data: { event_id: "evt_123", result: { success: true, reason: "already_processed", user_id: "user_abc" } }
+}
+```
+
+- Success (not processed):
+```
+{
+  success: true,
+  data: { event_id: "evt_123", result: { success: false, reason: "user_not_found" } }
+}
+```
+
+- Errors:
+  - 401 UNAUTHORIZED: `Invalid webhook signature` | `Missing webhook signature`
+  - 400 VALIDATION_ERROR: `Invalid JSON`, `Event timestamp outside allowed window`
+  - 500 INTERNAL_ERROR: `Kajabi webhook processing failed`
 
 ## Testing APIs
 

@@ -6,7 +6,7 @@
   "daemon": true,
   "tasks": {
     "type-check": {
-      "outputs": ["packages/*/*.tsbuildinfo"],
+      "outputs": [],
       "cache": true,
       "inputs": [
         "src/**/*.ts",
@@ -17,7 +17,7 @@
     },
     "build:types": {
       "dependsOn": ["^type-check"],
-      "outputs": ["packages/*/dist/types/**"],
+      "outputs": ["dist/types/**"],
       "cache": true,
       "inputs": [
         "src/**/*.ts",
@@ -28,7 +28,7 @@
     },
     "build:js": {
       "dependsOn": ["build:types"],
-      "outputs": ["packages/*/dist/js/**"],
+      "outputs": ["dist/js/**"],
       "cache": true,
       "inputs": ["src/**/*", "tsup.config.ts", "package.json"]
     },
@@ -81,8 +81,8 @@
     "NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA",
     "ANALYZE",
     "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_URL",
+    "SUPABASE_PUBLIC_KEY",
     "NEXT_PUBLIC_SITE_URL",
     "NEXT_PUBLIC_KAJABI_PORTAL_URL",
     "TURBO_TOKEN",
@@ -93,7 +93,7 @@
     "DIRECT_URL",
     "CLERK_SECRET_KEY",
     "CLERK_WEBHOOK_SECRET",
-    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_SECRET_KEY",
     "KAJABI_WEBHOOK_SECRET",
     "KAJABI_LEARN_TAGS",
     "KAJABI_API_KEY",

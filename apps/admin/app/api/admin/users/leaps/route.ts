@@ -7,8 +7,9 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
@@ -26,11 +27,12 @@ const BulkLeapsUpdateSchema = z
     message: 'Provide at least one field to update',
   })
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withApiErrorHandling(async (request: NextRequest, _context: ApiContext): Promise<NextResponse> => {
   return withRateLimit(request, adminRateLimiter, async () => {
     await requireRole('admin')
     const start = Date.now()
-    const logger = await getSafeServerLogger('admin-users-leaps-bulk')
+    const baseLogger = await getSafeServerLogger('admin-users-leaps-bulk')
+    const logger = createRequestLogger(baseLogger, request)
     try {
       const json: unknown = await request.json()
       const parsed = BulkLeapsUpdateSchema.safeParse(json)
@@ -73,19 +75,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
       }
 
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const res = toSuccessResponse(results)
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/users/leaps', 'POST', 200)
       recordApiResponseTime('/api/admin/users/leaps', 'POST', Date.now() - start, 200)
       return res
     } catch (error) {
       recordApiAvailability('/api/admin/users/leaps', 'POST', 500)
       recordApiResponseTime('/api/admin/users/leaps', 'POST', Date.now() - start, 500)
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})

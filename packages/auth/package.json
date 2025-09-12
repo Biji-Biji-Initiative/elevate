@@ -6,7 +6,8 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": "./dist/js/index.js"
+      "import": "./dist/js/index.js",
+      "default": "./dist/js/index.js"
     },
     "./context": {
       "types": "./dist/types/context.d.ts",
@@ -14,7 +15,8 @@
     },
     "./server-helpers": {
       "types": "./dist/types/server-helpers.d.ts",
-      "import": "./dist/js/server-helpers.js"
+      "import": "./dist/js/server-helpers.js",
+      "default": "./dist/js/server-helpers.js"
     },
     "./withRole": {
       "types": "./dist/types/withRole.d.ts",

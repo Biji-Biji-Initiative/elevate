@@ -6,7 +6,7 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -14,12 +14,12 @@ import { KajabiTestSchema, buildAuditMeta, toPrismaJson } from '@elevate/types'
 
 export const runtime = 'nodejs'
 
-export async function POST(request: NextRequest) {
+export const POST = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
     // Check admin role
     await requireRole('admin')
-    const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+    
 
     const body: unknown = await request.json()
     const parsed = KajabiTestSchema.safeParse(body)
@@ -187,17 +187,14 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
       ...result,
       })
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       return res
     }
     } catch (error) {
       const baseLogger = await getSafeServerLogger('admin-kajabi')
       const logger = createRequestLogger(baseLogger, request)
       logger.error('Kajabi test event failed', error instanceof Error ? error : new Error(String(error)))
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})

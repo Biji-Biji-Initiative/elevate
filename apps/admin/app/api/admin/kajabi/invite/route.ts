@@ -7,7 +7,7 @@ import { prisma, type Prisma } from '@elevate/db'
 // Standardized envelopes: prefer local helpers
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { enrollUserInKajabi } from '@elevate/integrations'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
@@ -27,12 +27,11 @@ const InviteRequestSchema = z
     message: 'userId or email is required',
   })
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withApiErrorHandling(async (request: NextRequest, _context: ApiContext): Promise<NextResponse> => {
   return withRateLimit(request, adminRateLimiter, async () => {
     await requireRole('admin')
     const baseLogger = await getSafeServerLogger('admin-kajabi-invite')
     const logger = createRequestLogger(baseLogger, request)
-    const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
     try {
       const start = Date.now()
       const json = (await request.json()) as unknown
@@ -260,7 +259,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         recordApiAvailability('/api/admin/kajabi/invite', 'POST', 502)
         recordApiResponseTime('/api/admin/kajabi/invite', 'POST', Date.now() - start, 502)
         const errRes = toErrorResponse(new AdminError('INTEGRATION_FAILED', result.error || 'Kajabi invite failed'))
-        if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
         return errRes
       }
 
@@ -276,7 +274,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         withOffer: !!effectiveOfferId,
         offerIdResolved,
       })
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/kajabi/invite', 'POST', 200)
       recordApiResponseTime('/api/admin/kajabi/invite', 'POST', Date.now() - start, 200)
       return res
@@ -285,8 +282,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       recordApiAvailability('/api/admin/kajabi/invite', 'POST', 500)
       recordApiResponseTime('/api/admin/kajabi/invite', 'POST', 0, 500)
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})

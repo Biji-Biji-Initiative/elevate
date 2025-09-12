@@ -38,9 +38,10 @@ describe('Admin referrals export CSV', () => {
       ])
       .mockResolvedValueOnce([])
 
-    const req = new Request('http://localhost/api/admin/referrals/export.csv?month=2025-09')
+    const req = new Request('http://localhost/api/admin/referrals/export.csv?month=2025-09', { headers: { 'X-Trace-Id': 't-ref' } })
     const res = await GET(req as unknown as import('next/server').NextRequest)
     expect(res.status).toBe(200)
+    expect(res.headers.get('X-Trace-Id')).toBe('t-ref')
     const text = await res.text()
     const lines = text.trim().split('\n')
     expect(lines[0]).toBe('when,event,source,referrer_name,referrer_email,referee_name,referee_email,referee_type,external_event_id')
@@ -49,4 +50,3 @@ describe('Admin referrals export CSV', () => {
     expect(text).toContain("'" + '+bob')
   })
 })
-

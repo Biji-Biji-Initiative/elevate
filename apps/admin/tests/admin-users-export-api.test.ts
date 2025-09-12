@@ -29,9 +29,10 @@ describe('Admin users export CSV', () => {
     // Second page empty to end loop
     findManyMock.mockResolvedValueOnce([])
 
-    const req = new Request('http://localhost/api/admin/users/export.csv')
+    const req = new Request('http://localhost/api/admin/users/export.csv', { headers: { 'X-Trace-Id': 't-users' } })
     const res = await GET(req)
     expect(res.status).toBe(200)
+    expect(res.headers.get('X-Trace-Id')).toBe('t-users')
     const text = await res.text()
     expect(text.split('\n')[0]).toContain('id,name,handle,email,role,user_type')
     expect(text).toContain('u1')

@@ -107,6 +107,12 @@ const validationChecks = [
     critical: true
   },
   {
+    name: 'API Trace Handling',
+    description: 'Ensure Admin API routes set trace headers or use wrapper',
+    command: 'node scripts/quality/validate-api-trace-headers.mjs',
+    critical: true
+  },
+  {
     name: 'Code Quality Checks',
     description: 'Run comprehensive code quality validation',
     command: 'node scripts/validate-code-quality.mjs',

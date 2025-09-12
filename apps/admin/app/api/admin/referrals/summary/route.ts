@@ -8,7 +8,7 @@ import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { recordApiAvailability, recordApiResponseTime } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
@@ -16,13 +16,12 @@ export const runtime = 'nodejs'
 
 const QuerySchema = z.object({ month: z.string().regex(/^\d{4}-\d{2}$/) })
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext): Promise<NextResponse> => {
   return withRateLimit(request, adminRateLimiter, async () => {
     await requireRole('admin')
     const start = Date.now()
     const baseLogger = await getSafeServerLogger('admin-referrals-summary')
     const logger = createRequestLogger(baseLogger, request)
-    const traceId = request.headers.get('x-trace-id') || undefined
     try {
       const { searchParams } = new URL(request.url)
       const parsed = QuerySchema.safeParse(Object.fromEntries(searchParams))
@@ -77,7 +76,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         pointsAwarded,
         topReferrers,
       })
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       recordApiAvailability('/api/admin/referrals/summary', 'GET', 200)
       recordApiResponseTime('/api/admin/referrals/summary', 'GET', Date.now() - start, 200)
       return res
@@ -86,8 +84,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       recordApiAvailability('/api/admin/referrals/summary', 'GET', 500)
       recordApiResponseTime('/api/admin/referrals/summary', 'GET', Date.now() - start, 500)
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})

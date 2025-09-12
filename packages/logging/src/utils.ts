@@ -111,14 +111,17 @@ export function sanitizeLogData(
   data: Record<string, unknown>,
   redactFields: string[] = []
 ): Record<string, unknown> {
-  const sanitized = { ...data }
+  const sanitized: Record<string, unknown> = { ...data }
+  const defaultFields = new Set(
+    ['password', 'token', 'secret', 'authorization', 'api_key', 'apiKey']
+      .concat(redactFields)
+      .map((s) => s.toLowerCase()),
+  )
 
-  for (const field of redactFields) {
-    if (field.toLowerCase() in sanitized) {
-      sanitized[field.toLowerCase()] = '[REDACTED]'
-    }
-    if (field.toUpperCase() in sanitized) {
-      sanitized[field.toUpperCase()] = '[REDACTED]'
+  for (const key of Object.keys(sanitized)) {
+    const lower = key.toLowerCase()
+    if (defaultFields.has(lower)) {
+      sanitized[key] = '[REDACTED]'
     }
   }
 

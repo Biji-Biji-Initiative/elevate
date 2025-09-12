@@ -17,10 +17,10 @@ vi.mock('@elevate/storage', async () => ({
   deleteEvidenceFile: (p: string) => deleteEvidenceFileMock(p),
 }))
 
-const submissionFindFirstMock = vi.fn()
+const submissionAttachmentFindFirstMock = vi.fn()
 vi.mock('@elevate/db/client', async () => ({
   prisma: {
-    submission: { findFirst: submissionFindFirstMock },
+    submissionAttachment: { findFirst: submissionAttachmentFindFirstMock },
   },
 }))
 
@@ -29,12 +29,13 @@ describe('Files API - DELETE forbidden cases', () => {
     currentUserId = 'owner'
     parseStoragePathMock.mockReset()
     deleteEvidenceFileMock.mockReset()
-    submissionFindFirstMock.mockReset()
+    submissionAttachmentFindFirstMock.mockReset()
   })
 
   it('forbids non-owner', async () => {
     const { DELETE } = await import('../app/api/files/[...path]/route')
     parseStoragePathMock.mockReturnValueOnce({ userId: 'someone_else', activityCode: 'LEARN' })
+    submissionAttachmentFindFirstMock.mockResolvedValueOnce({ id: 'att', path: 'evidence/learn/someone_else/file.pdf', submission: { user_id: 'someone_else', status: 'PENDING' } })
     const req = new Request('http://localhost/api/files/evidence/learn/someone_else/file.pdf', { method: 'DELETE' })
     const ctx: { params: { path: string[] } } = { params: { path: ['evidence','learn','someone_else','file.pdf'] } }
     const res = await DELETE(req, ctx)
@@ -44,7 +45,7 @@ describe('Files API - DELETE forbidden cases', () => {
   it('forbids deletion if submission not pending', async () => {
     const { DELETE } = await import('../app/api/files/[...path]/route')
     parseStoragePathMock.mockReturnValueOnce({ userId: 'owner', activityCode: 'LEARN' })
-    submissionFindFirstMock.mockResolvedValueOnce({ id: 'sub_1', status: 'APPROVED' })
+    submissionAttachmentFindFirstMock.mockResolvedValueOnce({ id: 'att', path: 'evidence/learn/owner/file.pdf', submission: { id: 'sub_1', user_id: 'owner', status: 'APPROVED' } })
     const req = new Request('http://localhost/api/files/evidence/learn/owner/file.pdf', { method: 'DELETE' })
     const ctx: { params: { path: string[] } } = { params: { path: ['evidence','learn','owner','file.pdf'] } }
     const res = await DELETE(req, ctx)

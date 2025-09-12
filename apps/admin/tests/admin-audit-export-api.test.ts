@@ -21,9 +21,10 @@ describe('Admin audit export CSV', () => {
       { created_at: new Date('2025-01-02T03:04:05Z'), action: 'TEST', actor_id: 'system', target_id: 'user_1', meta: { a: 1 } },
     ])
     findManyMock.mockResolvedValueOnce([])
-    const req = new Request('http://localhost/api/admin/audit/export.csv')
+    const req = new Request('http://localhost/api/admin/audit/export.csv', { headers: { 'X-Trace-Id': 't-audit' } })
     const res = await GET(req as unknown as import('next/server').NextRequest)
     expect(res.status).toBe(200)
+    expect(res.headers.get('X-Trace-Id')).toBe('t-audit')
     const text = await res.text()
     const lines = text.split('\n')
     expect(lines[0]).toContain('created_at,action,actor_id,target_id,meta')

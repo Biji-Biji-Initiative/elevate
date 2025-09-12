@@ -17,12 +17,12 @@ let supabaseClient: ReturnType<typeof createClient> | null = null
 function getSupabaseClient() {
   if (!supabaseClient) {
     const env = parseWebEnv(process.env)
-    if (!env.NEXT_PUBLIC_SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (!env.SUPABASE_URL || !env.SUPABASE_SECRET_KEY) {
       throw new Error('Missing required Supabase configuration')
     }
     supabaseClient = createClient(
-      env.NEXT_PUBLIC_SUPABASE_URL,
-      env.SUPABASE_SERVICE_ROLE_KEY,
+      env.SUPABASE_URL,
+      env.SUPABASE_SECRET_KEY,
     )
   }
   return supabaseClient

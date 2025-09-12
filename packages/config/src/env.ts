@@ -23,17 +23,19 @@ export const EnvSchema = z.object({
     .min(1, "CLERK_WEBHOOK_SECRET is required for webhook validation")
     .optional(),
 
-  // Supabase Storage - Optional but validated if provided
-  NEXT_PUBLIC_SUPABASE_URL: z.string()
-    .url("Invalid Supabase URL")
+  // Supabase Storage - Optional in general schema (apps can require)
+  SUPABASE_URL: z.string()
+    .url('Invalid Supabase URL')
     .refine(
       (url) => url.includes('.supabase.co') || process.env.NODE_ENV === 'development',
-      "NEXT_PUBLIC_SUPABASE_URL should be a valid Supabase URL"
+      'SUPABASE_URL should be a valid Supabase URL',
     )
     .optional(),
-  
-  SUPABASE_SERVICE_ROLE_KEY: z.string()
-    .min(1, "SUPABASE_SERVICE_ROLE_KEY is required when using Supabase")
+  SUPABASE_PUBLIC_KEY: z.string()
+    .refine((key) => key.startsWith('eyJ') || process.env.NODE_ENV === 'development', 'SUPABASE_PUBLIC_KEY should be a valid JWT')
+    .optional(),
+  SUPABASE_SECRET_KEY: z.string()
+    .refine((key) => key.startsWith('eyJ') || process.env.NODE_ENV === 'development', 'SUPABASE_SECRET_KEY should be a valid JWT')
     .optional(),
 
   // Kajabi Integration - Optional but validated if provided
@@ -114,19 +116,16 @@ export const EnvSchema = z.object({
 // Web app specific env vars - stricter requirements
 export const WebEnvSchema = EnvSchema.extend({
   // Web app requires Supabase for file storage
-  NEXT_PUBLIC_SUPABASE_URL: z.string()
-    .url("Supabase URL is required for web app")
+  SUPABASE_URL: z.string()
+    .url('SUPABASE_URL is required for web app')
     .refine(
       (url) => url.includes('.supabase.co') || process.env.NODE_ENV === 'development',
-      "NEXT_PUBLIC_SUPABASE_URL must be a valid Supabase URL"
+      'SUPABASE_URL must be a valid Supabase URL',
     ),
-    
-  SUPABASE_SERVICE_ROLE_KEY: z.string()
-    .min(1, "Supabase service role key is required for web app")
-    .refine(
-      (key) => key.startsWith('eyJ') || process.env.NODE_ENV === 'development',
-      "SUPABASE_SERVICE_ROLE_KEY should be a valid JWT token"
-    ),
+  SUPABASE_PUBLIC_KEY: z.string()
+    .refine((key) => key.startsWith('eyJ') || process.env.NODE_ENV === 'development', 'SUPABASE_PUBLIC_KEY should be a valid JWT token'),
+  SUPABASE_SECRET_KEY: z.string()
+    .refine((key) => key.startsWith('eyJ') || process.env.NODE_ENV === 'development', 'SUPABASE_SECRET_KEY should be a valid JWT token'),
 
   // Web app requires Kajabi integration for webhooks  
   KAJABI_WEBHOOK_SECRET: z.string()
@@ -163,13 +162,8 @@ export const AdminEnvSchema = EnvSchema.pick({
 })
 
 // Normalize aliases and environment naming drifts without requiring changes downstream
-function withAliases(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  return {
-    ...env,
-    // Support both SUPABASE_SERVICE_ROLE_KEY and SUPABASE_SERVICE_ROLE
-    SUPABASE_SERVICE_ROLE_KEY: env.SUPABASE_SERVICE_ROLE_KEY || ('SUPABASE_SERVICE_ROLE' in env ? env.SUPABASE_SERVICE_ROLE : undefined),
-  }
-}
+// No aliases; enforce new naming only
+function withAliases(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv { return env }
 
 // Enhanced parsing with detailed error reporting and fail-fast behavior
 export function parseEnv(env: NodeJS.ProcessEnv): z.infer<typeof EnvSchema>
@@ -216,7 +210,7 @@ export function parseEnv<TOutput>(
 
 // Helper functions for specific app types with enhanced error handling
 export function parseWebEnv(env: NodeJS.ProcessEnv = process.env): WebEnv {
-  const parsed = WebEnvSchema.parse(withAliases(env))
+  const parsed = WebEnvSchema.parse(env)
   if (parsed.NODE_ENV === 'production') {
     if (!parsed.KAJABI_WEBHOOK_SECRET) {
       throw new Error('KAJABI_WEBHOOK_SECRET is required in production')

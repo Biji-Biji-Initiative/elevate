@@ -11,15 +11,10 @@ export async function GET(): Promise<NextResponse> {
     // Check database connection
     await prisma.$connect()
 
-    // Resolve Supabase using new naming first, fallback to legacy
-    const supabaseUrl =
-      process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabasePublicKey =
-      process.env.SUPABASE_PUBLIC_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    const supabaseSecretKey =
-      process.env.SUPABASE_SECRET_KEY ||
-      process.env.SUPABASE_SERVICE_ROLE_KEY
+    // Resolve Supabase using new naming only
+    const supabaseUrl = process.env.SUPABASE_URL
+    const supabasePublicKey = process.env.SUPABASE_PUBLIC_KEY
+    const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY
 
     // Check required environment variables (minimal set for runtime)
     const required = {
@@ -87,11 +82,7 @@ export async function GET(): Promise<NextResponse> {
           url: supabaseUrl,
           publicKey: mask(supabasePublicKey!),
           secretKey: mask(supabaseSecretKey!),
-          usingLegacyNames: Boolean(
-            process.env.NEXT_PUBLIC_SUPABASE_URL ||
-              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-              process.env.SUPABASE_SERVICE_ROLE_KEY,
-          ),
+          usingLegacyNames: false,
         },
       },
     })

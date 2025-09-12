@@ -46,6 +46,12 @@ if [ -z "${DATABASE_URL:-}" ]; then
   export DATABASE_URL="postgresql://postgres:postgres@localhost:54322/postgres"
 fi
 
+# Provide sane defaults for test secrets if missing
+export NODE_ENV=${NODE_ENV:-test}
+export KAJABI_WEBHOOK_SECRET=${KAJABI_WEBHOOK_SECRET:-test-webhook-secret-123}
+export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-pk_test_dummy}
+export CLERK_SECRET_KEY=${CLERK_SECRET_KEY:-sk_test_dummy}
+
 log "Checking Supabase Local status..."
 if ! supabase status >/dev/null 2>&1; then
   log "Starting Supabase Local (this may take a minute)..."
@@ -79,6 +85,7 @@ log "Installing dependencies..."
 pnpm install --frozen-lockfile || pnpm install
 
 log "Building internal packages..."
+pnpm -F @elevate/openapi generate:all || true
 pnpm -r --filter @elevate/* run build || true
 
 log "Initializing database schema and seed..."
@@ -102,8 +109,15 @@ fi
 
 pnpm db:seed
 
-log "Validating environment configuration..."
-pnpm env:validate
+if [ "${SKIP_ENV_VALIDATION:-false}" = "true" ]; then
+  warn "Skipping environment validation (SKIP_ENV_VALIDATION=true)"
+else
+  log "Validating environment configuration..."
+  pnpm env:validate || {
+    warn "env:validate failed; set SKIP_ENV_VALIDATION=true to bypass for local tests"
+    exit 1
+  }
+fi
 
 log "Running lint and type-check..."
 pnpm lint

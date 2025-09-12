@@ -27,9 +27,9 @@ const requiredEnvVars = {
   // Clerk Auth
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-  // Supabase
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  // Supabase (new naming)
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  SUPABASE_PUBLIC_KEY: process.env.SUPABASE_PUBLIC_KEY,
   // Database
   DATABASE_URL: process.env.DATABASE_URL,
   // App URLs

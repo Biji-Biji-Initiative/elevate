@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm turbo run build --filter=^elevate-admin --filter=elevate-admin",
+  "buildCommand": "pnpm turbo run build --filter=elevate-admin...",
   "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
   "outputDirectory": "apps/admin/.next",
   "framework": "nextjs"

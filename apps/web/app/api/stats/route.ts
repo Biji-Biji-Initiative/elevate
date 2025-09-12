@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { Prisma } from '@prisma/client'
 
 import { prisma } from '@elevate/db/client'
-import { createErrorResponse, createSuccessResponse } from '@elevate/http'
+import { createErrorResponse, createSuccessResponse, withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
 import {
@@ -19,7 +19,7 @@ import { withRateLimit, publicApiRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs'
 
-export async function GET(request: NextRequest) {
+export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   return withRateLimit(request, publicApiRateLimiter, async () => {
     const start = Date.now()
     const baseLogger = await getSafeServerLogger('stats')
@@ -100,16 +100,58 @@ export async function GET(request: NextRequest) {
       })
 
       try {
-        const [educators, totalSubmissions, totalPoints] = await Promise.all([
-          prisma.user.count({ where: { user_type: 'EDUCATOR' } }),
-          prisma.submission.count(),
-          prisma.pointsLedger.aggregate({ _sum: { delta_points: true } }),
+        const [educators, totalSubmissions, totalPoints, learnersDistinct, amplifySubmissions, storiesShared, microCredentials] = await Promise.all([
+          (prisma as any).user?.count
+            ? (prisma as any).user.count({ where: { user_type: 'EDUCATOR' } }).catch(() => 0)
+            : Promise.resolve(0),
+          (prisma as any).submission?.count
+            ? (prisma as any).submission.count().catch(() => 0)
+            : Promise.resolve(0),
+          (prisma as any).pointsLedger?.aggregate
+            ? (prisma as any).pointsLedger.aggregate({ _sum: { delta_points: true } }).catch(() => ({ _sum: { delta_points: 0 } }))
+            : Promise.resolve({ _sum: { delta_points: 0 } }),
+          // Distinct EDU users with LEARN tag grants (approximation via groupBy)
+          (prisma as any).learnTagGrant?.groupBy
+            ? (prisma as any).learnTagGrant
+                .groupBy({ by: ['user_id'] })
+                .then((rows: Array<{ user_id: string }>) => rows.length)
+                .catch(() => 0)
+            : Promise.resolve(0),
+          // Approved AMPLIFY submissions to compute peers/students reached
+          (prisma as any).submission?.findMany
+            ? (prisma as any).submission
+                .findMany({
+                  where: { activity_code: 'AMPLIFY', status: 'APPROVED' },
+                  select: { payload: true },
+                })
+                .catch(() => [] as Array<{ payload: any }>)
+            : Promise.resolve([] as Array<{ payload: any }>),
+          // stories_shared: approved PRESENT submissions
+          (prisma as any).submission?.count
+            ? (prisma as any).submission
+                .count({ where: { activity_code: 'PRESENT', status: 'APPROVED' } })
+                .catch(() => 0)
+            : Promise.resolve(0),
+          // micro_credentials: distinct (user, tag) grant pairs
+          (prisma as any).learnTagGrant?.count
+            ? (prisma as any).learnTagGrant.count().catch(() => 0)
+            : Promise.resolve(0),
         ])
+
+        const peersStudentsReached = Array.isArray(amplifySubmissions)
+          ? amplifySubmissions.reduce((sum, s) => {
+              const p = s?.payload || {}
+              const peers = Number((p as any).peers_trained || (p as any).peersTrained || 0)
+              const students = Number((p as any).students_trained || (p as any).studentsTrained || 0)
+              return sum + peers + students
+            }, 0)
+          : 0
+
         const res = createSuccessResponse({
           totalEducators: educators,
           totalSubmissions,
-          totalPoints: Number(totalPoints._sum.delta_points || 0),
-          studentsImpacted: 0,
+          totalPoints: Number(totalPoints._sum?.delta_points || 0),
+          studentsImpacted: peersStudentsReached,
           byStage: {
             learn: { total: 0, approved: 0, pending: 0, rejected: 0 },
             explore: { total: 0, approved: 0, pending: 0, rejected: 0 },
@@ -120,6 +162,13 @@ export async function GET(request: NextRequest) {
           topCohorts: [],
           monthlyGrowth: [],
           badges: { totalAwarded: 0, uniqueBadges: 0, mostPopular: [] },
+          counters: {
+            educators_learning: learnersDistinct,
+            peers_students_reached: peersStudentsReached,
+            stories_shared: storiesShared,
+            micro_credentials: microCredentials,
+            mce_certified: 0,
+          },
         })
         res.headers.set('Cache-Control', 'public, s-maxage=300')
         recordApiAvailability('/api/stats', 'GET', 200)
@@ -132,4 +181,4 @@ export async function GET(request: NextRequest) {
       }
     }
   })
-}
+})

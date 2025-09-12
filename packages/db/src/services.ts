@@ -558,6 +558,8 @@ export async function createKajabiEvent(data: {
 }): Promise<KajabiEvent> {
   return await prisma.kajabiEvent.create({
     data: {
+      // Align with schema where `id` is the primary key and equals `event_id`
+      id: data.event_id,
       event_id: data.event_id,
       tag_name_raw: data.tag_name_raw,
       tag_name_norm: data.tag_name_norm,
@@ -591,27 +593,18 @@ export async function getKajabiEventStats(): Promise<{
   matched_users: number
   unmatched_events: number
 }> {
-  const stats = await prisma.kajabiEvent.aggregate({
-    _count: {
-      id: true,
-      email: true,
-      status: true,
-    },
-  })
-
-  const processedCount = await prisma.kajabiEvent.count({
-    where: { status: 'processed' },
-  })
-
+  const total = await prisma.kajabiEvent.count()
+  const processedCount = await prisma.kajabiEvent.count({ where: { status: 'processed' } })
+  // Prefer user_match column when available; fallback to email presence
   const matchedCount = await prisma.kajabiEvent.count({
-    where: { email: { not: null } },
+    where: { OR: [{ user_match: { not: null } }, { email: { not: null } }] },
   })
 
   return {
-    total_events: stats._count.id || 0,
+    total_events: total,
     processed_events: processedCount,
     matched_users: matchedCount,
-    unmatched_events: (stats._count.id || 0) - matchedCount,
+    unmatched_events: total - matchedCount,
   }
 }
 

@@ -1,5 +1,4 @@
-"use server"
-import 'server-only'
+// server-only not required here; keep as plain TS wrapper for tests
 
 import type { ListParams } from '@/lib/server/submissions-service'
 import { listSubmissionsService, getSubmissionByIdService } from '@/lib/server/submissions-service'

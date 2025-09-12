@@ -1,0 +1,206 @@
+
+ RUN  v3.2.4 /Users/agent-g/elevate/elevate
+
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating submission with invalid user_id 245ms
+ ✓ packages/db/tests/triggers.test.ts > Database Triggers and Automation > Timestamp Triggers > should set created_at automatically on insert 266ms
+ × packages/db/tests/test-utils.test.ts > Test Utilities and Common Patterns > DatabaseFixtures Testing > should generate consistent Indonesian user data 257ms
+   → expected false to be true // Object.is equality
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating submission with invalid activity_code 253ms
+ ✓ packages/db/tests/constraints.test.ts > Database Constraints and Integrity > User Constraints > should enforce unique handle constraint 531ms
+ × tests/performance/performance-benchmarks.test.ts > Performance: Critical Queries and Endpoints > Database Query Performance > should query users efficiently 452ms
+   → 
+Invalid `this.prisma.submissionAttachment.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:362:44
+
+  359 if (submission.attachments && submission.attachments.length > 0) {
+  360   await Promise.all(
+  361     submission.attachments.map((attachment) =>
+→ 362       this.prisma.submissionAttachment.create(
+Foreign key constraint violated on the constraint: `submission_attachments_submission_id_fkey`
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ ✓ packages/db/tests/constraints.test.ts > Database Constraints and Integrity > User Constraints > should enforce unique email constraint 314ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating points ledger with invalid user_id 248ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent creating points ledger with invalid activity_code 98ms
+ × packages/db/tests/triggers.test.ts > Database Triggers and Automation > Timestamp Triggers > should update updated_at automatically on submission changes 531ms
+   → 
+Invalid `db.prisma.submission.update()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/triggers.test.ts:61:60
+
+  58 await new Promise(resolve => setTimeout(resolve, 10));
+  59 
+  60 // Update the submission
+→ 61 const updatedSubmission = await db.prisma.submission.update(
+An operation failed because it depends on one or more records that were required but not found. No record was found for an update.
+ × tests/performance/performance-benchmarks.test.ts > Performance: Critical Queries and Endpoints > Database Query Performance > should query submissions with filters efficiently 126ms
+   → 
+Invalid `this.prisma.pointsLedger.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:384:36
+
+  381 ): Promise<TestPointsEntry> {
+  382   const entry = this.generatePointsEntry(pointsData)
+  383 
+→ 384   await this.prisma.pointsLedger.create(
+Foreign key constraint violated on the constraint: `points_ledger_user_id_fkey`
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ ✓ packages/db/tests/triggers.test.ts > Database Triggers and Automation > Timestamp Triggers > should set created_at on points ledger entries 156ms
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should cascade delete submissions when user is deleted 100ms
+ ✓ packages/db/tests/rls.test.ts > Row Level Security Policies > User Table Policies > should allow users to view their own profile 774ms
+ ✓ packages/db/tests/constraints.test.ts > Database Constraints and Integrity > User Constraints > should enforce unique kajabi_contact_id constraint when not null 146ms
+ × tests/performance/performance-benchmarks.test.ts > Performance: Critical Queries and Endpoints > Database Query Performance > should aggregate points efficiently 90ms
+   → 
+Invalid `this.prisma.submissionAttachment.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:362:44
+
+  359 if (submission.attachments && submission.attachments.length > 0) {
+  360   await Promise.all(
+  361     submission.attachments.map((attachment) =>
+→ 362       this.prisma.submissionAttachment.create(
+Foreign key constraint violated on the constraint: `submission_attachments_submission_id_fkey`
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should cascade delete points when user is deleted 66ms
+   → 
+Invalid `this.prisma.pointsLedger.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:384:36
+
+  381 ): Promise<TestPointsEntry> {
+  382   const entry = this.generatePointsEntry(pointsData)
+  383 
+→ 384   await this.prisma.pointsLedger.create(
+Foreign key constraint violated on the constraint: `points_ledger_user_id_fkey`
+ × tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Foreign Key Constraints > should prevent deleting activity if it has associated data 90ms
+   → promise resolved "{ code: 'LEARN', name: 'Learn', …(1) }" instead of rejecting
+ × packages/db/tests/test-utils.test.ts > Test Utilities and Common Patterns > DatabaseFixtures Testing > should generate realistic LEAPS activity payloads 786ms
+   → expected { …(5) } to have property "students_trained"
+ × packages/db/tests/constraints.test.ts > Database Constraints and Integrity > User Constraints > should allow multiple users with null kajabi_contact_id 150ms
+   → expected 'kajabi-4e3fe1b54a2e' to be null
+ × packages/db/tests/performance.test.ts > Database Performance Benchmarks > Materialized Views Performance > should refresh leaderboard views within time limits 1105ms
+   → 
+Invalid `this.prisma.submission.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:345:60
+
+  342 ): Promise<TestSubmission> {
+  343   const submission = this.generateSubmission(submissionData)
+  344 
+→ 345   const createdSubmission = await this.prisma.submission.create(
+Foreign key constraint violated on the constraint: `submissions_user_id_fkey`
+ × tests/performance/performance-benchmarks.test.ts > Performance: Critical Queries and Endpoints > Database Query Performance > should query leaderboard data efficiently 100ms
+   → 
+Invalid `this.prisma.submission.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:345:60
+
+  342 ): Promise<TestSubmission> {
+  343   const submission = this.generateSubmission(submissionData)
+  344 
+→ 345   const createdSubmission = await this.prisma.submission.create(
+Foreign key constraint violated on the constraint: `submissions_user_id_fkey`
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ × tests/performance/performance-benchmarks.test.ts > Performance: Critical Queries and Endpoints > Database Query Performance > should perform complex joins efficiently 71ms
+   → 
+Invalid `this.prisma.submission.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:345:60
+
+  342 ): Promise<TestSubmission> {
+  343   const submission = this.generateSubmission(submissionData)
+  344 
+→ 345   const createdSubmission = await this.prisma.submission.create(
+Foreign key constraint violated on the constraint: `submissions_user_id_fkey`
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+{"level":"warn","time":"2025-09-12T04:43:04.227Z","pid":42674,"hostname":"Gurpreets-iMac.local","environment":"test","module":"kajabi-webhook","module":"kajabi-webhook","url":"http://localhost:3000/api/kajabi/webhook","meta":{},"msg":"Invalid webhook signature"}
+stderr | tests/integration/02-kajabi-webhook-integration.test.ts > Integration: Kajabi Webhook Integration > should process learn completion webhook successfully
+[HIGH ERROR] {
+  "timestamp": "2025-09-12T04:43:04.232Z",
+  "traceId": "trace_1757652184228_a77edb54144c",
+  "error": {
+    "name": "Error",
+    "message": "Invalid webhook signature",
+    "stack": "Error: Invalid webhook signature\n    at [REDACTED]\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at withRateLimit ([REDACTED]\n    at Module.executeApiRoute ([REDACTED]\n    at [REDACTED]\n    at file://[REDACTED]"
+  },
+  "environment": "test"
+}
+
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Unique Constraints > should prevent duplicate user handles 90ms
+ ✓ packages/db/tests/rls.test.ts > Row Level Security Policies > User Table Policies > should allow users to view public profiles 411ms
+ × packages/db/tests/triggers.test.ts > Database Triggers and Automation > Timestamp Triggers > should set created_at on all other models with timestamps 159ms
+   → 
+Invalid `db.prisma.kajabiEvent.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/triggers.test.ts:121:55
+
+  118 });
+  119 
+  120 // Test kajabi event
+→ 121 const kajabiEvent = await db.prisma.kajabiEvent.create({
+        data: {
+          id: "test-kajabi-event",
+          payload: {
+            test: "timestamp"
+          },
+      +   event_id: String
+        }
+      })
+
+Argument `event_id` is missing.
+ × tests/integration/02-kajabi-webhook-integration.test.ts > Integration: Kajabi Webhook Integration > should process learn completion webhook successfully 997ms
+   → expected 401 to be 200 // Object.is equality
+ × tests/performance/performance-benchmarks.test.ts > Performance: Critical Queries and Endpoints > API Endpoint Performance > should serve leaderboard API quickly 111ms
+   → 
+Invalid `this.prisma.submissionAttachment.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:362:44
+
+  359 if (submission.attachments && submission.attachments.length > 0) {
+  360   await Promise.all(
+  361     submission.attachments.map((attachment) =>
+→ 362       this.prisma.submissionAttachment.create(
+Foreign key constraint violated on the constraint: `submission_attachments_submission_id_fkey`
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+{"level":"warn","time":"2025-09-12T04:43:04.356Z","pid":42674,"hostname":"Gurpreets-iMac.local","environment":"test","module":"kajabi-webhook","module":"kajabi-webhook","url":"http://localhost:3000/api/kajabi/webhook","meta":{},"msg":"Invalid webhook signature"}
+stderr | tests/integration/02-kajabi-webhook-integration.test.ts > Integration: Kajabi Webhook Integration > should handle case-insensitive email matching
+[HIGH ERROR] {
+  "timestamp": "2025-09-12T04:43:04.357Z",
+  "traceId": "trace_1757652184357_714a535129b1",
+  "error": {
+    "name": "Error",
+    "message": "Invalid webhook signature",
+    "stack": "Error: Invalid webhook signature\n    at [REDACTED]\n    at withRateLimit ([REDACTED]\n    at Module.executeApiRoute ([REDACTED]\n    at [REDACTED]\n    at file://[REDACTED]"
+  },
+  "environment": "test"
+}
+
+ ✓ tests/integration/05-database-consistency.test.ts > Integration: Database Consistency and Integrity > Unique Constraints > should prevent duplicate user emails 142ms
+ ✓ packages/db/tests/rls.test.ts > Row Level Security Policies > User Table Policies > should allow users to update their own profile 188ms
+ × packages/db/tests/constraints.test.ts > Database Constraints and Integrity > User Constraints > should validate role enum values 198ms
+   → 
+Invalid `this.prisma.user.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:321:28
+
+  318 async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
+  319   const user = this.generateUser(userData)
+  320 
+→ 321   await this.prisma.user.create(
+Unique constraint failed on the fields: (`email`)
+ × tests/integration/02-kajabi-webhook-integration.test.ts > Integration: Kajabi Webhook Integration > should handle case-insensitive email matching 92ms
+   → expected 401 to be 200 // Object.is equality
+{"level":"warn","time":"2025-09-12T04:43:04.450Z","pid":42674,"hostname":"Gurpreets-iMac.local","environment":"test","module":"kajabi-webhook","module":"kajabi-webhook","url":"http://localhost:3000/api/kajabi/webhook","meta":{},"msg":"Invalid webhook signature"}
+stderr | tests/integration/02-kajabi-webhook-integration.test.ts > Integration: Kajabi Webhook Integration > should handle duplicate webhooks idempotently
+[HIGH ERROR] {
+  "timestamp": "2025-09-12T04:43:04.450Z",
+  "traceId": "trace_1757652184450_58b84885e962",
+  "error": {
+    "name": "Error",
+    "message": "Invalid webhook signature",
+    "stack": "Error: Invalid webhook signature\n    at [REDACTED]\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at withRateLimit ([REDACTED]\n    at Module.executeApiRoute ([REDACTED]\n    at [REDACTED]\n    at file://[REDACTED]"
+  },
+  "environment": "test"
+}
+
+ × tests/performance/performance-benchmarks.test.ts > Performance: Critical Queries and Endpoints > API Endpoint Performance > should serve admin submissions API quickly 122ms
+   → 
+Invalid `this.prisma.submission.create()` invocation in
+/Users/agent-g/elevate/elevate/packages/db/tests/fixtures.ts:345:60
+
+  342 ): Promise<TestSubmission> {
+  343   const submission = this.generateSubmission(submissionData)
+  344 
+→ 345   const createdSubmission = await this.prisma.submission.create(
+Foreign key constraint violated on the constraint: `submissions_user_id_fkey`
+   → Package subpath './server-helpers' is not defined by "exports" in /Users/agent-g/elevate/elevate/node_modules/.pnpm/node_modules/@elevate/auth/package.json
+ ✓ packages/db/tests/triggers.test.ts > Database Triggers and Automation > Data Validation Triggers > should validate email format if database has email validation trigger 230ms

@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 import { LearnSchema, ExploreSchema, AmplifySchema, PresentSchema, ShineSchema } from './schemas'
 
-// Discriminated union for submission payloads by activity_code
+// Discriminated union for submission payloads by activity_code (strict DB schemas)
 export const SubmissionPayloadSchema = z.discriminatedUnion('activityCode', [
   z.object({
     activityCode: z.literal('LEARN'),

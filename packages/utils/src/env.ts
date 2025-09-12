@@ -325,17 +325,23 @@ export function validateClerkConfig(): void {
  * Validate Supabase configuration
  */
 export function validateSupabaseConfig(): void {
-  // Support new naming (SUPABASE_URL, SUPABASE_PUBLIC_KEY, SUPABASE_SECRET_KEY)
-  const supabaseUrl =
-    getOptionalEnv('NEXT_PUBLIC_SUPABASE_URL') || getRequiredUrl('SUPABASE_URL')
+  // Enforce new naming only
+  const supabaseUrl = getRequiredEnv('SUPABASE_URL')
+  const publicKey = getRequiredEnv('SUPABASE_PUBLIC_KEY')
+  const secretKey = getRequiredEnv('SUPABASE_SECRET_KEY')
 
-  const publicKey =
-    getOptionalEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY') ||
-    getRequiredEnv('SUPABASE_PUBLIC_KEY', isValidJWT)
+  // Validate formats
+  if (!isValidUrl(supabaseUrl)) {
+    throw new InvalidEnvironmentVariableError('SUPABASE_URL', 'valid URL', supabaseUrl)
+  }
 
-  const secretKey =
-    getOptionalEnv('SUPABASE_SERVICE_ROLE_KEY') ||
-    getRequiredEnv('SUPABASE_SECRET_KEY', isValidJWT)
+  if (!isValidJWT(publicKey)) {
+    throw new InvalidEnvironmentVariableError('SUPABASE_PUBLIC_KEY', 'valid JWT')
+  }
+
+  if (!isValidJWT(secretKey)) {
+    throw new InvalidEnvironmentVariableError('SUPABASE_SECRET_KEY', 'valid JWT')
+  }
 
   // Allow localhost Supabase URL in development; enforce hosted URL in production
   const isHostedSupabase = /^https:\/\/[a-z0-9]+\.supabase\.co$/.test(
@@ -609,9 +615,9 @@ export function getStorageConfig() {
   validateSupabaseConfig()
   return {
     supabase: {
-      url: getRequiredUrl('NEXT_PUBLIC_SUPABASE_URL'),
-      anonKey: getRequiredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-      serviceRoleKey: getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
+      url: getRequiredEnv('SUPABASE_URL'),
+      anonKey: getRequiredEnv('SUPABASE_PUBLIC_KEY'),
+      serviceRoleKey: getRequiredEnv('SUPABASE_SECRET_KEY'),
     },
   }
 }

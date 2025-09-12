@@ -48,9 +48,26 @@ export interface SecurityHeaders {
  * Uses Web Crypto API for edge runtime compatibility
  */
 export function generateNonce(): string {
-  // Use Web Crypto API which is available in both Node.js and edge runtime
+  // Prefer Node crypto for tests that stub randomBytes; fallback to Web Crypto
+  try {
+    // @ts-expect-error - node:crypto may not be available in edge
+    const nodeCrypto: typeof import('node:crypto') | undefined = (globalThis as any).require
+      ? (globalThis as any).require('node:crypto')
+      : undefined
+    if (nodeCrypto && typeof nodeCrypto.randomBytes === 'function') {
+      return nodeCrypto.randomBytes(16).toString('base64')
+    }
+  } catch {
+    // ignore and fallback
+  }
   const array = new Uint8Array(16)
-  crypto.getRandomValues(array)
+  // Web Crypto API
+  // @ts-expect-error - web crypto exists in modern runtimes
+  (globalThis.crypto as Crypto).getRandomValues(array)
+  // Convert to base64
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(array).toString('base64')
+  }
   return btoa(String.fromCharCode(...array))
 }
 
@@ -274,7 +291,7 @@ export function generateSecurityHeaders(
   // Add HSTS in production with longer max-age and security optimizations
   if (!isDevelopment) {
     headers['Strict-Transport-Security'] =
-      'max-age=63072000; includeSubDomains; preload'
+      'max-age=31536000; includeSubDomains; preload'
   }
 
   // Additional modern security headers

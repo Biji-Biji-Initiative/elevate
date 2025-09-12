@@ -7,8 +7,9 @@
 
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { createErrorResponse, TRACE_HEADER } from '@elevate/http'
+import { createErrorResponse, withApiErrorHandling, type ApiContext, TRACE_HEADER } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { createCSPReportHandler } from '@elevate/security/security-middleware'
 
 function wrapErrorLocal(error: unknown, message: string): Error {
@@ -80,9 +81,11 @@ const handleCSPReport = createCSPReportHandler({
  * @param request - The incoming request with violation report
  * @returns Response indicating receipt of the report
  */
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withApiErrorHandling(async (request: NextRequest, _context: ApiContext): Promise<NextResponse> => {
   try {
     const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+    const base = logger ?? (await getSafeServerLogger('admin-csp-report'))
+    const reqLogger = createRequestLogger(base, request)
     // Validate content type
     const contentType = request.headers.get('content-type')
     if (
@@ -106,8 +109,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const userAgent = request.headers.get('user-agent') || 'unknown'
 
-    if (logger) {
-      logger.info('CSP Report received in Admin App', {
+    if (reqLogger) {
+      reqLogger.info('CSP Report received in Admin App', {
         clientIP,
         userAgent,
         timestamp: new Date().toISOString(),
@@ -121,12 +124,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Process the violation report
     {
       const res = await handleCSPReport(request)
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       return res
     }
   } catch (error: unknown) {
-    if (logger) {
-      logger.error(
+    const base = logger ?? (await getSafeServerLogger('admin-csp-report'))
+    const reqLogger = createRequestLogger(base, request)
+    if (reqLogger) {
+      reqLogger.error(
         'Error in Admin CSP report handler',
         wrapErrorLocal(error, 'Admin CSP report error'),
       )
@@ -135,7 +139,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Don't expose internal errors to clients
     return createErrorResponse(new Error('Internal server error'), 500)
   }
-}
+})
 
 /**
  * Handle OPTIONS requests for CORS preflight

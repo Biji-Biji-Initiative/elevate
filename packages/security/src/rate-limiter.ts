@@ -354,11 +354,16 @@ export class RateLimiter {
   }
 }
 
+function toInt(value: string | undefined, fallback: number): number {
+  const n = parseInt(String(value ?? '').trim(), 10)
+  return Number.isFinite(n) ? n : fallback
+}
+
 // Pre-configured rate limiters
 export const webhookRateLimiter = new RateLimiter({
   name: 'webhook',
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: parseInt(process.env.WEBHOOK_RATE_LIMIT_RPM || '120'),
+  maxRequests: toInt(process.env.WEBHOOK_RATE_LIMIT_RPM, 120),
   keyGenerator: (request) => {
     // For webhooks, rate limit by IP + User-Agent + specific headers
     const xForwardedFor = request.headers.get('x-forwarded-for');
@@ -377,41 +382,41 @@ export const webhookRateLimiter = new RateLimiter({
 export const apiRateLimiter = new RateLimiter({
   name: 'api',
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: parseInt(process.env.RATE_LIMIT_RPM || '60'),
+  maxRequests: toInt(process.env.RATE_LIMIT_RPM, 60),
 });
 
 export const adminRateLimiter = new RateLimiter({
   name: 'admin',
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: parseInt(process.env.ADMIN_RATE_LIMIT_RPM || '40'),
+  maxRequests: toInt(process.env.ADMIN_RATE_LIMIT_RPM, 40),
 });
 
 // File upload rate limiter (stricter)
 export const fileUploadRateLimiter = new RateLimiter({
   name: 'file_upload',
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: parseInt(process.env.FILE_UPLOAD_RATE_LIMIT_RPM || '10'),
+  maxRequests: toInt(process.env.FILE_UPLOAD_RATE_LIMIT_RPM, 10),
 });
 
 // Submission rate limiter (moderate)
 export const submissionRateLimiter = new RateLimiter({
   name: 'submission',
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: parseInt(process.env.SUBMISSION_RATE_LIMIT_RPM || '20'),
+  maxRequests: toInt(process.env.SUBMISSION_RATE_LIMIT_RPM, 20),
 });
 
 // Auth-related endpoints (stricter)
 export const authRateLimiter = new RateLimiter({
   name: 'auth',
   windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: parseInt(process.env.AUTH_RATE_LIMIT_PER_15MIN || '10'),
+  maxRequests: toInt(process.env.AUTH_RATE_LIMIT_PER_15MIN, 10),
 });
 
 // Public API endpoints (moderate)
 export const publicApiRateLimiter = new RateLimiter({
   name: 'public_api',
   windowMs: 60 * 1000, // 1 minute
-  maxRequests: parseInt(process.env.PUBLIC_API_RATE_LIMIT_RPM || '100'),
+  maxRequests: toInt(process.env.PUBLIC_API_RATE_LIMIT_RPM, 100),
 });
 
 // Helper function to apply rate limiting

@@ -4,16 +4,11 @@ import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { grantBadgesForUser } from '@elevate/logic'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
-import {
-  toPrismaJson,
-  parseKajabiWebhook,
-  KajabiReprocessSchema,
-  buildAuditMeta,
-} from '@elevate/types'
+import { parseKajabiWebhook, KajabiReprocessSchema, buildAuditMeta } from '@elevate/types'
 import { activityCanon } from '@elevate/types/activity-canon'
 
 export const runtime = 'nodejs'
@@ -37,9 +32,7 @@ function getObjectField<T extends object = Record<string, unknown>>(
   return undefined
 }
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype
-}
+//
 
 type ReprocessResult = {
   user_id: string
@@ -49,12 +42,12 @@ type ReprocessResult = {
   duplicate: boolean
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       // Check admin role
       await requireRole('admin')
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
+      
 
       const body: unknown = await request.json()
       const parsed = KajabiReprocessSchema.safeParse(body)
@@ -131,7 +124,6 @@ export async function POST(request: NextRequest) {
         })
         {
           const res = toSuccessResponse({ queued: true }, 202)
-          if (traceId) res.headers.set(TRACE_HEADER, traceId)
           return res
         }
       }
@@ -143,13 +135,12 @@ export async function POST(request: NextRequest) {
         })
         {
           const errRes = toErrorResponse(new AdminError('FORBIDDEN', 'Student accounts are not eligible'))
-          if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
           return errRes
         }
       }
 
       const eventTime = kajabiEvent.created_at_utc
-      const externalEventId = `kajabi:${kajabiEvent.event_id}|tag:${tagNorm}`
+      const externalEventId = kajabiEvent.event_id
       const matchedUser = user
 
       // Helper: detect unique violation
@@ -209,12 +200,8 @@ export async function POST(request: NextRequest) {
           where: { id: event_id },
           data: {
             status: 'processed',
-            raw: toPrismaJson({
-              ...(isPlainObject(getObjectField(kajabiEvent, 'raw'))
-                ? (getObjectField(kajabiEvent, 'raw') as Record<string, unknown>)
-                : {}),
-              user_match: matchedUser.id,
-            }) as Prisma.InputJsonValue,
+            processed_at: new Date(),
+            user_match: matchedUser.id,
           },
         })
 
@@ -260,14 +247,11 @@ export async function POST(request: NextRequest) {
           : 'Event reprocessed successfully',
         ...result,
         })
-        if (traceId) res.headers.set(TRACE_HEADER, traceId)
         return res
       }
     } catch (error) {
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})

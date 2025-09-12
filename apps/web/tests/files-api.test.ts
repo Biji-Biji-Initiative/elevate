@@ -25,11 +25,12 @@ vi.mock('@elevate/storage', async () => ({
 
 // Mock prisma
 const userFindUniqueMock = vi.fn()
-const submissionFindFirstMock = vi.fn()
+const submissionAttachmentFindFirstMock = vi.fn()
+const deleteAttachmentMock = vi.fn()
 vi.mock('@elevate/db/client', async () => ({
   prisma: {
     user: { findUnique: userFindUniqueMock },
-    submission: { findFirst: submissionFindFirstMock },
+    submissionAttachment: { findFirst: submissionAttachmentFindFirstMock, delete: deleteAttachmentMock },
   },
 }))
 
@@ -40,7 +41,8 @@ describe('Files API', () => {
     getSignedUrlMock.mockReset()
     deleteEvidenceFileMock.mockReset()
     userFindUniqueMock.mockReset()
-    submissionFindFirstMock.mockReset()
+    submissionAttachmentFindFirstMock.mockReset()
+    deleteAttachmentMock.mockReset()
   })
 
   it('requires auth on GET', async () => {
@@ -57,7 +59,7 @@ describe('Files API', () => {
 
     userFindUniqueMock.mockResolvedValueOnce({ role: 'PARTICIPANT' })
     parseStoragePathMock.mockReturnValueOnce({ userId: 'user_1', activityCode: 'LEARN' })
-    submissionFindFirstMock.mockResolvedValueOnce({ id: 'sub_1' })
+    submissionAttachmentFindFirstMock.mockResolvedValueOnce({ id: 'att_1', path: 'evidence/learn/user_1/file.pdf', submission: { user_id: 'user_1', status: 'PENDING' } })
     getSignedUrlMock.mockResolvedValueOnce('https://signed.url/test')
 
     const req = new Request('http://localhost/api/files/evidence/learn/user_1/file.pdf')

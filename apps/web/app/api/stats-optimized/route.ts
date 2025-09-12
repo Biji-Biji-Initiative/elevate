@@ -1,7 +1,7 @@
 import { type NextRequest } from 'next/server'
 
 import { prisma } from '@elevate/db/client'
-import { createSuccessResponse, createErrorResponse } from '@elevate/http'
+import { createSuccessResponse, createErrorResponse, withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { formatActivityBreakdown, formatCohortPerformanceStats, formatMonthlyGrowthStats } from '@elevate/logic'
 
@@ -46,7 +46,7 @@ type PlatformStatsOverview = {
   last_updated: Date
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const baseLogger = await getSafeServerLogger('stats-optimized')
   const logger = baseLogger.forRequestWithHeaders
     ? baseLogger.forRequestWithHeaders(request)
@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
     // Fallback to original stats calculation if materialized views are not available
     return createErrorResponse(new Error('Failed to fetch statistics'), 500)
   }
-}
+})
 
 // Health check for materialized views
 export async function HEAD(_request: NextRequest) {

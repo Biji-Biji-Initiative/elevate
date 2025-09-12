@@ -158,6 +158,23 @@ export function getSecurityHeaders({ isProduction }: SecurityHeadersOptions): {
     }[];
 }[];
 
+// @public
+export function getWebRuntimeConfig(): {
+    readonly enableInternalEndpoints: boolean;
+    readonly cronSecret: string | null;
+    readonly internalMetricsToken: string | null;
+    readonly clerkWebhookSecret: string | null;
+    readonly kajabi: {
+        readonly webhookSecret: string | null;
+        readonly allowUnsigned: boolean;
+        readonly offerId: string | null;
+        readonly offerName: string | null;
+        readonly apiKey: string | null;
+        readonly clientSecret: string | null;
+        readonly learnTags: string[];
+    };
+};
+
 // @public (undocumented)
 export function parseAdminEnv(env?: NodeJS.ProcessEnv): z.infer<typeof AdminEnvSchema>;
 
@@ -268,6 +285,9 @@ export const WebEnvSchema: z.ZodObject<{
     SENTRY_DSN?: string | undefined;
     LOGTAIL_TOKEN?: string | undefined;
 }>;
+
+// @public (undocumented)
+export type WebRuntimeConfig = ReturnType<typeof getWebRuntimeConfig>;
 
 // (No @packageDocumentation comment for this package)
 

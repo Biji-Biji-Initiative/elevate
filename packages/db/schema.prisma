@@ -63,7 +63,7 @@ model Submission {
   approval_org_timezone String?
   created_at      DateTime               @default(now())
   updated_at      DateTime               @updatedAt
-  activity        Activity               @relation(fields: [activity_code], references: [code], onDelete: Cascade)
+  activity        Activity               @relation(fields: [activity_code], references: [code], onDelete: Restrict)
   user            User                   @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, activity_code])
@@ -81,11 +81,13 @@ model PointsLedger {
   event_time        DateTime
   meta              Json         @default("{}")
   created_at        DateTime     @default(now())
-  activity          Activity     @relation(fields: [activity_code], references: [code], onDelete: Cascade)
+  activity          Activity     @relation(fields: [activity_code], references: [code], onDelete: Restrict)
   user              User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, activity_code], map: "ix_points_ledger_user_activity")
   @@index([activity_code, external_source, event_time], map: "ix_points_ledger_activity_source_time")
+  // Ensure idempotency of external events (e.g., Kajabi). Allow multiple NULLs; enforce uniqueness for non-null values.
+  @@unique([external_event_id], map: "ux_points_external_event")
   @@map("points_ledger")
 }
 

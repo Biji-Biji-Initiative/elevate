@@ -3,17 +3,19 @@ import type { NextRequest, NextResponse } from 'next/server'
 import { requireRole } from '@elevate/auth/server-helpers'
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
-import { TRACE_HEADER } from '@elevate/http'
+import { TRACE_HEADER, withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
+import { createRequestLogger } from '@elevate/logging/request-logger'
 import { recordApiAvailability, recordApiResponseTime, sloMonitor } from '@elevate/logging/slo-monitor'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
 
 export const runtime = 'nodejs'
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext): Promise<NextResponse> => {
   return withRateLimit(request, adminRateLimiter, async () => {
     await requireRole('admin')
-    const logger = await getSafeServerLogger('admin-slo-summary')
+    const baseLogger = await getSafeServerLogger('admin-slo-summary')
+    const logger = createRequestLogger(baseLogger, request)
     try {
       const start = Date.now()
       const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
@@ -49,4 +51,4 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return errRes
     }
   })
-}
+})

@@ -36,12 +36,13 @@ describe('CRITICAL: Field Name Validation', () => {
   
   describe('Database Layer - MUST use snake_case', () => {
     
-    it('AMPLIFY: should accept snake_case fields (peers_trained, students_trained)', () => {
+    it('AMPLIFY: should accept snake_case fields (peers_trained, students_trained, session_date)', () => {
       const validPayload = {
         activityCode: 'AMPLIFY',
         data: {
           peers_trained: 25,          // snake_case - CORRECT
-          students_trained: 150       // snake_case - CORRECT
+          students_trained: 150,      // snake_case - CORRECT
+          session_date: '2024-02-01', // required by DB schema
         }
       }
       
@@ -50,12 +51,13 @@ describe('CRITICAL: Field Name Validation', () => {
       expect(result?.activityCode).toBe('AMPLIFY')
     })
 
-    it('AMPLIFY: should reject camelCase fields (peersTrained, studentsTrained)', () => {
+    it('AMPLIFY: should reject camelCase fields (peersTrained, studentsTrained, sessionDate)', () => {
       const invalidPayload = {
         activityCode: 'AMPLIFY',
         data: {
           peersTrained: 25,           // camelCase - WRONG
-          studentsTrained: 150        // camelCase - WRONG
+          studentsTrained: 150,       // camelCase - WRONG
+          sessionDate: '2024-02-01',  // camelCase - WRONG
         }
       }
       
@@ -182,12 +184,13 @@ describe('CRITICAL: Field Name Validation', () => {
 
   describe('API Layer - MUST use camelCase', () => {
     
-    it('AMPLIFY: should accept camelCase fields (peersTrained, studentsTrained)', () => {
+    it('AMPLIFY: should accept camelCase fields (peersTrained, studentsTrained, sessionDate)', () => {
       const validPayload = {
         activityCode: 'AMPLIFY',
         data: {
           peersTrained: 25,           // camelCase - CORRECT for API
-          studentsTrained: 150        // camelCase - CORRECT for API
+          studentsTrained: 150,       // camelCase - CORRECT for API
+          sessionDate: '2024-02-01',  // required by API schema
         }
       }
       
@@ -196,12 +199,13 @@ describe('CRITICAL: Field Name Validation', () => {
       expect(result?.activityCode).toBe('AMPLIFY')
     })
 
-    it('AMPLIFY: should reject snake_case fields (peers_trained, students_trained)', () => {
+    it('AMPLIFY: should reject snake_case fields (peers_trained, students_trained, session_date)', () => {
       const invalidPayload = {
         activityCode: 'AMPLIFY',
         data: {
           peers_trained: 25,          // snake_case - WRONG for API
-          students_trained: 150       // snake_case - WRONG for API
+          students_trained: 150,      // snake_case - WRONG for API
+          session_date: '2024-02-01', // snake_case - WRONG for API
         }
       }
       

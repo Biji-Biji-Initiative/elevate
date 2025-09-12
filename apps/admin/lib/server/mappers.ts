@@ -162,15 +162,26 @@ export function toReferralRow(row: ReferralEventRow) {
 
 // Kajabi mapping
 /** Map a KajabiEvent row into the Admin Kajabi DTO. */
-export function toKajabiEvent(row: { id: string; created_at_utc: Date; raw: unknown }) {
-  const raw = (row.raw ?? {}) as Record<string, unknown>
-  const user_match = typeof raw.user_match === 'string' ? raw.user_match : null
+export function toKajabiEvent(row: {
+  id: string
+  created_at_utc: Date
+  processed_at?: Date | null
+  user_match?: string | null
+  raw?: unknown
+  payload?: unknown
+}) {
+  const payload = (row.payload ?? row.raw ?? {}) as Record<string, unknown>
+  const user_match = typeof row.user_match === 'string'
+    ? row.user_match
+    : (typeof (payload as Record<string, unknown>)?.user_match === 'string'
+        ? ((payload as Record<string, unknown>).user_match as string)
+        : null)
   return {
     id: row.id,
     received_at: row.created_at_utc.toISOString(),
-    processed_at: null as string | null,
+    processed_at: row.processed_at ? row.processed_at.toISOString() : null,
     user_match,
-    payload: (raw as unknown) ?? {},
+    payload: payload as unknown,
   }
 }
 

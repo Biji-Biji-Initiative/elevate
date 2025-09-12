@@ -18,10 +18,11 @@ vi.mock('@elevate/storage', async () => ({
   deleteEvidenceFile: (p: string) => deleteEvidenceFileMock(p),
 }))
 
-const submissionFindFirstMock = vi.fn()
+const submissionAttachmentFindFirstMock = vi.fn()
+const deleteAttachmentMock = vi.fn()
 vi.mock('@elevate/db/client', async () => ({
   prisma: {
-    submission: { findFirst: submissionFindFirstMock },
+    submissionAttachment: { findFirst: submissionAttachmentFindFirstMock, delete: deleteAttachmentMock },
   },
 }))
 
@@ -30,7 +31,8 @@ describe('Files API - DELETE', () => {
     currentUserId = 'user_1'
     parseStoragePathMock.mockReset()
     deleteEvidenceFileMock.mockReset()
-    submissionFindFirstMock.mockReset()
+    submissionAttachmentFindFirstMock.mockReset()
+    deleteAttachmentMock.mockReset()
   })
 
   it('requires auth', async () => {
@@ -45,7 +47,7 @@ describe('Files API - DELETE', () => {
   it('deletes file for owner with pending submission', async () => {
     const { DELETE } = await import('../app/api/files/[...path]/route')
     parseStoragePathMock.mockReturnValueOnce({ userId: 'user_1', activityCode: 'LEARN' })
-    submissionFindFirstMock.mockResolvedValueOnce({ id: 'sub_1', status: 'PENDING' })
+    submissionAttachmentFindFirstMock.mockResolvedValueOnce({ id: 'att_1', path: 'evidence/learn/user_1/file.pdf', submission: { id: 'sub_1', user_id: 'user_1', status: 'PENDING' } })
     deleteEvidenceFileMock.mockResolvedValueOnce(undefined)
 
     const req = new Request('http://localhost/api/files/evidence/learn/user_1/file.pdf', { method: 'DELETE' })

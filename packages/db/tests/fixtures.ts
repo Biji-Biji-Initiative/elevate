@@ -138,10 +138,9 @@ export class DatabaseFixtures {
       role: Role.PARTICIPANT,
       school: (overrides.school || INDONESIAN_SCHOOLS[schoolIndex]) ?? null,
       cohort: overrides.cohort || `MS Elevate ${cohortCity ?? 'Test'} 2024`,
+      // Default to null to allow tests that require multiple NULLs on unique column
       kajabi_contact_id:
-        overrides.kajabi_contact_id ||
-        `kajabi-${randomBytes(6).toString('hex')}` ||
-        null,
+        overrides.kajabi_contact_id ?? null,
     }
   }
 
@@ -318,18 +317,37 @@ export class DatabaseFixtures {
   async createTestUser(userData: Partial<TestUser> = {}): Promise<TestUser> {
     const user = this.generateUser(userData)
 
-    await this.prisma.user.create({
-      data: {
-        id: user.id,
-        handle: user.handle,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        school: user.school ?? null,
-        cohort: user.cohort ?? null,
-        kajabi_contact_id: user.kajabi_contact_id ?? null,
-      },
-    })
+    const create = async (u: typeof user) =>
+      this.prisma.user.create({
+        data: {
+          id: u.id,
+          handle: u.handle,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          school: u.school ?? null,
+          cohort: u.cohort ?? null,
+          kajabi_contact_id: u.kajabi_contact_id ?? null,
+        },
+      })
+
+    try {
+      await create(user)
+    } catch (e: unknown) {
+      // Handle unique constraint collisions gracefully to improve test isolation across runs
+      const code = (e as { code?: string }).code
+      if (code === 'P2002') {
+        // Prefer preserving explicit email used by tests; adjust only the handle
+        const suffix = `-${Date.now().toString(36)}`
+        const uniqueUser = {
+          ...user,
+          handle: `${user.handle}${suffix}`.slice(0, 30),
+        }
+        await create(uniqueUser)
+        return uniqueUser
+      }
+      throw e
+    }
 
     return user
   }
@@ -341,6 +359,21 @@ export class DatabaseFixtures {
     submissionData: Partial<TestSubmission> = {},
   ): Promise<TestSubmission> {
     const submission = this.generateSubmission(submissionData)
+
+    // Ensure parent user exists to satisfy FK
+    const existingUser = await this.prisma.user.findUnique({ where: { id: submission.user_id } })
+    if (!existingUser) {
+      const handleBase = `user_${Math.abs(submission.user_id.split('').reduce((a, c) => a + c.charCodeAt(0), 0))}`
+      await this.prisma.user.create({
+        data: {
+          id: submission.user_id,
+          handle: handleBase,
+          name: 'Test User',
+          email: `${handleBase}@example.com`,
+          role: 'PARTICIPANT',
+        },
+      })
+    }
 
     const createdSubmission = await this.prisma.submission.create({
       data: {
@@ -380,6 +413,21 @@ export class DatabaseFixtures {
     pointsData: Partial<TestPointsEntry> = {},
   ): Promise<TestPointsEntry> {
     const entry = this.generatePointsEntry(pointsData)
+
+    // Ensure parent user exists to satisfy FK
+    const existingUser = await this.prisma.user.findUnique({ where: { id: entry.user_id } })
+    if (!existingUser) {
+      const handleBase = `user_${Math.abs(entry.user_id.split('').reduce((a, c) => a + c.charCodeAt(0), 0))}`
+      await this.prisma.user.create({
+        data: {
+          id: entry.user_id,
+          handle: handleBase,
+          name: 'Test User',
+          email: `${handleBase}@example.com`,
+          role: 'PARTICIPANT',
+        },
+      })
+    }
 
     await this.prisma.pointsLedger.create({
       data: {
@@ -427,7 +475,8 @@ export class DatabaseFixtures {
     const user = await this.createTestUser({
       handle: 'basicuser',
       name: 'Basic Test User',
-      email: 'basic@example.com',
+      // Ensure unique email across repeated runs to avoid unique constraint conflicts
+      email: `basic${this.userCounter}@example.com`,
     })
 
     const submission = await this.createTestSubmission({
@@ -500,13 +549,15 @@ export class DatabaseFixtures {
     const user = await this.createTestUser({
       handle: 'reviewuser',
       name: 'Review Test User',
-      email: 'review@example.com',
+      // Unique email to avoid collisions across runs
+      email: `review${this.userCounter}@example.com`,
     })
 
     const reviewer = await this.createTestUser({
       handle: 'reviewer',
       name: 'Test Reviewer',
-      email: 'reviewer@example.com',
+      // Unique email to avoid collisions across runs
+      email: `reviewer${this.userCounter}@example.com`,
       role: Role.REVIEWER,
     })
 
@@ -589,6 +640,18 @@ export class DatabaseFixtures {
    */
   async cleanup(): Promise<void> {
     // Delete in order to respect foreign key constraints
+    try {
+      // Delete attachments before submissions to satisfy FK: submission_attachments_submission_id_fkey
+      await this.prisma.submissionAttachment.deleteMany({
+        where: { submission_id: { contains: 'test-submission-' } },
+      })
+    } catch { /* noop */ }
+    try {
+      // Remove test-created badges with predictable codes
+      await this.prisma.badge.deleteMany({
+        where: { code: { startsWith: 'COMPLEX_' } },
+      })
+    } catch { /* noop */ }
     try {
       await this.prisma.earnedBadge.deleteMany({
         where: { user_id: { contains: 'test-' } },

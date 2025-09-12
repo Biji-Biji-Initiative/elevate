@@ -38,22 +38,22 @@ const ENV_RULES = {
       sensitive: true,
       example: 'sk_test_abcd1234...'
     },
-    NEXT_PUBLIC_SUPABASE_URL: {
+    SUPABASE_URL: {
       required: true,
       pattern: /^https:\/\/[a-z0-9]+\.supabase\.co$/,
       description: 'Supabase project URL',
       example: 'https://project.supabase.co'
     },
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: {
+    SUPABASE_PUBLIC_KEY: {
       required: true,
       pattern: /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/,
-      description: 'Supabase anonymous key (JWT)',
+      description: 'Supabase public (anon) key (JWT)',
       example: 'eyJ...'
     },
-    SUPABASE_SERVICE_ROLE_KEY: {
+    SUPABASE_SECRET_KEY: {
       required: true,
       pattern: /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/,
-      description: 'Supabase service role key (JWT)',
+      description: 'Supabase service role (secret) key (JWT)',
       sensitive: true,
       example: 'eyJ...'
     },
@@ -442,17 +442,7 @@ class EnvironmentValidator {
   // Step 2: Load environment variables
   this.loadEnvironment();
 
-  // Step 2.1: Normalize Supabase variable names (support new public/secret naming)
-  // Prefer new names if provided; backfill legacy names for downstream consumers
-  if (process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.SUPABASE_URL;
-  }
-  if (process.env.SUPABASE_PUBLIC_KEY && !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.SUPABASE_PUBLIC_KEY;
-  }
-  if (process.env.SUPABASE_SECRET_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY;
-  }
+  // No normalization; enforce new naming only
 
     // Step 3: Validate all variables
     const variablesValid = this.validateAllVariables();

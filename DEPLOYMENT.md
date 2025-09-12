@@ -69,7 +69,8 @@ pnpm run emails:dev # http://localhost:3002
 4. **Set Environment Variables**:
    ```bash
    SUPABASE_URL=https://your-project.supabase.co
-   SUPABASE_SERVICE_ROLE=your-service-role-key
+   SUPABASE_PUBLIC_KEY=your-anon-key
+   SUPABASE_SECRET_KEY=your-service-role-key
    ```
 
 ### Clerk Authentication
@@ -109,6 +110,46 @@ pnpm run emails:dev # http://localhost:3002
 ## Deployment
 
 > **📋 Complete Vercel Deployment Guide**: See [VERCEL_DEPLOYMENT_GUIDE.md](./VERCEL_DEPLOYMENT_GUIDE.md) for detailed configuration and troubleshooting information.
+
+### Runtime Environment Variables Checklist
+
+#### Web App (apps/web)
+| Variable | Required | Purpose | Validation |
+|----------|----------|---------|------------|
+| `DATABASE_URL` | ✅ | PostgreSQL connection | Middleware check |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Clerk authentication | Middleware check |
+| `CLERK_SECRET_KEY` | ✅ | Clerk server auth | Middleware check |
+| `SUPABASE_URL` | ✅ | Supabase project URL | Required |
+| `SUPABASE_PUBLIC_KEY` | ✅ | Public storage access | Required |
+| `SUPABASE_SECRET_KEY` | ⚠️ | Server-side storage | Required |
+| `NEXT_PUBLIC_SITE_URL` | ✅ | App URL configuration | Middleware check |
+| `KAJABI_WEBHOOK_SECRET` | ⚠️ | Webhook validation | Optional |
+| `KAJABI_API_KEY` | ⚠️ | Kajabi integration | Optional |
+
+Legacy names are no longer supported; use the new naming only.
+
+#### Admin App (apps/admin)
+| Variable | Required | Purpose | Validation |
+|----------|----------|---------|------------|
+| `DATABASE_URL` | ✅ | PostgreSQL connection | Middleware check |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | ✅ | Clerk authentication | Middleware check |
+| `CLERK_SECRET_KEY` | ✅ | Clerk server auth | Middleware check |
+| `SUPABASE_URL` | ✅ | Supabase project URL | Required |
+| `SUPABASE_SECRET_KEY` | ✅ | Admin storage operations | Required |
+| `ADMIN_DEV_BYPASS_USER_IDS` | ⚠️ | Dev-only bypass | Dev only |
+
+Legacy names are no longer supported; use the new naming only.
+
+#### CI/CD Validation
+```bash
+# Validate production environment variables
+pnpm run env:validate:prod
+
+# Validate development environment variables
+pnpm run env:validate:dev
+```
+
+**Note**: Both apps include runtime validation in their middleware that logs warnings for missing environment variables. Critical variables will cause immediate failures in production.
 
 ### Quick Deployment Commands
 
@@ -162,7 +203,7 @@ Set these in Vercel dashboard or via CLI:
 # Required for all environments
 vercel env add DATABASE_URL
 vercel env add SUPABASE_URL
-vercel env add SUPABASE_SERVICE_ROLE
+vercel env add SUPABASE_SECRET_KEY
 vercel env add NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 vercel env add CLERK_SECRET_KEY
 vercel env add RESEND_API_KEY

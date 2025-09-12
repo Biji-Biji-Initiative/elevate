@@ -16,6 +16,10 @@
       "types": "./dist/types/badges.d.ts",
       "import": "./dist/js/badges.js"
     },
+    "./kajabi": {
+      "types": "./dist/types/kajabi.d.ts",
+      "import": "./dist/js/kajabi.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/js/index.js",

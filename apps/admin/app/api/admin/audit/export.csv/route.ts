@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandling, type ApiContext } from '@elevate/http'
 
 import { z } from 'zod'
 
@@ -24,7 +24,7 @@ function cell(v: unknown) {
   return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   return withRateLimit(request, adminRateLimiter, async () => {
     await requireRole('admin')
     const url = new URL(request.url)
@@ -85,8 +85,6 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'no-store',
       }),
     })
-    const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
-    if (traceId) res.headers.set(TRACE_HEADER, traceId)
     return res
   })
-}
+})

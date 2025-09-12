@@ -1,15 +1,6 @@
 {
-  "framework": "nextjs",
-  "installCommand": "pnpm -w install --frozen-lockfile",
-  "buildCommand": "next build",
-  "outputDirectory": ".next",
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [ { "key": "X-App-Name", "value": "elevate-admin" } ]
-    }
-  ]
+  "buildCommand": "pnpm turbo run build --filter=elevate-admin...",
+  "installCommand": "pnpm install --frozen-lockfile && pnpm db:generate",
+  "outputDirectory": "apps/admin/.next",
+  "framework": "nextjs"
 }

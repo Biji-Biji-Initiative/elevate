@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 import { requireRole } from '@elevate/auth/server-helpers'
 import { prisma, type Prisma } from '@elevate/db'
-import { createErrorResponse as createHttpError, TRACE_HEADER } from '@elevate/http'
+import { createErrorResponse as createHttpError, withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -28,10 +28,9 @@ function cell(v: unknown) {
   return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const baseLogger = await getSafeServerLogger('admin-exports')
   const logger = createRequestLogger(baseLogger, request)
-  const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       const user = await requireRole('admin')
@@ -40,13 +39,13 @@ export async function GET(request: NextRequest) {
         Object.fromEntries(searchParams),
       )
       if (!parsed.success) {
-        return createHttpError(new Error('Invalid export query'), 400, traceId)
+        return createHttpError(new Error('Invalid export query'), 400)
       }
       const { type, format, startDate, endDate, activity, status, cohort } =
         parsed.data
 
       if (format !== 'csv') {
-        return createHttpError(new Error('Only CSV format is supported'), 400, traceId)
+        return createHttpError(new Error('Only CSV format is supported'), 400)
       }
 
       let csvContent = ''
@@ -90,7 +89,7 @@ export async function GET(request: NextRequest) {
           break
 
         default:
-          return createHttpError(new Error('Invalid export type'), 400, traceId)
+          return createHttpError(new Error('Invalid export type'), 400)
       }
 
       // Create audit log
@@ -116,7 +115,6 @@ export async function GET(request: NextRequest) {
           'Content-Disposition': `attachment; filename="${filename}"`,
         },
       })
-      if (traceId) response.headers.set(TRACE_HEADER, traceId)
       logger.info('Generated CSV export', {
         type,
         format,
@@ -126,10 +124,10 @@ export async function GET(request: NextRequest) {
       return response
     } catch (error) {
       logger.error('Admin export failed', error instanceof Error ? error : new Error(String(error)))
-      return createHttpError(error, 500, traceId)
+      return createHttpError(error, 500)
     }
   })
-}
+})
 
 async function generateSubmissionsCSV(filters: {
   startDate?: string | null

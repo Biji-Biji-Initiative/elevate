@@ -7,7 +7,7 @@ import { prisma, type Prisma } from '@elevate/db'
 // Standard envelopes provided via local helpers
 import { AdminError } from '@/lib/server/admin-error'
 import { toErrorResponse, toSuccessResponse } from '@/lib/server/http'
-import { TRACE_HEADER } from '@elevate/http'
+import { withApiErrorHandling, type ApiContext } from '@elevate/http'
 import { getSafeServerLogger } from '@elevate/logging/safe-server'
 import { createRequestLogger } from '@elevate/logging/request-logger'
 import { withRateLimit, adminRateLimiter } from '@elevate/security'
@@ -15,13 +15,12 @@ import { BadgeSchema, toPrismaJson, buildAuditMeta } from '@elevate/types'
 
 export const runtime = 'nodejs'
 
-export async function GET(request: NextRequest) {
+export const GET = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const baseLogger = await getSafeServerLogger('admin-badges')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       await requireRole('admin')
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
-      const logger = createRequestLogger(baseLogger, request)
+      const _logger = createRequestLogger(baseLogger, request)
       const { searchParams } = new URL(request.url)
 
       const includeStats = searchParams.get('includeStats') === 'true'
@@ -58,7 +57,6 @@ export async function GET(request: NextRequest) {
           })
 
       const res = toSuccessResponse({ badges })
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       return res
     } catch (error) {
       const logger = createRequestLogger(baseLogger, request)
@@ -66,21 +64,18 @@ export async function GET(request: NextRequest) {
         'Admin badges GET failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const baseLogger = await getSafeServerLogger('admin-badges')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       const user = await requireRole('admin')
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
-      const logger = createRequestLogger(baseLogger, request)
+      const _logger = createRequestLogger(baseLogger, request)
       const body: unknown = await request.json()
 
       const validation = BadgeSchema.safeParse(body)
@@ -126,7 +121,6 @@ export async function POST(request: NextRequest) {
       })
 
       const res = toSuccessResponse({ message: 'Badge created successfully' })
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       return res
     } catch (error) {
       const logger = createRequestLogger(baseLogger, request)
@@ -134,21 +128,18 @@ export async function POST(request: NextRequest) {
         'Admin badges POST failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const baseLogger = await getSafeServerLogger('admin-badges')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       const user = await requireRole('admin')
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
-      const logger = createRequestLogger(baseLogger, request)
+      const _logger = createRequestLogger(baseLogger, request)
       const body: unknown = await request.json()
 
       // Type-safe extraction of code and updates
@@ -215,7 +206,6 @@ export async function PATCH(request: NextRequest) {
       })
 
       const res = toSuccessResponse({ message: 'Badge updated successfully' })
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       return res
     } catch (error) {
       const logger = createRequestLogger(baseLogger, request)
@@ -223,21 +213,18 @@ export async function PATCH(request: NextRequest) {
         'Admin badges PATCH failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withApiErrorHandling(async (request: NextRequest, _context: ApiContext) => {
   const baseLogger = await getSafeServerLogger('admin-badges')
   return withRateLimit(request, adminRateLimiter, async () => {
     try {
       const user = await requireRole('admin')
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
-      const logger = createRequestLogger(baseLogger, request)
+      const _logger = createRequestLogger(baseLogger, request)
       const { searchParams } = new URL(request.url)
       const queryObj = Object.fromEntries(searchParams)
       const querySchema = z.object({ code: z.string().min(1) })
@@ -287,7 +274,6 @@ export async function DELETE(request: NextRequest) {
       })
 
       const res = toSuccessResponse({ message: 'Badge deleted successfully' })
-      if (traceId) res.headers.set(TRACE_HEADER, traceId)
       return res
     } catch (error) {
       const logger = createRequestLogger(baseLogger, request)
@@ -295,10 +281,8 @@ export async function DELETE(request: NextRequest) {
         'Admin badges DELETE failed',
         error instanceof Error ? error : new Error(String(error)),
       )
-      const traceId = request.headers.get('x-trace-id') || request.headers.get(TRACE_HEADER) || undefined
       const errRes = toErrorResponse(error)
-      if (traceId) errRes.headers.set(TRACE_HEADER, traceId)
       return errRes
     }
   })
-}
+})

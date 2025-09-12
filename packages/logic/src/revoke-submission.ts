@@ -27,12 +27,12 @@ export async function revokeSubmission(
   const approvedId = `submission:${opts.submissionId}:approved:v1`
   const revokeId = `submission:${opts.submissionId}:revoked:v1`
 
-  const existingRevoke = await tx.pointsLedger.findFirst({
+  const existingRevoke = await tx.pointsLedger.findUnique({
     where: { external_event_id: revokeId },
   })
   if (existingRevoke) return
 
-  const entry = await tx.pointsLedger.findFirst({
+  const entry = await tx.pointsLedger.findUnique({
     where: { external_event_id: approvedId },
   })
   if (!entry) {
