@@ -6,8 +6,8 @@
  */
 
 import { exec } from 'child_process';
-import { promisify } from 'util';
 import { existsSync } from 'fs';
+import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
@@ -47,7 +47,7 @@ const steps = [
 async function runSetup() {
   console.log('🚀 Setting up development environment for MS Elevate LEAPS Tracker\n');
   
-  let failedSteps = [];
+  const failedSteps = [];
   
   for (const [index, step] of steps.entries()) {
     const stepNumber = index + 1;

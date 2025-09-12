@@ -3,7 +3,6 @@ import 'server-only'
 
 import fs from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import path from 'node:path'
 
 export async function getRootFontClass(): Promise<string> {
   try {

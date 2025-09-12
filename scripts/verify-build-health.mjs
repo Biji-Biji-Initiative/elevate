@@ -9,6 +9,7 @@
 
 import { readFileSync, existsSync, statSync } from 'fs';
 import { resolve, dirname } from 'path';
+
 import { glob } from 'glob';
 
 const rootDir = process.cwd();

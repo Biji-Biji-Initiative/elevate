@@ -1,5 +1,6 @@
 
 import { prisma } from '@elevate/db/client'
+import { featureFlags } from '@elevate/config'
 import { getProfileUrl, getMetricsUrl } from '@elevate/types'
 
 import type { MetadataRoute } from 'next'
@@ -20,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: 'daily',
         priority: 1.0,
       },
-      ...(process.env.NEXT_PUBLIC_ENABLE_API_DOCS === 'true'
+      ...(featureFlags.apiDocsEnabled
         ? ([
             {
               url: `${baseUrl}/docs`,

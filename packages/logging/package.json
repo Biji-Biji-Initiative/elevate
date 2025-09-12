@@ -28,6 +28,11 @@
       "types": "./dist/types/slo-monitor.d.ts",
       "import": "./dist/js/slo-monitor.js"
     }
+    ,
+    "./request-logger": {
+      "types": "./src/request-logger.ts",
+      "import": "./src/request-logger.ts"
+    }
   },
   "main": "./dist/js/index.js",
   "types": "./dist/types/index.d.ts",

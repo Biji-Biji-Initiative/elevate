@@ -87,6 +87,33 @@
     "NEXT_PUBLIC_SITE_URL",
     "NEXT_PUBLIC_KAJABI_PORTAL_URL",
     "TURBO_TOKEN",
-    "TURBO_TEAM"
+    "TURBO_TEAM",
+    // Server/runtime envs used by applications and packages
+    "DATABASE_URL",
+    "TEST_DATABASE_URL",
+    "DIRECT_URL",
+    "CLERK_SECRET_KEY",
+    "CLERK_WEBHOOK_SECRET",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "KAJABI_WEBHOOK_SECRET",
+    "KAJABI_LEARN_TAGS",
+    "KAJABI_API_KEY",
+    "KAJABI_CLIENT_SECRET",
+    "KAJABI_BASE_URL",
+    "KAJABI_OFFER_ID",
+    "KAJABI_OFFER_NAME",
+    "RESEND_API_KEY",
+    "FROM_EMAIL",
+    "REPLY_TO_EMAIL",
+    "CRON_SECRET",
+    "NEXT_RUNTIME",
+    "ENABLE_INTERNAL_ENDPOINTS",
+    "INTERNAL_METRICS_TOKEN",
+    "ALLOW_UNSIGNED_KAJABI_WEBHOOK",
+    // Observability/monitoring (optional)
+    "SENTRY_DSN",
+    // Admin analytics config
+    "ANALYTICS_POINTS_BUCKETS",
+    "ANALYTICS_POINTS_QUANTILES"
   ]
 }

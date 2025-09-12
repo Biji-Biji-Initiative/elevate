@@ -22,12 +22,12 @@ async function main() {
   } catch (err) {
     throw new Error(`Invalid openapi.json: ${(err && err.message) || 'parse error'}`)
   }
-  // eslint-disable-next-line no-console
+   
   console.log('Verified apps/web/public/openapi.json')
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
+   
   console.error(err)
   process.exitCode = 1
 })

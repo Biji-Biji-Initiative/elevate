@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { writeFileSync } from 'fs'
+
 import { glob } from 'glob'
 
 const archivedDocs = await glob('archive/docs-legacy/**/*.md')

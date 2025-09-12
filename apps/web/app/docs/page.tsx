@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useMemo } from 'react'
+import { featureFlags } from '@elevate/config'
 import Link from 'next/link'
 
 // Optional CSS import; guard to avoid build-time resolution failure
@@ -14,7 +15,7 @@ try {
 const SwaggerUI = dynamic(() => import('swagger-ui-react'), { ssr: false })
 
 export default function ApiDocsPage() {
-  const enabled = useMemo(() => process.env.NEXT_PUBLIC_ENABLE_API_DOCS === 'true', [])
+  const enabled = useMemo(() => featureFlags.apiDocsEnabled, [])
   if (!enabled) {
     return (
       <div style={{ padding: 16 }}>

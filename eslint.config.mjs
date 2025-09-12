@@ -248,6 +248,8 @@ export default [
     files: ['apps/**/app/api/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': 'off',
+      // Env vars in server routes are validated centrally; reduce noise
+      'turbo/no-undeclared-env-vars': 'off',
     },
   },
 

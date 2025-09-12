@@ -3,14 +3,14 @@
  * Emit OpenAPI spec JSON to apps/web/public/openapi.json
  * Keeps Web app free of runtime @elevate/openapi dependency
  */
-import { fileURLToPath } from 'url'
-import path from 'path'
 import fs from 'fs/promises'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 // Try to load programmatic generator; fallback to YAML if unavailable
 let getOpenApiSpec
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+   
   const mod = await import('@elevate/openapi')
   getOpenApiSpec = mod.getOpenApiSpec
 } catch (_) {
@@ -37,12 +37,12 @@ async function main() {
   }
   await fs.mkdir(outDir, { recursive: true })
   await fs.writeFile(outFile, JSON.stringify(spec, null, 2), 'utf8')
-  // eslint-disable-next-line no-console
+   
   console.log(`Wrote OpenAPI spec to ${path.relative(root, outFile)}`)
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
+   
   console.error('Failed to emit OpenAPI JSON', err)
   process.exitCode = 1
 })

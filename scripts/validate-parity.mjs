@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // ESM script to enforce docs↔code parity for key counts
 import { readFileSync, existsSync } from 'fs'
+
 import { glob } from 'glob'
 
 function readJson(path) {

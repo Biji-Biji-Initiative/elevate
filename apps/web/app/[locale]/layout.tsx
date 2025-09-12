@@ -7,6 +7,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations } from 'next-intl/server'
 
 import { Button } from '@elevate/ui'
+import { featureFlags } from '@elevate/config'
 import { ClientHeader, Footer } from '@elevate/ui/next'
 
 import { locales } from '../../i18n'
@@ -126,7 +127,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       signUpUrl={`/${locale}/sign-up`}
     >
       <NextIntlClientProvider messages={messages}>
-        {process.env.NEXT_PUBLIC_ENABLE_API_DOCS === 'true' && (
+        {featureFlags.apiDocsEnabled && (
           <div className="w-full bg-blue-50 text-blue-800 text-sm">
             <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
               <span>Developer resources available</span>
@@ -145,7 +146,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             { name: 'Present', href: '/metrics/present' },
             { name: 'Shine', href: '/metrics/shine' },
           ]
-          return process.env.NEXT_PUBLIC_ENABLE_API_DOCS === 'true'
+          return featureFlags.apiDocsEnabled
             ? [...base, { name: 'API Docs', href: '/docs' }]
             : base
         })()}
@@ -195,7 +196,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         languageSwitcher={<LanguageSwitcher />}
         />
         <main className="flex-1">{children}</main>
-        {process.env.NEXT_PUBLIC_ENABLE_API_DOCS === 'true' && (
+        {featureFlags.apiDocsEnabled && (
           <div className="w-full bg-gray-50 border-t">
             <div className="max-w-7xl mx-auto px-4 py-3 text-sm text-gray-700 flex items-center gap-3">
               <Link href="/docs" className="underline hover:no-underline">API Docs</Link>
